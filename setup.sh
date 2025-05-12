@@ -5,7 +5,7 @@ echo "🚀 开始安装项目..."
 
 # GitHub 仓库信息
 GITHUB_USER="Limkon"
-REPO_NAME="Netnope"
+REPO_NAME="kpan"
 BRANCH="master"
 
 echo "👤 GitHub 用户名: $GITHUB_USER"
