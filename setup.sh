@@ -114,12 +114,13 @@ echo "📦 安装依赖..."
 # 这里按原脚本逻辑逐个安装，并假设它们是生产依赖
 # 如果 package.json 已经存在且包含依赖， `npm install` 就足够了。
 # 这个显式安装会添加它们到 package.json (如果它是空的或者没有这些依赖)
-#if npm install axios express ws cookie-parser body-parser http-proxy-middleware; then
-#    echo "✅ 依赖安装成功。"
-#else
-#    echo "❌ 依赖安装过程中发生错误。"
-#    exit 1 # npm install 失败时脚本会因 set -e 退出，这里显式退出确保清晰
-#fi
+if npm install
+# axios express ws cookie-parser body-parser http-proxy-middleware; then
+    echo "✅ 依赖安装成功。"
+else
+    echo "❌ 依赖安装过程中发生错误。"
+    exit 1 # npm install 失败时脚本会因 set -e 退出，这里显式退出确保清晰
+fi
 
 # 获取 node 的绝对路径，用于开机启动项
 NODE_EXEC_PATH=$(command -v node)
