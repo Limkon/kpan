@@ -6,7 +6,7 @@ const mainRouter = require('./routes/index');
 const db = require('./db/database'); // Ensures DB is initialized when server starts
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8100;
 
 // Middleware
 app.use(cors()); // Configure CORS appropriately for your frontend's origin in production
