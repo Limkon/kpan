@@ -1,22 +1,22 @@
-// server.js (SQLite 版本)
-// 導入所需模組
+// server.js (SQLite 版本 - 修复视图路径并更新端口)
+// 导入所需模块
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const sqlite3 = require('sqlite3').verbose(); // 引入 sqlite3
+const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
-const port = 8100;
+const port = 8100; // <--- 已按您的要求更改端口
 
 // 資料庫文件路徑
 const DB_FILE = path.join(__dirname, 'data', 'netdisk.sqlite');
 // 上傳文件存儲目錄
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 
-// 確保 data 和 uploads 目錄存在
+// 确保data和uploads目录存在
 if (!fs.existsSync(path.join(__dirname, 'data'))) {
     fs.mkdirSync(path.join(__dirname, 'data'));
 }
@@ -31,7 +31,6 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
         throw err;
     }
     console.log('已成功連接到 SQLite 資料庫。');
-    // 創建 users 表格 (如果不存在)
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
@@ -42,7 +41,6 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             console.error('創建 users 表格失敗:', err.message);
         } else {
             console.log("'users' 表格已準備就緒。");
-            // 檢查是否需要創建第一個管理員帳戶
             db.get("SELECT COUNT(*) as count FROM users", (err, row) => {
                 if (err) {
                     console.error("檢查用戶數量時出錯:", err.message);
@@ -57,11 +55,13 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
 });
 
 // 中間件設置
-app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views')); // <--- 明确设置视图目录
+app.set('view engine', 'ejs'); // 设置模板引擎为 EJS
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
-    secret: 'your_very_secret_key_sqlite', // 建議更改為更安全的密鑰
+    secret: 'your_very_secret_key_sqlite_8100', // 建议更改为更安全的密钥
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false } // 在生產環境中應設為 true (HTTPS)
@@ -70,6 +70,7 @@ app.use(session({
 // Multer 設置 (文件上傳處理)
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
+        // 文件将存储在用户特定的目录中
         const userUploadDir = path.join(UPLOAD_DIR, req.session.user.username);
         if (!fs.existsSync(userUploadDir)) {
             fs.mkdirSync(userUploadDir, { recursive: true });
@@ -77,7 +78,8 @@ const storage = multer.diskStorage({
         cb(null, userUploadDir);
     },
     filename: function (req, file, cb) {
-        cb(null, Buffer.from(file.originalname, 'latin1').toString('utf8')); // 解決中文檔名問題
+        // 保留原始文件名, 并尝试解决中文乱码问题
+        cb(null, Buffer.from(file.originalname, 'latin1').toString('utf8'));
     }
 });
 const upload = multer({ storage: storage });
@@ -103,13 +105,13 @@ app.get('/', (req, res) => {
     if (req.session.user) {
         res.redirect('/files');
     } else {
-        res.redirect('/login');
+        res.redirect('/login'); // <--- 这是导致错误的 res.render 调用的地方之一
     }
 });
 
 // 註冊頁面
 app.get('/register', (req, res) => {
-    res.render('register', { error: null });
+    res.render('register', { error: null }); // <--- 确保 register.ejs 存在
 });
 
 app.post('/register', (req, res) => {
@@ -128,7 +130,6 @@ app.post('/register', (req, res) => {
             return res.render('register', { error: '用戶名已存在' });
         }
 
-        // 檢查是否是第一個用戶
         db.get("SELECT COUNT(*) as count FROM users", (err, countRow) => {
             if (err) {
                 console.error("檢查用戶總數時出錯:", err.message);
@@ -136,11 +137,11 @@ app.post('/register', (req, res) => {
             }
 
             const hashedPassword = bcrypt.hashSync(password, 10);
-            const userRole = countRow.count === 0 ? 'admin' : 'user'; // 第一個註冊的用戶是管理員
+            const userRole = countRow.count === 0 ? 'admin' : 'user';
 
             db.run("INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
                 [username, hashedPassword, userRole],
-                function (err) { // 使用普通函數以獲取 this.lastID
+                function (err) {
                     if (err) {
                         console.error("插入新用戶失敗:", err.message);
                         return res.render('register', { error: '註冊失敗，請稍後再試。' });
@@ -155,7 +156,7 @@ app.post('/register', (req, res) => {
 
 // 登錄頁面
 app.get('/login', (req, res) => {
-    res.render('login', { error: null });
+    res.render('login', { error: null }); // <--- 确保 login.ejs 存在
 });
 
 app.post('/login', (req, res) => {
@@ -166,7 +167,7 @@ app.post('/login', (req, res) => {
             return res.render('login', { error: '登錄過程中發生錯誤，請稍後再試。' });
         }
         if (user && bcrypt.compareSync(password, user.password)) {
-            req.session.user = { id: user.id, username: user.username, role: user.role }; // 在 session 中儲存用戶信息
+            req.session.user = { id: user.id, username: user.username, role: user.role };
             res.redirect('/files');
         } else {
             res.render('login', { error: '用戶名或密碼無效' });
@@ -199,9 +200,9 @@ app.get('/files', isAuthenticated, (req, res) => {
             console.error("讀取文件目錄失敗:", err);
             return res.status(500).send('無法讀取文件列表');
         }
-        res.render('files', {
+        res.render('files', { // <--- 确保 files.ejs 存在
             user: user,
-            files: files.map(f => ({ name: f, encodedName: encodeURIComponent(f) })) || [], // 確保文件名被正確編碼以用於 URL
+            files: files.map(f => ({ name: f, encodedName: encodeURIComponent(f) })) || [],
             message: req.query.message
         });
     });
@@ -218,7 +219,6 @@ app.post('/upload', isAuthenticated, upload.array('userFiles', 10), (req, res) =
 // 文件下載處理
 app.get('/download/:filename', isAuthenticated, (req, res) => {
     const user = req.session.user;
-    // 解碼文件名，因為它在 URL 中可能是編碼過的
     const filename = decodeURIComponent(req.params.filename);
     const filePath = path.join(UPLOAD_DIR, user.username, filename);
 
@@ -264,13 +264,13 @@ app.get('/admin', isAuthenticated, isAdmin, (req, res) => {
             console.error("獲取用戶列表失敗:", err.message);
             return res.status(500).send("無法獲取用戶列表");
         }
-        res.render('admin', { users: users, currentUser: req.session.user, message: req.query.message });
+        res.render('admin', { users: users, currentUser: req.session.user, message: req.query.message }); // <--- 确保 admin.ejs 存在
     });
 });
 
 // 管理員刪除用戶
 app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => {
-    const userIdToDelete = parseInt(req.params.userId, 10); // 確保是數字
+    const userIdToDelete = parseInt(req.params.userId, 10);
 
     if (isNaN(userIdToDelete)) {
         return res.redirect('/admin?message=無效的用戶ID');
@@ -280,7 +280,6 @@ app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => {
         return res.redirect('/admin?message=不能刪除當前登錄的管理員帳戶');
     }
 
-    // 在刪除前，獲取用戶名以備後續可能的文件夾刪除操作
     db.get("SELECT username FROM users WHERE id = ?", [userIdToDelete], (err, userToDelete) => {
         if (err) {
             console.error("刪除用戶前查找用戶名失敗:", err.message);
@@ -297,13 +296,11 @@ app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => {
             }
             if (this.changes > 0) {
                 console.log(`用戶 ID ${userIdToDelete} (用戶名: ${userToDelete.username}) 已被刪除。`);
-                // 可選：刪除該用戶的文件目錄
                 const userDirToDelete = path.join(UPLOAD_DIR, userToDelete.username);
                 if (fs.existsSync(userDirToDelete)) {
                     fs.rm(userDirToDelete, { recursive: true, force: true }, (rmErr) => {
                         if (rmErr) {
                             console.error(`刪除用戶 ${userToDelete.username} 的文件夾 ${userDirToDelete} 失敗:`, rmErr);
-                            // 即使文件夾刪除失敗，用戶記錄也已刪除，所以繼續
                             res.redirect(`/admin?message=用戶已刪除，但其文件夾刪除失敗。`);
                         } else {
                             console.log(`用戶 ${userToDelete.username} 的文件夾 ${userDirToDelete} 已成功刪除。`);
@@ -323,11 +320,10 @@ app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => {
 
 // 啟動伺服器
 app.listen(port, () => {
-    console.log(`伺服器運行在 http://localhost:${port}`);
+    console.log(`伺服器運行在 http://localhost:${port}`); // <--- 确保日志输出正确的端口
     console.log('請在瀏覽器中打開此地址。');
 });
 
-// 確保在應用程式關閉時關閉資料庫連接
 process.on('SIGINT', () => {
     db.close((err) => {
         if (err) {
