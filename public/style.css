@@ -11,6 +11,7 @@ body {
     align-items: center;
     min-height: 100vh;
     box-sizing: border-box;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
 }
 
 .container {
@@ -25,6 +26,66 @@ body {
     box-sizing: border-box;
 }
 
+/* --- Authentication Page Specific Styles --- */
+.auth-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 80vh; /* Ensure it takes up most of the viewport height */
+    padding: 20px;
+}
+
+.auth-form-container {
+    background-color: #fff;
+    padding: 25px 30px; /* More padding for auth forms */
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px; /* Optimal width for auth forms */
+    text-align: center; /* Center form elements like h1 and p */
+}
+.auth-form-container h1 {
+    font-size: 1.8em; /* Slightly larger for auth pages */
+    margin-bottom: 25px;
+    color: #343a40;
+}
+.auth-form-container .form-group {
+    margin-bottom: 20px;
+    text-align: left; /* Align labels and inputs to the left */
+}
+.auth-form-container label {
+    display: block;
+    margin-bottom: 8px; /* More space below label */
+    font-weight: 600;
+    color: #495057;
+}
+.auth-form-container input[type="text"],
+.auth-form-container input[type="password"] {
+    width: 100%;
+    padding: 12px 15px; /* Larger padding for inputs */
+    font-size: 1em;
+    margin-bottom: 0; /* Remove default margin from unified controls */
+}
+.auth-form-container .full-width-button {
+    width: 100%;
+    padding: 12px 15px; /* Larger button padding */
+    font-size: 1.05em;
+    margin-top: 10px; /* Space above button */
+    margin-bottom: 0;
+}
+.auth-form-container .auth-switch {
+    margin-top: 20px;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+.auth-form-container .auth-switch a {
+    color: #007bff;
+    font-weight: 500;
+}
+
+
 header {
     display: flex;
     flex-direction: column;
@@ -37,97 +98,61 @@ header h1 { margin: 0 0 10px 0; font-size: 1.6em; color: #343a40; }
 header nav { display: flex; flex-wrap: wrap; gap: 10px; }
 header nav a { margin-left: 0; text-decoration: none; color: #007bff; font-weight: 500; padding: 5px 0; }
 
-h1 { text-align: center; font-size: 1.8em; margin-bottom: 15px; color: #343a40; }
+/* General h1, h2 for non-auth pages */
+.container > h1:not(.auth-form-container h1) { text-align: center; font-size: 1.8em; margin-bottom: 15px; color: #343a40; }
 h2 {
     font-size: 1.3em; border-bottom: 2px solid #007bff; padding-bottom: 6px;
     margin-top: 25px; margin-bottom: 15px; color: #343a40;
 }
 h2:first-of-type { margin-top: 0; }
 
-/* --- Unified Control Styling --- */
-input[type="text"],
-input[type="password"],
-select,
-textarea,
-button, /* Apply base to buttons too */
-.button-link { /* Apply base to anchor tags styled as buttons */
-    display: inline-block; /* Important for sizing and margin */
-    width: auto; /* Default to auto, specific forms will override */
-    padding: 10px 15px; /* Unified padding */
+
+/* Unified Control Styling (from previous version, slight adjustments) */
+input[type="text"], input[type="password"],
+select, textarea,
+button, .button-link {
+    display: inline-block;
+    width: auto;
+    padding: 10px 15px;
     border: 1px solid #ced4da;
     border-radius: 5px;
     box-sizing: border-box;
     font-size: 0.95em;
     line-height: 1.5;
-    vertical-align: middle; /* Align inline-block elements */
-    margin: 5px; /* Add some default margin for spacing */
+    vertical-align: middle;
+    margin: 5px;
     transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
-
 input[type="file"] {
-    display: block; /* File inputs are often better as block */
-    width: 100%;
-    padding: 8px 10px;
-    margin-bottom: 10px; /* Ensure space below file input */
+    display: block; width: 100%; padding: 8px 10px; margin-bottom: 10px;
+    border: 1px solid #ced4da; border-radius: 5px; box-sizing: border-box; font-size: 0.95em;
 }
+textarea { min-height: 100px; }
 
-/* Specific overrides for inputs if they shouldn't look like buttons */
-input[type="text"],
-input[type="password"],
+input[type="text"]:not(.auth-form-container input), /* Avoid double styling */
+input[type="password"]:not(.auth-form-container input),
 select,
 textarea {
-    background-color: #fff; /* Default input background */
-    color: #495057; /* Default input text color */
+    background-color: #fff; color: #495057;
 }
-input[type="text"]:focus,
-input[type="password"]:focus,
+input[type="text"]:focus:not(.auth-form-container input),
+input[type="password"]:focus:not(.auth-form-container input),
 select:focus,
 textarea:focus {
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    outline: none;
+    border-color: #80bdff; box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); outline: none;
 }
 
-/* Button and Button-like Anchor Styling */
-button,
-button[type="submit"],
-.button-link {
-    background-color: #007bff;
-    color: white !important;
-    border-color: #007bff; /* Match border to background */
-    cursor: pointer;
-    font-weight: 500;
-    text-decoration: none;
-    text-align: center;
+button, button[type="submit"], .button-link {
+    background-color: #007bff; color: white !important; border-color: #007bff;
+    cursor: pointer; font-weight: 500; text-decoration: none; text-align: center;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
-button:hover,
-button[type="submit"]:hover,
-.button-link:hover {
-    background-color: #0069d9;
-    border-color: #0062cc;
-    color: white !important;
-    text-decoration: none;
+button:hover, button[type="submit"]:hover, .button-link:hover {
+    background-color: #0069d9; border-color: #0062cc; color: white !important; text-decoration: none;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-button:active,
-button[type="submit"]:active,
-.button-link:active {
-    background-color: #005cbf;
-    border-color: #0056b3;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.125);
-}
-
-button.secondary,
-.button-link.secondary {
-    background-color: #6c757d;
-    border-color: #6c757d;
-}
-button.secondary:hover,
-.button-link.secondary:hover {
-    background-color: #5a6268;
-    border-color: #545b62;
-}
+button.secondary, .button-link.secondary { background-color: #6c757d; border-color: #6c757d; }
+button.secondary:hover, .button-link.secondary:hover { background-color: #5a6268; border-color: #545b62; }
 
 .message { padding: 10px 12px; border-radius: 5px; margin-bottom: 15px; font-size: 0.95em; }
 .error-message { color: #842029; background-color: #f8d7da; border: 1px solid #f5c2c7; }
@@ -136,43 +161,17 @@ button.secondary:hover,
 .current-path { margin-bottom: 15px; padding: 10px; background-color: #e9ecef; border-radius: 5px; font-size: 0.9em; color: #495057; word-break: break-all; }
 .current-path a { font-weight: 500; }
 
-/* --- File Browser Controls --- */
 .file-browser-controls {
-    margin-bottom: 20px;
-    display: flex;
-    flex-wrap: wrap; /* Allow controls to wrap on smaller screens */
-    gap: 10px; /* Consistent gap between all control groups */
-    align-items: center; /* Align items vertically */
+    margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
 }
-.file-browser-controls .control-form { /* For create folder and rename */
-    display: flex;
-    flex-grow: 1; /* Allow form to take available space */
-    gap: 8px;
-    min-width: 200px; /* Minimum width before wrapping for the form itself */
-}
-.file-browser-controls .control-form input[type="text"] {
-    flex-grow: 1; /* Input takes most space within its form */
-    margin: 0; /* Reset margin from base control style */
-}
-.file-browser-controls .control-form button {
-    flex-shrink: 0; /* Prevent button from shrinking */
-    margin: 0;
-}
-.file-browser-controls .upload-button-main, /* The main "Upload File" button */
-.file-browser-controls .view-toggle button {
-    margin: 0; /* Reset margin */
-    flex-shrink: 0;
-}
-.view-toggle {
-    display: flex;
-    gap: 8px;
-    margin-left: auto; /* Push to the right on wider screens if space allows */
-}
-.view-toggle button { background-color: #6c757d; font-size: 0.9em; } /* Slightly larger view toggle buttons */
+.file-browser-controls .control-form { display: flex; flex-grow: 1; gap: 8px; min-width: 200px; }
+.file-browser-controls .control-form input[type="text"] { flex-grow: 1; margin: 0; }
+.file-browser-controls .control-form button { flex-shrink: 0; margin: 0; }
+.file-browser-controls .upload-button-main, .file-browser-controls .view-toggle button { margin: 0; flex-shrink: 0; }
+.view-toggle { display: flex; gap: 8px; margin-left: auto; }
+.view-toggle button { background-color: #6c757d; font-size: 0.9em; }
 .view-toggle button.active { background-color: #007bff; }
 
-
-/* Expandable Upload Section */
 #upload-section {
     display: none; padding: 15px; border: 1px solid #dee2e6;
     border-radius: 6px; margin-top: 15px; background-color: #f8f9fa;
@@ -185,13 +184,12 @@ button.secondary:hover,
 #drop-area.highlight { border-color: #007bff; background-color: #e9f5ff; }
 #drop-area p { margin: 0 0 10px 0; color: #495057; font-size: 0.9em; }
 #drop-area label { color: #007bff; cursor: pointer; text-decoration: underline; font-weight: 500; }
-#drop-area #upload-button { margin-top: 12px; width: 100%; } /* Full width inside drop area */
+#drop-area #upload-button { margin-top: 12px; width: 100%; }
 #file-list-preview ul { list-style-type: none; padding-left: 0; margin-top: 10px; text-align: left; }
 #file-list-preview li { font-size: 0.85em; color: #343a40; padding: 3px 0; }
 
 #file-container ul { list-style-type: none; padding: 0; margin:0;}
 
-/* List View */
 .list-view li {
     padding: 10px; margin-bottom: -1px; display: flex; justify-content: space-between; align-items: center;
     border: 1px solid #dee2e6; background-color: #fff;
@@ -206,7 +204,6 @@ button.secondary:hover,
 .list-view .file-actions { white-space: nowrap; display: flex; gap: 6px; }
 .list-view .file-actions .action-link { margin-left: 0; font-size: 0.8em; padding: 4px 8px; }
 
-/* Grid View */
 .grid-view ul { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .grid-view li {
     padding: 10px; min-height: 130px; background-color: #fff; border: 1px solid #dee2e6; border-radius: 6px;
@@ -224,43 +221,69 @@ button.secondary:hover,
 .grid-view .file-actions { display: flex; flex-direction: column; gap: 4px; width: 100%; margin-top: auto; }
 .grid-view .file-actions .action-link { font-size: 0.75em; padding: 4px 6px; background-color: #f1f3f5; border-radius: 4px; color: #495057; display: block; }
 
-/* Rename Form */
 .rename-form { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; width:100%; }
 .rename-form form.inline-form { display: flex; gap: 6px; align-items: center; }
-.rename-form input[type="text"] { flex-grow: 1; font-size: 0.9em; padding: 6px 8px; margin:0; } /* Reset margin */
-.rename-form button { font-size: 0.85em; padding: 6px 10px; margin:0; } /* Reset margin */
+.rename-form input[type="text"] { flex-grow: 1; font-size: 0.9em; padding: 6px 8px; margin:0; }
+.rename-form button { font-size: 0.85em; padding: 6px 10px; margin:0; }
 
-/* Admin Table */
 .admin-table-container { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; min-width: 500px; }
 table th, table td { border: 1px solid #dee2e6; padding: 8px 10px; text-align: left; }
 table th { background-color: #e9ecef; font-weight: 600; }
-table td .action-link, table td button.action-link { font-size: 0.85em; padding: 4px 6px; margin: 2px; } /* Add small margin for table actions */
+table td .action-link, table td button.action-link { font-size: 0.85em; padding: 4px 6px; margin: 2px; }
 table td form { display: inline-flex !important; gap: 5px !important; align-items: center !important; flex-wrap: wrap; }
 table td form input[type="password"] { width: 120px !important; padding: 5px !important; font-size: 0.85em !important; margin:0; }
 table td form button { margin:0; }
 
-/* Editor Page */
 textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin:0; }
 .editor-actions { margin-top: 15px; text-align: right; display: flex; gap: 10px; justify-content: flex-end; }
 .editor-actions button { margin-left: 0; margin-bottom:0; }
 
 .note { font-size: 0.85em; margin-top: 15px; padding: 10px; background-color: #f1f3f5; border-left: 4px solid #007bff; }
 
-/* Responsive adjustments for larger screens */
+/* Theme Switcher Styles */
+.theme-switcher-container {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    padding: 10px 15px;
+    background-color: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    z-index: 1000;
+    border: 1px solid #dee2e6;
+}
+.theme-switcher-container label {
+    margin-right: 8px;
+    font-size: 0.9em;
+    color: #495057;
+    font-weight: 500;
+}
+.theme-switcher-container select {
+    padding: 6px 8px; /* Smaller padding for select */
+    font-size: 0.9em;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    margin: 0; /* Reset margin */
+    width: auto; /* Allow select to size to content */
+}
+
+
+/* Responsive adjustments */
 @media (min-width: 576px) {
     .container { padding: 20px 25px; }
     header { flex-direction: row; align-items: center; }
     header h1 { margin-bottom: 0; font-size: 1.75em; }
     .file-browser-controls { flex-direction: row; align-items: center; }
-    .file-browser-controls .control-form { flex-grow: 0; min-width: 250px; } /* Don't let it grow too much, but have a min-width */
-    .file-browser-controls .upload-button-main { width: auto; } /* Revert to auto width */
+    .file-browser-controls .control-form { flex-grow: 0; min-width: 250px; }
+    .file-browser-controls .upload-button-main { width: auto; }
     #drop-area #upload-button { width: auto; }
     .grid-view ul { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
 }
 @media (min-width: 768px) {
     .container { padding: 25px 30px; }
-    h1 { font-size: 2em; }
+    .auth-form-container { padding: 30px 40px; } /* More padding on larger auth forms */
+    h1:not(.auth-form-container h1) { font-size: 2em; } /* General h1 */
     h2 { font-size: 1.4em; }
     .grid-view ul { grid-template-columns: repeat(3, 1fr); }
     .file-browser-controls .control-form { min-width: 300px; }
@@ -268,4 +291,3 @@ textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin:0; }
 @media (min-width: 992px) {
      .grid-view ul { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 }
-
