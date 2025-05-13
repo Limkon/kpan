@@ -1,4 +1,4 @@
-// server.js (SQLite 版本 - 獨立上傳頁面路由)
+// server.js (SQLite 版本 - 移除獨立上傳頁面路由)
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
@@ -47,13 +47,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
-    secret: 'a_very_strong_and_unique_secret_key_v5_final', // 請務必更改
+    secret: 'a_very_strong_and_unique_secret_key_v6_final_final', // 請務必更改
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false, httpOnly: true, sameSite: 'lax' }
 }));
 
-// --- 輔助函數 (與 v4 版本相同) ---
+// --- 輔助函數 (與 v5 版本相同) ---
 function getUserUploadRoot(username) {
     const userDir = path.join(UPLOAD_DIR_BASE, username);
     if (!fs.existsSync(userDir)) {
@@ -61,7 +61,6 @@ function getUserUploadRoot(username) {
     }
     return userDir;
 }
-
 function resolvePathForUser(usernameForPath, relativePath = '/') {
     if (typeof usernameForPath !== 'string' || usernameForPath.includes('..') || usernameForPath.includes('/') || usernameForPath.includes('\\')) {
         throw new Error('無效的目標用戶名。');
@@ -74,11 +73,10 @@ function resolvePathForUser(usernameForPath, relativePath = '/') {
     return requestedPath;
 }
 
-// --- Multer 設置 (與 v4 版本相同) ---
+// --- Multer 設置 (與 v5 版本相同) ---
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const actingUsername = req.session.user.username;
-        // 從 req.body 獲取 targetUsername (來自表單的隱藏字段)
         const targetUsername = (req.session.user.role === 'admin' && req.body.targetUsername) ? req.body.targetUsername : actingUsername;
         const currentUploadPath = req.body.currentPath || '/';
         try {
@@ -89,7 +87,8 @@ const storage = multer.diskStorage({
             cb(null, resolvedUploadDir);
         } catch (err) {
             console.error(`[${actingUsername}] Multer destination error for target ${targetUsername}:`, err);
-            return cb(err);
+            // 向 multer 回調傳遞錯誤，以便它可以被捕獲
+            return cb(new Error(`上傳目標路徑處理錯誤: ${err.message}`));
         }
     },
     filename: function (req, file, cb) {
@@ -107,7 +106,7 @@ const upload = multer({
     }
 });
 
-// --- 認證中間件 (與 v4 版本相同) ---
+// --- 認證中間件 (與 v5 版本相同) ---
 function isAuthenticated(req, res, next) {
     if (req.session.user) return next();
     res.redirect('/login');
@@ -120,7 +119,7 @@ function isAdmin(req, res, next) {
 // --- 路由 ---
 app.get('/', (req, res) => res.redirect(req.session.user ? '/files' : '/login'));
 
-// 用戶註冊 (與 v4 版本相同)
+// 用戶註冊 (與 v5 版本相同)
 app.get('/register', (req, res) => res.render('register', { error: null }));
 app.post('/register', (req, res) => {
     const { username, password, confirmPassword } = req.body;
@@ -145,7 +144,7 @@ app.post('/register', (req, res) => {
     });
 });
 
-// 用戶登錄 (與 v4 版本相同)
+// 用戶登錄 (與 v5 版本相同)
 app.get('/login', (req, res) => res.render('login', { error: req.query.error, message: req.query.message }));
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
@@ -162,7 +161,7 @@ app.post('/login', (req, res) => {
 
 app.get('/logout', (req, res) => req.session.destroy(() => res.redirect('/login')));
 
-// 修改密碼 (與 v4 版本相同)
+// 修改密碼 (與 v5 版本相同)
 app.get('/change-password', isAuthenticated, (req, res) => res.render('change-password', { user: req.session.user, message: null, messageType: null }));
 app.post('/change-password', isAuthenticated, (req, res) => {
     const { currentPassword, newPassword, confirmNewPassword } = req.body;
@@ -179,7 +178,7 @@ app.post('/change-password', isAuthenticated, (req, res) => {
     });
 });
 
-// 文件瀏覽 (與 v4 版本相同)
+// 文件瀏覽 (與 v5 版本相同)
 app.get('/files', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeQueryPath = req.query.path || '/';
@@ -223,58 +222,36 @@ app.get('/files', isAuthenticated, async (req, res) => {
     }
 });
 
-// 新增：渲染獨立上傳頁面的路由
-app.get('/upload-page', isAuthenticated, (req, res) => {
-    const actingUser = req.session.user;
-    const currentPath = req.query.currentPath || '/';
-    let targetUsernameForUpload = actingUser.username;
-    let viewAsAdminContext = false;
+// 移除了 GET /upload-page 路由
 
-    if (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) {
-        // 這裡可以添加驗證 targetUsername 是否存在的邏輯，如果需要更強的安全性
-        targetUsernameForUpload = req.query.targetUsername;
-        viewAsAdminContext = true;
-    }
+// 文件上傳處理 (POST /upload)
+// 使用 upload.array 中間件處理文件，然後是我們的路由處理器
+app.post('/upload', isAuthenticated, (req, res, next) => {
+    // 首先調用 multer 中間件
+    upload.array('userFiles', 10)(req, res, (err) => {
+        if (err) {
+            // Multer 錯誤處理 (例如，來自 fileFilter 或 destination 的錯誤)
+            console.error(`[${req.session.user.username}] Multer 上傳錯誤:`, err.message);
+            const currentPath = req.body.currentPath || '/';
+            const adminQuery = (req.session.user.role === 'admin' && req.body.targetUsername) ? `&targetUsername=${encodeURIComponent(req.body.targetUsername)}` : '';
+            const redirectPath = `/files?path=${encodeURIComponent(currentPath)}${adminQuery}`;
+            // 將 multer 的錯誤消息傳遞給用戶
+            return res.redirect(`${redirectPath}&message=${encodeURIComponent(err.message)}&messageType=error`);
+        }
+        // 如果 multer 成功，繼續到我們的邏輯
+        const currentPath = req.body.currentPath || '/';
+        const adminQuery = (req.session.user.role === 'admin' && req.body.targetUsername) ? `&targetUsername=${encodeURIComponent(req.body.targetUsername)}` : '';
+        const redirectPath = `/files?path=${encodeURIComponent(currentPath)}${adminQuery}`;
 
-    // 準備顯示的路徑，例如將 "/" 顯示為 "根目錄"
-    let currentPathDisplay = currentPath;
-    if (currentPath === '/') {
-        currentPathDisplay = '根目錄';
-    } else {
-        // 只取最後一部分作為當前文件夾名顯示
-        const segments = currentPath.split('/').filter(Boolean);
-        currentPathDisplay = segments.length > 0 ? segments[segments.length - 1] : '根目錄';
-    }
-
-
-    res.render('upload-page', { // 確保您有 views/upload-page.ejs
-        user: actingUser,
-        currentPath: currentPath,
-        currentPathDisplay: currentPathDisplay,
-        viewTargetUsername: viewAsAdminContext ? targetUsernameForUpload : null,
-        message: req.query.message,
-        messageType: req.query.messageType
+        if (!req.files || req.files.length === 0) {
+            return res.redirect(`${redirectPath}&message=沒有選擇文件。&messageType=error`);
+        }
+        res.redirect(`${redirectPath}&message=文件上傳成功。&messageType=success`);
     });
 });
 
 
-// 文件上傳處理 (POST /upload) (與 v4 版本基本相同，確保 targetUsername 和 currentPath 從表單獲取)
-app.post('/upload', isAuthenticated, upload.array('userFiles', 10), (req, res) => {
-    const currentPath = req.body.currentPath || '/';
-    const adminQuery = (req.session.user.role === 'admin' && req.body.targetUsername) ? `&targetUsername=${encodeURIComponent(req.body.targetUsername)}` : '';
-    const redirectPath = `/files?path=${encodeURIComponent(currentPath)}${adminQuery}`;
-
-    if (req.multerError) { // 檢查 multer 中間件可能設置的錯誤
-        return res.redirect(`${redirectPath}&message=${encodeURIComponent(req.multerError)}&messageType=error`);
-    }
-    if (!req.files || req.files.length === 0) {
-        return res.redirect(`${redirectPath}&message=沒有選擇文件。&messageType=error`);
-    }
-    res.redirect(`${redirectPath}&message=文件上傳成功。&messageType=success`);
-});
-
-
-// 創建文件夾 (與 v4 版本相同)
+// 創建文件夾 (與 v5 版本相同)
 app.post('/create-folder', isAuthenticated, async (req, res) => {
     const { folderName, currentPath: relativeCurrentPath } = req.body;
     const actingUser = req.session.user;
@@ -295,9 +272,9 @@ app.post('/create-folder', isAuthenticated, async (req, res) => {
     }
 });
 
-// 重命名文件/文件夾 (與 v4 版本相同)
+// 重命名文件/文件夾 (與 v5 版本相同)
 app.post('/rename', isAuthenticated, async (req, res) => {
-    const { oldPath: relativeOldPath, newName, currentPath: relativeCurrentPath } = req.body; // isDir is not strictly needed if we check fs.stat
+    const { oldPath: relativeOldPath, newName, currentPath: relativeCurrentPath } = req.body;
     const actingUser = req.session.user;
     const targetUsername = (actingUser.role === 'admin' && req.body.targetUsername) ? req.body.targetUsername : actingUser.username;
     let redirectPathQuery = relativeCurrentPath ? `path=${encodeURIComponent(relativeCurrentPath)}` : '';
@@ -320,7 +297,7 @@ app.post('/rename', isAuthenticated, async (req, res) => {
     }
 });
 
-// 文件下載 (與 v4 版本相同)
+// 文件下載 (與 v5 版本相同)
 app.get('/download', isAuthenticated, (req, res) => {
     const actingUser = req.session.user;
     const relativeFilePath = req.query.path;
@@ -339,7 +316,7 @@ app.get('/download', isAuthenticated, (req, res) => {
     }
 });
 
-// 刪除文件或文件夾 (與 v4 版本相同)
+// 刪除文件或文件夾 (與 v5 版本相同)
 app.get('/delete', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeItemPath = req.query.path;
@@ -362,7 +339,7 @@ app.get('/delete', isAuthenticated, async (req, res) => {
     }
 });
 
-// 編輯文本文件 - 顯示頁面 (與 v4 版本相同)
+// 編輯文本文件 - 顯示頁面 (與 v5 版本相同)
 app.get('/edit', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeFilePath = req.query.path;
@@ -387,7 +364,7 @@ app.get('/edit', isAuthenticated, async (req, res) => {
     }
 });
 
-// 保存編輯後的文本文件 (與 v4 版本相同)
+// 保存編輯後的文本文件 (與 v5 版本相同)
 app.post('/save/:encodedPath', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeFilePath = decodeURIComponent(req.params.encodedPath);
@@ -409,7 +386,7 @@ app.post('/save/:encodedPath', isAuthenticated, async (req, res) => {
     }
 });
 
-// 管理員功能 (與 v4 版本相同)
+// 管理員功能 (與 v5 版本相同)
 app.get('/admin', isAuthenticated, isAdmin, (req, res) => {
     db.all("SELECT id, username, role FROM users", [], (err, users) => {
         if (err) return res.status(500).render('error', { user: req.session.user, message: '無法獲取用戶列表。' });
@@ -451,7 +428,7 @@ app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => {
     });
 });
 
-// 404 和全局錯誤處理 (與 v4 版本相同)
+// 404 和全局錯誤處理 (與 v5 版本相同)
 app.use((req, res, next) => res.status(404).render('error', { user: req.session.user, message: '找不到頁面 (404)。' }));
 app.use((err, req, res, next) => {
     console.error(`[${req.session.user ? req.session.user.username : '未認證用戶'}] 全局錯誤處理: ${req.method} ${req.path}`, err);
@@ -460,4 +437,3 @@ app.use((err, req, res, next) => {
 
 app.listen(port, () => console.log(`伺服器運行在 http://localhost:${port}`));
 process.on('SIGINT', () => db.close(() => process.exit(0)));
-
