@@ -1,4 +1,4 @@
-// server.js (SQLite 版本 - 視圖優化與管理員文件訪問)
+// server.js (SQLite 版本 - 獨立上傳頁面路由)
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
@@ -47,13 +47,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
-    secret: 'a_very_strong_and_unique_secret_key_v4', // 請務必更改
+    secret: 'a_very_strong_and_unique_secret_key_v5_final', // 請務必更改
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false, httpOnly: true, sameSite: 'lax' }
 }));
 
-// --- 輔助函數 ---
+// --- 輔助函數 (與 v4 版本相同) ---
 function getUserUploadRoot(username) {
     const userDir = path.join(UPLOAD_DIR_BASE, username);
     if (!fs.existsSync(userDir)) {
@@ -63,11 +63,10 @@ function getUserUploadRoot(username) {
 }
 
 function resolvePathForUser(usernameForPath, relativePath = '/') {
-    // 驗證 usernameForPath 是否為有效用戶名（例如，不含 '..' 或 '/'）
     if (typeof usernameForPath !== 'string' || usernameForPath.includes('..') || usernameForPath.includes('/') || usernameForPath.includes('\\')) {
         throw new Error('無效的目標用戶名。');
     }
-    const userRoot = getUserUploadRoot(usernameForPath); // 確保目標用戶的根目錄存在
+    const userRoot = getUserUploadRoot(usernameForPath);
     const requestedPath = path.join(userRoot, relativePath);
     if (!path.resolve(requestedPath).startsWith(path.resolve(userRoot))) {
         throw new Error('試圖訪問無效路徑！');
@@ -75,16 +74,16 @@ function resolvePathForUser(usernameForPath, relativePath = '/') {
     return requestedPath;
 }
 
-
-// --- Multer 設置 ---
+// --- Multer 設置 (與 v4 版本相同) ---
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const actingUsername = req.session.user.username;
+        // 從 req.body 獲取 targetUsername (來自表單的隱藏字段)
         const targetUsername = (req.session.user.role === 'admin' && req.body.targetUsername) ? req.body.targetUsername : actingUsername;
         const currentUploadPath = req.body.currentPath || '/';
         try {
             const resolvedUploadDir = resolvePathForUser(targetUsername, currentUploadPath);
-            if (!fs.existsSync(resolvedUploadDir)) { // Multer 不會遞歸創建，我們手動確保
+            if (!fs.existsSync(resolvedUploadDir)) {
                 fs.mkdirSync(resolvedUploadDir, { recursive: true });
             }
             cb(null, resolvedUploadDir);
@@ -108,7 +107,7 @@ const upload = multer({
     }
 });
 
-// --- 認證中間件 ---
+// --- 認證中間件 (與 v4 版本相同) ---
 function isAuthenticated(req, res, next) {
     if (req.session.user) return next();
     res.redirect('/login');
@@ -121,16 +120,15 @@ function isAdmin(req, res, next) {
 // --- 路由 ---
 app.get('/', (req, res) => res.redirect(req.session.user ? '/files' : '/login'));
 
-// 用戶註冊
+// 用戶註冊 (與 v4 版本相同)
 app.get('/register', (req, res) => res.render('register', { error: null }));
 app.post('/register', (req, res) => {
     const { username, password, confirmPassword } = req.body;
     if (!username || !password || !confirmPassword) return res.render('register', { error: '所有欄位均為必填項。' });
     if (password !== confirmPassword) return res.render('register', { error: '兩次輸入的密碼不匹配。' });
-    if (username.includes('/') || username.includes('..') || username.includes('\\') || username.length > 50) { // 增加長度限制
+    if (username.includes('/') || username.includes('..') || username.includes('\\') || username.length > 50) {
         return res.render('register', { error: '用戶名包含無效字符或過長。'});
     }
-
     db.get("SELECT * FROM users WHERE username = ?", [username], (err, row) => {
         if (err) return res.render('register', { error: '註冊錯誤，請稍後再試。' });
         if (row) return res.render('register', { error: '用戶名已存在。' });
@@ -147,7 +145,7 @@ app.post('/register', (req, res) => {
     });
 });
 
-// 用戶登錄
+// 用戶登錄 (與 v4 版本相同)
 app.get('/login', (req, res) => res.render('login', { error: req.query.error, message: req.query.message }));
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
@@ -164,14 +162,13 @@ app.post('/login', (req, res) => {
 
 app.get('/logout', (req, res) => req.session.destroy(() => res.redirect('/login')));
 
-// 修改密碼
+// 修改密碼 (與 v4 版本相同)
 app.get('/change-password', isAuthenticated, (req, res) => res.render('change-password', { user: req.session.user, message: null, messageType: null }));
 app.post('/change-password', isAuthenticated, (req, res) => {
     const { currentPassword, newPassword, confirmNewPassword } = req.body;
     const userId = req.session.user.id;
     if (!currentPassword || !newPassword || !confirmNewPassword) return res.render('change-password', { user: req.session.user, message: '所有欄位均為必填項。', messageType: 'error' });
     if (newPassword !== confirmNewPassword) return res.render('change-password', { user: req.session.user, message: '新密碼與確認密碼不匹配。', messageType: 'error' });
-    // 移除了密碼長度限制
     db.get("SELECT password FROM users WHERE id = ?", [userId], (err, user) => {
         if (err || !user || !bcrypt.compareSync(currentPassword, user.password)) return res.render('change-password', { user: req.session.user, message: '當前密碼不正確。', messageType: 'error' });
         const hashedNewPassword = bcrypt.hashSync(newPassword, 10);
@@ -182,20 +179,17 @@ app.post('/change-password', isAuthenticated, (req, res) => {
     });
 });
 
-// 文件瀏覽
+// 文件瀏覽 (與 v4 版本相同)
 app.get('/files', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeQueryPath = req.query.path || '/';
-    let targetUsernameForView = actingUser.username; // 默認為當前用戶
+    let targetUsernameForView = actingUser.username;
     let viewAsAdminContext = false;
 
-    // 如果是管理員且指定了 targetUsername
     if (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) {
-        // 驗證 targetUsername 是否存在
         const targetUserExists = await new Promise((resolve, reject) => {
             db.get("SELECT username FROM users WHERE username = ?", [req.query.targetUsername], (err, row) => {
-                if (err) reject(err);
-                else resolve(!!row);
+                if (err) reject(err); else resolve(!!row);
             });
         });
         if (targetUserExists) {
@@ -205,32 +199,19 @@ app.get('/files', isAuthenticated, async (req, res) => {
             return res.redirect(`/files?message=目標用戶 ${req.query.targetUsername} 不存在。&messageType=error`);
         }
     }
-
     try {
         const currentFullPath = resolvePathForUser(targetUsernameForView, relativeQueryPath);
         const dirEntries = await fsp.readdir(currentFullPath, { withFileTypes: true });
         const items = dirEntries.map(entry => {
             const itemPath = path.join(relativeQueryPath, entry.name);
-            return {
-                name: entry.name,
-                isDir: entry.isDirectory(),
-                path: itemPath,
-                encodedName: encodeURIComponent(entry.name),
-                encodedPath: encodeURIComponent(itemPath)
-            };
+            return { name: entry.name, isDir: entry.isDirectory(), path: itemPath, encodedName: encodeURIComponent(entry.name), encodedPath: encodeURIComponent(itemPath) };
         }).sort((a,b) => {
-            if (a.isDir && !b.isDir) return -1;
-            if (!a.isDir && b.isDir) return 1;
+            if (a.isDir && !b.isDir) return -1; if (!a.isDir && b.isDir) return 1;
             return a.name.localeCompare(b.name, 'zh-CN-u-co-pinyin');
         });
-
         res.render('files', {
-            user: actingUser, // 始終是操作的用戶
-            viewTargetUsername: viewAsAdminContext ? targetUsernameForView : null, // 傳遞被查看的用戶名
-            items: items,
-            currentPath: relativeQueryPath,
-            message: req.query.message,
-            messageType: req.query.messageType
+            user: actingUser, viewTargetUsername: viewAsAdminContext ? targetUsernameForView : null,
+            items: items, currentPath: relativeQueryPath, message: req.query.message, messageType: req.query.messageType
         });
     } catch (err) {
         console.error(`[${actingUser.username}] 瀏覽 ${targetUsernameForView} 的文件夾 ${relativeQueryPath} 錯誤:`, err);
@@ -242,23 +223,70 @@ app.get('/files', isAuthenticated, async (req, res) => {
     }
 });
 
-// 創建文件夾
+// 新增：渲染獨立上傳頁面的路由
+app.get('/upload-page', isAuthenticated, (req, res) => {
+    const actingUser = req.session.user;
+    const currentPath = req.query.currentPath || '/';
+    let targetUsernameForUpload = actingUser.username;
+    let viewAsAdminContext = false;
+
+    if (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) {
+        // 這裡可以添加驗證 targetUsername 是否存在的邏輯，如果需要更強的安全性
+        targetUsernameForUpload = req.query.targetUsername;
+        viewAsAdminContext = true;
+    }
+
+    // 準備顯示的路徑，例如將 "/" 顯示為 "根目錄"
+    let currentPathDisplay = currentPath;
+    if (currentPath === '/') {
+        currentPathDisplay = '根目錄';
+    } else {
+        // 只取最後一部分作為當前文件夾名顯示
+        const segments = currentPath.split('/').filter(Boolean);
+        currentPathDisplay = segments.length > 0 ? segments[segments.length - 1] : '根目錄';
+    }
+
+
+    res.render('upload-page', { // 確保您有 views/upload-page.ejs
+        user: actingUser,
+        currentPath: currentPath,
+        currentPathDisplay: currentPathDisplay,
+        viewTargetUsername: viewAsAdminContext ? targetUsernameForUpload : null,
+        message: req.query.message,
+        messageType: req.query.messageType
+    });
+});
+
+
+// 文件上傳處理 (POST /upload) (與 v4 版本基本相同，確保 targetUsername 和 currentPath 從表單獲取)
+app.post('/upload', isAuthenticated, upload.array('userFiles', 10), (req, res) => {
+    const currentPath = req.body.currentPath || '/';
+    const adminQuery = (req.session.user.role === 'admin' && req.body.targetUsername) ? `&targetUsername=${encodeURIComponent(req.body.targetUsername)}` : '';
+    const redirectPath = `/files?path=${encodeURIComponent(currentPath)}${adminQuery}`;
+
+    if (req.multerError) { // 檢查 multer 中間件可能設置的錯誤
+        return res.redirect(`${redirectPath}&message=${encodeURIComponent(req.multerError)}&messageType=error`);
+    }
+    if (!req.files || req.files.length === 0) {
+        return res.redirect(`${redirectPath}&message=沒有選擇文件。&messageType=error`);
+    }
+    res.redirect(`${redirectPath}&message=文件上傳成功。&messageType=success`);
+});
+
+
+// 創建文件夾 (與 v4 版本相同)
 app.post('/create-folder', isAuthenticated, async (req, res) => {
     const { folderName, currentPath: relativeCurrentPath } = req.body;
     const actingUser = req.session.user;
     const targetUsername = (actingUser.role === 'admin' && req.body.targetUsername) ? req.body.targetUsername : actingUser.username;
     let redirectPath = relativeCurrentPath || '/';
     const adminQuery = (actingUser.role === 'admin' && req.body.targetUsername) ? `&targetUsername=${encodeURIComponent(req.body.targetUsername)}` : '';
-
-
     if (!folderName || folderName.includes('/') || folderName.includes('..') || folderName.includes('\\') || folderName.length > 100) {
         return res.redirect(`/files?path=${encodeURIComponent(redirectPath)}${adminQuery}&message=無效的文件夾名稱。&messageType=error`);
     }
     try {
         const fullPathToCreate = resolvePathForUser(targetUsername, path.join(relativeCurrentPath, folderName));
-        if (fs.existsSync(fullPathToCreate)) {
-            return res.redirect(`/files?path=${encodeURIComponent(redirectPath)}${adminQuery}&message=文件夾 "${folderName}" 已存在。&messageType=error`);
-        }
+        if (fs.existsSync(fullPathToCreate)) return res.redirect(`/files?path=${encodeURIComponent(redirectPath)}${adminQuery}&message=文件夾 "${folderName}" 已存在。&messageType=error`);
         await fsp.mkdir(fullPathToCreate);
         res.redirect(`/files?path=${encodeURIComponent(redirectPath)}${adminQuery}&message=文件夾 "${folderName}" 創建成功。&messageType=success`);
     } catch (err) {
@@ -267,36 +295,23 @@ app.post('/create-folder', isAuthenticated, async (req, res) => {
     }
 });
 
-// 重命名文件/文件夾
+// 重命名文件/文件夾 (與 v4 版本相同)
 app.post('/rename', isAuthenticated, async (req, res) => {
-    const { oldPath: relativeOldPath, newName, currentPath: relativeCurrentPath, isDir } = req.body;
+    const { oldPath: relativeOldPath, newName, currentPath: relativeCurrentPath } = req.body; // isDir is not strictly needed if we check fs.stat
     const actingUser = req.session.user;
     const targetUsername = (actingUser.role === 'admin' && req.body.targetUsername) ? req.body.targetUsername : actingUser.username;
     let redirectPathQuery = relativeCurrentPath ? `path=${encodeURIComponent(relativeCurrentPath)}` : '';
     const adminQuery = (actingUser.role === 'admin' && req.body.targetUsername) ? `&targetUsername=${encodeURIComponent(req.body.targetUsername)}` : '';
-    if (adminQuery && redirectPathQuery) redirectPathQuery += adminQuery;
-    else if (adminQuery) redirectPathQuery = adminQuery.substring(1);
+    if (adminQuery) redirectPathQuery = redirectPathQuery ? `${redirectPathQuery}${adminQuery}` : adminQuery.substring(1);
 
-
-    if (!newName || newName.includes('/') || newName.includes('..') || newName.includes('\\') || newName.length > 255) {
-        return res.redirect(`/files?${redirectPathQuery}&message=無效的新名稱。&messageType=error`);
-    }
-    if (!relativeOldPath) {
-         return res.redirect(`/files?${redirectPathQuery}&message=未提供原始路徑。&messageType=error`);
-    }
-
+    if (!newName || newName.includes('/') || newName.includes('..') || newName.includes('\\') || newName.length > 255) return res.redirect(`/files?${redirectPathQuery}&message=無效的新名稱。&messageType=error`);
+    if (!relativeOldPath) return res.redirect(`/files?${redirectPathQuery}&message=未提供原始路徑。&messageType=error`);
     try {
         const fullOldPath = resolvePathForUser(targetUsername, relativeOldPath);
         const parentDirOfOld = path.dirname(relativeOldPath);
         const fullNewPath = resolvePathForUser(targetUsername, path.join(parentDirOfOld, newName));
-
-        if (!fs.existsSync(fullOldPath)) {
-            return res.redirect(`/files?${redirectPathQuery}&message=原始文件或文件夾未找到。&messageType=error`);
-        }
-        if (fs.existsSync(fullNewPath) && fullOldPath.toLowerCase() !== fullNewPath.toLowerCase()) {
-            return res.redirect(`/files?${redirectPathQuery}&message=名稱 "${newName}" 已存在。&messageType=error`);
-        }
-
+        if (!fs.existsSync(fullOldPath)) return res.redirect(`/files?${redirectPathQuery}&message=原始文件或文件夾未找到。&messageType=error`);
+        if (fs.existsSync(fullNewPath) && fullOldPath.toLowerCase() !== fullNewPath.toLowerCase()) return res.redirect(`/files?${redirectPathQuery}&message=名稱 "${newName}" 已存在。&messageType=error`);
         await fsp.rename(fullOldPath, fullNewPath);
         res.redirect(`/files?${redirectPathQuery}&message=重命名成功。&messageType=success`);
     } catch (err) {
@@ -305,58 +320,36 @@ app.post('/rename', isAuthenticated, async (req, res) => {
     }
 });
 
-// 文件上傳
-app.post('/upload', isAuthenticated, upload.array('userFiles', 10), (req, res) => {
-    const currentPath = req.body.currentPath || '/';
-    const adminQuery = (req.session.user.role === 'admin' && req.body.targetUsername) ? `&targetUsername=${encodeURIComponent(req.body.targetUsername)}` : '';
-    if (!req.files || req.files.length === 0) {
-        return res.redirect(`/files?path=${encodeURIComponent(currentPath)}${adminQuery}&message=沒有選擇文件。&messageType=error`);
-    }
-    res.redirect(`/files?path=${encodeURIComponent(currentPath)}${adminQuery}&message=文件上傳成功。&messageType=success`);
-});
-
-// 文件下載
+// 文件下載 (與 v4 版本相同)
 app.get('/download', isAuthenticated, (req, res) => {
     const actingUser = req.session.user;
     const relativeFilePath = req.query.path;
     const targetUsername = (actingUser.role === 'admin' && req.query.targetUsername) ? req.query.targetUsername : actingUser.username;
-
     if (!relativeFilePath) return res.status(400).render('error', { user: actingUser, message: '未指定下載文件路徑。' });
-
     try {
         const fullFilePath = resolvePathForUser(targetUsername, relativeFilePath);
         if (fs.existsSync(fullFilePath) && fs.statSync(fullFilePath).isFile()) {
             res.download(fullFilePath, path.basename(relativeFilePath), (err) => {
-                if (err) {
-                    console.error(`[${actingUser.username}] 為 ${targetUsername} 下載文件 ${relativeFilePath} 出錯:`, err);
-                    if (!res.headersSent) res.status(500).render('error', { user: actingUser, message: '下載文件時發生內部錯誤。' });
-                }
+                if (err) { console.error(`[${actingUser.username}] 為 ${targetUsername} 下載文件 ${relativeFilePath} 出錯:`, err); if (!res.headersSent) res.status(500).render('error', { user: actingUser, message: '下載文件時發生內部錯誤。' });}
             });
-        } else {
-            res.status(404).render('error', { user: actingUser, message: '文件未找到或不是一個有效文件。' });
-        }
+        } else res.status(404).render('error', { user: actingUser, message: '文件未找到或不是一個有效文件。' });
     } catch (err) {
         console.error(`[${actingUser.username}] 為 ${targetUsername} 準備下載 ${relativeFilePath} 時出錯:`, err);
         res.status(500).render('error', { user: actingUser, message: '處理下載請求時出錯。' });
     }
 });
 
-// 刪除文件或文件夾
+// 刪除文件或文件夾 (與 v4 版本相同)
 app.get('/delete', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeItemPath = req.query.path;
     const isDir = req.query.isDir === 'true';
     const targetUsername = (actingUser.role === 'admin' && req.query.targetUsername) ? req.query.targetUsername : actingUser.username;
-
     if (!relativeItemPath) return res.redirect(`/files?message=未指定要刪除的項目路徑。&messageType=error`);
-
     const parentRelativePath = path.dirname(relativeItemPath);
     let redirectQuery = (parentRelativePath === '.' || parentRelativePath === '/') ? '' : `path=${encodeURIComponent(parentRelativePath)}`;
     const adminQuery = (actingUser.role === 'admin' && req.query.targetUsername) ? `&targetUsername=${encodeURIComponent(req.query.targetUsername)}` : '';
-    if (adminQuery && redirectQuery) redirectQuery += adminQuery;
-    else if (adminQuery) redirectQuery = adminQuery.substring(1);
-
-
+    if (adminQuery) redirectQuery = redirectQuery ? `${redirectQuery}${adminQuery}` : adminQuery.substring(1);
     try {
         const fullItemPath = resolvePathForUser(targetUsername, relativeItemPath);
         if (!fs.existsSync(fullItemPath)) return res.redirect(`/files?${redirectQuery}&message=要刪除的項目未找到。&messageType=error`);
@@ -369,41 +362,32 @@ app.get('/delete', isAuthenticated, async (req, res) => {
     }
 });
 
-// 編輯文本文件 - 顯示頁面
+// 編輯文本文件 - 顯示頁面 (與 v4 版本相同)
 app.get('/edit', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeFilePath = req.query.path;
     const targetUsername = (actingUser.role === 'admin' && req.query.targetUsername) ? req.query.targetUsername : actingUser.username;
-
     if (!relativeFilePath) return res.status(400).render('error', { user: actingUser, message: '未指定編輯文件路徑。' });
     const filename = path.basename(relativeFilePath);
     const fileExt = path.extname(filename).toLowerCase();
-
     if (!ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) return res.status(403).render('error', { user: actingUser, message: `不支援編輯此文件類型 (${fileExt})。`});
-
     try {
         const fullFilePath = resolvePathForUser(targetUsername, relativeFilePath);
         if (fs.existsSync(fullFilePath) && fs.statSync(fullFilePath).isFile()) {
             const content = await fsp.readFile(fullFilePath, 'utf8');
-            res.render('edit-file', { // 確保 views/edit-file.ejs 存在
-                user: actingUser,
-                viewTargetUsername: (actingUser.role === 'admin' && req.query.targetUsername) ? req.query.targetUsername : null,
-                filename: filename,
-                content: content,
-                currentPath: relativeFilePath, // 用於保存操作
-                message: req.query.message,
-                messageType: req.query.messageType
+            res.render('edit-file', {
+                user: actingUser, viewTargetUsername: (actingUser.role === 'admin' && req.query.targetUsername) ? req.query.targetUsername : null,
+                filename: filename, content: content, currentPath: relativeFilePath,
+                message: req.query.message, messageType: req.query.messageType
             });
-        } else {
-            res.status(404).render('error', { user: actingUser, message: '文件未找到。' });
-        }
+        } else res.status(404).render('error', { user: actingUser, message: '文件未找到。' });
     } catch (err) {
         console.error(`[${actingUser.username}] 為 ${targetUsername} 讀取文件 ${relativeFilePath} 編輯錯誤:`, err);
         res.status(500).render('error', { user: actingUser, message: '讀取文件內容失敗。' });
     }
 });
 
-// 保存編輯後的文本文件
+// 保存編輯後的文本文件 (與 v4 版本相同)
 app.post('/save/:encodedPath', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeFilePath = decodeURIComponent(req.params.encodedPath);
@@ -411,10 +395,7 @@ app.post('/save/:encodedPath', isAuthenticated, async (req, res) => {
     const targetUsername = (actingUser.role === 'admin' && req.body.targetUsername) ? req.body.targetUsername : actingUser.username;
     const filename = path.basename(relativeFilePath);
     const fileExt = path.extname(filename).toLowerCase();
-
-    if (!ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
-        return res.status(403).render('edit-file', { user: actingUser, viewTargetUsername: targetUsername !== actingUser.username ? targetUsername : null, filename, content: fileContent, currentPath: relativeFilePath, message: `不支援保存此文件類型 (${fileExt})。`, messageType: 'error' });
-    }
+    if (!ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) return res.status(403).render('edit-file', { user: actingUser, viewTargetUsername: targetUsername !== actingUser.username ? targetUsername : null, filename, content: fileContent, currentPath: relativeFilePath, message: `不支援保存此文件類型 (${fileExt})。`, messageType: 'error' });
     try {
         const fullFilePath = resolvePathForUser(targetUsername, relativeFilePath);
         if (!fs.existsSync(path.dirname(fullFilePath))) return res.status(400).render('edit-file', { user: actingUser, viewTargetUsername: targetUsername !== actingUser.username ? targetUsername : null, filename, content: fileContent, currentPath: relativeFilePath, message: '保存路徑無效。', messageType: 'error' });
@@ -428,21 +409,18 @@ app.post('/save/:encodedPath', isAuthenticated, async (req, res) => {
     }
 });
 
-// 管理員功能
+// 管理員功能 (與 v4 版本相同)
 app.get('/admin', isAuthenticated, isAdmin, (req, res) => {
     db.all("SELECT id, username, role FROM users", [], (err, users) => {
         if (err) return res.status(500).render('error', { user: req.session.user, message: '無法獲取用戶列表。' });
         res.render('admin', { users, currentUser: req.session.user, message: req.query.message, messageType: req.query.messageType });
     });
 });
-
 app.post('/admin/reset-password/:userId', isAuthenticated, isAdmin, (req, res) => {
     const userIdToReset = parseInt(req.params.userId, 10);
     const { newPassword } = req.body;
     if (req.session.user.id === userIdToReset) return res.redirect('/admin?message=不能重置自己的密碼。&messageType=error');
-    // 移除了密碼長度限制
     if (!newPassword) return res.redirect(`/admin?message=新密碼不能為空。&messageType=error`);
-
     const hashedNewPassword = bcrypt.hashSync(newPassword, 10);
     db.run("UPDATE users SET password = ? WHERE id = ?", [hashedNewPassword, userIdToReset], function(err) {
         if (err || this.changes === 0) return res.redirect('/admin?message=重置密碼失敗。&messageType=error');
@@ -451,14 +429,13 @@ app.post('/admin/reset-password/:userId', isAuthenticated, isAdmin, (req, res) =
         });
     });
 });
-
 app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => {
     const userIdToDelete = parseInt(req.params.userId, 10);
     if (isNaN(userIdToDelete)) return res.redirect('/admin?message=無效的用戶ID。&messageType=error');
     if (req.session.user.id === userIdToDelete) return res.redirect('/admin?message=不能刪除自己。&messageType=error');
     db.get("SELECT username FROM users WHERE id = ?", [userIdToDelete], (err, user) => {
         if (err || !user) return res.redirect('/admin?message=未找到用戶。&messageType=error');
-        const userDirToDelete = resolvePathForUser(user.username); // No relative path means root
+        const userDirToDelete = resolvePathForUser(user.username);
         db.run("DELETE FROM users WHERE id = ?", [userIdToDelete], async function(err) {
             if (err) return res.redirect('/admin?message=刪除用戶失敗。&messageType=error');
             if (this.changes > 0) {
@@ -469,14 +446,12 @@ app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => {
                     console.error(`刪除用戶 ${user.username} 文件夾錯誤:`, fsErr);
                     res.redirect(`/admin?message=用戶 ${user.username} 已刪除，但其文件夾刪除失敗。&messageType=error`);
                 }
-            } else {
-                res.redirect('/admin?message=未找到用戶或刪除失敗。&messageType=error');
-            }
+            } else res.redirect('/admin?message=未找到用戶或刪除失敗。&messageType=error');
         });
     });
 });
 
-// 404 和全局錯誤處理
+// 404 和全局錯誤處理 (與 v4 版本相同)
 app.use((req, res, next) => res.status(404).render('error', { user: req.session.user, message: '找不到頁面 (404)。' }));
 app.use((err, req, res, next) => {
     console.error(`[${req.session.user ? req.session.user.username : '未認證用戶'}] 全局錯誤處理: ${req.method} ${req.path}`, err);
