@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>編輯文件: <%= filename %></title>
+    <title>編輯文件: <%= filename %> - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
-    </head>
+    <link id="theme-stylesheet" rel="stylesheet" href=""> </head>
 <body>
     <div class="container">
         <header>
@@ -43,5 +43,7 @@
             </form>
         </div>
     </div>
+    <%- include('partials/theme-switcher') %>
+    <script src="/theme.js"></script>
 </body>
 </html>
