@@ -3,154 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的文件 - 網路硬碟</title>
+    <title><%= viewTargetUsername ? viewTargetUsername + ' 的文件' : user.username + ' 的文件' %> - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        /* Drag and drop area styling */
-        #drop-area {
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            margin-bottom: 20px;
-            background-color: #f9f9f9;
-            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-        }
-        #drop-area.highlight {
-            border-color: #007bff;
-            background-color: #e9f5ff;
-        }
-        #drop-area p { margin: 0; color: #555; }
-        #drop-area label { color: #007bff; cursor: pointer; text-decoration: underline; }
-
-        .file-browser-controls {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .file-browser-controls input[type="text"] {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            flex-grow: 1;
-        }
-        .file-browser-controls button {
-            padding: 8px 15px;
-        }
-
-        .view-toggle { margin-left: auto; } /* Pushes view toggle to the right */
-        .view-toggle button { background: #6c757d; }
-        .view-toggle button.active { background: #007bff; }
-
-
-        /* Grid View Styles */
-        .grid-view {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Responsive grid */
-            gap: 20px;
-            list-style-type: none;
-            padding: 0;
-        }
-        .grid-view li {
-            background-color: #f9f9f9;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between; /* For actions at bottom */
-            min-height: 150px; /* Ensure consistent height */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .grid-view li:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .grid-view .file-icon-large {
-            font-size: 3.5em; /* Larger icon for grid view */
-            margin-bottom: 10px;
-            color: #007bff; /* Default icon color */
-        }
-        .grid-view .file-icon-large.folder-icon { color: #ffc107; } /* Folder color */
-
-        .grid-view .file-name {
-            font-size: 0.9em;
-            word-break: break-all; /* Break long names */
-            margin-bottom: 10px;
-            flex-grow: 1; /* Allow name to take space */
-        }
-        .grid-view .file-actions {
-            display: flex;
-            flex-wrap: wrap; /* Allow actions to wrap on small items */
-            justify-content: center;
-            gap: 5px; /* Space between action links */
-            width: 100%; /* Take full width for centering */
-        }
-        .grid-view .file-actions .action-link {
-            font-size: 0.8em;
-            padding: 3px 6px;
-            background-color: #e9ecef;
-            border-radius: 3px;
-            color: #495057;
-        }
-         .grid-view .file-actions .action-link:hover {
-            background-color: #ced4da;
-            text-decoration: none;
-        }
-        .grid-view .file-actions .delete-link { background-color: #f8d7da; color: #721c24; }
-        .grid-view .file-actions .delete-link:hover { background-color: #f1b0b7; }
-        .grid-view .file-actions .edit-link { background-color: #d4edda; color: #155724; }
-        .grid-view .file-actions .edit-link:hover { background-color: #b8dfc1; }
-
-
-        /* List View Styles (default) */
-        .list-view { list-style-type: none; padding: 0; }
-        .list-view li {
-            background-color: #f9f9f9;
-            border: 1px solid #eee;
-            padding: 10px 15px;
-            margin-bottom: 8px;
-            border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .list-view .file-entry { display: flex; align-items: center; flex-grow: 1; overflow: hidden; }
-        .list-view .file-icon { font-size: 1.5em; margin-right: 10px; vertical-align: middle; }
-        .list-view .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .list-view .file-actions .action-link { margin-left: 10px; font-size: 0.9em; }
-        .list-view .file-actions .edit-link { color: #28a745; }
-        .list-view .file-actions .edit-link:hover { color: #1e7e34; }
-
-        /* Current path display */
-        .current-path {
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #e9ecef;
-            border-radius: 4px;
-            font-size: 0.95em;
-        }
-        .current-path a { color: #007bff; }
-        .current-path span { color: #6c757d; }
-
-        /* Rename form (modal or inline) */
-        .rename-form { display: none; margin-top: 5px; }
-        .rename-form input[type="text"] { width: auto; margin-right: 5px; }
+        /* Common styles moved to style.css, specific overrides or dynamic styles can remain here if necessary */
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><%= user.username %> 的文件</h1>
-            <nav>
-                <a href="/change-password">修改密碼</a>
-                <% if (user.role === 'admin') { %>
-                    <a href="/admin">管理用戶</a>
+            <h1>
+                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                    管理員視角: <%= viewTargetUsername %> 的文件
+                <% } else { %>
+                    <%= user.username %> 的文件
                 <% } %>
+            </h1>
+            <nav>
+                <% if (user.role === 'admin') { %>
+                    <a href="/admin">管理面板</a>
+                <% } %>
+                <a href="/change-password">修改密碼</a>
                 <a href="/logout">登出</a>
             </nav>
         </header>
@@ -161,33 +34,40 @@
 
         <div class="current-path">
             當前路徑:
-            <a href="/files">根目錄</a>
-            <% let pathSegments = currentPath.split('/').filter(Boolean); %>
-            <% let cumulativePath = ''; %>
+            <a href="/files<%= locals.viewTargetUsername && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>">根目錄</a>
+            <%
+                let pathSegments = currentPath.split('/').filter(Boolean);
+                let cumulativePathForLink = '';
+                const adminTargetQuery = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '';
+            %>
             <% pathSegments.forEach(segment => { %>
-                <% cumulativePath += '/' + segment; %>
-                / <a href="/files?path=<%= encodeURIComponent(cumulativePath) %>"><%= segment %></a>
+                <% cumulativePathForLink += '/' + segment; %>
+                / <a href="/files?path=<%= encodeURIComponent(cumulativePathForLink) %><%= adminTargetQuery %>"><%= segment %></a>
             <% }); %>
         </div>
-
 
         <div class="file-browser-controls">
             <form action="/create-folder" method="POST" style="display: inline-flex; gap: 10px;">
                 <input type="hidden" name="currentPath" value="<%= currentPath %>">
+                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                    <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                <% } %>
                 <input type="text" name="folderName" placeholder="新文件夾名稱" required>
                 <button type="submit">創建文件夾</button>
             </form>
             <div class="view-toggle">
-                <button id="listViewBtn" class="active" onclick="toggleView('list')">列表</button>
+                <button id="listViewBtn" onclick="toggleView('list')">列表</button>
                 <button id="gridViewBtn" onclick="toggleView('grid')">網格</button>
             </div>
         </div>
-
 
         <h2>上傳文件到 "<%= currentPath === '/' ? '根目錄' : currentPath.split('/').pop() %>"</h2>
         <div id="drop-area">
             <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="currentPath" value="<%= currentPath %>">
+                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                    <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                <% } %>
                 <input type="file" id="userFiles" name="userFiles" multiple style="display: none;">
                 <p>將文件拖拽到此處，或 <label for="userFiles">點擊選擇文件</label></p>
                 <button type="submit" id="upload-button" style="margin-top: 10px;">上傳已選文件</button>
@@ -196,50 +76,56 @@
         </div>
 
         <h2>文件列表</h2>
-        <div id="file-container" class="list-view"> <% if (items.length > 0) { %>
-                <ul> <% items.forEach(item => { %>
+        <div id="file-container"> <% if (items.length > 0) { %>
+                <ul>
+                    <% items.forEach(item => { %>
                         <li>
+                            <% const itemDisplayName = item.name; %>
+                            <% const itemPathForLink = item.path; %>
+                            <% const encodedItemPathForLink = item.encodedPath; %>
+                            <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
+
                             <% if (item.isDir) { %>
                                 <div class="file-entry">
-                                    <span class="file-icon-large folder-icon">📁</span> <span class="file-icon folder-icon">📁</span> <a href="/files?path=<%= encodeURIComponent(item.path) %>" class="file-name"><%= item.name %></a>
+                                    <span class="file-icon-large folder-icon">📁</span> <a href="/files?path=<%= encodedItemPathForLink %><%= adminTargetQueryForActions %>" class="file-name"><%= itemDisplayName %></a>
                                 </div>
                             <% } else { %>
                                 <div class="file-entry">
                                      <%
-                                        const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
-                                        let icon = '📄'; // Default
+                                        const ext = itemDisplayName.includes('.') ? itemDisplayName.substring(itemDisplayName.lastIndexOf('.') + 1).toLowerCase() : '';
                                         let largeIcon = '📄'; // Default for grid
-                                        if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(ext)) { icon = '📝'; largeIcon = '📝';}
-                                        else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { icon = '🖼️'; largeIcon = '🖼️'; }
-                                        else if (['pdf'].includes(ext)) { icon = '📕'; largeIcon = '📕';}
-                                        else if (['doc', 'docx'].includes(ext)) { icon = '📃'; largeIcon = '📃';}
-                                        else if (['xls', 'xlsx'].includes(ext)) { icon = '📊'; largeIcon = '📊';}
-                                        else if (['ppt', 'pptx'].includes(ext)) { icon = '🖥️'; largeIcon = '🖥️';}
-                                        else if (['zip', 'rar', 'tar', 'gz'].includes(ext)) { icon = '📦'; largeIcon = '📦';}
-                                        else if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) { icon = '🎵'; largeIcon = '🎵';}
-                                        else if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) { icon = '🎬'; largeIcon = '🎬';}
+                                        if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(ext)) { largeIcon = '📝';}
+                                        else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
+                                        else if (['pdf'].includes(ext)) { largeIcon = '📕';}
+                                        else if (['doc', 'docx'].includes(ext)) { largeIcon = '📃';}
+                                        else if (['xls', 'xlsx'].includes(ext)) { largeIcon = '📊';}
+                                        else if (['ppt', 'pptx'].includes(ext)) { largeIcon = '🖥️';}
+                                        else if (['zip', 'rar', 'tar', 'gz'].includes(ext)) { largeIcon = '📦';}
+                                        else if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) { largeIcon = '🎵';}
+                                        else if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) { largeIcon = '🎬';}
                                     %>
-                                    <span class="file-icon-large"><%= largeIcon %></span>
-                                    <span class="file-icon"><%= icon %></span>
-                                    <span class="file-name"><%= item.name %></span>
+                                    <span class="file-icon-large"><%= largeIcon %></span> <span class="file-name"><%= itemDisplayName %></span>
                                 </div>
                             <% } %>
                             <span class="file-actions">
-                                <a href="#" class="action-link rename-link" onclick="showRenameForm('<%= item.encodedName %>', '<%= item.name.replace(/'/g, '\\\'') %>', <%= item.isDir %>); return false;">重命名</a>
+                                <a href="#" class="action-link rename-link" onclick="showRenameForm('<%= item.encodedName %>', '<%= itemDisplayName.replace(/'/g, '\\\'') %>', <%= item.isDir %>); return false;">重命名</a>
                                 <% if (!item.isDir) { %>
-                                    <% if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '')) { %>
-                                        <a href="/edit?path=<%= item.encodedPath %>" class="action-link edit-link">編輯</a>
+                                    <% if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(itemDisplayName.includes('.') ? itemDisplayName.substring(itemDisplayName.lastIndexOf('.') + 1).toLowerCase() : '')) { %>
+                                        <a href="/edit?path=<%= encodedItemPathForLink %><%= adminTargetQueryForActions %>" class="action-link edit-link">編輯</a>
                                     <% } %>
-                                    <a href="/download?path=<%= item.encodedPath %>" class="action-link">下載</a>
+                                    <a href="/download?path=<%= encodedItemPathForLink %><%= adminTargetQueryForActions %>" class="action-link">下載</a>
                                 <% } %>
-                                <a href="/delete?path=<%= item.encodedPath %>&isDir=<%= item.isDir %>" class="action-link delete-link" onclick="return confirm('確定要刪除 <%= item.name.replace(/'/g, '\\\'') %><%= item.isDir ? ' 及其所有內容' : '' %> 嗎？');">删除</a>
+                                <a href="/delete?path=<%= encodedItemPathForLink %>&isDir=<%= item.isDir %><%= adminTargetQueryForActions %>" class="action-link delete-link" onclick="return confirm('確定要刪除 <%= itemDisplayName.replace(/'/g, '\\\'') %><%= item.isDir ? ' 及其所有內容' : '' %> 嗎？');">删除</a>
                             </span>
                             <div class="rename-form" id="rename-form-<%= item.encodedName %>">
                                 <form action="/rename" method="POST" style="display:inline-flex; gap: 5px;">
                                     <input type="hidden" name="currentPath" value="<%= currentPath %>">
-                                    <input type="hidden" name="oldPath" value="<%= item.path %>">
+                                    <input type="hidden" name="oldPath" value="<%= itemPathForLink %>">
                                     <input type="hidden" name="isDir" value="<%= item.isDir %>">
-                                    <input type="text" name="newName" placeholder="新名稱" value="<%= item.name %>" required>
+                                    <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                                        <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                                    <% } %>
+                                    <input type="text" name="newName" placeholder="新名稱" value="<%= itemDisplayName %>" required>
                                     <button type="submit" style="font-size:0.8em; padding: 4px 8px;">確認</button>
                                     <button type="button" style="font-size:0.8em; padding: 4px 8px; background-color: #6c757d;" onclick="hideRenameForm('<%= item.encodedName %>'); return false;">取消</button>
                                 </form>
@@ -254,16 +140,13 @@
     </div>
 
     <script>
+        // Drag and Drop (same as before)
         const dropArea = document.getElementById('drop-area');
         const fileInput = document.getElementById('userFiles');
         const uploadForm = document.getElementById('upload-form');
         const fileListPreview = document.getElementById('file-list-preview');
         const uploadButton = document.getElementById('upload-button');
-        const fileContainer = document.getElementById('file-container');
-        const listViewBtn = document.getElementById('listViewBtn');
-        const gridViewBtn = document.getElementById('gridViewBtn');
 
-        // Drag and Drop
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, preventDefaults, false);
             document.body.addEventListener(eventName, preventDefaults, false);
@@ -299,33 +182,28 @@
         if(fileInput.files.length === 0) uploadButton.style.display = 'none';
 
         // View Toggle
+        const fileContainer = document.getElementById('file-container');
+        const listViewBtn = document.getElementById('listViewBtn');
+        const gridViewBtn = document.getElementById('gridViewBtn');
+
         function toggleView(viewType) {
             if (viewType === 'grid') {
-                fileContainer.classList.remove('list-view');
-                fileContainer.classList.add('grid-view');
+                fileContainer.className = 'grid-view'; // Directly set class
                 gridViewBtn.classList.add('active');
                 listViewBtn.classList.remove('active');
                 localStorage.setItem('fileView', 'grid');
             } else {
-                fileContainer.classList.remove('grid-view');
-                fileContainer.classList.add('list-view');
+                fileContainer.className = 'list-view'; // Directly set class
                 listViewBtn.classList.add('active');
                 gridViewBtn.classList.remove('active');
                 localStorage.setItem('fileView', 'list');
             }
         }
-        // Restore view preference
         const preferredView = localStorage.getItem('fileView');
-        if (preferredView) {
-            toggleView(preferredView);
-        } else {
-            toggleView('list'); // Default
-        }
+        toggleView(preferredView || 'list'); // Default to list or preferred
 
-
-        // Rename Form
+        // Rename Form (same as before)
         function showRenameForm(encodedName, currentName, isDir) {
-            // Hide all other rename forms first
             document.querySelectorAll('.rename-form').forEach(form => form.style.display = 'none');
             const form = document.getElementById('rename-form-' + encodedName);
             if (form) {
@@ -338,7 +216,6 @@
             const form = document.getElementById('rename-form-' + encodedName);
             if (form) form.style.display = 'none';
         }
-
     </script>
 </body>
 </html>
