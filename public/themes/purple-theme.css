@@ -1,0 +1,91 @@
+/* public/themes/purple-theme.css */
+:root {
+    --primary-color: #6f42c1; /* 主要的紫色 */
+    --primary-hover-color: #5a32a3; /* 鼠標懸停時的深紫色 */
+    --background-color: #f3eefc; /* 非常淺的紫色背景 */
+    --container-background: #ffffff; /* 容器背景（白色） */
+    --text-color: #212529; /* 主要文字顏色 */
+    --header-text-color: #49258e; /* 標題文字顏色（深紫） */
+    --border-color: #d3c0f0; /* 邊框顏色（淺紫） */
+    --input-bg: #fff; /* 輸入框背景 */
+    --input-border: #d3c0f0; /* 輸入框邊框 */
+    --input-focus-border: #6f42c1; /* 輸入框焦點邊框 */
+    --input-focus-shadow: rgba(111, 66, 193, 0.25); /* 輸入框焦點陰影 */
+    --link-color: #5a32a3; /* 鏈接顏色（稍深的紫色） */
+    --secondary-button-bg: #8d6fdb; /* 次要按鈕背景（不同的紫色） */
+    --secondary-button-hover-bg: #7358c5; /* 次要按鈕懸停背景 */
+}
+
+/* 從 blue-theme.css 複製其餘的規則，它們會使用上面定義的變量 */
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+.container, .auth-form-container {
+    background-color: var(--container-background);
+    border: 1px solid var(--border-color);
+}
+header { border-bottom-color: var(--border-color); }
+header h1, h1, h2 { color: var(--header-text-color); }
+h2 { border-bottom-color: var(--primary-color); }
+
+input[type="text"], input[type="password"], select, textarea {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-color);
+}
+input[type="text"]:focus, input[type="password"]:focus, select:focus, textarea:focus {
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 0.2rem var(--input-focus-shadow);
+}
+
+button, .button-link {
+    background-color: var(--primary-color);
+    color: white !important;
+    border-color: var(--primary-color);
+}
+button:hover, .button-link:hover {
+    background-color: var(--primary-hover-color);
+    border-color: var(--primary-hover-color);
+}
+button.secondary, .button-link.secondary {
+    background-color: var(--secondary-button-bg);
+    border-color: var(--secondary-button-bg);
+}
+button.secondary:hover, .button-link.secondary:hover {
+    background-color: var(--secondary-button-hover-bg);
+    border-color: var(--secondary-button-hover-bg);
+}
+
+a { color: var(--link-color); }
+.current-path { background-color: #e0d8f5; color: var(--header-text-color); } /* 淺紫色背景 */
+.current-path a { color: var(--primary-color); }
+
+#drop-area { background-color: #f8f5fc; border-color: var(--border-color); } /* 淡紫色 */
+#drop-area.highlight { border-color: var(--primary-color); background-color: #e0d8f5; }
+
+.list-view li { border-color: var(--border-color); }
+.list-view li:hover { background-color: #f3eefc; }
+.list-view .file-name { color: var(--primary-color); }
+.list-view .file-entry .file-name { color: var(--text-color); }
+
+.grid-view li { border-color: var(--border-color); }
+.grid-view .file-icon-large { color: var(--primary-color); }
+.grid-view .file-icon-large.folder-icon { color: #5a32a3; } /* 深紫色文件夾 */
+.grid-view .file-name { color: var(--text-color); }
+.grid-view .file-entry a.file-name { color: var(--primary-color); }
+
+.note { border-left-color: var(--primary-color); background-color: #f3eefc;}
+.theme-switcher-container { background-color: var(--container-background); border-top: 1px solid var(--border-color); }
+
+/* 確保消息框樣式與主題協調 */
+.message:not(.error-message) {
+    color: #3c1b72; /* 深紫色文字 */
+    background-color: #e0d8f5; /* 淺紫色背景 */
+    border-color: #c1aee8; /* 紫色邊框 */
+}
+.error-message { /* 錯誤消息在任何主題下都應清晰可見 */
+    color: #842029;
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+}
