@@ -1,29 +1,29 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-ষেধ-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - 网络硬盘</title>
+    <title>登錄 - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <div class="container">
-        <h1>登录</h1>
-        <% if (error) { %>
+        <h1>登錄</h1>
+        <% if (locals.error) { %>
             <p class="error-message"><%= error %></p>
         <% } %>
         <form action="/login" method="POST">
             <div>
-                <label for="username">用户名:</label>
+                <label for="username">用戶名:</label>
                 <input type="text" id="username" name="username" required>
             </div>
             <div>
-                <label for="password">密码:</label>
+                <label for="password">密碼:</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            <button type="submit">登录</button>
+            <button type="submit">登錄</button>
         </form>
-        <p>还没有账户? <a href="/register">注册</a></p>
+        <p>還沒有帳戶? <a href="/register">註冊</a></p>
     </div>
 </body>
 </html>
@@ -31,29 +31,29 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-ষেধ-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>注册 - 网络硬盘</title>
+    <title>註冊 - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <div class="container">
-        <h1>注册</h1>
-        <% if (error) { %>
+        <h1>註冊</h1>
+        <% if (locals.error) { %>
             <p class="error-message"><%= error %></p>
         <% } %>
         <form action="/register" method="POST">
             <div>
-                <label for="username">用户名:</label>
+                <label for="username">用戶名:</label>
                 <input type="text" id="username" name="username" required>
             </div>
             <div>
-                <label for="password">密码:</label>
+                <label for="password">密碼:</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            <button type="submit">注册</button>
+            <button type="submit">註冊</button>
         </form>
-        <p>已有账户? <a href="/login">登录</a></p>
+        <p>已有帳戶? <a href="/login">登錄</a></p>
     </div>
 </body>
 </html>
@@ -61,9 +61,9 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-ষেধ-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的文件 - 网络硬盘</title>
+    <title>我的文件 - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -72,40 +72,40 @@
             <h1><%= user.username %> 的文件</h1>
             <nav>
                 <% if (user.role === 'admin') { %>
-                    <a href="/admin">管理用户</a>
+                    <a href="/admin">管理用戶</a>
                 <% } %>
                 <a href="/logout">登出</a>
             </nav>
         </header>
 
         <% if (locals.message) { %>
-            <p class="message"><%= message %></p>
+            <p class="message <%= (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('沒有選擇文件'))) ? 'error-message' : '' %>"><%= message %></p>
         <% } %>
 
-        <h2>上传文件</h2>
+        <h2>上傳文件</h2>
         <form action="/upload" method="POST" enctype="multipart/form-data">
             <div>
-                <label for="userFiles">选择文件 (可多选):</label>
+                <label for="userFiles">選擇文件 (可多選):</label>
                 <input type="file" id="userFiles" name="userFiles" multiple>
             </div>
-            <button type="submit">上传</button>
+            <button type="submit">上傳</button>
         </form>
 
         <h2>文件列表</h2>
         <% if (files.length > 0) { %>
             <ul>
-                <% files.forEach(file => { %>
+                <% files.forEach(fileObj => { %>
                     <li>
-                        <%= file %>
-                        <span>
-                            <a href="/download/<%= encodeURIComponent(file) %>" class="action-link">下载</a>
-                            <a href="/delete/<%= encodeURIComponent(file) %>" class="action-link delete-link" onclick="return confirm('确定要删除这个文件吗？');">删除</a>
+                        <span><%= fileObj.name %></span>
+                        <span class="file-actions">
+                            <a href="/download/<%= fileObj.encodedName %>" class="action-link">下載</a>
+                            <a href="/delete/<%= fileObj.encodedName %>" class="action-link delete-link" onclick="return confirm('確定要刪除這個文件嗎？ <%= fileObj.name %>');">删除</a>
                         </span>
                     </li>
                 <% }) %>
             </ul>
         <% } else { %>
-            <p>您还没有上传任何文件。</p>
+            <p>您還沒有上傳任何文件。</p>
         <% } %>
     </div>
 </body>
@@ -114,15 +114,15 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-ষেধ-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理员面板 - 网络硬盘</title>
+    <title>管理員面板 - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>管理员面板 - 用户管理</h1>
+            <h1>管理員面板 - 用戶管理</h1>
             <nav>
                 <a href="/files">返回文件列表</a>
                 <a href="/logout">登出</a>
@@ -130,30 +130,31 @@
         </header>
 
         <% if (locals.message) { %>
-            <p class="message"><%= message %></p>
+             <p class="message <%= (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('不能') || message.includes('無效的用戶ID'))) ? 'error-message' : '' %>"><%= message %></p>
         <% } %>
 
-        <h2>用户列表</h2>
+        <h2>用戶列表</h2>
         <% if (users.length > 0) { %>
             <table>
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>用户名</th>
+                        <th>用戶名</th>
                         <th>角色</th>
                         <th>操作</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% users.forEach(user => { %>
+                    <% users.forEach(u => { %>
                         <tr>
-                            <td><%= user.id %></td>
-                            <td><%= user.username %></td>
-                            <td><%= user.role %></td>
+                            <td><%= u.id %></td>
+                            <td><%= u.username %></td>
+                            <td><%= u.role %></td>
                             <td>
-                                <% if (currentUser.id !== user.id) { %> <a href="/admin/delete/<%= user.id %>" class="action-link delete-link" onclick="return confirm('确定要删除这个用户吗？其文件不会被删除。');">删除用户</a>
+                                <% if (currentUser.id !== u.id) { %>
+                                    <a href="/admin/delete/<%= u.id %>" class="action-link delete-link" onclick="return confirm('確定要刪除用戶 <%= u.username %> 嗎？其所有文件也將被刪除。');">刪除用戶</a>
                                 <% } else { %>
-                                    (当前用户)
+                                    (當前用戶)
                                 <% } %>
                             </td>
                         </tr>
@@ -161,9 +162,9 @@
                 </tbody>
             </table>
         <% } else { %>
-            <p>系统中没有其他用户。</p>
+            <p>系統中沒有其他用戶。</p>
         <% } %>
-         <p style="font-size: 0.8em; margin-top: 20px;">注意：删除用户目前不会删除其上传的文件。</p>
+         <p class="note" style="font-size: 0.9em; margin-top: 20px; color: #555;">注意：刪除用戶將同時刪除其所有上傳的文件。</p>
     </div>
 </body>
 </html>
