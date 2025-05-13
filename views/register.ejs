@@ -3,35 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>註冊 - 網路硬碟</title>
+    <title><%= locals.viewTargetUsername ? viewTargetUsername + ' 的文件' : user.username + ' 的文件' %> - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
-    <link id="theme-stylesheet" rel="stylesheet" href=""> </head>
+    <link id="theme-stylesheet" rel="stylesheet" href=""> <style>
+        #upload-section {
+            display: none;
+            padding: 20px;
+            border: 1px solid #dee2e6; /* 應由主題CSS控制 */
+            border-radius: 6px;
+            margin-top: 15px;
+            background-color: #f8f9fa; /* 應由主題CSS控制 */
+        }
+    </style>
+</head>
 <body>
-    <div class="auth-container">
-        <div class="auth-form-container">
-            <h1>註冊</h1>
-            <% if (locals.error) { %>
-                <p class="error-message"><%= error %></p>
-            <% } %>
-            <form action="/register" method="POST">
-                <div class="form-group">
-                    <label for="username">用戶名:</label>
-                    <input type="text" id="username" name="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">密碼:</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                <div class="form-group">
-                    <label for="confirmPassword">確認密碼:</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required>
-                </div>
-                <button type="submit" class="full-width-button">註冊</button>
+    <div class="container">
+        <header>
+            <h1>
+                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                    管理員視角: <%= viewTargetUsername %> 的文件
+                <% } else { %>
+                    <%= user.username %> 的文件
+                <% } %>
+            </h1>
+            <nav>
+                <% if (user.role === 'admin') { %>
+                    <a href="/admin">管理面板</a>
+                <% } %>
+                <a href="/change-password">修改密碼</a>
+                <a href="/logout">登出</a>
+            </nav>
+        </header>
+
+        <% if (locals.message) { %>
+            <p class="message <%= (locals.messageType === 'error' || (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('沒有選擇文件')))) ? 'error-message' : '' %>"><%= message %></p>
+        <% } %>
+
+        <div class="current-path">
+            當前路徑:
+            <a href="/files<%= locals.viewTargetUsername && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>">根目錄</a>
+            <%
+                let pathSegments = currentPath.split('/').filter(Boolean);
+                let cumulativePathForLink = '';
+                const adminTargetQuery = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '';
+            %>
+            <% pathSegments.forEach(segment => { %>
+                <% cumulativePathForLink += '/' + segment; %>
+                / <a href="/files?path=<%= encodeURIComponent(cumulativePathForLink) %><%= adminTargetQuery %>"><%= segment %></a>
+            <% }); %>
+        </div>
+
+        <div class="file-browser-controls">
+            <form action="/create-folder" method="POST" class="control-form">
+                <input type="hidden" name="currentPath" value="<%= currentPath %>">
+                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                    <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                <% } %>
+                <input type="text" name="folderName" placeholder="新文件夾名稱" required>
+                <button type="submit">創建文件夾</button>
             </form>
-            <p class="auth-switch">已有帳戶? <a href="/login">登錄</a></p>
+            <button type="button" id="toggleUploadBtn" class="upload-button-main">上傳文件</button>
+            <div class="view-toggle">
+                <button id="listViewBtn" onclick="toggleView('list')">列表</button>
+                <button id="gridViewBtn" onclick="toggleView('grid')">網格</button>
+            </div>
+        </div>
+
+        <div id="upload-section">
+            <h2>上傳到 "<%= currentPath === '/' ? '根目錄' : currentPath.split('/').pop() %>"</h2>
+            <div id="drop-area">
+                <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="currentPath" value="<%= currentPath %>">
+                    <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                        <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                    <% } %>
+                    <input type="file" id="userFiles" name="userFiles" multiple style="display: none;">
+                    <p>將文件拖拽到此處，或 <label for="userFiles">點擊選擇文件</label></p>
+                    <button type="submit" id="upload-button">上傳已選文件</button>
+                </form>
+                <div id="file-list-preview" style="margin-top:10px; text-align:left;"></div>
+            </div>
+        </div>
+
+        <h2>文件列表</h2>
+        <div id="file-container">
+            <% if (items.length > 0) { %>
+                <ul>
+                    <% items.forEach(item => { %>
+                        <li>
+                            <% const itemDisplayName = item.name; %>
+                            <% const itemPathForLink = item.path; %>
+                            <% const encodedItemPathForLink = item.encodedPath; %>
+                            <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
+                            <% if (item.isDir) { %>
+                                <div class="file-entry">
+                                    <span class="file-icon-large folder-icon">📁</span>
+                                    <a href="/files?path=<%= encodedItemPathForLink %><%= adminTargetQueryForActions %>" class="file-name"><%= itemDisplayName %></a>
+                                </div>
+                            <% } else { %>
+                                <div class="file-entry">
+                                     <%
+                                        const ext = itemDisplayName.includes('.') ? itemDisplayName.substring(itemDisplayName.lastIndexOf('.') + 1).toLowerCase() : '';
+                                        let largeIcon = '📄';
+                                        if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(ext)) { largeIcon = '📝';}
+                                        else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
+                                        else if (['pdf'].includes(ext)) { largeIcon = '📕';}
+                                        else if (['doc', 'docx'].includes(ext)) { largeIcon = '📃';}
+                                        else if (['xls', 'xlsx'].includes(ext)) { largeIcon = '📊';}
+                                        else if (['ppt', 'pptx'].includes(ext)) { largeIcon = '🖥️';}
+                                        else if (['zip', 'rar', 'tar', 'gz'].includes(ext)) { largeIcon = '📦';}
+                                        else if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) { largeIcon = '🎵';}
+                                        else if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) { largeIcon = '🎬';}
+                                    %>
+                                    <span class="file-icon-large"><%= largeIcon %></span>
+                                    <span class="file-name"><%= itemDisplayName %></span>
+                                </div>
+                            <% } %>
+                            <span class="file-actions">
+                                <a href="#" class="action-link rename-link" onclick="showRenameForm('<%= item.encodedName %>', '<%= itemDisplayName.replace(/'/g, '\\\'') %>', <%= item.isDir %>); return false;">重命名</a>
+                                <% if (!item.isDir) { %>
+                                    <% if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(itemDisplayName.includes('.') ? itemDisplayName.substring(itemDisplayName.lastIndexOf('.') + 1).toLowerCase() : '')) { %>
+                                        <a href="/edit?path=<%= encodedItemPathForLink %><%= adminTargetQueryForActions %>" class="action-link edit-link">編輯</a>
+                                    <% } %>
+                                    <a href="/download?path=<%= encodedItemPathForLink %><%= adminTargetQueryForActions %>" class="action-link">下載</a>
+                                <% } %>
+                                <a href="/delete?path=<%= encodedItemPathForLink %>&isDir=<%= item.isDir %><%= adminTargetQueryForActions %>" class="action-link delete-link" onclick="return confirm('確定要刪除 <%= itemDisplayName.replace(/'/g, '\\\'') %><%= item.isDir ? ' 及其所有內容' : '' %> 嗎？');">删除</a>
+                            </span>
+                            <div class="rename-form" id="rename-form-<%= item.encodedName %>">
+                                <form action="/rename" method="POST" class="control-form inline-form">
+                                    <input type="hidden" name="currentPath" value="<%= currentPath %>">
+                                    <input type="hidden" name="oldPath" value="<%= itemPathForLink %>">
+                                    <input type="hidden" name="isDir" value="<%= item.isDir %>">
+                                    <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                                        <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                                    <% } %>
+                                    <input type="text" name="newName" placeholder="新名稱" value="<%= itemDisplayName %>" required>
+                                    <button type="submit">確認</button>
+                                    <button type="button" class="secondary" onclick="hideRenameForm('<%= item.encodedName %>'); return false;">取消</button>
+                                </form>
+                            </div>
+                        </li>
+                    <% }) %>
+                </ul>
+            <% } else { %>
+                <p>此文件夾為空。</p>
+            <% } %>
         </div>
     </div>
     <%- include('partials/theme-switcher') %>
     <script src="/theme.js"></script>
+    <script>
+        // Script for files.ejs (toggle upload, drag-drop, view toggle, rename form)
+        const toggleUploadBtn = document.getElementById('toggleUploadBtn');
+        const uploadSection = document.getElementById('upload-section');
+        if (toggleUploadBtn && uploadSection) {
+            toggleUploadBtn.addEventListener('click', () => {
+                if (uploadSection.style.display === 'none' || uploadSection.style.display === '') {
+                    uploadSection.style.display = 'block';
+                    toggleUploadBtn.textContent = '隱藏上傳區域';
+                } else {
+                    uploadSection.style.display = 'none';
+                    toggleUploadBtn.textContent = '上傳文件';
+                }
+            });
+        }
+
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('userFiles');
+        const fileListPreview = document.getElementById('file-list-preview');
+        const uploadButton = document.getElementById('upload-button');
+
+        if (dropArea && fileInput && fileListPreview && uploadButton) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+            function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+            ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false));
+            ['dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false));
+            dropArea.addEventListener('drop', handleDrop, false);
+            function handleDrop(e) {
+                fileInput.files = e.dataTransfer.files;
+                updateFileListPreview();
+            }
+            fileInput.addEventListener('change', updateFileListPreview);
+            function updateFileListPreview() {
+                fileListPreview.innerHTML = '';
+                if (fileInput.files.length > 0) {
+                    const list = document.createElement('ul');
+                    list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
+                    for (let i = 0; i < fileInput.files.length; i++) {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = fileInput.files[i].name;
+                        listItem.style.fontSize = '0.9em'; listItem.style.color = '#333';
+                        list.appendChild(listItem);
+                    }
+                    fileListPreview.appendChild(list);
+                    uploadButton.style.display = 'inline-block';
+                } else {
+                    uploadButton.style.display = 'none';
+                }
+            }
+            if(fileInput.files.length === 0) uploadButton.style.display = 'none';
+        }
+
+        const fileContainer = document.getElementById('file-container');
+        const listViewBtn = document.getElementById('listViewBtn');
+        const gridViewBtn = document.getElementById('gridViewBtn');
+        if (fileContainer && listViewBtn && gridViewBtn) {
+            function toggleView(viewType) {
+                if (viewType === 'grid') {
+                    fileContainer.className = 'grid-view';
+                    gridViewBtn.classList.add('active');
+                    listViewBtn.classList.remove('active');
+                    localStorage.setItem('fileView', 'grid');
+                } else {
+                    fileContainer.className = 'list-view';
+                    listViewBtn.classList.add('active');
+                    gridViewBtn.classList.remove('active');
+                    localStorage.setItem('fileView', 'list');
+                }
+            }
+            const preferredView = localStorage.getItem('fileView');
+            toggleView(preferredView || 'list');
+        }
+
+        function showRenameForm(encodedName, currentName, isDir) {
+            document.querySelectorAll('.rename-form').forEach(form => form.style.display = 'none');
+            const form = document.getElementById('rename-form-' + encodedName);
+            if (form) {
+                form.style.display = 'block';
+                form.querySelector('input[name="newName"]').focus();
+                form.querySelector('input[name="newName"]').select();
+            }
+        }
+        function hideRenameForm(encodedName) {
+            const form = document.getElementById('rename-form-' + encodedName);
+            if (form) form.style.display = 'none';
+        }
+    </script>
 </body>
 </html>
