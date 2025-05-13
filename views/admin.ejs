@@ -11,7 +11,7 @@
         <header>
             <h1>管理員面板 - 用戶管理</h1>
             <nav>
-                <a href="/files">返回文件列表</a>
+                <a href="/files">我的文件</a>
                 <a href="/logout">登出</a>
             </nav>
         </header>
@@ -39,11 +39,12 @@
                             <td><%= u.role %></td>
                             <td>
                                 <% if (currentUser.id !== u.id) { %>
-                                    <a href="/admin/delete/<%= u.id %>" class="action-link delete-link" onclick="return confirm('確定要刪除用戶 <%= u.username.replace(/'/g, '\\\'') %> 嗎？其所有文件也將被刪除。');">刪除用戶</a>
+                                    <a href="/files?targetUsername=<%= encodeURIComponent(u.username) %>" class="action-link" style="background-color: #17a2b8; color: white;">查看文件</a>
                                     <form action="/admin/reset-password/<%= u.id %>" method="POST" style="display: inline; margin-left: 10px;">
                                         <input type="password" name="newPassword" placeholder="輸入新密碼" required style="padding: 5px; width: 120px; font-size: 0.9em;">
                                         <button type="submit" class="action-link" style="background-color: #ffc107; color: #212529; font-size:0.9em; padding: 6px 10px;" onclick="return confirm('確定要為用戶 <%= u.username.replace(/'/g, '\\\'') %> 重置密碼嗎？');">重置密碼</button>
                                     </form>
+                                    <a href="/admin/delete/<%= u.id %>" class="action-link delete-link" style="margin-left: 10px;" onclick="return confirm('確定要刪除用戶 <%= u.username.replace(/'/g, '\\\'') %> 嗎？其所有文件也將被刪除。');">刪除用戶</a>
                                 <% } else { %>
                                     (當前用戶)
                                 <% } %>
