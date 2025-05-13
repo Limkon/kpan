@@ -5,12 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的文件 - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
+    <style>
+        /* Drag and drop area styling */
+        #drop-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        #drop-area.highlight {
+            border-color: #007bff;
+            background-color: #e9f5ff;
+        }
+        #drop-area p {
+            margin: 0;
+            color: #555;
+        }
+        .file-icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .file-entry {
+            display: flex;
+            align-items: center;
+        }
+        .file-entry span:first-child { /* File name span */
+            flex-grow: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+         .file-actions a.edit-link {
+            color: #28a745; /* Green color for edit link */
+        }
+        .file-actions a.edit-link:hover {
+            color: #1e7e34;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1><%= user.username %> 的文件</h1>
             <nav>
+                <a href="/change-password">修改密碼</a>
                 <% if (user.role === 'admin') { %>
                     <a href="/admin">管理用戶</a>
                 <% } %>
@@ -19,25 +61,48 @@
         </header>
 
         <% if (locals.message) { %>
-            <p class="message <%= (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('沒有選擇文件'))) ? 'error-message' : '' %>"><%= message %></p>
+            <p class="message <%= (locals.messageType === 'error' || (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('沒有選擇文件')))) ? 'error-message' : '' %>"><%= message %></p>
         <% } %>
 
         <h2>上傳文件</h2>
-        <form action="/upload" method="POST" enctype="multipart/form-data">
-            <div>
-                <label for="userFiles">選擇文件 (可多選):</label>
-                <input type="file" id="userFiles" name="userFiles" multiple>
-            </div>
-            <button type="submit">上傳</button>
-        </form>
+        <div id="drop-area">
+            <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
+                <input type="file" id="userFiles" name="userFiles" multiple style="display: none;">
+                <p>將文件拖拽到此處，或 <label for="userFiles" style="color: #007bff; cursor: pointer; text-decoration: underline;">點擊選擇文件</label></p>
+                <button type="submit" id="upload-button" style="margin-top: 10px;">上傳已選文件</button>
+            </form>
+            <div id="file-list-preview" style="margin-top:10px; text-align:left;"></div>
+        </div>
+
 
         <h2>文件列表</h2>
         <% if (files.length > 0) { %>
             <ul>
                 <% files.forEach(fileObj => { %>
                     <li>
-                        <span><%= fileObj.name %></span>
+                        <div class="file-entry">
+                            <span class="file-icon">
+                                <%
+                                const ext = fileObj.name.includes('.') ? fileObj.name.substring(fileObj.name.lastIndexOf('.') + 1).toLowerCase() : '';
+                                let icon = '📄'; // Default icon
+                                if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(ext)) icon = '📝'; // Text/Code
+                                else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) icon = '🖼️'; // Image
+                                else if (['pdf'].includes(ext)) icon = '📕'; // PDF
+                                else if (['doc', 'docx'].includes(ext)) icon = '📃'; // Word
+                                else if (['xls', 'xlsx'].includes(ext)) icon = '📊'; // Excel
+                                else if (['ppt', 'pptx'].includes(ext)) icon = '🖥️'; // PowerPoint
+                                else if (['zip', 'rar', 'tar', 'gz'].includes(ext)) icon = '📦'; // Archive
+                                else if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) icon = '🎵'; // Audio
+                                else if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) icon = '🎬'; // Video
+                                %>
+                                <%= icon %>
+                            </span>
+                            <span><%= fileObj.name %></span>
+                        </div>
                         <span class="file-actions">
+                            <% if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(ext)) { %>
+                                <a href="/edit/<%= fileObj.encodedName %>" class="action-link edit-link">編輯</a>
+                            <% } %>
                             <a href="/download/<%= fileObj.encodedName %>" class="action-link">下載</a>
                             <a href="/delete/<%= fileObj.encodedName %>" class="action-link delete-link" onclick="return confirm('確定要刪除這個文件嗎？ <%= fileObj.name.replace(/'/g, '\\\'') %>');">删除</a>
                         </span>
@@ -48,5 +113,79 @@
             <p>您還沒有上傳任何文件。</p>
         <% } %>
     </div>
+
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('userFiles');
+        const uploadForm = document.getElementById('upload-form');
+        const fileListPreview = document.getElementById('file-list-preview');
+        const uploadButton = document.getElementById('upload-button');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser opening file
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropArea.classList.add('highlight');
+        }
+
+        function unhighlight(e) {
+            dropArea.classList.remove('highlight');
+        }
+
+        // Handle dropped files
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files; // Assign dropped files to the input
+            updateFileListPreview(); // Update the preview
+        }
+
+        // Handle file selection via click
+        fileInput.addEventListener('change', updateFileListPreview);
+
+        function updateFileListPreview() {
+            fileListPreview.innerHTML = ''; // Clear previous list
+            if (fileInput.files.length > 0) {
+                const list = document.createElement('ul');
+                list.style.listStyleType = 'none';
+                list.style.paddingLeft = '0';
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = fileInput.files[i].name;
+                    listItem.style.fontSize = '0.9em';
+                    listItem.style.color = '#333';
+                    list.appendChild(listItem);
+                }
+                fileListPreview.appendChild(list);
+                uploadButton.style.display = 'inline-block'; // Show upload button
+            } else {
+                uploadButton.style.display = 'none'; // Hide if no files
+            }
+        }
+        
+        // Initially hide the upload button if no files are pre-selected (though unlikely for this input type)
+        if(fileInput.files.length === 0) {
+            uploadButton.style.display = 'none';
+        }
+    </script>
 </body>
 </html>
