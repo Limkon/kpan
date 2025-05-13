@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理員面板 - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
-</head>
+    <link id="theme-stylesheet" rel="stylesheet" href=""> </head>
 <body>
     <div class="container">
         <header>
@@ -21,42 +21,46 @@
         <% } %>
 
         <h2>用戶列表</h2>
-        <% if (users.length > 0) { %>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>用戶名</th>
-                        <th>角色</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% users.forEach(u => { %>
+        <div class="admin-table-container">
+            <% if (users.length > 0) { %>
+                <table>
+                    <thead>
                         <tr>
-                            <td><%= u.id %></td>
-                            <td><%= u.username %></td>
-                            <td><%= u.role %></td>
-                            <td>
-                                <% if (currentUser.id !== u.id) { %>
-                                    <a href="/files?targetUsername=<%= encodeURIComponent(u.username) %>" class="action-link" style="background-color: #17a2b8; color: white;">查看文件</a>
-                                    <form action="/admin/reset-password/<%= u.id %>" method="POST" style="display: inline; margin-left: 10px;">
-                                        <input type="password" name="newPassword" placeholder="輸入新密碼" required style="padding: 5px; width: 120px; font-size: 0.9em;">
-                                        <button type="submit" class="action-link" style="background-color: #ffc107; color: #212529; font-size:0.9em; padding: 6px 10px;" onclick="return confirm('確定要為用戶 <%= u.username.replace(/'/g, '\\\'') %> 重置密碼嗎？');">重置密碼</button>
-                                    </form>
-                                    <a href="/admin/delete/<%= u.id %>" class="action-link delete-link" style="margin-left: 10px;" onclick="return confirm('確定要刪除用戶 <%= u.username.replace(/'/g, '\\\'') %> 嗎？其所有文件也將被刪除。');">刪除用戶</a>
-                                <% } else { %>
-                                    (當前用戶)
-                                <% } %>
-                            </td>
+                            <th>ID</th>
+                            <th>用戶名</th>
+                            <th>角色</th>
+                            <th>操作</th>
                         </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-        <% } else { %>
-            <p>系統中沒有其他用戶。</p>
-        <% } %>
-         <p class="note" style="font-size: 0.9em; margin-top: 20px; color: #555;">注意：刪除用戶將同時刪除其所有上傳的文件。</p>
+                    </thead>
+                    <tbody>
+                        <% users.forEach(u => { %>
+                            <tr>
+                                <td><%= u.id %></td>
+                                <td><%= u.username %></td>
+                                <td><%= u.role %></td>
+                                <td>
+                                    <% if (currentUser.id !== u.id) { %>
+                                        <a href="/files?targetUsername=<%= encodeURIComponent(u.username) %>" class="action-link" style="background-color: #17a2b8; color: white;">查看文件</a>
+                                        <form action="/admin/reset-password/<%= u.id %>" method="POST" style="display: inline; margin-left: 10px;">
+                                            <input type="password" name="newPassword" placeholder="輸入新密碼" required>
+                                            <button type="submit" class="action-link" style="background-color: #ffc107; color: #212529;" onclick="return confirm('確定要為用戶 <%= u.username.replace(/'/g, '\\\'') %> 重置密碼嗎？');">重置密碼</button>
+                                        </form>
+                                        <a href="/admin/delete/<%= u.id %>" class="action-link delete-link" style="margin-left: 10px;" onclick="return confirm('確定要刪除用戶 <%= u.username.replace(/'/g, '\\\'') %> 嗎？其所有文件也將被刪除。');">刪除用戶</a>
+                                    <% } else { %>
+                                        (當前用戶)
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <p>系統中沒有其他用戶。</p>
+            <% } %>
+        </div>
+         <p class="note">注意：刪除用戶將同時刪除其所有上傳的文件。</p>
     </div>
+    <%- include('partials/theme-switcher') %>
+    <script src="/theme.js"></script>
 </body>
 </html>
