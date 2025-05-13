@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>錯誤 - 網路硬碟</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>發生錯誤</h1>
+             <nav>
+                <% if (locals.user && locals.user.username) { %>
+                    <a href="/files">返回文件列表</a>
+                    <a href="/logout">登出</a>
+                <% } else { %>
+                    <a href="/login">前往登錄</a>
+                <% } %>
+            </nav>
+        </header>
+        <div class="error-message" style="background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; padding: 15px; border-radius: 5px;">
+            <p><%= message %></p>
+        </div>
+        <p style="text-align: center; margin-top: 20px;">
+            <% if (locals.user && locals.user.username) { %>
+                <a href="/files">點擊此處返回您的文件列表</a>
+            <% } else { %>
+                <a href="/login">點擊此處前往登錄頁面</a>
+            <% } %>
+        </p>
+    </div>
+</body>
+</html>
