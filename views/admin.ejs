@@ -17,7 +17,7 @@
         </header>
 
         <% if (locals.message) { %>
-             <p class="message <%= (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('不能') || message.includes('無效的用戶ID'))) ? 'error-message' : '' %>"><%= message %></p>
+             <p class="message <%= (locals.messageType === 'error' || (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('不能') || message.includes('無效的用戶ID')))) ? 'error-message' : '' %>"><%= message %></p>
         <% } %>
 
         <h2>用戶列表</h2>
@@ -40,6 +40,10 @@
                             <td>
                                 <% if (currentUser.id !== u.id) { %>
                                     <a href="/admin/delete/<%= u.id %>" class="action-link delete-link" onclick="return confirm('確定要刪除用戶 <%= u.username.replace(/'/g, '\\\'') %> 嗎？其所有文件也將被刪除。');">刪除用戶</a>
+                                    <form action="/admin/reset-password/<%= u.id %>" method="POST" style="display: inline; margin-left: 10px;">
+                                        <input type="password" name="newPassword" placeholder="輸入新密碼" required style="padding: 5px; width: 120px; font-size: 0.9em;">
+                                        <button type="submit" class="action-link" style="background-color: #ffc107; color: #212529; font-size:0.9em; padding: 6px 10px;" onclick="return confirm('確定要為用戶 <%= u.username.replace(/'/g, '\\\'') %> 重置密碼嗎？');">重置密碼</button>
+                                    </form>
                                 <% } else { %>
                                     (當前用戶)
                                 <% } %>
