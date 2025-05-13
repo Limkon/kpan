@@ -5,185 +5,207 @@ body {
     color: #212529;
     line-height: 1.6;
     margin: 0;
-    padding: 0;
+    padding: 10px; /* Add padding for small screens */
     display: flex;
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
+    box-sizing: border-box;
 }
 
 .container {
     background-color: #ffffff;
-    padding: 20px 25px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    width: 90%;
+    padding: 15px; /* Adjust padding for mobile */
+    border-radius: 8px; /* Slightly less pronounced radius */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    width: 100%; /* Full width on mobile */
     max-width: 960px;
-    margin-top: 25px;
-    margin-bottom: 25px;
+    margin-top: 15px; /* Adjust margin for mobile */
+    margin-bottom: 15px;
+    box-sizing: border-box;
 }
 
 header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
+    flex-direction: column; /* Stack on mobile */
+    align-items: flex-start; /* Align to start on mobile */
+    margin-bottom: 20px;
     padding-bottom: 15px;
     border-bottom: 1px solid #dee2e6;
 }
-header h1 { margin: 0; font-size: 1.75em; color: #343a40; }
-header nav a { margin-left: 18px; text-decoration: none; color: #007bff; font-weight: 500; transition: color 0.2s ease-in-out; }
-header nav a:hover, header nav a:focus { color: #0056b3; text-decoration: underline; }
+header h1 {
+    margin: 0 0 10px 0; /* Margin bottom for spacing on mobile */
+    font-size: 1.6em;
+    color: #343a40;
+}
+header nav {
+    display: flex;
+    flex-wrap: wrap; /* Allow nav links to wrap */
+    gap: 10px; /* Space between nav links */
+}
+header nav a {
+    margin-left: 0; /* Remove left margin, use gap */
+    text-decoration: none;
+    color: #007bff;
+    font-weight: 500;
+    padding: 5px 0; /* Easier tap target */
+}
 
-h1 { text-align: center; font-size: 2em; margin-bottom: 20px; color: #343a40; }
-h2 { font-size: 1.4em; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-top: 30px; margin-bottom: 20px; color: #343a40; }
+h1 { text-align: center; font-size: 1.8em; margin-bottom: 15px; color: #343a40; }
+h2 {
+    font-size: 1.3em; border-bottom: 2px solid #007bff; padding-bottom: 6px;
+    margin-top: 25px; margin-bottom: 15px; color: #343a40;
+}
 h2:first-of-type { margin-top: 0; }
 
 form div { margin-bottom: 16px; }
 label { display: block; margin-bottom: 6px; font-weight: 600; color: #495057; }
 input[type="text"], input[type="password"], input[type="file"], select, textarea {
     width: 100%; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 5px;
-    box-sizing: border-box; font-size: 0.95em; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-input[type="text"]:focus, input[type="password"]:focus, input[type="file"]:focus, select:focus, textarea:focus {
-    border-color: #80bdff; box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); outline: none;
+    box-sizing: border-box; font-size: 1em; /* Ensure readability */
 }
 input[type="file"] { padding: 8px 10px; }
 
-button, button[type="submit"] {
-    background-color: #007bff; color: white; padding: 10px 16px; border: none; border-radius: 5px;
-    cursor: pointer; font-size: 0.95em; font-weight: 500; transition: background-color 0.2s ease-in-out, box-shadow 0.15s ease-in-out;
+button, button[type="submit"], .button-link { /* Style .button-link like a button */
+    background-color: #007bff; color: white !important; /* Important for overriding <a> color */
+    padding: 10px 16px; border: none; border-radius: 5px;
+    cursor: pointer; font-size: 1em; font-weight: 500;
+    text-decoration: none; /* Remove underline from .button-link */
+    display: inline-block; /* For padding and margin on <a> */
+    text-align: center;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.15s ease-in-out;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-button:hover, button[type="submit"]:hover { background-color: #0069d9; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
-button:active, button[type="submit"]:active { background-color: #005cbf; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
-button[type="button"].secondary, .action-link.secondary { background-color: #6c757d; border-color: #6c757d; }
-button[type="button"].secondary:hover, .action-link.secondary:hover { background-color: #5a6268; border-color: #545b62; }
+button:hover, button[type="submit"]:hover, .button-link:hover {
+    background-color: #0069d9; color: white !important; text-decoration: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+button:active, button[type="submit"]:active, .button-link:active {
+    background-color: #005cbf;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+button[type="button"].secondary, .button-link.secondary { background-color: #6c757d; border-color: #6c757d; }
+button[type="button"].secondary:hover, .button-link.secondary:hover { background-color: #5a6268; border-color: #545b62; }
 
-a { color: #007bff; text-decoration: none; }
-a:hover { text-decoration: underline; }
-
-.message { color: #0f5132; background-color: #d1e7dd; border: 1px solid #badbcc; padding: 12px 15px; border-radius: 5px; margin-bottom: 20px; }
+.message { padding: 10px 12px; border-radius: 5px; margin-bottom: 15px; font-size: 0.95em; }
 .error-message { color: #842029; background-color: #f8d7da; border: 1px solid #f5c2c7; }
+.message:not(.error-message) { color: #0f5132; background-color: #d1e7dd; border: 1px solid #badbcc;}
+
 
 /* File Browser Specific Styles */
-.current-path { margin-bottom: 20px; padding: 12px 15px; background-color: #e9ecef; border-radius: 5px; font-size: 0.9em; color: #495057; word-break: break-all; }
+.current-path { margin-bottom: 15px; padding: 10px; background-color: #e9ecef; border-radius: 5px; font-size: 0.9em; color: #495057; word-break: break-all; }
 .current-path a { font-weight: 500; }
 
-.file-browser-controls { margin-bottom: 25px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-.file-browser-controls form { display: inline-flex; gap: 8px; align-items: center; }
-.file-browser-controls input[type="text"] { padding: 9px 10px; flex-grow: 1; min-width: 150px; }
-.file-browser-controls button { padding: 9px 15px; }
+.file-browser-controls {
+    margin-bottom: 20px; display: flex; flex-direction: column; /* Stack controls on mobile */
+    gap: 10px; align-items: stretch; /* Make children take full width */
+}
+.file-browser-controls form, .file-browser-controls .upload-button-main { width: 100%; }
+.file-browser-controls .control-form { display: flex; gap: 8px; } /* For create folder and rename forms */
+.file-browser-controls .control-form input[type="text"] { flex-grow: 1; }
+.file-browser-controls .upload-button-main { margin-top: 0; } /* Remove top margin if stacked */
 
-.view-toggle { margin-left: auto; display: flex; gap: 8px; }
-.view-toggle button { background-color: #6c757d; font-size: 0.85em; padding: 7px 12px; }
+
+.view-toggle { display: flex; gap: 8px; justify-content: center; /* Center toggle buttons */ margin-top: 10px; }
+.view-toggle button { background-color: #6c757d; font-size: 0.85em; padding: 8px 12px; flex-grow: 1; } /* Buttons take equal space */
 .view-toggle button.active { background-color: #007bff; }
 
 #drop-area {
-    border: 2px dashed #adb5bd; border-radius: 6px; padding: 35px; text-align: center;
-    margin-bottom: 25px; background-color: #f8f9fa; transition: background-color 0.2s ease, border-color 0.2s ease;
+    border: 2px dashed #adb5bd; border-radius: 6px; padding: 25px; text-align: center;
+    margin-bottom: 20px; background-color: #f8f9fa;
 }
-#drop-area.highlight { border-color: #007bff; background-color: #e9f5ff; }
-#drop-area p { margin: 0 0 10px 0; color: #495057; font-size: 0.95em; }
+#drop-area p { margin: 0 0 10px 0; color: #495057; font-size: 0.9em; }
 #drop-area label { color: #007bff; cursor: pointer; text-decoration: underline; font-weight: 500; }
-#drop-area #upload-button { margin-top: 12px; }
-#file-list-preview ul { list-style-type: disc; padding-left: 20px; margin-top: 10px; }
-#file-list-preview li { font-size: 0.85em; color: #343a40; }
+#drop-area #upload-button-standalone, #drop-area #upload-button { margin-top: 12px; width: 100%; } /* Full width upload button */
+#file-list-preview ul { list-style-type: none; padding-left: 0; margin-top: 10px; text-align: left; }
+#file-list-preview li { font-size: 0.85em; color: #343a40; padding: 3px 0; }
 
-/* Common UL for both views */
+
 #file-container ul { list-style-type: none; padding: 0; margin:0;}
 
 /* List View */
 .list-view li {
-    background-color: #fff; border: 1px solid #dee2e6; padding: 10px 15px;
-    margin-bottom: -1px; display: flex; justify-content: space-between; align-items: center;
-    transition: background-color 0.15s ease;
+    padding: 12px 10px; margin-bottom: -1px; display: flex;
+    justify-content: space-between; align-items: center;
+    border: 1px solid #dee2e6; background-color: #fff;
 }
 .list-view li:first-child { border-top-left-radius: 5px; border-top-right-radius: 5px; }
 .list-view li:last-child { border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; margin-bottom: 0; }
-.list-view li:hover { background-color: #f8f9fa; }
 .list-view .file-entry { display: flex; align-items: center; flex-grow: 1; overflow: hidden; }
-/* No icon for list view by default */
-.list-view .file-icon-large { display: none; } /* Hide large grid icons in list view */
-.list-view .file-icon { display: none; } /* Hide general small icons in list view too */
-
-.list-view .file-name { font-weight: 500; color: #007bff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-left: 0; /* No margin if no icon */ }
+.list-view .file-icon-large, .list-view .file-icon { display: none !important; }
+.list-view .file-name { font-weight: 500; color: #007bff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .list-view .file-entry a.file-name:hover { text-decoration: underline; }
-.list-view .file-entry .file-name { color: #212529; } /* Non-link file names */
-.list-view .file-actions { white-space: nowrap; }
-.list-view .file-actions .action-link { margin-left: 12px; font-size: 0.85em; }
+.list-view .file-entry .file-name { color: #212529; }
+.list-view .file-actions { white-space: nowrap; display: flex; gap: 8px; } /* Use flex for better spacing */
+.list-view .file-actions .action-link { margin-left: 0; font-size: 0.85em; }
 
-/* Grid View (九宫格 - 3 columns) */
+/* Grid View (Responsive: 2 columns on small, 3 on medium, etc.) */
 .grid-view ul {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 columns for 九宫格 */
-    gap: 18px;
+    grid-template-columns: repeat(2, 1fr); /* Default 2 columns for mobile */
+    gap: 15px;
 }
 .grid-view li {
-    background-color: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 15px;
+    padding: 12px; min-height: 140px; /* Adjust height for mobile */
+    /* other grid item styles from v4 */
+    background-color: #fff; border: 1px solid #dee2e6; border-radius: 6px;
     text-align: center; display: flex; flex-direction: column; align-items: center;
-    justify-content: flex-start; min-height: 160px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    justify-content: flex-start; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
-.grid-view li:hover { transform: translateY(-2px); box-shadow: 0 3px 7px rgba(0,0,0,0.08); }
-.grid-view .file-icon { display: none; } /* Hide small list icons in grid view */
-.grid-view .file-icon-large { font-size: 3.8em; margin-bottom: 12px; color: #007bff; line-height: 1; display: inline-block !important; } /* Ensure it's displayed */
+.grid-view .file-icon { display: none !important; }
+.grid-view .file-icon-large { font-size: 3em; margin-bottom: 8px; display: inline-block !important; line-height:1; } /* Adjust size for mobile */
 .grid-view .file-icon-large.folder-icon { color: #ffc107; }
 .grid-view .file-name {
-    font-size: 0.9em; font-weight: 500; color: #343a40; word-break: break-all;
-    margin-bottom: 10px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; min-height: 2.6em;
+    font-size: 0.85em; font-weight: 500; color: #343a40; word-break: break-all;
+    margin-bottom: 8px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; min-height: 2.4em; /* Adjust for font size */
 }
-.grid-view .file-entry a.file-name { color: #007bff; }
-.grid-view .file-entry a.file-name:hover { text-decoration: underline; }
-.grid-view .file-actions { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: auto; }
-.grid-view .file-actions .action-link {
-    font-size: 0.8em; padding: 4px 8px; background-color: #f1f3f5; border-radius: 4px;
-    color: #495057; display: block; transition: background-color 0.15s ease;
-}
-.grid-view .file-actions .action-link:hover { background-color: #e9ecef; text-decoration: none; }
-.grid-view .file-actions .delete-link { background-color: #f8d7da; color: #721c24; }
-.grid-view .file-actions .delete-link:hover { background-color: #f1b0b7; }
-.grid-view .file-actions .edit-link { background-color: #d1e7dd; color: #0f5132; }
-.grid-view .file-actions .edit-link:hover { background-color: #badbcc; }
+.grid-view .file-actions { display: flex; flex-direction: column; gap: 5px; width: 100%; margin-top: auto; }
+.grid-view .file-actions .action-link { font-size: 0.75em; padding: 5px 8px; background-color: #f1f3f5; border-radius: 4px; color: #495057; display: block; }
 
 /* Rename Form */
 .rename-form { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; width:100%; }
-.rename-form form { display: flex; gap: 8px; align-items: center; }
+.rename-form form.inline-form { display: flex; gap: 8px; align-items: center; } /* Ensure inline-form class is used */
 .rename-form input[type="text"] { flex-grow: 1; font-size: 0.9em; padding: 6px 8px; }
 .rename-form button { font-size: 0.85em; padding: 6px 10px; }
 
 /* Admin Table */
-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; }
-table th, table td { border: 1px solid #dee2e6; padding: 10px 12px; text-align: left; }
+.admin-table-container { overflow-x: auto; } /* Allow horizontal scroll on mobile for table */
+table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; min-width: 600px; /* Prevent excessive squishing */ }
+table th, table td { border: 1px solid #dee2e6; padding: 8px 10px; text-align: left; }
 table th { background-color: #e9ecef; font-weight: 600; }
-table td .action-link, table td button.action-link { font-size: 0.9em; padding: 5px 8px; }
-table td form { display: inline-flex !important; gap: 5px !important; align-items: center !important; }
-table td form input[type="password"] { width: 130px !important; padding: 6px 8px !important; font-size: 0.9em !important; }
+table td .action-link, table td button.action-link { font-size: 0.85em; padding: 4px 6px; }
+table td form { display: inline-flex !important; gap: 5px !important; align-items: center !important; flex-wrap: wrap; } /* Allow wrap */
+table td form input[type="password"] { width: 120px !important; padding: 5px !important; font-size: 0.85em !important; }
 
 /* Editor Page */
-textarea#fileContent {
-    width: 100%; min-height: 60vh; padding: 15px; border: 1px solid #ced4da; border-radius: 5px;
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-    font-size: 0.9rem; line-height: 1.6; box-sizing: border-box; resize: vertical;
-}
-.editor-actions { margin-top: 20px; text-align: right; }
-.editor-actions button { margin-left: 10px; }
+textarea#fileContent { min-height: 50vh; font-size: 0.9rem; } /* Adjust height for mobile */
+.editor-actions { margin-top: 15px; text-align: right; display: flex; gap: 10px; justify-content: flex-end; }
+.editor-actions button { margin-left: 0; }
 
-.note {
-    font-size: 0.85em; margin-top: 20px; color: #495057; padding: 12px 15px;
-    background-color: #f1f3f5; border-left: 4px solid #007bff; border-radius: 0 4px 4px 0;
+.note { font-size: 0.85em; margin-top: 15px; padding: 10px; background-color: #f1f3f5; border-left: 4px solid #007bff; }
+
+/* Responsive adjustments for larger screens */
+@media (min-width: 576px) { /* Small devices (landscape phones, 576px and up) */
+    .container { padding: 20px 25px; }
+    header { flex-direction: row; align-items: center; } /* Horizontal layout for header */
+    header h1 { margin-bottom: 0; font-size: 1.75em; }
+    .file-browser-controls { flex-direction: row; align-items: center; } /* Horizontal controls */
+    .file-browser-controls form, .file-browser-controls .upload-button-main { width: auto; }
+    .file-browser-controls .upload-button-main { margin-top: 0; }
+    .view-toggle { margin-top: 0; }
+    #drop-area #upload-button-standalone, #drop-area #upload-button { width: auto; }
+    .grid-view ul { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); /* More flexible grid */ }
 }
 
-/* Ensure icons are hidden in list view and shown in grid view as intended */
-.list-view .file-entry .file-icon-large,
-.list-view .file-entry .file-icon {
-    display: none !important;
+@media (min-width: 768px) { /* Medium devices (tablets, 768px and up) */
+    .container { padding: 25px 30px; }
+    h1 { font-size: 2em; }
+    h2 { font-size: 1.4em; }
+    .grid-view ul { grid-template-columns: repeat(3, 1fr); } /* Enforce 3 columns for "九宫格" on medium screens */
 }
-.grid-view .file-entry .file-icon {
-    display: none !important; /* Hide the smaller icon meant for list view */
-}
-.grid-view .file-entry .file-icon-large {
-    display: inline-block !important; /* Ensure the large icon is visible */
+
+@media (min-width: 992px) { /* Large devices (desktops, 992px and up) */
+     .grid-view ul { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* More items on larger screens */ }
 }
 
