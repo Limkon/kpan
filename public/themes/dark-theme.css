@@ -1,0 +1,132 @@
+/* public/themes/dark-theme.css */
+body {
+    background-color: #1a1a1a; /* 更深的背景 */
+    color: #e0e0e0; /* 柔和的文字顏色 */
+}
+
+.container, .auth-form-container {
+    background-color: #2c2c2c; /* 深色容器背景 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* 調整陰影以適應暗色背景 */
+    border: 1px solid #444; /* 可選的邊框 */
+}
+
+header {
+    border-bottom-color: #444;
+}
+header h1, h1, h2 {
+    color: #f5f5f5; /* 亮色標題 */
+}
+
+input[type="text"],
+input[type="password"],
+select,
+textarea {
+    background-color: #333; /* 深色輸入框背景 */
+    color: #e0e0e0; /* 輸入框文字顏色 */
+    border-color: #555; /* 輸入框邊框顏色 */
+}
+input[type="text"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+    border-color: #007bff; /* 焦點時使用主題色 */
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.35); /* 調整陰影透明度 */
+}
+
+button, .button-link {
+    background-color: #007bff; /* 主題按鈕顏色 */
+    color: #ffffff !important;
+    border-color: #007bff;
+}
+button:hover, .button-link:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+}
+button.secondary, .button-link.secondary {
+    background-color: #4f5962;
+    border-color: #4f5962;
+}
+button.secondary:hover, .button-link.secondary:hover {
+    background-color: #3d444b;
+    border-color: #383d41;
+}
+
+a {
+    color: #6cb2eb; /* 亮藍色鏈接 */
+}
+a:hover {
+    color: #8dc9f0;
+}
+
+.current-path {
+    background-color: #3a3a3a;
+    color: #ccc;
+}
+.current-path a { color: #6cb2eb; }
+
+#drop-area {
+    background-color: #252525;
+    border-color: #555;
+}
+#drop-area.highlight {
+    border-color: #007bff;
+    background-color: #303040; /* 拖拽高亮背景 */
+}
+#drop-area p, #drop-area label { color: #bbb; }
+#drop-area label { color: #6cb2eb; }
+
+
+.list-view li {
+    background-color: #2c2c2c;
+    border-color: #444;
+}
+.list-view li:hover { background-color: #383838; }
+.list-view .file-name { color: #6cb2eb; } /* 鏈接文件名 */
+.list-view .file-entry .file-name { color: #e0e0e0; } /* 普通文件名 */
+
+
+.grid-view li {
+    background-color: #2c2c2c;
+    border-color: #444;
+}
+.grid-view .file-icon-large { color: #6cb2eb; }
+.grid-view .file-icon-large.folder-icon { color: #ffc107; } /* 文件夾顏色保持不變或調整 */
+.grid-view .file-name { color: #e0e0e0; }
+.grid-view .file-entry a.file-name { color: #6cb2eb; }
+.grid-view .file-actions .action-link {
+    background-color: #3a3a3a;
+    color: #ccc;
+}
+.grid-view .file-actions .action-link:hover { background-color: #454545; }
+.grid-view .file-actions .delete-link { background-color: #5c2c31; color: #f5c6cb; }
+.grid-view .file-actions .delete-link:hover { background-color: #6c373c; }
+.grid-view .file-actions .edit-link { background-color: #2c5133; color: #c3e6cb; }
+.grid-view .file-actions .edit-link:hover { background-color: #37633f; }
+
+
+table th { background-color: #3a3a3a; border-color: #555; }
+table td { border-color: #555; }
+
+.note {
+    background-color: #3a3a3a;
+    color: #ccc;
+    border-left-color: #007bff;
+}
+
+.message { /* 亮色主題的消息框在暗色下可能需要調整 */
+    color: #e0e0e0;
+    background-color: #33414e; /* 深藍灰色背景 */
+    border-color: #4a5b6c;
+}
+.error-message {
+    color: #f5c6cb; /* 淺紅色文字 */
+    background-color: #5c2c31; /* 深紅色背景 */
+    border-color: #842029;
+}
+.theme-switcher-container {
+    background-color: #2c2c2c;
+    border-top: 1px solid #444;
+}
+.theme-switcher-container label {
+    color: #e0e0e0;
+}
