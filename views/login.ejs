@@ -5,25 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>登錄 - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
+    <link id="theme-stylesheet" rel="stylesheet" href="">
 </head>
 <body>
-    <div class="container">
-        <h1>登錄</h1>
-        <% if (locals.error) { %>
-            <p class="error-message"><%= error %></p>
-        <% } %>
-        <form action="/login" method="POST">
-            <div>
-                <label for="username">用戶名:</label>
-                <input type="text" id="username" name="username" required>
-            </div>
-            <div>
-                <label for="password">密碼:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <button type="submit">登錄</button>
-        </form>
-        <p>還沒有帳戶? <a href="/register">註冊</a></p>
+    <div class="auth-container"> <div class="auth-form-container">
+            <h1>登錄</h1>
+            <% if (locals.error) { %>
+                <p class="error-message"><%= error %></p>
+            <% } %>
+            <% if (locals.message) { %>
+                <p class="message"><%= message %></p>
+            <% } %>
+            <form action="/login" method="POST">
+                <div class="form-group">
+                    <label for="username">用戶名:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">密碼:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="full-width-button">登錄</button>
+            </form>
+            <p class="auth-switch">還沒有帳戶? <a href="/register">註冊</a></p>
+        </div>
     </div>
+    <%- include('partials/theme-switcher') %>
+    <script src="/theme.js"></script>
 </body>
 </html>
