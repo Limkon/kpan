@@ -5,17 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= locals.viewTargetUsername ? viewTargetUsername + ' 的文件' : user.username + ' 的文件' %> - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
-    <style>
-        /* 可展開區域的樣式 */
+    <link id="theme-stylesheet" rel="stylesheet" href=""> <style>
         #upload-section {
-            display: none; /* 默認隱藏 */
+            display: none;
             padding: 20px;
-            border: 1px solid #dee2e6;
+            border: 1px solid #dee2e6; /* 應由主題CSS控制 */
             border-radius: 6px;
             margin-top: 15px;
-            background-color: #f8f9fa;
+            background-color: #f8f9fa; /* 應由主題CSS控制 */
         }
-        /* 其他特定於此頁面的樣式可以放在這裡，但多數應在 style.css */
     </style>
 </head>
 <body>
@@ -87,9 +85,9 @@
             </div>
         </div>
 
-
         <h2>文件列表</h2>
-        <div id="file-container"> <% if (items.length > 0) { %>
+        <div id="file-container">
+            <% if (items.length > 0) { %>
                 <ul>
                     <% items.forEach(item => { %>
                         <li>
@@ -97,7 +95,6 @@
                             <% const itemPathForLink = item.path; %>
                             <% const encodedItemPathForLink = item.encodedPath; %>
                             <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
-
                             <% if (item.isDir) { %>
                                 <div class="file-entry">
                                     <span class="file-icon-large folder-icon">📁</span>
@@ -153,9 +150,10 @@
             <% } %>
         </div>
     </div>
-
+    <%- include('partials/theme-switcher') %>
+    <script src="/theme.js"></script>
     <script>
-        // Toggle Upload Section
+        // Script for files.ejs (toggle upload, drag-drop, view toggle, rename form)
         const toggleUploadBtn = document.getElementById('toggleUploadBtn');
         const uploadSection = document.getElementById('upload-section');
         if (toggleUploadBtn && uploadSection) {
@@ -170,30 +168,24 @@
             });
         }
 
-
-        // Drag and Drop (for the new upload section)
         const dropArea = document.getElementById('drop-area');
         const fileInput = document.getElementById('userFiles');
-        // const uploadForm = document.getElementById('upload-form'); // Already declared if needed
         const fileListPreview = document.getElementById('file-list-preview');
-        const uploadButton = document.getElementById('upload-button'); // Button inside upload-section
+        const uploadButton = document.getElementById('upload-button');
 
         if (dropArea && fileInput && fileListPreview && uploadButton) {
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 dropArea.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser opening file
+                document.body.addEventListener(eventName, preventDefaults, false);
             });
             function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-
             ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false));
             ['dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false));
-
             dropArea.addEventListener('drop', handleDrop, false);
             function handleDrop(e) {
                 fileInput.files = e.dataTransfer.files;
                 updateFileListPreview();
             }
-
             fileInput.addEventListener('change', updateFileListPreview);
             function updateFileListPreview() {
                 fileListPreview.innerHTML = '';
@@ -215,12 +207,9 @@
             if(fileInput.files.length === 0) uploadButton.style.display = 'none';
         }
 
-
-        // View Toggle (same as before)
         const fileContainer = document.getElementById('file-container');
         const listViewBtn = document.getElementById('listViewBtn');
         const gridViewBtn = document.getElementById('gridViewBtn');
-
         if (fileContainer && listViewBtn && gridViewBtn) {
             function toggleView(viewType) {
                 if (viewType === 'grid') {
@@ -239,8 +228,6 @@
             toggleView(preferredView || 'list');
         }
 
-
-        // Rename Form (same as before)
         function showRenameForm(encodedName, currentName, isDir) {
             document.querySelectorAll('.rename-form').forEach(form => form.style.display = 'none');
             const form = document.getElementById('rename-form-' + encodedName);
