@@ -99,7 +99,7 @@
                         <span><%= fileObj.name %></span>
                         <span class="file-actions">
                             <a href="/download/<%= fileObj.encodedName %>" class="action-link">下載</a>
-                            <a href="/delete/<%= fileObj.encodedName %>" class="action-link delete-link" onclick="return confirm('確定要刪除這個文件嗎？ <%= fileObj.name %>');">删除</a>
+                            <a href="/delete/<%= fileObj.encodedName %>" class="action-link delete-link" onclick="return confirm('確定要刪除這個文件嗎？ <%= fileObj.name.replace(/'/g, '\\\'') %>');">删除</a>
                         </span>
                     </li>
                 <% }) %>
@@ -152,7 +152,7 @@
                             <td><%= u.role %></td>
                             <td>
                                 <% if (currentUser.id !== u.id) { %>
-                                    <a href="/admin/delete/<%= u.id %>" class="action-link delete-link" onclick="return confirm('確定要刪除用戶 <%= u.username %> 嗎？其所有文件也將被刪除。');">刪除用戶</a>
+                                    <a href="/admin/delete/<%= u.id %>" class="action-link delete-link" onclick="return confirm('確定要刪除用戶 <%= u.username.replace(/'/g, '\\\'') %> 嗎？其所有文件也將被刪除。');">刪除用戶</a>
                                 <% } else { %>
                                     (當前用戶)
                                 <% } %>
