@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>註冊 - 網路硬碟</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>註冊</h1>
+        <% if (locals.error) { %>
+            <p class="error-message"><%= error %></p>
+        <% } %>
+        <form action="/register" method="POST">
+            <div>
+                <label for="username">用戶名:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div>
+                <label for="password">密碼:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">註冊</button>
+        </form>
+        <p>已有帳戶? <a href="/login">登錄</a></p>
+    </div>
+</body>
+</html>
