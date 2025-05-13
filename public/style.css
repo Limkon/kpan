@@ -44,48 +44,90 @@ h2 {
 }
 h2:first-of-type { margin-top: 0; }
 
-form div { margin-bottom: 16px; }
-label { display: block; margin-bottom: 6px; font-weight: 600; color: #495057; }
-
-/* Unified control styling */
-input[type="text"], input[type="password"],
-select, textarea,
-button, button[type="submit"], .button-link {
-    width: 100%;
-    padding: 10px 12px;
+/* --- Unified Control Styling --- */
+input[type="text"],
+input[type="password"],
+select,
+textarea,
+button, /* Apply base to buttons too */
+.button-link { /* Apply base to anchor tags styled as buttons */
+    display: inline-block; /* Important for sizing and margin */
+    width: auto; /* Default to auto, specific forms will override */
+    padding: 10px 15px; /* Unified padding */
     border: 1px solid #ced4da;
     border-radius: 5px;
     box-sizing: border-box;
-    font-size: 0.95em; /* Slightly smaller for better fit */
-    line-height: 1.5; /* Consistent line height */
-    margin-bottom: 5px; /* Add a little space below each control */
+    font-size: 0.95em;
+    line-height: 1.5;
+    vertical-align: middle; /* Align inline-block elements */
+    margin: 5px; /* Add some default margin for spacing */
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
-input[type="file"] { /* File input is special */
-    width: 100%; padding: 8px 10px; border: 1px solid #ced4da; border-radius: 5px;
-    box-sizing: border-box; font-size: 0.95em; margin-bottom: 5px;
-}
-textarea { min-height: 100px; } /* Default min height for textareas */
 
+input[type="file"] {
+    display: block; /* File inputs are often better as block */
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 10px; /* Ensure space below file input */
+}
 
-button, button[type="submit"], .button-link {
-    background-color: #007bff; color: white !important;
-    border: none; /* Button specific, input has border */
-    cursor: pointer; font-weight: 500;
-    text-decoration: none; display: inline-block; text-align: center;
-    transition: background-color 0.2s ease-in-out, box-shadow 0.15s ease-in-out;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    width: auto; /* Allow buttons to size to content by default */
-    margin-bottom: 0; /* Remove margin from general rule */
+/* Specific overrides for inputs if they shouldn't look like buttons */
+input[type="text"],
+input[type="password"],
+select,
+textarea {
+    background-color: #fff; /* Default input background */
+    color: #495057; /* Default input text color */
 }
-button:hover, button[type="submit"]:hover, .button-link:hover {
-    background-color: #0069d9; color: white !important; text-decoration: none;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+input[type="text"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
 }
-button:active, button[type="submit"]:active, .button-link:active {
-    background-color: #005cbf; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+
+/* Button and Button-like Anchor Styling */
+button,
+button[type="submit"],
+.button-link {
+    background-color: #007bff;
+    color: white !important;
+    border-color: #007bff; /* Match border to background */
+    cursor: pointer;
+    font-weight: 500;
+    text-decoration: none;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
-button[type="button"].secondary, .button-link.secondary { background-color: #6c757d; }
-button[type="button"].secondary:hover, .button-link.secondary:hover { background-color: #5a6268; }
+button:hover,
+button[type="submit"]:hover,
+.button-link:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+    color: white !important;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+button:active,
+button[type="submit"]:active,
+.button-link:active {
+    background-color: #005cbf;
+    border-color: #0056b3;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.125);
+}
+
+button.secondary,
+.button-link.secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+button.secondary:hover,
+.button-link.secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}
 
 .message { padding: 10px 12px; border-radius: 5px; margin-bottom: 15px; font-size: 0.95em; }
 .error-message { color: #842029; background-color: #f8d7da; border: 1px solid #f5c2c7; }
@@ -94,39 +136,56 @@ button[type="button"].secondary:hover, .button-link.secondary:hover { background
 .current-path { margin-bottom: 15px; padding: 10px; background-color: #e9ecef; border-radius: 5px; font-size: 0.9em; color: #495057; word-break: break-all; }
 .current-path a { font-weight: 500; }
 
+/* --- File Browser Controls --- */
 .file-browser-controls {
-    margin-bottom: 20px; display: flex; flex-direction: column;
-    gap: 10px; align-items: stretch;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap; /* Allow controls to wrap on smaller screens */
+    gap: 10px; /* Consistent gap between all control groups */
+    align-items: center; /* Align items vertically */
 }
-.file-browser-controls .control-form { display: flex; gap: 8px; width: 100%; }
-.file-browser-controls .control-form input[type="text"] { flex-grow: 1; margin-bottom: 0; } /* Remove bottom margin for inline items */
-.file-browser-controls .control-form button { width: auto; margin-bottom: 0; }
-.file-browser-controls .upload-button-main { width: 100%; margin-top: 0; }
-
-
-.view-toggle { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
-.view-toggle button { background-color: #6c757d; font-size: 0.85em; padding: 8px 12px; flex-grow: 1; margin-bottom: 0; }
+.file-browser-controls .control-form { /* For create folder and rename */
+    display: flex;
+    flex-grow: 1; /* Allow form to take available space */
+    gap: 8px;
+    min-width: 200px; /* Minimum width before wrapping for the form itself */
+}
+.file-browser-controls .control-form input[type="text"] {
+    flex-grow: 1; /* Input takes most space within its form */
+    margin: 0; /* Reset margin from base control style */
+}
+.file-browser-controls .control-form button {
+    flex-shrink: 0; /* Prevent button from shrinking */
+    margin: 0;
+}
+.file-browser-controls .upload-button-main, /* The main "Upload File" button */
+.file-browser-controls .view-toggle button {
+    margin: 0; /* Reset margin */
+    flex-shrink: 0;
+}
+.view-toggle {
+    display: flex;
+    gap: 8px;
+    margin-left: auto; /* Push to the right on wider screens if space allows */
+}
+.view-toggle button { background-color: #6c757d; font-size: 0.9em; } /* Slightly larger view toggle buttons */
 .view-toggle button.active { background-color: #007bff; }
 
-/* Styles for the expandable upload section */
-#upload-section {
-    display: none; /* Default hidden */
-    padding: 15px; /* Unified padding */
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    margin-top: 15px;
-    background-color: #f8f9fa;
-}
-#upload-section h2 { margin-top: 0; font-size: 1.1em; } /* Smaller heading for section */
 
+/* Expandable Upload Section */
+#upload-section {
+    display: none; padding: 15px; border: 1px solid #dee2e6;
+    border-radius: 6px; margin-top: 15px; background-color: #f8f9fa;
+}
+#upload-section h2 { margin-top: 0; font-size: 1.1em; }
 #drop-area {
     border: 2px dashed #adb5bd; border-radius: 6px; padding: 25px; text-align: center;
-    margin-bottom: 0; /* Remove margin if it's the last element in section */
-    background-color: #f0f2f5; /* Slightly different background for drop area */
+    margin-bottom: 0; background-color: #f0f2f5;
 }
+#drop-area.highlight { border-color: #007bff; background-color: #e9f5ff; }
 #drop-area p { margin: 0 0 10px 0; color: #495057; font-size: 0.9em; }
 #drop-area label { color: #007bff; cursor: pointer; text-decoration: underline; font-weight: 500; }
-#drop-area #upload-button { margin-top: 12px; width: 100%; }
+#drop-area #upload-button { margin-top: 12px; width: 100%; } /* Full width inside drop area */
 #file-list-preview ul { list-style-type: none; padding-left: 0; margin-top: 10px; text-align: left; }
 #file-list-preview li { font-size: 0.85em; color: #343a40; padding: 3px 0; }
 
@@ -134,8 +193,7 @@ button[type="button"].secondary:hover, .button-link.secondary:hover { background
 
 /* List View */
 .list-view li {
-    padding: 10px; /* Unified padding */
-    margin-bottom: -1px; display: flex; justify-content: space-between; align-items: center;
+    padding: 10px; margin-bottom: -1px; display: flex; justify-content: space-between; align-items: center;
     border: 1px solid #dee2e6; background-color: #fff;
 }
 .list-view li:first-child { border-top-left-radius: 5px; border-top-right-radius: 5px; }
@@ -145,14 +203,13 @@ button[type="button"].secondary:hover, .button-link.secondary:hover { background
 .list-view .file-name { font-weight: 500; color: #007bff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95em; }
 .list-view .file-entry a.file-name:hover { text-decoration: underline; }
 .list-view .file-entry .file-name { color: #212529; }
-.list-view .file-actions { white-space: nowrap; display: flex; gap: 6px; } /* Slightly smaller gap */
-.list-view .file-actions .action-link { margin-left: 0; font-size: 0.8em; padding: 4px 8px; } /* Smaller action links */
+.list-view .file-actions { white-space: nowrap; display: flex; gap: 6px; }
+.list-view .file-actions .action-link { margin-left: 0; font-size: 0.8em; padding: 4px 8px; }
 
 /* Grid View */
-.grid-view ul { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; /* Smaller gap */ }
+.grid-view ul { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .grid-view li {
-    padding: 10px; min-height: 130px;
-    background-color: #fff; border: 1px solid #dee2e6; border-radius: 6px;
+    padding: 10px; min-height: 130px; background-color: #fff; border: 1px solid #dee2e6; border-radius: 6px;
     text-align: center; display: flex; flex-direction: column; align-items: center;
     justify-content: flex-start; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
@@ -170,22 +227,21 @@ button[type="button"].secondary:hover, .button-link.secondary:hover { background
 /* Rename Form */
 .rename-form { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; width:100%; }
 .rename-form form.inline-form { display: flex; gap: 6px; align-items: center; }
-.rename-form input[type="text"] { flex-grow: 1; font-size: 0.9em; padding: 6px 8px; margin-bottom:0; }
-.rename-form button { font-size: 0.85em; padding: 6px 10px; margin-bottom:0; }
+.rename-form input[type="text"] { flex-grow: 1; font-size: 0.9em; padding: 6px 8px; margin:0; } /* Reset margin */
+.rename-form button { font-size: 0.85em; padding: 6px 10px; margin:0; } /* Reset margin */
 
 /* Admin Table */
 .admin-table-container { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; min-width: 500px; }
 table th, table td { border: 1px solid #dee2e6; padding: 8px 10px; text-align: left; }
 table th { background-color: #e9ecef; font-weight: 600; }
-table td .action-link, table td button.action-link { font-size: 0.85em; padding: 4px 6px; }
+table td .action-link, table td button.action-link { font-size: 0.85em; padding: 4px 6px; margin: 2px; } /* Add small margin for table actions */
 table td form { display: inline-flex !important; gap: 5px !important; align-items: center !important; flex-wrap: wrap; }
-table td form input[type="password"] { width: 120px !important; padding: 5px !important; font-size: 0.85em !important; margin-bottom:0; }
-table td form button { margin-bottom:0; }
-
+table td form input[type="password"] { width: 120px !important; padding: 5px !important; font-size: 0.85em !important; margin:0; }
+table td form button { margin:0; }
 
 /* Editor Page */
-textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin-bottom:0; }
+textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin:0; }
 .editor-actions { margin-top: 15px; text-align: right; display: flex; gap: 10px; justify-content: flex-end; }
 .editor-actions button { margin-left: 0; margin-bottom:0; }
 
@@ -197,9 +253,8 @@ textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin-bottom:0; }
     header { flex-direction: row; align-items: center; }
     header h1 { margin-bottom: 0; font-size: 1.75em; }
     .file-browser-controls { flex-direction: row; align-items: center; }
-    .file-browser-controls .control-form, .file-browser-controls .upload-button-main { width: auto; }
-    .file-browser-controls .upload-button-main { margin-top: 0; }
-    .view-toggle { margin-top: 0; }
+    .file-browser-controls .control-form { flex-grow: 0; min-width: 250px; } /* Don't let it grow too much, but have a min-width */
+    .file-browser-controls .upload-button-main { width: auto; } /* Revert to auto width */
     #drop-area #upload-button { width: auto; }
     .grid-view ul { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
 }
@@ -208,7 +263,9 @@ textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin-bottom:0; }
     h1 { font-size: 2em; }
     h2 { font-size: 1.4em; }
     .grid-view ul { grid-template-columns: repeat(3, 1fr); }
+    .file-browser-controls .control-form { min-width: 300px; }
 }
 @media (min-width: 992px) {
      .grid-view ul { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 }
+
