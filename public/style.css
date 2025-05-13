@@ -11,6 +11,7 @@ body {
     align-items: flex-start; /* Align items to the top */
     min-height: 100vh;
     padding-top: 20px; /* Add some padding at the top */
+    padding-bottom: 20px; /* Add some padding at the bottom */
 }
 
 .container {
@@ -46,17 +47,17 @@ header nav a:hover {
     text-decoration: underline;
 }
 
-h1, h2 {
+h1, h2 { /* General h1 and h2 styling */
     color: #333;
     margin-bottom: 15px;
 }
 
-h1 {
+h1 { /* Specifically for page titles like Login/Register */
     text-align: center;
     font-size: 2em;
 }
 
-h2 {
+h2 { /* Specifically for section titles */
     font-size: 1.5em;
     border-bottom: 1px solid #eee;
     padding-bottom: 8px;
@@ -107,18 +108,18 @@ a:hover {
 }
 
 .error-message {
-    color: red;
-    background-color: #ffe6e6;
-    border: 1px solid red;
+    color: #721c24; /* Darker red for text */
+    background-color: #f8d7da; /* Light red background */
+    border: 1px solid #f5c6cb; /* Red border */
     padding: 10px;
     border-radius: 4px;
     margin-bottom: 15px;
 }
 
-.message {
-    color: green;
-    background-color: #e6ffe6;
-    border: 1px solid green;
+.message { /* Default for success messages */
+    color: #155724; /* Darker green for text */
+    background-color: #d4edda; /* Light green background */
+    border: 1px solid #c3e6cb; /* Green border */
     padding: 10px;
     border-radius: 4px;
     margin-bottom: 15px;
@@ -140,9 +141,13 @@ ul li {
     align-items: center;
 }
 
-ul li span .action-link {
+ul li span.file-actions .action-link { /* Target action links within the span */
     margin-left: 10px;
     font-size: 0.9em;
+}
+
+.action-link { /* General styling for action links if needed outside lists */
+    margin-left: 5px; /* Adjusted for general use */
 }
 
 .delete-link {
@@ -166,4 +171,13 @@ table th, table td {
 
 table th {
     background-color: #f0f0f0;
+}
+
+.note {
+    font-size: 0.9em;
+    margin-top: 20px;
+    color: #555;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-left: 3px solid #007bff;
 }
