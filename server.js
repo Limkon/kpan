@@ -9,7 +9,7 @@ const bcrypt = require('bcryptjs');
 const sqlite3 = require('sqlite3').verbose(); // 引入 sqlite3
 
 const app = express();
-const port = 3000;
+const port = 8100;
 
 // 資料庫文件路徑
 const DB_FILE = path.join(__dirname, 'data', 'netdisk.sqlite');
