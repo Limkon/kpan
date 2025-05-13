@@ -8,10 +8,10 @@ body {
     padding: 0;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Align items to the top */
+    align-items: flex-start;
     min-height: 100vh;
-    padding-top: 20px; /* Add some padding at the top */
-    padding-bottom: 20px; /* Add some padding at the bottom */
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
 
 .container {
@@ -20,7 +20,7 @@ body {
     border-radius: 8px;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     width: 90%;
-    max-width: 800px; /* Increased max-width for better layout */
+    max-width: 800px;
 }
 
 header {
@@ -47,20 +47,18 @@ header nav a:hover {
     text-decoration: underline;
 }
 
-h1, h2 { /* General h1 and h2 styling */
-    color: #333;
-    margin-bottom: 15px;
-}
-
-h1 { /* Specifically for page titles like Login/Register */
+h1 { /* Page titles like Login/Register */
     text-align: center;
     font-size: 2em;
+    margin-bottom: 15px; /* Added margin for standalone H1 */
 }
 
-h2 { /* Specifically for section titles */
+h2 { /* Section titles */
     font-size: 1.5em;
     border-bottom: 1px solid #eee;
     padding-bottom: 8px;
+    margin-top: 25px; /* Added top margin for separation */
+    margin-bottom: 15px;
 }
 
 form div {
@@ -76,15 +74,19 @@ label {
 input[type="text"],
 input[type="password"],
 input[type="file"],
-select {
-    width: calc(100% - 22px); /* Adjust width to account for padding and border */
+select,
+textarea { /* Added textarea */
+    width: 100%; /* Changed from calc for simplicity with box-sizing */
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    box-sizing: border-box; /* Important for width calculation */
+    box-sizing: border-box; /* Ensures padding and border don't add to width */
+    font-size: 1em; /* Ensure consistent font size */
 }
 
-button[type="submit"] {
+
+button[type="submit"],
+button { /* General button styling */
     background-color: #007bff;
     color: white;
     padding: 10px 18px;
@@ -92,11 +94,21 @@ button[type="submit"] {
     border-radius: 4px;
     cursor: pointer;
     font-size: 1em;
+    transition: background-color 0.2s ease-in-out;
 }
 
-button[type="submit"]:hover {
+button[type="submit"]:hover,
+button:hover {
     background-color: #0056b3;
 }
+
+button[type="button"] { /* Specific for cancel buttons or secondary actions */
+    background-color: #6c757d;
+}
+button[type="button"]:hover {
+    background-color: #5a6268;
+}
+
 
 a {
     color: #007bff;
@@ -107,23 +119,22 @@ a:hover {
     text-decoration: underline;
 }
 
-.error-message {
-    color: #721c24; /* Darker red for text */
-    background-color: #f8d7da; /* Light red background */
-    border: 1px solid #f5c6cb; /* Red border */
+.message { /* Default for success messages */
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
     padding: 10px;
     border-radius: 4px;
     margin-bottom: 15px;
 }
 
-.message { /* Default for success messages */
-    color: #155724; /* Darker green for text */
-    background-color: #d4edda; /* Light green background */
-    border: 1px solid #c3e6cb; /* Green border */
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 15px;
+.error-message { /* For error messages */
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    /* padding, border-radius, margin-bottom inherited or can be set if different from .message */
 }
+
 
 ul {
     list-style-type: none;
@@ -141,13 +152,13 @@ ul li {
     align-items: center;
 }
 
-ul li span.file-actions .action-link { /* Target action links within the span */
+ul li span.file-actions .action-link {
     margin-left: 10px;
     font-size: 0.9em;
 }
 
-.action-link { /* General styling for action links if needed outside lists */
-    margin-left: 5px; /* Adjusted for general use */
+.action-link {
+    margin-left: 5px;
 }
 
 .delete-link {
@@ -181,3 +192,83 @@ table th {
     background-color: #f9f9f9;
     border-left: 3px solid #007bff;
 }
+
+/* Styles for Drag and Drop (already in files.ejs but good to have here for centralization if needed) */
+#drop-area {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+#drop-area.highlight {
+    border-color: #007bff;
+    background-color: #e9f5ff;
+}
+#drop-area p {
+    margin: 0;
+    color: #555;
+}
+#drop-area label { /* Style for the "click to select files" label */
+    color: #007bff;
+    cursor: pointer;
+    text-decoration: underline;
+    font-weight: normal; /* Override bold from general label */
+    display: inline; /* Make it flow with text */
+}
+
+
+/* Styles for File Icons (already in files.ejs) */
+.file-icon {
+    font-size: 1.5em; /* Adjust as needed */
+    margin-right: 10px;
+    vertical-align: middle;
+}
+.file-entry { /* Container for icon and name */
+    display: flex;
+    align-items: center;
+    flex-grow: 1; /* Allow it to take available space */
+    overflow: hidden; /* Prevent long names from breaking layout */
+}
+.file-entry span:first-child { /* Icon span */
+   /* No specific style needed here if icon size is controlled by .file-icon */
+}
+.file-entry span:nth-child(2) { /* File name span */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* Styles for Text Editor (already in edit-file.ejs) */
+.editor-container {
+    margin-top: 20px;
+}
+textarea#fileContent {
+    width: 100%;
+    min-height: 500px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1rem;
+    line-height: 1.5;
+    box-sizing: border-box;
+    resize: vertical;
+}
+.editor-actions {
+    margin-top: 15px;
+    text-align: right;
+}
+.editor-actions button {
+    margin-left: 10px;
+}
+.file-actions a.edit-link { /* Style for edit link in file list */
+    color: #28a745; /* Green color for edit link */
+}
+.file-actions a.edit-link:hover {
+    color: #1e7e34;
+}
+
