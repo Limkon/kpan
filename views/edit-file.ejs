@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>編輯文件: <%= filename %></title>
+    <link rel="stylesheet" href="/style.css">
+    </head>
+<body>
+    <div class="container">
+        <header>
+            <h1>編輯文件: <%= filename %></h1>
+            <nav>
+                <%
+                    let backPath = "/files";
+                    if (locals.viewTargetUsername && user.role === 'admin') {
+                        const parentDirOfFile = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/';
+                        backPath = `/files?path=${encodeURIComponent(parentDirOfFile)}&targetUsername=${encodeURIComponent(viewTargetUsername)}`;
+                    } else {
+                        const parentDirOfFile = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/';
+                        backPath = `/files?path=${encodeURIComponent(parentDirOfFile)}`;
+                    }
+                %>
+                <a href="<%= backPath %>">返回文件列表</a>
+                <a href="/logout">登出</a>
+            </nav>
+        </header>
+
+        <% if (locals.message) { %>
+            <p class="message <%= (locals.messageType === 'error') ? 'error-message' : '' %>"><%= message %></p>
+        <% } %>
+
+        <div class="editor-container">
+            <form action="/save/<%= encodeURIComponent(currentPath) %>" method="POST">
+                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                    <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                <% } %>
+                <textarea id="fileContent" name="fileContent" required><%= content %></textarea>
+                <div class="editor-actions">
+                    <button type="button" class="secondary" onclick="window.location.href='<%= backPath %>'">取消</button>
+                    <button type="submit">保存更改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
