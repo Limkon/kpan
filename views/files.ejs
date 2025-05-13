@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的文件 - 網路硬碟</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><%= user.username %> 的文件</h1>
+            <nav>
+                <% if (user.role === 'admin') { %>
+                    <a href="/admin">管理用戶</a>
+                <% } %>
+                <a href="/logout">登出</a>
+            </nav>
+        </header>
+
+        <% if (locals.message) { %>
+            <p class="message <%= (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('沒有選擇文件'))) ? 'error-message' : '' %>"><%= message %></p>
+        <% } %>
+
+        <h2>上傳文件</h2>
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <div>
+                <label for="userFiles">選擇文件 (可多選):</label>
+                <input type="file" id="userFiles" name="userFiles" multiple>
+            </div>
+            <button type="submit">上傳</button>
+        </form>
+
+        <h2>文件列表</h2>
+        <% if (files.length > 0) { %>
+            <ul>
+                <% files.forEach(fileObj => { %>
+                    <li>
+                        <span><%= fileObj.name %></span>
+                        <span class="file-actions">
+                            <a href="/download/<%= fileObj.encodedName %>" class="action-link">下載</a>
+                            <a href="/delete/<%= fileObj.encodedName %>" class="action-link delete-link" onclick="return confirm('確定要刪除這個文件嗎？ <%= fileObj.name.replace(/'/g, '\\\'') %>');">删除</a>
+                        </span>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } else { %>
+            <p>您還沒有上傳任何文件。</p>
+        <% } %>
+    </div>
+</body>
+</html>
