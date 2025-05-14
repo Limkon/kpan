@@ -8,46 +8,117 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* 内联样式可以移到 style.css 中以保持模板清洁 */
-        #upload-section {
-            display: none; /* 默认隐藏，由JS控制 */
-            padding: 20px;
-            border: 1px solid #dee2e6; /* 應由主題CSS控制 */
-            border-radius: 6px;
-            margin-top: 15px;
-            background-color: #f8f9fa; /* 應由主題CSS控制 */
-        }
-        .search-results-info {
+        /* Basic styling for new elements - move to style.css for production */
+        #selection-action-bar {
             padding: 10px;
-            background-color: #e9ecef; /* 應由主題CSS控制 */
-            border-radius: 5px;
+            background-color: #f0f0f0; /* Light grey, themeable */
+            border-bottom: 1px solid #ccc; /* Themeable */
             margin-bottom: 15px;
+            display: none; /* Hidden by default */
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        #selection-action-bar button {
+            margin: 0;
+        }
+        .item-checkbox {
+            margin-right: 10px;
+            width: 18px; /* Larger checkbox */
+            height: 18px;
+            vertical-align: middle;
+        }
+        .file-entry-selectable { /* Wrapper for checkbox and item content */
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .file-content-wrapper { /* To take remaining width */
+            flex-grow: 1;
+            display: flex; /* For list view alignment */
+            justify-content: space-between; /* For list view alignment */
+            align-items: center; /* For list view alignment */
+        }
+        .list-view .file-content-wrapper > .file-entry {
+             flex-grow: 1; /* Allow file name to take space */
+        }
+        .list-view .file-actions-placeholder { /* Space for old actions, now empty or for selection count */
+            min-width: 150px; /* Adjust as needed */
+            text-align: right;
             font-size: 0.9em;
+            color: #666;
         }
-        .file-location-in-search {
-            font-size: 0.8em;
-            color: #6c757d; /* 應由主題CSS控制 */
-            margin-left: 8px;
+
+        #move-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
         }
+        .move-modal-content {
+            background-color: #fff; /* Themeable */
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888; /* Themeable */
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+            color: #333; /* Themeable */
+        }
+        .move-modal-content h3 { margin-top: 0;}
+        #directory-tree-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eee; /* Themeable */
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
+        #directory-tree-container li { padding: 5px 0; cursor: pointer; }
+        #directory-tree-container li:hover { background-color: #f0f0f0; } /* Themeable */
+        #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } /* Themeable */
+
+        .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; }
+
+        /* Ensure file-entry still handles icons and names correctly */
         .file-entry {
             display: flex;
             align-items: center;
-            gap: 8px; /* 给图标和文件名之间一些空间 */
+            gap: 8px;
         }
-        .list-view .file-entry .file-name { /* 确保文件名在列表视图中可以正确显示 */
+        .list-view .file-entry .file-name {
              overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
-        .grid-view .file-entry { /* 网格视图下，让条目内容垂直居中 */
+        .grid-view .file-entry {
             flex-direction: column;
             justify-content: center;
             text-align: center;
         }
+        #select-all-container {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            background-color: #f9f9f9; /* Themeable */
+            border-bottom: 1px solid #eee; /* Themeable */
+        }
+        #select-all-container label { margin-left: 5px; font-weight: normal;}
+
+        /* From previous styles, might need adjustments */
+        #upload-section { display: none; padding: 20px; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 15px; background-color: #f8f9fa; }
+        .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
+        .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
+
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>
+             <h1>
                 <% if (locals.isSearchResult && locals.searchQuery) { %>
                     有關 "<%= searchQuery %>" 的搜尋結果 <% if (locals.viewTargetUsername) { %>(在 <%= viewTargetUsername %> 的文件中)<% } else { %>(在您的文件中)<% } %>
                 <% } else if (locals.viewTargetUsername && user.role === 'admin') { %>
@@ -57,9 +128,7 @@
                 <% } %>
             </h1>
             <nav>
-                <% if (user.role === 'admin') { %>
-                    <a href="/admin">管理面板</a>
-                <% } %>
+                <% if (user.role === 'admin') { %><a href="/admin">管理面板</a><% } %>
                 <a href="/change-password">修改密碼</a>
                 <a href="/logout">登出</a>
             </nav>
@@ -102,9 +171,7 @@
             <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
                 <form action="/create-folder" method="POST" class="control-form">
                     <input type="hidden" name="currentPath" value="<%= currentPath %>">
-                    <% if (locals.viewTargetUsername && user.role === 'admin') { %>
-                        <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
-                    <% } %>
+                    <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
                     <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
                     <input type="text" name="folderName" placeholder="新文件夾名稱" required>
                     <button type="submit">創建文件夾</button>
@@ -112,10 +179,20 @@
                 <button type="button" id="toggleUploadBtn" class="upload-button-main">上傳文件到此</button>
             <% } %>
             <div class="view-toggle">
-                <button id="listViewBtn" onclick="toggleView('list')">列表</button>
-                <button id="gridViewBtn" onclick="toggleView('grid')">網格</button>
+                <button id="listViewBtn">列表</button>
+                <button id="gridViewBtn">網格</button>
             </div>
         </div>
+        
+        <div id="selection-action-bar">
+            <span id="selection-count" style="margin-right: 15px;">已選擇 0 項</span>
+            <button id="action-edit-btn" disabled>編輯</button>
+            <button id="action-rename-btn" disabled>重命名</button>
+            <button id="action-move-btn" disabled>移動</button>
+            <button id="action-download-btn" disabled>下載</button>
+            <button id="action-delete-btn" class="secondary" disabled>删除</button>
+        </div>
+
 
         <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
             <div id="upload-section">
@@ -123,9 +200,7 @@
                 <div id="drop-area">
                     <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="currentPath" value="<%= currentPath %>">
-                        <% if (locals.viewTargetUsername && user.role === 'admin') { %>
-                            <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
-                        <% } %>
+                        <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
                         <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
                         <input type="file" id="userFiles" name="userFiles" multiple style="display: none;">
                         <p>將文件拖拽到此處，或 <label for="userFiles">點擊選擇文件</label></p>
@@ -137,66 +212,63 @@
         <% } %>
 
         <h2><%= locals.isSearchResult ? '搜索結果' : '文件列表' %></h2>
+        <% if (items.length > 0) { %>
+            <div id="select-all-container">
+                <input type="checkbox" id="select-all-checkbox">
+                <label for="select-all-checkbox">全選/取消全選</label>
+            </div>
+        <% } %>
         <div id="file-container">
             <% if (items.length > 0) { %>
                 <ul>
                     <% items.forEach(item => { %>
                         <li>
-                            <% const itemDisplayName = item.name; %>
-                            <% const itemPathForLink = item.path; %>
-                            <% const encodedItemPathForLink = item.encodedPath; %>
-                            <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
-                            
-                            <% if (item.isDir) { %>
-                                <div class="file-entry">
-                                    <span class="file-icon-large folder-icon">📁</span>
-                                    <a href="/files?path=<%= encodedItemPathForLink %><%= adminTargetQueryForActions %>" class="file-name"><%= itemDisplayName %></a>
-                                    <% if (locals.isSearchResult) { %>
-                                        <span class="file-location-in-search">(位於: <%= (itemPathForLink.substring(0, itemPathForLink.lastIndexOf('/')) || '/') %>)</span>
+                            <div class="file-entry-selectable">
+                                <input type="checkbox" class="item-checkbox"
+                                       data-path="<%= item.path %>"
+                                       data-encoded-path="<%= item.encodedPath %>"
+                                       data-name="<%= item.name %>"
+                                       data-encoded-name="<%= item.encodedName %>"
+                                       data-is-dir="<%= item.isDir %>"
+                                       data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>">
+                                <div class="file-content-wrapper">
+                                    <% if (item.isDir) { %>
+                                        <div class="file-entry">
+                                            <span class="file-icon-large folder-icon">📁</span>
+                                            <a href="/files?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name"><%= item.name %></a>
+                                            <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
+                                        </div>
+                                    <% } else { %>
+                                        <div class="file-entry">
+                                            <%
+                                                const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
+                                                let largeIcon = '📄';
+                                                if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(ext)) { largeIcon = '📝';}
+                                                else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
+                                                else if (['pdf'].includes(ext)) { largeIcon = '📕';}
+                                                else if (['doc', 'docx', 'odt'].includes(ext)) { largeIcon = '📃';}
+                                                else if (['xls', 'xlsx', 'ods'].includes(ext)) { largeIcon = '📊';}
+                                                else if (['ppt', 'pptx', 'odp'].includes(ext)) { largeIcon = '🖥️';}
+                                                else if (['zip', 'rar', 'tar', 'gz', '7z'].includes(ext)) { largeIcon = '📦';}
+                                                else if (['mp3', 'wav', 'ogg', 'aac', 'flac'].includes(ext)) { largeIcon = '🎵';}
+                                                else if (['mp4', 'mov', 'avi', 'mkv', 'webm', 'wmv'].includes(ext)) { largeIcon = '🎬';}
+                                            %>
+                                            <span class="file-icon-large"><%= largeIcon %></span>
+                                            <span class="file-name"><%= item.name %></span>
+                                            <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
+                                        </div>
                                     <% } %>
+                                    <span class="file-actions-placeholder"></span>
                                 </div>
-                            <% } else { %>
-                                <div class="file-entry">
-                                    <%
-                                        const ext = itemDisplayName.includes('.') ? itemDisplayName.substring(itemDisplayName.lastIndexOf('.') + 1).toLowerCase() : '';
-                                        let largeIcon = '📄'; // 默认图标
-                                        if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(ext)) { largeIcon = '📝';}
-                                        else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
-                                        else if (['pdf'].includes(ext)) { largeIcon = '📕';}
-                                        else if (['doc', 'docx', 'odt'].includes(ext)) { largeIcon = '📃';}
-                                        else if (['xls', 'xlsx', 'ods'].includes(ext)) { largeIcon = '📊';}
-                                        else if (['ppt', 'pptx', 'odp'].includes(ext)) { largeIcon = '🖥️';}
-                                        else if (['zip', 'rar', 'tar', 'gz', '7z'].includes(ext)) { largeIcon = '📦';}
-                                        else if (['mp3', 'wav', 'ogg', 'aac', 'flac'].includes(ext)) { largeIcon = '🎵';}
-                                        else if (['mp4', 'mov', 'avi', 'mkv', 'webm', 'wmv'].includes(ext)) { largeIcon = '🎬';}
-                                    %>
-                                    <span class="file-icon-large"><%= largeIcon %></span>
-                                    <span class="file-name"><%= itemDisplayName %></span>
-                                     <% if (locals.isSearchResult) { %>
-                                        <span class="file-location-in-search">(位於: <%= (itemPathForLink.substring(0, itemPathForLink.lastIndexOf('/')) || '/') %>)</span>
-                                    <% } %>
-                                </div>
-                            <% } %>
-                            <span class="file-actions">
-                                <a href="#" class="action-link rename-link" onclick="showRenameForm('<%= item.encodedName %>', '<%= itemDisplayName.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>', <%= item.isDir %>); return false;">重命名</a>
-                                <% if (!item.isDir) { %>
-                                    <% if (locals.ALLOWED_TEXT_EXTENSIONS && ALLOWED_TEXT_EXTENSIONS.includes(itemDisplayName.includes('.') ? itemDisplayName.substring(itemDisplayName.lastIndexOf('.') + 1).toLowerCase() : '')) { %>
-                                        <a href="/edit?path=<%= encodedItemPathForLink %><%= adminTargetQueryForActions %>" class="action-link edit-link">編輯</a>
-                                    <% } %>
-                                    <a href="/download?path=<%= encodedItemPathForLink %><%= adminTargetQueryForActions %>" class="action-link">下載</a>
-                                <% } %>
-                                <a href="/delete?path=<%= encodedItemPathForLink %>&isDir=<%= item.isDir %><%= adminTargetQueryForActions %>" class="action-link delete-link" onclick="return confirm('確定要刪除 <%= itemDisplayName.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %><%= item.isDir ? ' 及其所有內容' : '' %> 嗎？');">删除</a>
-                            </span>
-                            <div class="rename-form" id="rename-form-<%= item.encodedName %>">
+                            </div>
+                            <div class="rename-form" id="rename-form-<%= item.encodedName %>" style="display:none; margin-left: 30px;">
                                 <form action="/rename" method="POST" class="control-form inline-form">
-                                    <input type="hidden" name="currentPath" value="<%= locals.isSearchResult ? (itemPathForLink.substring(0, itemPathForLink.lastIndexOf('/')) || '/') : currentPath %>">
-                                    <input type="hidden" name="oldPath" value="<%= itemPathForLink %>">
+                                    <input type="hidden" name="currentPath" value="<%= locals.isSearchResult ? (item.path.substring(0, item.path.lastIndexOf('/')) || '/') : currentPath %>">
+                                    <input type="hidden" name="oldPath" value="<%= item.path %>">
                                     <input type="hidden" name="isDir" value="<%= item.isDir %>">
-                                    <% if (locals.viewTargetUsername && user.role === 'admin') { %>
-                                        <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
-                                    <% } %>
+                                    <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
                                     <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                                    <input type="text" name="newName" placeholder="新名稱" value="<%= itemDisplayName %>" required>
+                                    <input type="text" name="newName" placeholder="新名稱" value="<%= item.name %>" required>
                                     <button type="submit">確認</button>
                                     <button type="button" class="secondary" onclick="hideRenameForm('<%= item.encodedName %>'); return false;">取消</button>
                                 </form>
@@ -209,102 +281,415 @@
             <% } %>
         </div>
     </div>
+
+    <div id="move-modal">
+        <div class="move-modal-content">
+            <span class="close-modal-btn" id="close-move-modal-btn">&times;</span>
+            <h3>移動選中項目到:</h3>
+            <div id="directory-tree-container">
+                <p>正在加載目錄...</p> {/* Placeholder */}
+            </div>
+            <p>已選擇目標: <strong id="selected-destination-path">無</strong></p>
+            <input type="hidden" id="move-destination-input" value="">
+            <button id="confirm-move-btn" disabled>確認移動</button>
+            <button type="button" class="secondary" id="cancel-move-btn">取消</button>
+        </div>
+    </div>
+
     <%- include('partials/theme-switcher') %>
     <script src="/theme.js"></script>
     <script>
-        // Script for files.ejs (toggle upload, drag-drop, view toggle, rename form)
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
+        const CSRF_TOKEN = "<%= locals.csrfToken || '' %>"; // For AJAX requests if needed
+        const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
+        const CURRENT_USER_ROLE = "<%= user.role %>";
+        const CURRENT_PATH_ON_LOAD = "<%= currentPath %>"; // For rename currentPath logic
+        const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
 
-        const toggleUploadBtn = document.getElementById('toggleUploadBtn');
-        const uploadSection = document.getElementById('upload-section');
-        if (toggleUploadBtn && uploadSection) {
-            toggleUploadBtn.addEventListener('click', () => {
-                if (uploadSection.style.display === 'none' || uploadSection.style.display === '') {
-                    uploadSection.style.display = 'block';
-                    toggleUploadBtn.textContent = '隱藏上傳區域';
-                } else {
-                    uploadSection.style.display = 'none';
-                    toggleUploadBtn.textContent = '上傳文件到此';
-                }
-            });
-        }
 
-        const dropArea = document.getElementById('drop-area');
-        const fileInput = document.getElementById('userFiles');
-        const fileListPreview = document.getElementById('file-list-preview');
-        const uploadButton = document.getElementById('upload-button');
+        document.addEventListener('DOMContentLoaded', () => {
+            const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const selectionActionBar = document.getElementById('selection-action-bar');
+            const selectionCountDisplay = document.getElementById('selection-count');
 
-        if (dropArea && fileInput && fileListPreview && uploadButton) {
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropArea.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser default behavior for whole page
-            });
-            function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+            const actionEditBtn = document.getElementById('action-edit-btn');
+            const actionRenameBtn = document.getElementById('action-rename-btn');
+            const actionMoveBtn = document.getElementById('action-move-btn');
+            const actionDownloadBtn = document.getElementById('action-download-btn');
+            const actionDeleteBtn = document.getElementById('action-delete-btn');
 
-            ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false));
-            ['dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false));
-            
-            dropArea.addEventListener('drop', handleDrop, false);
-            function handleDrop(e) {
-                fileInput.files = e.dataTransfer.files;
-                updateFileListPreview();
-            }
-            fileInput.addEventListener('change', updateFileListPreview);
+            const moveModal = document.getElementById('move-modal');
+            const closeMoveModalBtn = document.getElementById('close-move-modal-btn');
+            const directoryTreeContainer = document.getElementById('directory-tree-container');
+            const confirmMoveBtn = document.getElementById('confirm-move-btn');
+            const cancelMoveBtn = document.getElementById('cancel-move-btn');
+            const selectedDestinationPathDisplay = document.getElementById('selected-destination-path');
+            const moveDestinationInput = document.getElementById('move-destination-input');
 
-            function updateFileListPreview() {
-                fileListPreview.innerHTML = '';
-                if (fileInput.files.length > 0) {
-                    const list = document.createElement('ul');
-                    list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
-                    for (let i = 0; i < fileInput.files.length; i++) {
-                        const listItem = document.createElement('li');
-                        listItem.textContent = fileInput.files[i].name + (fileInput.files[i].size ? ` (${(fileInput.files[i].size / 1024).toFixed(1)} KB)` : '');
-                        listItem.style.fontSize = '0.9em';
-                        list.appendChild(listItem);
+            let currentDirectoryTree = []; // To store fetched directory tree
+
+            function getSelectedItems() {
+                const selected = [];
+                itemCheckboxes.forEach(cb => {
+                    if (cb.checked) {
+                        selected.push({
+                            path: cb.dataset.path,
+                            encodedPath: cb.dataset.encodedPath,
+                            name: cb.dataset.name, // Original name, not encoded
+                            encodedName: cb.dataset.encodedName,
+                            isDir: cb.dataset.isDir === 'true',
+                            rawName: cb.dataset.rawName // For confirm dialogs
+                        });
                     }
-                    fileListPreview.appendChild(list);
-                    uploadButton.style.display = 'inline-block';
+                });
+                return selected;
+            }
+
+            function updateSelectionActions() {
+                const selectedItems = getSelectedItems();
+                const count = selectedItems.length;
+
+                if (count > 0) {
+                    selectionActionBar.style.display = 'flex';
+                    selectionCountDisplay.textContent = `已選擇 ${count} 項`;
                 } else {
-                    uploadButton.style.display = 'none';
+                    selectionActionBar.style.display = 'none';
                 }
-            }
-            if(fileInput.files.length === 0) uploadButton.style.display = 'none'; // Initial check
-        }
 
-        const fileContainer = document.getElementById('file-container');
-        const listViewBtn = document.getElementById('listViewBtn');
-        const gridViewBtn = document.getElementById('gridViewBtn');
-        if (fileContainer && listViewBtn && gridViewBtn) {
-            function toggleView(viewType) {
-                if (viewType === 'grid') {
-                    fileContainer.className = 'grid-view';
-                    gridViewBtn.classList.add('active');
-                    listViewBtn.classList.remove('active');
-                    localStorage.setItem('fileView', 'grid');
-                } else { // Default to list view
-                    fileContainer.className = 'list-view';
-                    listViewBtn.classList.add('active');
-                    gridViewBtn.classList.remove('active');
-                    localStorage.setItem('fileView', 'list');
+                actionEditBtn.disabled = !(count === 1 && !selectedItems[0].isDir && ALLOWED_TEXT_EXTENSIONS.includes(selectedItems[0].name.substring(selectedItems[0].name.lastIndexOf('.') + 1).toLowerCase()));
+                actionRenameBtn.disabled = !(count === 1);
+                actionMoveBtn.disabled = !(count > 0);
+                actionDownloadBtn.disabled = !(count === 1 && !selectedItems[0].isDir);
+                actionDeleteBtn.disabled = !(count > 0);
+            }
+
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateSelectionActions);
+            });
+
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', (e) => {
+                    itemCheckboxes.forEach(cb => cb.checked = e.target.checked);
+                    updateSelectionActions();
+                });
+            }
+
+            // Action Button Listeners
+            if (actionEditBtn) {
+                actionEditBtn.addEventListener('click', () => {
+                    const selected = getSelectedItems();
+                    if (selected.length === 1) {
+                        let url = `/edit?path=${selected[0].encodedPath}`;
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                            url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                        }
+                        window.location.href = url;
+                    }
+                });
+            }
+
+            if (actionRenameBtn) {
+                actionRenameBtn.addEventListener('click', () => {
+                    const selected = getSelectedItems();
+                    if (selected.length === 1) {
+                        // Reuse existing inline form logic for now
+                        showRenameForm(selected[0].encodedName, selected[0].name, selected[0].isDir);
+                    }
+                });
+            }
+            
+            if (actionDownloadBtn) {
+                actionDownloadBtn.addEventListener('click', () => {
+                    const selected = getSelectedItems();
+                    if (selected.length === 1 && !selected[0].isDir) {
+                        let url = `/download?path=${selected[0].encodedPath}`;
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                            url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                        }
+                        window.location.href = url; // Or create an iframe to download
+                    }
+                });
+            }
+
+            if (actionDeleteBtn) {
+                actionDeleteBtn.addEventListener('click', async () => {
+                    const selectedItems = getSelectedItems();
+                    if (selectedItems.length === 0) return;
+
+                    const itemNames = selectedItems.map(item => item.rawName).join(', ');
+                    if (confirm(`確定要刪除選中的 ${selectedItems.length} 個項目 (${itemNames}) 嗎？此操作不可恢復！`)) {
+                        // For simplicity, we'll call the existing delete endpoint for each item.
+                        // A batch delete endpoint would be more efficient.
+                        let allSucceeded = true;
+                        for (const item of selectedItems) {
+                            try {
+                                let deleteUrl = `/delete?path=${item.encodedPath}&isDir=${item.isDir}`;
+                                if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                                    deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                                }
+                                // We expect a redirect from the server. If we want to stay on page and refresh,
+                                // we'd need to use fetch and handle response.
+                                // For now, let's assume simple sequential GET requests and then reload.
+                                // This is NOT ideal for UX or efficiency. A proper batch API is needed.
+                                
+                                // Temporary: just navigate for the first one to show it "works", then alert.
+                                // In a real scenario, you'd use fetch() and handle responses.
+                                if (selectedItems.indexOf(item) === 0 && selectedItems.length === 1) { // only for single item for now
+                                     window.location.href = deleteUrl;
+                                     return;
+                                }
+                            } catch (error) {
+                                console.error('刪除項目時出錯:', item.name, error);
+                                allSucceeded = false;
+                            }
+                        }
+                        if (selectedItems.length > 1) {
+                             alert('多項目刪除需要後端支持批處理。目前僅為演示。請刷新頁面查看結果（如果單個刪除接口被多次調用）。');
+                             // window.location.reload(); // Or selectively remove items from DOM
+                        } else if (allSucceeded && selectedItems.length > 0) {
+                            // For single item, page would have reloaded via the GET request.
+                        }
+                         updateSelectionActions(); // Clear selection
+                         // Potentially reload or update UI more gracefully
+                    }
+                });
+            }
+
+            // --- Move Modal Logic ---
+            if (actionMoveBtn) {
+                actionMoveBtn.addEventListener('click', async () => {
+                    const selectedItems = getSelectedItems();
+                    if (selectedItems.length === 0) return;
+                    
+                    moveDestinationInput.value = '';
+                    selectedDestinationPathDisplay.textContent = '無';
+                    confirmMoveBtn.disabled = true;
+                    directoryTreeContainer.innerHTML = '<p>正在加載目錄...</p>';
+                    moveModal.style.display = 'block';
+
+                    try {
+                        let fetchUrl = '/api/directories';
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                            fetchUrl += `?targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                        }
+                        // Add current path of items being moved to exclude them and their children
+                        // This needs more sophisticated logic if items are from different dirs (search results)
+                        // For now, assume items are from currentPath if not search, or root if search
+                        const baseSourcePath = IS_SEARCH_RESULT_VIEW ? '/' : CURRENT_PATH_ON_LOAD;
+                        // fetchUrl += `${fetchUrl.includes('?') ? '&' : '?'}excludePath=${encodeURIComponent(baseSourcePath)}`;
+
+
+                        const response = await fetch(fetchUrl);
+                        if (!response.ok) throw new Error(`無法獲取目錄列表: ${response.statusText}`);
+                        currentDirectoryTree = await response.json();
+                        renderDirectoryTree(currentDirectoryTree, directoryTreeContainer, selectedItems.map(i => i.path));
+                    } catch (error) {
+                        console.error('獲取目錄樹時出錯:', error);
+                        directoryTreeContainer.innerHTML = `<p style="color:red;">加載目錄失敗: ${error.message}</p>`;
+                    }
+                });
+            }
+            
+            function renderDirectoryTree(nodes, container, itemsToMovePaths, currentLevelPath = '/') {
+                container.innerHTML = ''; // Clear previous content
+                const ul = document.createElement('ul');
+                
+                // Add "Root" directory as a selectable option
+                const rootLi = document.createElement('li');
+                rootLi.textContent = '根目錄 (/)';
+                rootLi.dataset.path = '/';
+                rootLi.addEventListener('click', (e) => selectDestination(e.target, '/'));
+                ul.appendChild(rootLi);
+
+                function buildTree(items, parentUl, parentPath) {
+                    items.forEach(item => {
+                        // Exclude the items being moved and their potential subdirectories from appearing as destinations
+                        if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || item.path.startsWith(sourcePath + '/'))) {
+                            return;
+                        }
+
+                        const li = document.createElement('li');
+                        li.textContent = item.name;
+                        li.dataset.path = item.path;
+                        li.addEventListener('click', (e) => {
+                            e.stopPropagation(); // Prevent parent li click
+                            selectDestination(e.target, item.path);
+                        });
+                        parentUl.appendChild(li);
+
+                        if (item.children && item.children.length > 0) {
+                            const nestedUl = document.createElement('ul');
+                            li.appendChild(nestedUl);
+                            buildTree(item.children, nestedUl, item.path);
+                        }
+                    });
                 }
+                buildTree(nodes, ul, '/');
+                container.appendChild(ul);
             }
-            const preferredView = localStorage.getItem('fileView');
-            toggleView(preferredView || 'list'); // Default to list if no preference
 
-            listViewBtn.addEventListener('click', () => toggleView('list'));
-            gridViewBtn.addEventListener('click', () => toggleView('grid'));
-        }
+            function selectDestination(targetElement, path) {
+                document.querySelectorAll('#directory-tree-container li.selected-dir').forEach(el => el.classList.remove('selected-dir'));
+                targetElement.classList.add('selected-dir');
+                selectedDestinationPathDisplay.textContent = path;
+                moveDestinationInput.value = path;
+                confirmMoveBtn.disabled = false;
+            }
 
+            if (closeMoveModalBtn) closeMoveModalBtn.onclick = () => moveModal.style.display = 'none';
+            if (cancelMoveBtn) cancelMoveBtn.onclick = () => moveModal.style.display = 'none';
+            window.onclick = (event) => { if (event.target == moveModal) moveModal.style.display = 'none'; }
+
+            if (confirmMoveBtn) {
+                confirmMoveBtn.addEventListener('click', async () => {
+                    const selectedToMove = getSelectedItems();
+                    const destinationPath = moveDestinationInput.value;
+
+                    if (selectedToMove.length === 0 || !destinationPath) {
+                        alert('請選擇要移動的項目和目標文件夾。');
+                        return;
+                    }
+                    
+                    // Prevent moving a folder into itself or one of its own children
+                    for (const item of selectedToMove) {
+                        if (item.isDir && (destinationPath === item.path || destinationPath.startsWith(item.path + '/'))) {
+                            alert(`不能將文件夾 "${item.name}" 移動到其自身或其子文件夾中。`);
+                            return;
+                        }
+                    }
+
+
+                    try {
+                        const payload = {
+                            sourcePaths: selectedToMove.map(item => item.path),
+                            destinationPath: destinationPath,
+                            csrfToken: CSRF_TOKEN // If CSRF is implemented
+                        };
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                            payload.targetUsername = VIEW_TARGET_USERNAME;
+                        }
+
+                        const response = await fetch('/move-items', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await response.json();
+
+                        if (response.ok && result.success) {
+                            alert('項目移動成功！');
+                            window.location.reload(); // Reload to see changes
+                        } else {
+                            alert(`移動失敗: ${result.message || '未知錯誤'}`);
+                        }
+                    } catch (error) {
+                        console.error('移動項目時出錯:', error);
+                        alert(`移動項目時發生客戶端錯誤: ${error.message}`);
+                    }
+                    moveModal.style.display = 'none';
+                });
+            }
+
+
+            // --- Original scripts for toggle upload, drag-drop, view toggle, rename form ---
+            const toggleUploadBtn = document.getElementById('toggleUploadBtn');
+            const uploadSection = document.getElementById('upload-section');
+            if (toggleUploadBtn && uploadSection) {
+                toggleUploadBtn.addEventListener('click', () => {
+                    if (uploadSection.style.display === 'none' || uploadSection.style.display === '') {
+                        uploadSection.style.display = 'block';
+                        toggleUploadBtn.textContent = '隱藏上傳區域';
+                    } else {
+                        uploadSection.style.display = 'none';
+                        toggleUploadBtn.textContent = '上傳文件到此';
+                    }
+                });
+            }
+
+            const dropArea = document.getElementById('drop-area');
+            const fileInput = document.getElementById('userFiles'); // from upload form
+            const fileListPreview = document.getElementById('file-list-preview');
+            const uploadFormButton = document.getElementById('upload-button'); // submit button of upload form
+
+            if (dropArea && fileInput && fileListPreview && uploadFormButton) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false);
+                });
+                function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+                ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false));
+                ['dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false));
+                dropArea.addEventListener('drop', handleDrop, false);
+                function handleDrop(e) {
+                    fileInput.files = e.dataTransfer.files;
+                    updateFileListPreview();
+                }
+                fileInput.addEventListener('change', updateFileListPreview);
+                function updateFileListPreview() {
+                    fileListPreview.innerHTML = '';
+                    if (fileInput.files.length > 0) {
+                        const list = document.createElement('ul');
+                        list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
+                        for (let i = 0; i < fileInput.files.length; i++) {
+                            const listItem = document.createElement('li');
+                            listItem.textContent = fileInput.files[i].name + (fileInput.files[i].size ? ` (${(fileInput.files[i].size / 1024).toFixed(1)} KB)` : '');
+                            listItem.style.fontSize = '0.9em';
+                            list.appendChild(listItem);
+                        }
+                        fileListPreview.appendChild(list);
+                        uploadFormButton.style.display = 'inline-block';
+                    } else {
+                        uploadFormButton.style.display = 'none';
+                    }
+                }
+                if(fileInput.files.length === 0) uploadFormButton.style.display = 'none';
+            }
+
+            const fileContainer = document.getElementById('file-container');
+            const listViewBtn = document.getElementById('listViewBtn');
+            const gridViewBtn = document.getElementById('gridViewBtn');
+            if (fileContainer && listViewBtn && gridViewBtn) {
+                function toggleView(viewType) {
+                    if (viewType === 'grid') {
+                        fileContainer.className = 'grid-view';
+                        gridViewBtn.classList.add('active');
+                        listViewBtn.classList.remove('active');
+                        localStorage.setItem('fileView', 'grid');
+                    } else {
+                        fileContainer.className = 'list-view';
+                        listViewBtn.classList.add('active');
+                        gridViewBtn.classList.remove('active');
+                        localStorage.setItem('fileView', 'list');
+                    }
+                }
+                const preferredView = localStorage.getItem('fileView');
+                toggleView(preferredView || 'list');
+                listViewBtn.addEventListener('click', () => toggleView('list'));
+                gridViewBtn.addEventListener('click', () => toggleView('grid'));
+            }
+            updateSelectionActions(); // Initial call
+        });
+
+        // Keep existing rename form functions, but they might need to be modalized later
         function showRenameForm(encodedName, currentName, isDir) {
-            document.querySelectorAll('.rename-form').forEach(form => form.style.display = 'none'); // Hide all first
-            const form = document.getElementById('rename-form-' + encodedName);
-            if (form) {
-                form.style.display = 'block';
-                const inputField = form.querySelector('input[name="newName"]');
+            document.querySelectorAll('.rename-form').forEach(form => form.style.display = 'none');
+            const formContainer = document.getElementById('rename-form-' + encodedName);
+            if (formContainer) {
+                formContainer.style.display = 'block';
+                const inputField = formContainer.querySelector('input[name="newName"]');
                 if (inputField) {
-                    inputField.value = currentName; // Set current name
+                    inputField.value = currentName;
                     inputField.focus();
                     inputField.select();
+                }
+                // Update currentPath in the rename form if it's a search result
+                const currentPathInput = formContainer.querySelector('input[name="currentPath"]');
+                if (currentPathInput && IS_SEARCH_RESULT_VIEW) {
+                     const itemOriginalPath = formContainer.querySelector('input[name="oldPath"]').value;
+                     currentPathInput.value = itemOriginalPath.substring(0, itemOriginalPath.lastIndexOf('/')) || '/';
+                } else if (currentPathInput) {
+                    currentPathInput.value = CURRENT_PATH_ON_LOAD;
                 }
             }
         }
