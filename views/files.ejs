@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* ... (保留之前的樣式) ... */
+        /* ... (保留所有之前的樣式) ... */
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         #selection-action-bar button { margin: 0; }
         .item-checkbox { margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
@@ -23,7 +23,7 @@
             overflow: auto; background-color: rgba(0,0,0,0.5); 
         }
         .modal-content { 
-            background-color: var(--modal-bg, #ffffff) !important; /* !important 确保背景色优先 */
+            background-color: var(--modal-bg, #ffffff) !important; /* 再次確保背景色 */
             color: var(--modal-text-color, #333);
             margin: 10% auto; 
             padding: 20px; 
@@ -33,12 +33,11 @@
             max-width: 500px; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
         }
-        /* 确保暗色主题也明确设置背景 */
         .dark-theme .modal-content {
              --modal-bg: #2c2c2c; 
              --modal-text-color: #e0e0e0; 
              --modal-border-color: #555;
-             background-color: var(--modal-bg) !important; /* !important 确保背景色优先 */
+             background-color: var(--modal-bg) !important; /* 確保暗色主題背景 */
         }
         .modal-content h3 { margin-top: 0; }
         .modal-content .form-group { margin-bottom: 15px; }
@@ -47,6 +46,11 @@
             width: 100%; padding: 10px; box-sizing: border-box;
             border: 1px solid var(--input-border-color, #ccc); border-radius: 4px;
             background-color: var(--input-bg-color, #fff); color: var(--input-text-color, #333);
+        }
+        .dark-theme .modal-content .form-group input[type="text"] { /* 暗色主題下輸入框樣式 */
+            background-color: var(--dark-input-bg, #3a3a3a);
+            color: var(--dark-input-text, #e0e0e0);
+            border-color: var(--dark-input-border, #555);
         }
         .modal-actions { text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
 
@@ -60,13 +64,13 @@
         }
         .dark-theme #directory-tree-container {
             border-color: #444;
-            background-color: #3a3a3a;
+            background-color: #3a3a3a; 
         }
         #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
         #directory-tree-container li { padding: 5px 0; cursor: pointer; border-bottom: 1px dashed var(--input-border-color, #eee); }
         #directory-tree-container li:last-child { border-bottom: none; }
         #directory-tree-container li:hover { background-color: var(--hover-bg, #f0f0f0); } 
-        .dark-theme #directory-tree-container li:hover { --hover-bg: #4a4a4a; }
+        .dark-theme #directory-tree-container li:hover { --hover-bg: #4a4a4a; background-color: var(--hover-bg); }
         #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } 
         .dark-theme #directory-tree-container li.selected-dir { background-color: #0056b3; }
 
@@ -465,13 +469,14 @@
             const itemCheckboxesForListeners = document.querySelectorAll('.item-checkbox');
             itemCheckboxesForListeners.forEach((checkbox, index) => {
                 checkbox.addEventListener('change', (event) => {
-                    // console.log(`Checkbox ${index} (path: ${event.target.dataset.path}) 'change' event. New checked state: ${event.target.checked}`); 
+                    console.log(`Checkbox ${index} (path: ${event.target.dataset.path}) 'change' event. New checked state: ${event.target.checked}`); 
                     updateSelectionActions(); 
                 });
             });
             
             if (selectAllCheckbox) {
                 selectAllCheckbox.addEventListener('change', (e) => {
+                    console.log(`Select All checkbox changed to: ${e.target.checked}`);
                     const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                     currentCheckboxes.forEach(cb => {
                         if (cb.checked !== e.target.checked) { 
@@ -506,19 +511,19 @@
             if (actionDownloadBtn) {
                 actionDownloadBtn.addEventListener('click', () => {
                     const selectedItems = getSelectedItems(); 
-                    // console.log("下載按鈕點擊，選中項:", selectedItems); 
+                    console.log("下載按鈕點擊，選中項:", selectedItems.length, "個"); 
 
                     if (selectedItems.length === 0) {
                         alert("請至少選擇一個項目進行下載。"); 
                         return;
                     }
                      if (actionDownloadBtn.disabled) { 
-                        // console.log("下載按鈕被禁用，但仍被點擊。");
+                        console.log("下載按鈕被禁用，但仍被點擊。");
                         return;
                     }
 
                     if (selectedItems.length === 1 && !selectedItems[0].isDir) {
-                        // console.log("準備下載單個文件:", selectedItems[0]);
+                        console.log("準備下載單個文件:", selectedItems[0]);
                         let url = `/download?path=${selectedItems[0].encodedPath}`;
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
@@ -531,7 +536,7 @@
                         tempLink.click();
                         document.body.removeChild(tempLink);
                     } else {
-                        // console.log("準備打包下載 (多選或文件夾):", selectedItems);
+                        console.log("準備打包下載 (多選或文件夾):", selectedItems);
                         const form = document.createElement('form');
                         form.method = 'POST';
                         form.action = '/download-archive';
@@ -547,7 +552,7 @@
                         }));
                         itemsInput.value = JSON.stringify(itemsForPayload);
                         form.appendChild(itemsInput);
-                        // console.log("打包下載的項目數據 (itemsInput.value):", itemsInput.value);
+                        console.log("打包下載的項目數據 (itemsInput.value):", itemsInput.value);
 
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             const targetUserInput = document.createElement('input');
@@ -564,7 +569,7 @@
                             form.appendChild(csrfInput);
                         }
                         document.body.appendChild(form);
-                        // console.log("提交打包下載表單...");
+                        console.log("提交打包下載表單...");
                         try {
                             form.submit();
                         } catch (e) {
@@ -711,6 +716,22 @@
                         return;
                     }
                     const formData = new FormData(uploadForm); 
+                    
+                    // Log FormData entries for debugging folder uploads
+                    console.log("FormData entries before XHR send:");
+                    for (let [key, value] of formData.entries()) {
+                        if (value instanceof File) {
+                            console.log(`  ${key}: File { name: "${value.name}", size: ${value.size}, type: "${value.type}", webkitRelativePath: "${value.webkitRelativePath}" }`);
+                        } else {
+                            console.log(`  ${key}: ${value}`);
+                        }
+                    }
+                    console.log("Total files in userFilesInput.files:", userFilesInput.files.length);
+                    for(let i=0; i < userFilesInput.files.length; i++) {
+                        console.log(`File ${i}: name="${userFilesInput.files[i].name}", webkitRelativePath="${userFilesInput.files[i].webkitRelativePath}"`);
+                    }
+
+
                     const xhr = new XMLHttpRequest();
                     xhr.open('POST', uploadForm.action, true);
                     if (uploadProgressContainer && uploadProgressBar) {
@@ -729,20 +750,14 @@
                     };
                     xhr.onload = function() {
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        if (xhr.status >= 200 && xhr.status < 300) {
+                        console.log("XHR Upload onload. Status:", xhr.status, "ResponseURL:", xhr.responseURL, "ResponseText:", xhr.responseText.substring(0, 200));
+                        if (xhr.status >= 200 && xhr.status < 400) { // Consider 3xx redirects as potentially successful if they go to /files
                             if (xhr.responseURL && xhr.responseURL !== uploadForm.action && xhr.responseURL.includes('/files')) { 
+                                console.log("XHR detected redirect to files page, navigating...");
                                 window.location.href = xhr.responseURL; 
                             } else {
-                                try {
-                                    const jsonResponse = JSON.parse(xhr.responseText);
-                                    if (jsonResponse.success) {
-                                        alert(jsonResponse.message || '上傳成功！頁面將刷新。');
-                                    } else {
-                                        alert(jsonResponse.message || '上傳失敗，但伺服器未重定向。');
-                                    }
-                                } catch (e) {
-                                    console.warn("Upload response was not JSON, or parsing fails. Assuming success by page behavior or redirect.");
-                                }
+                                console.log("XHR success, but no clear redirect to /files or responseURL same as action. Reloading.");
+                                // alert('上傳操作已發送，頁面將刷新。'); 
                                 window.location.reload();
                             }
                         } else {
@@ -756,21 +771,21 @@
                                 if(xhr.responseText) errorMessage = xhr.responseText;
                             }
                             alert(errorMessage);
-                            console.error('Upload failed:', xhr.status, xhr.responseText);
+                            console.error('Upload failed through XHR:', xhr.status, xhr.responseText);
                         }
                     };
-                    xhr.onerror = function(e) { // 添加事件参数 e
+                    xhr.onerror = function(e) { 
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
                         alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
-                        console.error('Upload network error:', e);
+                        console.error('Upload network error (xhr.onerror):', e, "Status:", xhr.status, "StatusText:", xhr.statusText);
                     };
+                    console.log("使用 XHR 發送上傳數據...");
                     xhr.send(formData);
                 });
             }
 
             const dropArea = document.getElementById('drop-area');
             const fileListPreview = document.getElementById('file-list-preview');
-            // const uploadFormButton = document.getElementById('upload-button'); // Already declared
 
             if (dropArea && userFilesInput && fileListPreview) { 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
