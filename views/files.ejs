@@ -8,13 +8,12 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* Basic styling for new elements - move to style.css for production */
         #selection-action-bar {
             padding: 10px;
-            background-color: #f0f0f0; /* Light grey, themeable */
-            border-bottom: 1px solid #ccc; /* Themeable */
+            background-color: #f0f0f0; 
+            border-bottom: 1px solid #ccc; 
             margin-bottom: 15px;
-            display: none; /* Hidden by default */
+            display: none; 
             flex-wrap: wrap;
             gap: 10px;
             align-items: center;
@@ -24,34 +23,33 @@
         }
         .item-checkbox {
             margin-right: 10px;
-            width: 18px; /* Larger checkbox */
+            width: 18px; 
             height: 18px;
             vertical-align: middle;
         }
-        .file-entry-selectable { /* Wrapper for checkbox and item content */
+        .file-entry-selectable { 
             display: flex;
             align-items: center;
             width: 100%;
         }
-        .file-content-wrapper { /* To take remaining width */
+        .file-content-wrapper { 
             flex-grow: 1;
-            display: flex; /* For list view alignment */
-            justify-content: space-between; /* For list view alignment */
-            align-items: center; /* For list view alignment */
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
         }
-        .list-view li { /* Ensure list items can contain positioned children */
-            position: relative; /* Crucial for absolute positioning of rename-form */
+        .list-view li { 
+            position: relative; 
         }
         .list-view .file-content-wrapper > .file-entry {
-             flex-grow: 1; /* Allow file name to take space */
+             flex-grow: 1; 
         }
-        .list-view .file-actions-placeholder { /* Space for old actions, now empty or for selection count */
-            min-width: 150px; /* Adjust as needed */
+        .list-view .file-actions-placeholder { 
+            min-width: 150px; 
             text-align: right;
             font-size: 0.9em;
             color: #666;
         }
-
         #move-modal {
             display: none;
             position: fixed;
@@ -64,30 +62,28 @@
             background-color: rgba(0,0,0,0.5);
         }
         .move-modal-content {
-            background-color: #fff; /* Themeable */
+            background-color: #fff; 
             margin: 10% auto;
             padding: 20px;
-            border: 1px solid #888; /* Themeable */
+            border: 1px solid #888; 
             border-radius: 8px;
             width: 80%;
             max-width: 500px;
-            color: #333; /* Themeable */
+            color: #333; 
         }
         .move-modal-content h3 { margin-top: 0;}
         #directory-tree-container {
             max-height: 300px;
             overflow-y: auto;
-            border: 1px solid #eee; /* Themeable */
+            border: 1px solid #eee; 
             padding: 10px;
             margin-bottom: 15px;
         }
         #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
         #directory-tree-container li { padding: 5px 0; cursor: pointer; }
-        #directory-tree-container li:hover { background-color: #f0f0f0; } /* Themeable */
-        #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } /* Themeable */
-
+        #directory-tree-container li:hover { background-color: #f0f0f0; } 
+        #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } 
         .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; }
-
         .file-entry {
             display: flex;
             align-items: center;
@@ -105,60 +101,51 @@
             display: flex;
             align-items: center;
             padding: 5px 10px;
-            background-color: #f9f9f9; /* Themeable */
-            border-bottom: 1px solid #eee; /* Themeable */
+            background-color: #f9f9f9; 
+            border-bottom: 1px solid #eee; 
         }
         #select-all-container label { margin-left: 5px; font-weight: normal;}
-
-        /* Styles for inline rename form - improved */
         .rename-form {
             display: none;
             position: absolute;
-            left: 25px; /* Adjusted left position */
-            right: 5px; /* Adjusted right for some padding */
-            top: calc(100% + 2px); /* Position below the item content, with a small gap */
-            background-color: var(--rename-form-bg, #ffffff); /* CSS variable for theming */
+            left: 25px; 
+            right: 5px; 
+            top: calc(100% + 2px); 
+            background-color: var(--rename-form-bg, #ffffff); 
             padding: 12px;
             border: 1px solid var(--rename-form-border-color, #cccccc);
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             z-index: 100;
             border-radius: 6px;
-            max-width: 400px; /* Limit width */
+            max-width: 400px; 
             box-sizing: border-box;
         }
-        .grid-view li .rename-form { /* Adjust for grid view if needed */
+        .grid-view li .rename-form { 
             left: 50%;
-            transform: translateX(-50%) translateY(5px); /* Center below grid item */
-            width: calc(100% - 10px); /* Slightly less than item width */
+            transform: translateX(-50%) translateY(5px); 
+            width: calc(100% - 10px); 
             max-width: 300px;
         }
-        .rename-form form.inline-form { /* Ensure form elements align well */
+        .rename-form form.inline-form { 
             display: flex;
             gap: 8px;
         }
         .rename-form input[type="text"] {
             flex-grow: 1;
         }
-
-
-         /* Dark theme specific for rename form (can also be done with CSS variables) */
         .dark-theme .rename-form {
             --rename-form-bg: #3a3a3a;
             --rename-form-border-color: #555;
-            /* color: #e0e0e0; /* For text inside if any */
         }
-
-
         #upload-section { display: none; padding: 20px; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 15px; background-color: #f8f9fa; }
         .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
         .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
-
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-             <h1>
+            <h1>
                 <% if (locals.isSearchResult && locals.searchQuery) { %>
                     有關 "<%= searchQuery %>" 的搜尋結果 <% if (locals.viewTargetUsername) { %>(在 <%= viewTargetUsername %> 的文件中)<% } else { %>(在您的文件中)<% } %>
                 <% } else if (locals.viewTargetUsername && user.role === 'admin') { %>
@@ -167,11 +154,14 @@
                     <%= user.username %> 的文件
                 <% } %>
             </h1>
-            <nav>
-                <% if (user.role === 'admin') { %><a href="/admin">管理面板</a><% } %>
-                <a href="/change-password">修改密碼</a>
-                <a href="/logout">登出</a>
-            </nav>
+            <div class="header-controls">
+                <nav>
+                    <% if (user.role === 'admin') { %><a href="/admin">管理面板</a><% } %>
+                    <a href="/change-password">修改密碼</a>
+                    <a href="/logout">登出</a>
+                </nav>
+                <%- include('partials/theme-switcher') %>
+            </div>
         </header>
 
         <% if (locals.message) { %>
@@ -232,7 +222,6 @@
             <button id="action-download-btn" disabled>下載 (單個文件)</button>
             <button id="action-delete-btn" class="secondary" disabled>删除</button>
         </div>
-
 
         <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
             <div id="upload-section">
@@ -337,10 +326,8 @@
         </div>
     </div>
 
-    <%- include('partials/theme-switcher') %>
     <script src="/theme.js"></script>
     <script>
-        // Ensure these are correctly passed from server and available globally or within this scope
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
         const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
@@ -348,19 +335,16 @@
         const CURRENT_PATH_ON_LOAD = "<%= currentPath %>";
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
 
-
         document.addEventListener('DOMContentLoaded', () => {
             const itemCheckboxes = document.querySelectorAll('.item-checkbox');
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const selectionActionBar = document.getElementById('selection-action-bar');
             const selectionCountDisplay = document.getElementById('selection-count');
-
             const actionEditBtn = document.getElementById('action-edit-btn');
             const actionRenameBtn = document.getElementById('action-rename-btn');
             const actionMoveBtn = document.getElementById('action-move-btn');
             const actionDownloadBtn = document.getElementById('action-download-btn');
             const actionDeleteBtn = document.getElementById('action-delete-btn');
-
             const moveModal = document.getElementById('move-modal');
             const closeMoveModalBtn = document.getElementById('close-move-modal-btn');
             const directoryTreeContainer = document.getElementById('directory-tree-container');
@@ -368,7 +352,6 @@
             const cancelMoveBtn = document.getElementById('cancel-move-btn');
             const selectedDestinationPathDisplay = document.getElementById('selected-destination-path');
             const moveDestinationInput = document.getElementById('move-destination-input');
-
             let currentDirectoryTree = [];
 
             function getSelectedItems() {
@@ -376,12 +359,9 @@
                 itemCheckboxes.forEach(cb => {
                     if (cb.checked) {
                         selected.push({
-                            path: cb.dataset.path,
-                            encodedPath: cb.dataset.encodedPath,
-                            name: cb.dataset.name,
-                            encodedName: cb.dataset.encodedName,
-                            isDir: cb.dataset.isDir === 'true',
-                            rawName: cb.dataset.rawName
+                            path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
+                            name: cb.dataset.name, encodedName: cb.dataset.encodedName,
+                            isDir: cb.dataset.isDir === 'true', rawName: cb.dataset.rawName
                         });
                     }
                 });
@@ -391,14 +371,12 @@
             function updateSelectionActions() {
                 const selectedItems = getSelectedItems();
                 const count = selectedItems.length;
-
                 if (count > 0) {
                     selectionActionBar.style.display = 'flex';
                     selectionCountDisplay.textContent = `已選擇 ${count} 項`;
                 } else {
                     selectionActionBar.style.display = 'none';
                 }
-                
                 let canEdit = false;
                 if (count === 1 && !selectedItems[0].isDir) {
                     const fileName = selectedItems[0].name;
@@ -408,17 +386,13 @@
                     }
                 }
                 actionEditBtn.disabled = !canEdit;
-
                 actionRenameBtn.disabled = !(count === 1);
                 actionMoveBtn.disabled = !(count > 0);
                 actionDownloadBtn.disabled = !(count === 1 && !selectedItems[0].isDir);
                 actionDeleteBtn.disabled = !(count > 0);
             }
 
-            itemCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', updateSelectionActions);
-            });
-
+            itemCheckboxes.forEach(checkbox => checkbox.addEventListener('change', updateSelectionActions));
             if (selectAllCheckbox) {
                 selectAllCheckbox.addEventListener('change', (e) => {
                     itemCheckboxes.forEach(cb => cb.checked = e.target.checked);
@@ -439,16 +413,12 @@
                     }
                 });
             }
-
             if (actionRenameBtn) {
                 actionRenameBtn.addEventListener('click', () => {
                     const selected = getSelectedItems();
-                    if (selected.length === 1) {
-                        showRenameForm(selected[0].encodedName, selected[0].name, selected[0].isDir);
-                    }
+                    if (selected.length === 1) showRenameForm(selected[0].encodedName, selected[0].name, selected[0].isDir);
                 });
             }
-            
             if (actionDownloadBtn) {
                 actionDownloadBtn.addEventListener('click', () => {
                     const selected = getSelectedItems();
@@ -459,26 +429,19 @@
                             url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
                         }
                         const tempLink = document.createElement('a');
-                        tempLink.href = url;
-                        tempLink.setAttribute('download', selected[0].name);
-                        tempLink.style.display = 'none';
-                        document.body.appendChild(tempLink);
-                        tempLink.click();
-                        document.body.removeChild(tempLink);
-                    } else {
-                        alert("打包下載多個文件功能尚未實現。");
-                    }
+                        tempLink.href = url; tempLink.setAttribute('download', selected[0].name);
+                        tempLink.style.display = 'none'; document.body.appendChild(tempLink);
+                        tempLink.click(); document.body.removeChild(tempLink);
+                    } else alert("打包下載多個文件功能尚未實現。");
                 });
             }
-
             if (actionDeleteBtn) {
                 actionDeleteBtn.addEventListener('click', async () => {
                     const selectedItems = getSelectedItems();
                     if (selectedItems.length === 0) return;
                     const itemNames = selectedItems.map(item => item.rawName).join(', ');
                     if (confirm(`確定要刪除選中的 ${selectedItems.length} 個項目 (${itemNames}) 嗎？此操作不可恢復！`)) {
-                        let allSucceeded = true;
-                        let reloadPage = false;
+                        let allSucceeded = true; let reloadPage = false;
                         for (const item of selectedItems) {
                             try {
                                 let deleteUrl = `/delete?path=${item.encodedPath}&isDir=${item.isDir}`;
@@ -486,16 +449,9 @@
                                     deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
                                 }
                                 const response = await fetch(deleteUrl, { method: 'GET' });
-                                if (response.ok && response.redirected) {
-                                   reloadPage = true;
-                                } else if (!response.ok) {
-                                    console.error('刪除失敗 (無重定向或錯誤狀態):', item.name, response.status);
-                                    allSucceeded = false;
-                                }
-                            } catch (error) {
-                                console.error('刪除項目時出錯:', item.name, error);
-                                allSucceeded = false;
-                            }
+                                if (response.ok && response.redirected) reloadPage = true;
+                                else if (!response.ok) { console.error('刪除失敗:', item.name, response.status); allSucceeded = false; }
+                            } catch (error) { console.error('刪除項目時出錯:', item.name, error); allSucceeded = false; }
                         }
                         if (reloadPage || !allSucceeded) {
                             alert(allSucceeded ? "選中項目已嘗試刪除，頁面將刷新。" : "部分項目刪除失敗，頁面將刷新。");
@@ -507,29 +463,19 @@
                     }
                 });
             }
-
             if (actionMoveBtn) {
                 actionMoveBtn.addEventListener('click', async () => {
                     const selectedItems = getSelectedItems();
                     if (selectedItems.length === 0) return;
-                    moveDestinationInput.value = '';
-                    selectedDestinationPathDisplay.textContent = '無';
-                    confirmMoveBtn.disabled = true;
-                    directoryTreeContainer.innerHTML = '<p>正在加載目錄...</p>';
+                    moveDestinationInput.value = ''; selectedDestinationPathDisplay.textContent = '無';
+                    confirmMoveBtn.disabled = true; directoryTreeContainer.innerHTML = '<p>正在加載目錄...</p>';
                     moveModal.style.display = 'block';
                     try {
-                        let fetchUrl = '/api/directories';
-                        let queryParams = [];
-                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                            queryParams.push(`targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`);
-                        }
+                        let fetchUrl = '/api/directories'; let queryParams = [];
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') queryParams.push(`targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`);
                         const pathsToExclude = selectedItems.filter(item => item.isDir).map(item => item.path);
-                        if (pathsToExclude.length > 0) {
-                            queryParams.push(`excludePaths=${encodeURIComponent(pathsToExclude.join(','))}`);
-                        }
-                        if (queryParams.length > 0) {
-                            fetchUrl += `?${queryParams.join('&')}`;
-                        }
+                        if (pathsToExclude.length > 0) queryParams.push(`excludePaths=${encodeURIComponent(pathsToExclude.join(','))}`);
+                        if (queryParams.length > 0) fetchUrl += `?${queryParams.join('&')}`;
                         const response = await fetch(fetchUrl);
                         if (!response.ok) throw new Error(`無法獲取目錄列表: ${response.statusText}`);
                         currentDirectoryTree = await response.json();
@@ -540,101 +486,62 @@
                     }
                 });
             }
-            
             function renderDirectoryTree(nodes, container, itemsToMovePaths, currentLevelPath = '/') {
-                container.innerHTML = '';
-                const ul = document.createElement('ul');
-                const rootLi = document.createElement('li');
-                rootLi.textContent = '根目錄 (/)';
-                rootLi.dataset.path = '/';
-                rootLi.addEventListener('click', (e) => selectDestination(e.target, '/'));
+                container.innerHTML = ''; const ul = document.createElement('ul');
+                const rootLi = document.createElement('li'); rootLi.textContent = '根目錄 (/)';
+                rootLi.dataset.path = '/'; rootLi.addEventListener('click', (e) => selectDestination(e.target, '/'));
                 ul.appendChild(rootLi);
                 function buildTree(items, parentUl, parentPath) {
                     items.forEach(item => {
-                        if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || (sourcePath.startsWith(item.path + '/') && item.path !=='/'))) { return; }
-                        if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) { return; }
-                        const li = document.createElement('li');
-                        li.textContent = item.name;
-                        li.dataset.path = item.path;
-                        li.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            selectDestination(e.target, item.path);
-                        });
+                        if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || (sourcePath.startsWith(item.path + '/') && item.path !=='/'))) return;
+                        if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) return;
+                        const li = document.createElement('li'); li.textContent = item.name; li.dataset.path = item.path;
+                        li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, item.path); });
                         parentUl.appendChild(li);
                         if (item.children && item.children.length > 0) {
-                            const nestedUl = document.createElement('ul');
-                            li.appendChild(nestedUl);
+                            const nestedUl = document.createElement('ul'); li.appendChild(nestedUl);
                             buildTree(item.children, nestedUl, item.path);
                         }
                     });
                 }
-                buildTree(nodes, ul, '/');
-                container.appendChild(ul);
+                buildTree(nodes, ul, '/'); container.appendChild(ul);
             }
-
             function selectDestination(targetElement, path) {
                 document.querySelectorAll('#directory-tree-container li.selected-dir').forEach(el => el.classList.remove('selected-dir'));
                 targetElement.classList.add('selected-dir');
-                selectedDestinationPathDisplay.textContent = path;
-                moveDestinationInput.value = path;
+                selectedDestinationPathDisplay.textContent = path; moveDestinationInput.value = path;
                 confirmMoveBtn.disabled = false;
             }
-
             if (closeMoveModalBtn) closeMoveModalBtn.onclick = () => moveModal.style.display = 'none';
             if (cancelMoveBtn) cancelMoveBtn.onclick = () => moveModal.style.display = 'none';
             window.onclick = (event) => { if (event.target == moveModal) moveModal.style.display = 'none'; }
-
             if (confirmMoveBtn) {
                 confirmMoveBtn.addEventListener('click', async () => {
-                    const selectedToMove = getSelectedItems();
-                    const destinationPath = moveDestinationInput.value;
-                    if (selectedToMove.length === 0 || !destinationPath) {
-                        alert('請選擇要移動的項目和目標文件夾。');
-                        return;
-                    }
+                    const selectedToMove = getSelectedItems(); const destinationPath = moveDestinationInput.value;
+                    if (selectedToMove.length === 0 || !destinationPath) { alert('請選擇要移動的項目和目標文件夾。'); return; }
                     for (const item of selectedToMove) {
                         if (item.isDir && (destinationPath === item.path || destinationPath.startsWith(item.path + '/'))) {
-                            alert(`不能將文件夾 "${item.name}" 移動到其自身或其子文件夾中。`);
-                            return;
+                            alert(`不能將文件夾 "${item.name}" 移動到其自身或其子文件夾中。`); return;
                         }
                     }
                     try {
-                        const payload = {
-                            sourcePaths: selectedToMove.map(item => item.path),
-                            destinationPath: destinationPath,
-                        };
-                         if (CSRF_TOKEN) { 
-                            payload._csrf = CSRF_TOKEN;
-                        }
-                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                            payload.targetUsername = VIEW_TARGET_USERNAME;
-                        }
+                        const payload = { sourcePaths: selectedToMove.map(item => item.path), destinationPath: destinationPath, };
+                        if (CSRF_TOKEN) payload._csrf = CSRF_TOKEN;
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') payload.targetUsername = VIEW_TARGET_USERNAME;
                         const response = await fetch('/move-items', {
-                            method: 'POST',
-                            headers: { 
-                                'Content-Type': 'application/json',
-                            },
+                            method: 'POST', headers: { 'Content-Type': 'application/json', },
                             body: JSON.stringify(payload)
                         });
                         const result = await response.json();
-                        if (response.ok && result.success) {
-                            alert('項目移動成功！');
-                            window.location.reload();
-                        } else {
-                            alert(`移動失敗: ${result.message || '未知錯誤'}`);
-                        }
-                    } catch (error) {
-                        console.error('移動項目時出錯:', error);
-                        alert(`移動項目時發生客戶端錯誤: ${error.message}`);
-                    }
+                        if (response.ok && result.success) { alert('項目移動成功！'); window.location.reload(); }
+                        else alert(`移動失敗: ${result.message || '未知錯誤'}`);
+                    } catch (error) { console.error('移動項目時出錯:', error); alert(`移動項目時發生客戶端錯誤: ${error.message}`); }
                     moveModal.style.display = 'none';
                 });
             }
-
-            // --- View Toggle, Upload Toggle, Drag-Drop ---
             const toggleUploadBtn = document.getElementById('toggleUploadBtn');
             const uploadSection = document.getElementById('upload-section');
-            if (toggleUploadBtn && uploadSection) {
+            if (toggleUploadBtn && uploadSection) { /* ... (original logic from previous version) ... */ 
                 toggleUploadBtn.addEventListener('click', () => {
                     if (uploadSection.style.display === 'none' || uploadSection.style.display === '') {
                         uploadSection.style.display = 'block';
@@ -645,13 +552,11 @@
                     }
                 });
             }
-
             const dropArea = document.getElementById('drop-area');
-            const fileInputForDrop = document.getElementById('userFiles'); // Ensure this ID matches your file input in the upload form
+            const fileInputForDrop = document.getElementById('userFiles'); 
             const fileListPreview = document.getElementById('file-list-preview');
             const uploadFormButton = document.getElementById('upload-button'); 
-
-            if (dropArea && fileInputForDrop && fileListPreview && uploadFormButton) {
+            if (dropArea && fileInputForDrop && fileListPreview && uploadFormButton) { /* ... (original logic from previous version for drag-drop) ... */ 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropArea.addEventListener(eventName, preventDefaults, false);
                     document.body.addEventListener(eventName, preventDefaults, false);
@@ -684,18 +589,17 @@
                 }
                 if(fileInputForDrop.files.length === 0) uploadFormButton.style.display = 'none';
             }
-
             const fileContainer = document.getElementById('file-container');
             const listViewBtn = document.getElementById('listViewBtn');
             const gridViewBtn = document.getElementById('gridViewBtn');
-            if (fileContainer && listViewBtn && gridViewBtn) {
+            if (fileContainer && listViewBtn && gridViewBtn) { /* ... (original logic from previous version for view toggle) ... */
                 function toggleView(viewType) {
                     if (viewType === 'grid') {
                         fileContainer.className = 'grid-view';
                         gridViewBtn.classList.add('active');
                         listViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'grid');
-                    } else { // Default to list view
+                    } else { 
                         fileContainer.className = 'list-view';
                         listViewBtn.classList.add('active');
                         gridViewBtn.classList.remove('active');
@@ -703,38 +607,25 @@
                     }
                 }
                 const preferredView = localStorage.getItem('fileView');
-                toggleView(preferredView || 'list'); // Default to list if no preference
-
-                // Attach event listeners for view toggle buttons
+                toggleView(preferredView || 'list'); 
                 listViewBtn.addEventListener('click', () => toggleView('list'));
                 gridViewBtn.addEventListener('click', () => toggleView('grid'));
             }
-            
-            updateSelectionActions(); // Initial call
+            updateSelectionActions(); 
         });
-
         function showRenameForm(encodedName, currentName, isDir) {
-            // Hide all other rename forms first
             document.querySelectorAll('.rename-form').forEach(form => {
-                if (form.id !== 'rename-form-' + encodedName) { // Don't hide the one we are about to show
-                    form.style.display = 'none';
-                }
+                if (form.id !== 'rename-form-' + encodedName) form.style.display = 'none';
             });
-
             const formContainer = document.getElementById('rename-form-' + encodedName);
             if (formContainer) {
-                // Toggle display
                 const isCurrentlyVisible = formContainer.style.display === 'block';
                 formContainer.style.display = isCurrentlyVisible ? 'none' : 'block';
-
-                if (!isCurrentlyVisible) { // If we just made it visible
+                if (!isCurrentlyVisible) { 
                     const inputField = formContainer.querySelector('input[name="newName"]');
                     if (inputField) {
-                        inputField.value = currentName; // Set current name every time it's shown
-                        inputField.focus();
-                        inputField.select();
+                        inputField.value = currentName; inputField.focus(); inputField.select();
                     }
-                    // Update currentPath in the rename form if it's a search result
                     const currentPathInput = formContainer.querySelector('input[name="currentPath"]');
                     if (currentPathInput && IS_SEARCH_RESULT_VIEW) {
                          const itemOriginalPath = formContainer.querySelector('input[name="oldPath"]').value;
