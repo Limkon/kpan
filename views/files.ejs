@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* 保留之前的樣式，並添加新的 */
+        /* ... (保留所有之前的樣式 - 与 files_ejs_modal_create ID 中的版本一致) ... */
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         #selection-action-bar button { margin: 0; }
         .item-checkbox { margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
@@ -18,11 +18,11 @@
         .list-view .file-content-wrapper > .file-entry { flex-grow: 1; }
         .list-view .file-actions-placeholder { min-width: 150px; text-align: right; font-size: 0.9em; color: #666; }
         
-        #move-modal, #create-item-modal { /* 通用模態框樣式 */
+        #move-modal, #create-item-modal { 
             display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
             overflow: auto; background-color: rgba(0,0,0,0.5);
         }
-        .modal-content { /* 通用模態框內容樣式 */
+        .modal-content { 
             background-color: var(--modal-bg, #fff); color: var(--modal-text-color, #333);
             margin: 15% auto; padding: 20px; border: 1px solid var(--modal-border-color, #888);
             border-radius: 8px; width: 90%; max-width: 450px;
@@ -61,59 +61,54 @@
         .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
         .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
 
-        /* --- Styles for .file-browser-controls (Single Row Layout) --- */
         .file-browser-controls {
             display: flex;
-            flex-wrap: wrap; /* 允许在小屏幕上换行 */
-            align-items: center; /* 垂直居中对齐所有控件 */
-            gap: 10px; /* 各个组之间的间隙 */
+            flex-wrap: wrap; 
+            align-items: center;
+            gap: 10px; 
             margin-bottom: 20px;
         }
-
-        .file-browser-controls .actions-group-left { /* 左侧的操作按钮组 */
+        .file-browser-controls .actions-group-left { 
             display: flex;
             gap: 10px;
             align-items: center;
-            flex-shrink: 0; /* 防止按钮组被过度压缩 */
+            flex-shrink: 0; 
         }
         .file-browser-controls .actions-group-left button {
             padding: 8px 12px; font-size: 0.9em; margin: 0;
         }
-
-        .file-browser-controls .search-form-right { /* 搜索表单，将靠右 */
+        .file-browser-controls .search-form-right { 
             display: flex;
             align-items: center;
             gap: 5px;
-            margin-left: auto; /* !!! 关键：将搜索表单及其右侧的元素推到右边 !!! */
-            flex-shrink: 0; /* 防止被过度压缩 */
+            margin-left: auto; 
+            flex-shrink: 0; 
         }
         .file-browser-controls .search-form-right input[type="search"] {
-            width: 180px; /* 缩短搜索输入框的长度 */
+            width: 180px; 
             padding: 8px 10px; font-size: 0.9em; border: 1px solid #ccc; border-radius: 4px; margin: 0;
         }
         .file-browser-controls .search-form-right button {
             padding: 8px 12px; font-size: 0.9em; margin: 0;
         }
-
-        .file-browser-controls .view-toggle { /* 视图切换按钮 */
+        .file-browser-controls .view-toggle { 
             display: flex;
             gap: 8px;
             align-items: center;
-            flex-shrink: 0; /* 防止被过度压缩 */
+            flex-shrink: 0; 
         }
          .file-browser-controls .view-toggle button {
              padding: 8px 12px; font-size: 0.9em; margin: 0;
         }
-        /* 当 actions-group-left 不存在时 (例如在搜索结果页)，让搜索表单不要有 margin-left: auto */
         .file-browser-controls:not(:has(.actions-group-left)) .search-form-right {
             margin-left: 0;
-            flex-grow: 1; /* 允许搜索表单在没有左侧按钮时占据更多空间 */
+            flex-grow: 1; 
         }
          .file-browser-controls:not(:has(.actions-group-left)) .search-form-right input[type="search"] {
-            flex-grow: 1; /* 允许输入框在表单内伸展 */
+            flex-grow: 1; 
         }
          .file-browser-controls:not(:has(.actions-group-left)) .view-toggle {
-            margin-left: auto; /* 这种情况下，将视图切换推到最右 */
+            margin-left: auto; 
         }
     </style>
 </head>
@@ -341,7 +336,7 @@
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
 
         document.addEventListener('DOMContentLoaded', () => {
-            const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+            // const itemCheckboxes = document.querySelectorAll('.item-checkbox'); // Initialized once
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const selectionActionBar = document.getElementById('selection-action-bar');
             const selectionCountDisplay = document.getElementById('selection-count');
@@ -359,9 +354,13 @@
             const moveDestinationInput = document.getElementById('move-destination-input');
             let currentDirectoryTree = [];
 
+            // Function to get currently selected items by querying the DOM directly
             function getSelectedItems() {
+                const currentCheckboxes = document.querySelectorAll('.item-checkbox'); // Always get fresh list
                 const selected = [];
-                itemCheckboxes.forEach(cb => {
+                // console.log(`getSelectedItems: Found ${currentCheckboxes.length} checkboxes in total.`);
+                currentCheckboxes.forEach((cb, index) => {
+                    // console.log(`Checkbox ${index} (path: ${cb.dataset.path}): checked = ${cb.checked}`);
                     if (cb.checked) {
                         selected.push({
                             path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
@@ -370,14 +369,14 @@
                         });
                     }
                 });
-                console.log('getSelectedItems:', selected); 
+                console.log('getSelectedItems (end of function):', selected.length, 'items selected.');
                 return selected;
             }
 
             function updateSelectionActions() {
-                const selectedItems = getSelectedItems();
+                const selectedItems = getSelectedItems(); // Uses the function that re-queries checkboxes
                 const count = selectedItems.length;
-                console.log('updateSelectionActions - count:', count); 
+                // console.log('updateSelectionActions - count:', count); 
 
                 if (selectionActionBar && selectionCountDisplay) { 
                     if (count > 0) {
@@ -403,11 +402,14 @@
                 if (actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
             }
 
-            itemCheckboxes.forEach(checkbox => checkbox.addEventListener('change', updateSelectionActions));
+            // Re-query itemCheckboxes for attaching event listeners as well, to be consistent
+            const itemCheckboxesForListeners = document.querySelectorAll('.item-checkbox');
+            itemCheckboxesForListeners.forEach(checkbox => checkbox.addEventListener('change', updateSelectionActions));
             
             if (selectAllCheckbox) {
                 selectAllCheckbox.addEventListener('change', (e) => {
-                    itemCheckboxes.forEach(cb => cb.checked = e.target.checked);
+                    const currentCheckboxes = document.querySelectorAll('.item-checkbox'); // Re-query for select all action
+                    currentCheckboxes.forEach(cb => cb.checked = e.target.checked);
                     updateSelectionActions();
                 });
             }
@@ -438,7 +440,7 @@
             
             if (actionDownloadBtn) {
                 actionDownloadBtn.addEventListener('click', () => {
-                    const selectedItems = getSelectedItems();
+                    const selectedItems = getSelectedItems(); // Crucial: get fresh selection
                     console.log("下載按鈕點擊，選中項:", selectedItems); 
 
                     if (selectedItems.length === 0) {
@@ -504,7 +506,12 @@
                             console.error("表單提交錯誤:", e);
                             alert("觸發下載時發生錯誤，請查看控制台。");
                         }
-                        document.body.removeChild(form);
+                        // It's good practice to remove the form after submission, 
+                        // though for a synchronous submit, the page will likely navigate away or reload.
+                        // setTimeout(() => document.body.removeChild(form), 100); // Small delay
+                        if (form.parentNode === document.body) { // Check if still in DOM
+                           document.body.removeChild(form);
+                        }
                     }
                 });
             }
@@ -532,7 +539,8 @@
                             window.location.reload();
                         }
                         if(selectAllCheckbox) selectAllCheckbox.checked = false;
-                        itemCheckboxes.forEach(cb => cb.checked = false);
+                        // Re-query checkboxes before trying to uncheck them, in case DOM changed
+                        document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false);
                         updateSelectionActions();
                     }
                 });
