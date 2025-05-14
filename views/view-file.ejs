@@ -6,7 +6,7 @@
     <title>查看文件: <%= filename %> - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
-    <%# 移除了 highlight.js 的 CSS 引用 %>
+    <% /* 移除了 highlight.js 的 CSS 引用 */ %>
     <style>
         .view-container {
             padding: 15px;
@@ -21,7 +21,6 @@
             white-space: pre-wrap; /* 保留空白符序列，但允许正常换行 */
             word-wrap: break-word; /* 在长单词或URL处换行 */
             color: var(--viewer-text-color, #333);
-            /* 如果之前有 highlight.js 的特定背景或颜色，确保这里有合适的替代 */
         }
         .view-actions {
             margin-top: 15px;
@@ -51,6 +50,7 @@
                 <nav>
                     <%
                         let backPath = "/files";
+                        // 确保 currentPath 存在且不为空
                         if (locals.currentPath && typeof locals.currentPath === 'string') {
                             const parentDirOfFile = currentPath.includes('/') ? currentPath.substring(0, currentPath.lastIndexOf('/')) || '/' : '/';
                             if (locals.viewTargetUsername && user.role === 'admin') {
@@ -63,7 +63,7 @@
                         }
                     %>
                     <a href="<%= backPath %>">返回文件列表</a>
-                    <%# 确保 locals.ALLOWED_TEXT_EXTENSIONS 和 locals.fileExtension 已传递到模板 %>
+                    <% /* 确保 locals.ALLOWED_TEXT_EXTENSIONS 和 locals.fileExtension 已传递到模板 */ %>
                     <% if (locals.ALLOWED_TEXT_EXTENSIONS && locals.fileExtension && ALLOWED_TEXT_EXTENSIONS.includes(fileExtension)) { %>
                         <a href="/edit?path=<%= encodeURIComponent(currentPath) %><% if (locals.viewTargetUsername && user.role === 'admin') { %>&targetUsername=<%= encodeURIComponent(viewTargetUsername) %><% } %>" class="button-link">編輯此文件</a>
                     <% } %>
@@ -81,14 +81,14 @@
             <div class="view-actions">
                 <a href="/download?path=<%= encodeURIComponent(currentPath) %><% if (locals.viewTargetUsername && user.role === 'admin') { %>&targetUsername=<%= encodeURIComponent(viewTargetUsername) %><% } %>" class="button-link secondary">下載文件</a>
             </div>
-            <%# 移除了 <code> 标签的 class="language-..." 属性，因为不再使用 highlight.js %>
+            <% /* 移除了 <code> 标签的 class="language-..." 属性，因为不再使用 highlight.js */ %>
             <pre class="view-container"><%= content %></pre>
-            <%# 如果内容本身包含 HTML 实体，而您希望它们被渲染为字符，则使用 <%- content %> %>
-            <%# 但对于纯文本或代码查看，<%= content %> 通常更安全，因为它会转义 HTML 特殊字符 %>
+            <% /* 如果内容本身包含 HTML 实体，而您希望它们被渲染为字符，则使用 <%- content %> */ %>
+            <% /* 但对于纯文本或代码查看，<%= content %> 通常更安全，因为它会转义 HTML 特殊字符 */ %>
         </div>
 
     </div>
     <script src="/theme.js"></script>
-    <%# 移除了 highlight.js 的 JS 引用和相关的初始化脚本 %>
+    <% /* 移除了 highlight.js 的 JS 引用和相关的初始化脚本 */ %>
 </body>
 </html>
