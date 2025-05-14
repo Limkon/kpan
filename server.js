@@ -1,4 +1,4 @@
-// server.js (SQLite 版本 - 包含所有功能)
+// server.js (SQLite 版本 - 真正完整版)
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
@@ -7,17 +7,17 @@ const fsp = fs.promises;
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const sqlite3 = require('sqlite3').verbose();
-const archiver = require('archiver'); // 引入 archiver
+const archiver = require('archiver'); 
 
 const app = express();
-const port = process.env.PORT || 8100; // 建議從環境變數讀取
+const port = process.env.PORT || 8100; 
 
 // --- 常量定義 ---
 const DATA_DIR = path.join(__dirname, 'data');
 const UPLOAD_DIR_BASE = path.join(__dirname, 'uploads');
 const DB_FILE = path.join(DATA_DIR, 'netdisk.sqlite');
 const ALLOWED_TEXT_EXTENSIONS = ['.txt', '.md', '.json', '.js', '.css', '.html', '.xml', '.log', '.csv', '.py', '.java', '.c', '.cpp', '.go', '.rb'];
-const SESSION_SECRET = process.env.SESSION_SECRET || 'your_very_strong_and_unique_session_secret_CHANGE_ME_final_v3_complete'; // !!! 強烈建議從環境變數讀取並更改 !!!
+const SESSION_SECRET = process.env.SESSION_SECRET || 'a_very_very_strong_and_unique_secret_CHANGE_THIS_NOW'; // !!! 強烈建議從環境變數讀取並更改 !!!
 
 // --- 目錄初始化 ---
 [DATA_DIR, UPLOAD_DIR_BASE].forEach(dir => {
@@ -31,7 +31,7 @@ const SESSION_SECRET = process.env.SESSION_SECRET || 'your_very_strong_and_uniqu
 const db = new sqlite3.Database(DB_FILE, (err) => {
     if (err) { console.error('無法連接到 SQLite 資料庫:', err.message); throw err; }
     console.log('已成功連接到 SQLite 資料庫。');
-    db.serialize(() => { // 使用 serialize 確保操作按順序執行
+    db.serialize(() => { 
         db.run(`CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
@@ -41,10 +41,8 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             if (err) console.error('創建 users 表格失敗:', err.message);
             else {
                 console.log("'users' 表格已準備就緒。");
-                // 檢查並創建初始管理員帳戶
                 const initialAdminUsername = 'admin';
                 const initialAdminPassword = 'admin'; 
-
                 db.get("SELECT * FROM users WHERE username = ?", [initialAdminUsername], (err, adminUser) => {
                     if (err) {
                         console.error('检查初始管理员时出错:', err.message);
@@ -58,7 +56,7 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
                                 if (err) console.error('创建初始管理员失败:', err.message);
                                 else {
                                     console.log(`初始管理员 '${initialAdminUsername}' 已创建。`);
-                                    getUserUploadRoot(initialAdminUsername); // 為初始管理員創建目錄
+                                    getUserUploadRoot(initialAdminUsername); 
                                 }
                             }
                         );
@@ -85,7 +83,7 @@ app.use(session({
         sameSite: 'lax' 
     }
 }));
-// 示例: CSRF 保護 (如果使用, 請取消註釋並安裝 'csurf' 套件)
+// CSRF Protection (Example - uncomment and configure if used)
 // const csrf = require('csurf');
 // app.use(csrf());
 // app.use((req, res, next) => {
@@ -105,7 +103,7 @@ function getUserUploadRoot(username) {
 
 function resolvePathForUser(usernameForPath, relativePath = '/') {
     if (typeof usernameForPath !== 'string' || usernameForPath.includes('..') || usernameForPath.includes('/') || usernameForPath.includes('\\')) {
-        console.error(`[Security] 無效的目標用戶名嘗試: ${usernameForPath}`);
+        console.error(`[SecurityResolve] 無效的目標用戶名嘗試: ${usernameForPath}`);
         throw new Error('無效的目標用戶名。');
     }
     const userRoot = getUserUploadRoot(usernameForPath);
@@ -117,7 +115,7 @@ function resolvePathForUser(usernameForPath, relativePath = '/') {
     const requestedPath = path.join(userRoot, normalizedRelativePath);
 
     if (!path.resolve(requestedPath).startsWith(path.resolve(userRoot))) {
-        console.error(`[Security] 試圖訪問無效路徑！用戶根目錄: ${userRoot}, 請求路徑: ${requestedPath}, 解析後: ${path.resolve(requestedPath)}`);
+        console.error(`[SecurityResolve] 試圖訪問無效路徑！用戶根目錄: ${userRoot}, 請求路徑: ${requestedPath}, 解析後: ${path.resolve(requestedPath)}`);
         throw new Error('試圖訪問無效路徑！');
     }
     return requestedPath;
@@ -184,38 +182,50 @@ async function getDirectoryTreeRecursive(directoryToScan, userUploadRoot, curren
 // --- Multer 設置 ---
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
+        console.log(`[Multer Destination] Received file: ${file.originalname}, webkitRelativePath: ${file.webkitRelativePath}`);
         const actingUsername = req.session.user.username;
         const targetUsername = (req.session.user.role === 'admin' && req.body.targetUsername) ? req.body.targetUsername : actingUsername;
         const baseUploadPath = req.body.currentPath || '/';
+        console.log(`[Multer Destination] actingUsername: ${actingUsername}, targetUsername: ${targetUsername}, baseUploadPath: ${baseUploadPath}`);
+        
         let finalDestinationPath = baseUploadPath;
 
-        if (file.webkitRelativePath) {
+        if (file.webkitRelativePath && typeof file.webkitRelativePath === 'string') {
+            // file.webkitRelativePath 的格式通常是 "FolderName/SubFolder/file.txt"
+            // 我們需要提取文件夾結構部分，不包括文件名
             const relativeFolderPath = path.dirname(file.webkitRelativePath); 
+            console.log(`[Multer Destination] file.webkitRelativePath: ${file.webkitRelativePath}, parsed relativeFolderPath: ${relativeFolderPath}`);
             if (relativeFolderPath && relativeFolderPath !== '.') {
                 finalDestinationPath = path.posix.join(baseUploadPath, relativeFolderPath);
             }
         }
+        console.log(`[Multer Destination] Calculated finalDestinationPath: ${finalDestinationPath}`);
         
         try {
             const resolvedUploadDir = resolvePathForUser(targetUsername, finalDestinationPath);
+            console.log(`[Multer Destination] Resolved upload directory: ${resolvedUploadDir}`);
+            // 確保目標路徑存在，如果不存在則遞歸創建
             if (!fs.existsSync(resolvedUploadDir)) {
                 fs.mkdirSync(resolvedUploadDir, { recursive: true });
-                console.log(`[Multer] 已為文件夾上傳自動創建路徑: ${resolvedUploadDir}`);
+                console.log(`[Multer Destination] Created directory: ${resolvedUploadDir}`);
             }
             cb(null, resolvedUploadDir);
         } catch (err) {
-            console.error(`[${actingUsername}] Multer destination error for target ${targetUsername} at path ${finalDestinationPath}:`, err);
+            console.error(`[Multer Destination ERROR] For target ${targetUsername} at path ${finalDestinationPath}:`, err);
             return cb(new Error(`上傳目標路徑處理錯誤: ${err.message}`));
         }
     },
     filename: function (req, file, cb) {
+        // 對於文件夾上傳，file.originalname 仍然是原始文件名 (不含路徑)
         const safeFilename = path.basename(file.originalname); 
+        console.log(`[Multer Filename] originalname: ${file.originalname}, safeFilename: ${safeFilename}`);
         cb(null, Buffer.from(safeFilename, 'latin1').toString('utf8')); 
     }
 });
 const upload = multer({ storage: storage, 
     fileFilter: (req, file, cb) => {
         if (file.originalname.includes('..') || file.originalname.includes('/') || file.originalname.includes('\\')) {
+            console.warn(`[Multer FileFilter] Invalid characters in filename: ${file.originalname}`);
             return cb(new Error('文件名包含無效字符。'), false);
         }
         cb(null, true);
@@ -382,21 +392,37 @@ app.get('/files', isAuthenticated, async (req, res) => {
 });
 
 app.post('/upload', isAuthenticated, (req, res, next) => { 
+    console.log(`[POST /upload] Request received. User: ${req.session.user.username}, Body:`, req.body);
     upload.array('userFiles', 100)(req, res, (err) => { 
         if (err) {
-            console.error(`[${req.session.user.username}] Multer 上傳錯誤:`, err.message);
+            console.error(`[POST /upload] Multer 上傳錯誤 for user ${req.session.user.username}:`, err.message, err.stack);
             const currentPath = req.body.currentPath || '/';
-            const adminQuery = (req.session.user.role === 'admin' && req.body.targetUsername) ? `&targetUsername=${encodeURIComponent(req.body.targetUsername)}` : '';
-            const redirectPath = `/files?path=${encodeURIComponent(currentPath)}${adminQuery}`;
-            return res.redirect(`${redirectPath}&message=${encodeURIComponent(err.message)}&messageType=error`);
+            const redirectParams = new URLSearchParams();
+            if (currentPath !== '/') redirectParams.set('path', currentPath);
+            if (req.session.user.role === 'admin' && req.body.targetUsername) {
+                redirectParams.set('targetUsername', req.body.targetUsername);
+            }
+            redirectParams.set('message', encodeURIComponent(err.message));
+            redirectParams.set('messageType', 'error');
+            return res.redirect(`/files?${redirectParams.toString()}`);
         }
+        console.log(`[POST /upload] Multer processed ${req.files ? req.files.length : 0} files for user ${req.session.user.username}.`);
         const currentPath = req.body.currentPath || '/';
-        const adminQuery = (req.session.user.role === 'admin' && req.body.targetUsername) ? `&targetUsername=${encodeURIComponent(req.body.targetUsername)}` : '';
-        const redirectPath = `/files?path=${encodeURIComponent(currentPath)}${adminQuery}`;
-        if (!req.files || req.files.length === 0) {
-            return res.redirect(`${redirectPath}&message=沒有選擇文件或文件夾。&messageType=error`);
+        const redirectParams = new URLSearchParams();
+        if (currentPath !== '/') redirectParams.set('path', currentPath);
+         if (req.session.user.role === 'admin' && req.body.targetUsername) {
+            redirectParams.set('targetUsername', req.body.targetUsername);
         }
-        res.redirect(`${redirectPath}&message=項目上傳成功。&messageType=success`);
+
+        if (!req.files || req.files.length === 0) {
+            redirectParams.set('message', encodeURIComponent('沒有選擇文件或文件夾。'));
+            redirectParams.set('messageType', 'error');
+            return res.redirect(`/files?${redirectParams.toString()}`);
+        }
+        
+        redirectParams.set('message', encodeURIComponent('項目上傳成功。'));
+        redirectParams.set('messageType', 'success');
+        res.redirect(`/files?${redirectParams.toString()}`);
     });
 });
 
