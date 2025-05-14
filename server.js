@@ -7,17 +7,17 @@ const fsp = fs.promises;
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const sqlite3 = require('sqlite3').verbose();
-const archiver = require('archiver'); 
+const archiver = require('archiver'); // 引入 archiver
 
 const app = express();
-const port = process.env.PORT || 8100; 
+const port = process.env.PORT || 8100; // 建議從環境變數讀取
 
 // --- 常量定義 ---
 const DATA_DIR = path.join(__dirname, 'data');
 const UPLOAD_DIR_BASE = path.join(__dirname, 'uploads');
 const DB_FILE = path.join(DATA_DIR, 'netdisk.sqlite');
 const ALLOWED_TEXT_EXTENSIONS = ['.txt', '.md', '.json', '.js', '.css', '.html', '.xml', '.log', '.csv', '.py', '.java', '.c', '.cpp', '.go', '.rb'];
-const SESSION_SECRET = process.env.SESSION_SECRET || 'your_very_strong_and_unique_session_secret_CHANGE_ME_final_v2_fix_dl_complete'; 
+const SESSION_SECRET = process.env.SESSION_SECRET || 'your_very_strong_and_unique_session_secret_CHANGE_ME_final_v3_complete'; // !!! 強烈建議從環境變數讀取並更改 !!!
 
 // --- 目錄初始化 ---
 [DATA_DIR, UPLOAD_DIR_BASE].forEach(dir => {
@@ -31,7 +31,7 @@ const SESSION_SECRET = process.env.SESSION_SECRET || 'your_very_strong_and_uniqu
 const db = new sqlite3.Database(DB_FILE, (err) => {
     if (err) { console.error('無法連接到 SQLite 資料庫:', err.message); throw err; }
     console.log('已成功連接到 SQLite 資料庫。');
-    db.serialize(() => { 
+    db.serialize(() => { // 使用 serialize 確保操作按順序執行
         db.run(`CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
@@ -41,8 +41,10 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             if (err) console.error('創建 users 表格失敗:', err.message);
             else {
                 console.log("'users' 表格已準備就緒。");
+                // 檢查並創建初始管理員帳戶
                 const initialAdminUsername = 'admin';
                 const initialAdminPassword = 'admin'; 
+
                 db.get("SELECT * FROM users WHERE username = ?", [initialAdminUsername], (err, adminUser) => {
                     if (err) {
                         console.error('检查初始管理员时出错:', err.message);
@@ -56,7 +58,7 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
                                 if (err) console.error('创建初始管理员失败:', err.message);
                                 else {
                                     console.log(`初始管理员 '${initialAdminUsername}' 已创建。`);
-                                    getUserUploadRoot(initialAdminUsername); 
+                                    getUserUploadRoot(initialAdminUsername); // 為初始管理員創建目錄
                                 }
                             }
                         );
@@ -83,7 +85,7 @@ app.use(session({
         sameSite: 'lax' 
     }
 }));
-// CSRF Protection (Example - uncomment and configure if used)
+// 示例: CSRF 保護 (如果使用, 請取消註釋並安裝 'csurf' 套件)
 // const csrf = require('csurf');
 // app.use(csrf());
 // app.use((req, res, next) => {
@@ -93,14 +95,15 @@ app.use(session({
 
 
 // --- 輔助函數 ---
-function getUserUploadRoot(username) { 
+function getUserUploadRoot(username) {
     const userDir = path.join(UPLOAD_DIR_BASE, username);
     if (!fs.existsSync(userDir)) {
         fs.mkdirSync(userDir, { recursive: true });
     }
     return userDir;
 }
-function resolvePathForUser(usernameForPath, relativePath = '/') { 
+
+function resolvePathForUser(usernameForPath, relativePath = '/') {
     if (typeof usernameForPath !== 'string' || usernameForPath.includes('..') || usernameForPath.includes('/') || usernameForPath.includes('\\')) {
         console.error(`[Security] 無效的目標用戶名嘗試: ${usernameForPath}`);
         throw new Error('無效的目標用戶名。');
@@ -119,7 +122,8 @@ function resolvePathForUser(usernameForPath, relativePath = '/') {
     }
     return requestedPath;
 }
-async function searchFilesRecursively(directoryToSearch, keyword, currentRelativePath = '/', userUploadRoot) { 
+
+async function searchFilesRecursively(directoryToSearch, keyword, currentRelativePath = '/', userUploadRoot) {
     let foundItems = [];
     const lowerCaseKeyword = keyword.toLowerCase();
     try {
@@ -149,7 +153,8 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
     } catch (err) { console.error(`[Search] 讀取目錄 ${directoryToSearch} 時發生錯誤:`, err.message); }
     return foundItems;
 }
-async function getDirectoryTreeRecursive(directoryToScan, userUploadRoot, currentRelativePath = '/', pathsToExclude = []) { 
+
+async function getDirectoryTreeRecursive(directoryToScan, userUploadRoot, currentRelativePath = '/', pathsToExclude = []) {
     let tree = [];
     try {
         if (!path.resolve(directoryToScan).startsWith(path.resolve(userUploadRoot))) {
@@ -176,17 +181,30 @@ async function getDirectoryTreeRecursive(directoryToScan, userUploadRoot, curren
     return tree.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN-u-co-pinyin'));
 }
 
+// --- Multer 設置 ---
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const actingUsername = req.session.user.username;
         const targetUsername = (req.session.user.role === 'admin' && req.body.targetUsername) ? req.body.targetUsername : actingUsername;
-        const currentUploadPath = req.body.currentPath || '/';
+        const baseUploadPath = req.body.currentPath || '/';
+        let finalDestinationPath = baseUploadPath;
+
+        if (file.webkitRelativePath) {
+            const relativeFolderPath = path.dirname(file.webkitRelativePath); 
+            if (relativeFolderPath && relativeFolderPath !== '.') {
+                finalDestinationPath = path.posix.join(baseUploadPath, relativeFolderPath);
+            }
+        }
+        
         try {
-            const resolvedUploadDir = resolvePathForUser(targetUsername, currentUploadPath);
-            if (!fs.existsSync(resolvedUploadDir)) fs.mkdirSync(resolvedUploadDir, { recursive: true });
+            const resolvedUploadDir = resolvePathForUser(targetUsername, finalDestinationPath);
+            if (!fs.existsSync(resolvedUploadDir)) {
+                fs.mkdirSync(resolvedUploadDir, { recursive: true });
+                console.log(`[Multer] 已為文件夾上傳自動創建路徑: ${resolvedUploadDir}`);
+            }
             cb(null, resolvedUploadDir);
         } catch (err) {
-            console.error(`[${actingUsername}] Multer destination error for target ${targetUsername}:`, err);
+            console.error(`[${actingUsername}] Multer destination error for target ${targetUsername} at path ${finalDestinationPath}:`, err);
             return cb(new Error(`上傳目標路徑處理錯誤: ${err.message}`));
         }
     },
@@ -205,6 +223,7 @@ const upload = multer({ storage: storage,
     limits: { fileSize: 100 * 1024 * 1024 } 
 });
 
+// --- 認證中間件 ---
 function isAuthenticated(req, res, next) { if (req.session.user) return next(); res.redirect('/login'); }
 function isAdmin(req, res, next) { 
     if (req.session.user && req.session.user.role === 'admin') return next(); 
@@ -215,7 +234,9 @@ function isAdmin(req, res, next) {
     });
 }
 
+// --- 路由 ---
 app.get('/', (req, res) => res.redirect(req.session.user ? '/files' : '/login'));
+
 app.get('/register', (req, res) => res.render('register', { error: null, csrfToken: res.locals.csrfToken }));
 app.post('/register', (req, res) => {
     const { username, password, confirmPassword } = req.body;
@@ -239,6 +260,7 @@ app.post('/register', (req, res) => {
         });
     });
 });
+
 app.get('/login', (req, res) => res.render('login', { error: req.query.error, message: req.query.message, csrfToken: res.locals.csrfToken }));
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
@@ -252,12 +274,14 @@ app.post('/login', (req, res) => {
         }
     });
 });
+
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) console.error("登出時銷毀 session 錯誤:", err);
         res.redirect('/login');
     });
 });
+
 app.get('/change-password', isAuthenticated, (req, res) => res.render('change-password', { user: req.session.user, message: null, messageType: null, csrfToken: res.locals.csrfToken }));
 app.post('/change-password', isAuthenticated, (req, res) => {
     const { currentPassword, newPassword, confirmNewPassword } = req.body;
@@ -276,6 +300,7 @@ app.post('/change-password', isAuthenticated, (req, res) => {
         });
     });
 });
+
 app.get('/files', isAuthenticated, async (req, res) => { 
     const actingUser = req.session.user;
     let relativeQueryPath = req.query.path || '/';
@@ -355,8 +380,9 @@ app.get('/files', isAuthenticated, async (req, res) => {
         res.redirect(`${baseRedirect}?${redirectParams.join('&')}`);
     }
 });
+
 app.post('/upload', isAuthenticated, (req, res, next) => { 
-    upload.array('userFiles', 10)(req, res, (err) => {
+    upload.array('userFiles', 100)(req, res, (err) => { 
         if (err) {
             console.error(`[${req.session.user.username}] Multer 上傳錯誤:`, err.message);
             const currentPath = req.body.currentPath || '/';
@@ -368,11 +394,12 @@ app.post('/upload', isAuthenticated, (req, res, next) => {
         const adminQuery = (req.session.user.role === 'admin' && req.body.targetUsername) ? `&targetUsername=${encodeURIComponent(req.body.targetUsername)}` : '';
         const redirectPath = `/files?path=${encodeURIComponent(currentPath)}${adminQuery}`;
         if (!req.files || req.files.length === 0) {
-            return res.redirect(`${redirectPath}&message=沒有選擇文件。&messageType=error`);
+            return res.redirect(`${redirectPath}&message=沒有選擇文件或文件夾。&messageType=error`);
         }
-        res.redirect(`${redirectPath}&message=文件上傳成功。&messageType=success`);
+        res.redirect(`${redirectPath}&message=項目上傳成功。&messageType=success`);
     });
 });
+
 app.post('/create-folder', isAuthenticated, async (req, res) => { 
     const { folderName, currentPath: relativeCurrentPath } = req.body;
     const actingUser = req.session.user;
@@ -397,6 +424,7 @@ app.post('/create-folder', isAuthenticated, async (req, res) => {
         res.redirect(`/files?${redirectPathQuery}&message=創建文件夾失敗。&messageType=error`);
     }
 });
+
 app.post('/rename', isAuthenticated, async (req, res) => { 
     const { oldPath: relativeOldPath, newName, currentPath: relativeCurrentPath } = req.body;
     const actingUser = req.session.user;
@@ -425,6 +453,7 @@ app.post('/rename', isAuthenticated, async (req, res) => {
         res.redirect(`/files?${redirectPathQuery}&message=重命名失敗。&messageType=error`);
     }
 });
+
 app.get('/download', isAuthenticated, (req, res) => { 
     const actingUser = req.session.user;
     const relativeFilePath = req.query.path;
@@ -445,6 +474,7 @@ app.get('/download', isAuthenticated, (req, res) => {
         res.status(500).render('error', { user: actingUser, message: '處理下載請求時出錯。', csrfToken: res.locals.csrfToken });
     }
 });
+
 app.post('/download-archive', isAuthenticated, async (req, res) => {
     console.log("[/download-archive] Received request.");
     console.log("[/download-archive] req.headers['content-type']:", req.headers['content-type']);
@@ -549,6 +579,7 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
     console.log(`[/download-archive] Finalizing archive: ${archiveName}`);
     await archive.finalize(); 
 });
+
 app.get('/delete', isAuthenticated, async (req, res) => { 
     const actingUser = req.session.user;
     const relativeItemPath = req.query.path;
@@ -558,7 +589,7 @@ app.get('/delete', isAuthenticated, async (req, res) => {
     const parentRelativePath = path.posix.dirname(relativeItemPath);
     let redirectQuery = (parentRelativePath === '.' || parentRelativePath === '/') ? '' : `path=${encodeURIComponent(parentRelativePath)}`;
     const adminQuery = (actingUser.role === 'admin' && req.query.targetUsername) ? `&targetUsername=${encodeURIComponent(req.query.targetUsername)}` : '';
-    if (adminQuery) redirectQuery = redirectQuery ? `${redirectPathQuery}${adminQuery}` : adminQuery.substring(1);
+    if (adminQuery) redirectQuery = redirectQuery ? `${redirectQuery}${adminQuery}` : adminQuery.substring(1);
     try {
         const fullItemPath = resolvePathForUser(targetUsername, relativeItemPath);
         if (!fs.existsSync(fullItemPath)) { return res.redirect(`/files?${redirectQuery}&message=要刪除的項目未找到。&messageType=error`);}
@@ -570,6 +601,7 @@ app.get('/delete', isAuthenticated, async (req, res) => {
         res.redirect(`/files?${redirectQuery}&message=刪除項目失敗。&messageType=error`);
     }
 });
+
 app.get('/view', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeFilePath = req.query.path;
@@ -594,6 +626,7 @@ app.get('/view', isAuthenticated, async (req, res) => {
         res.status(500).render('error', { user: actingUser, message: '讀取文件內容失敗。', csrfToken: res.locals.csrfToken });
     }
 });
+
 app.get('/edit', isAuthenticated, async (req, res) => { 
     const actingUser = req.session.user;
     const relativeFilePath = req.query.path;
@@ -617,6 +650,7 @@ app.get('/edit', isAuthenticated, async (req, res) => {
         res.status(500).render('error', { user: actingUser, message: '讀取文件內容失敗。', csrfToken: res.locals.csrfToken });
     }
 });
+
 app.post('/save/:encodedPath', isAuthenticated, async (req, res) => { 
     const actingUser = req.session.user;
     const relativeFilePath = decodeURIComponent(req.params.encodedPath);
@@ -655,6 +689,7 @@ app.post('/save/:encodedPath', isAuthenticated, async (req, res) => {
         });
     }
 });
+
 app.post('/create-text-file', isAuthenticated, async (req, res) => {
     const { newFileName, currentPath: relativeCurrentPath } = req.body;
     const actingUser = req.session.user;
@@ -691,6 +726,7 @@ app.post('/create-text-file', isAuthenticated, async (req, res) => {
         res.redirect(`/files?${redirectPathQuery}&message=創建文本文件失敗。&messageType=error`);
     }
 });
+
 app.get('/api/directories', isAuthenticated, async (req, res) => { 
     const actingUser = req.session.user;
     let targetUsernameForTree = actingUser.username;
@@ -716,6 +752,7 @@ app.get('/api/directories', isAuthenticated, async (req, res) => {
         res.status(500).json({ success: false, message: '無法獲取目錄列表。' });
     }
 });
+
 app.post('/move-items', isAuthenticated, async (req, res) => { 
     const actingUser = req.session.user;
     const { sourcePaths, destinationPath } = req.body; 
@@ -769,6 +806,7 @@ app.post('/move-items', isAuthenticated, async (req, res) => {
         res.status(500).json({ success: false, message: error.message || '移動項目時發生內部伺服器錯誤。' });
     }
 });
+
 app.get('/admin', isAuthenticated, isAdmin, (req, res) => { 
     db.all("SELECT id, username, role FROM users", [], (err, users) => {
         if (err) { console.error("獲取用戶列表錯誤:", err); return res.status(500).render('error', { user: req.session.user, message: '無法獲取用戶列表。', csrfToken: res.locals.csrfToken });}
