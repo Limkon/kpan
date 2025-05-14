@@ -1,1 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查看文件: <%= filename %> - 網路硬碟</title>
+    <link rel="stylesheet" href="/style.css">
+    <link id="theme-stylesheet" rel="stylesheet" href="">
+    <%# 引入 highlight.js 的样式，如果需要代码高亮 %>
+    <% if (['.js', '.json', '.css', '.html', '.xml', '.py', '.java', '.c', '.cpp', '.go', '.rb', '.md'].includes(fileExtension)) { %>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+        <%# 或者选择一个您喜欢的主题, e.g., github-dark.min.css %>
+        <%# <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hljs-theme-dark" disabled> %>
+        <%# <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-theme-light"> %>
+    <% } %>
+    <style>
+        .view-container {
+            padding: 15px;
+            background-color: var(--viewer-bg, #fdfdfd); /* CSS 变量，方便主题化 */
+            border: 1px solid var(--viewer-border-color, #eee);
+            border-radius: 5px;
+            margin-top: 15px;
+            font-family: monospace; /* 等宽字体适合查看代码和纯文本 */
+            font-size: 0.9em;
+            line-height: 1.6;
+            overflow-x: auto; /* 内容过长时允许水平滚动 */
+            white-space: pre-wrap; /* 保留空白符序列，但允许正常换行 */
+            word-wrap: break-word; /* 在长单词或URL处换行 */
+            color: var(--viewer-text-color, #333);
+        }
+        .view-actions {
+            margin-top: 15px;
+            text-align: right;
+        }
+        /* Highlight.js 暗色主题适配 */
+        .dark-theme .view-container {
+            --viewer-bg: #2b2b2b;
+            --viewer-border-color: #444;
+            --viewer-text-color: #ccc;
+        }
+        .dark-theme .hljs { /* 如果使用 highlight.js */
+            background: #2b2b2b; /* 确保与容器背景一致或协调 */
+            color: #bababa;
+        }
+        /* 确保 .container 也能适应内容高度 */
+        body > .container {
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 40px); 
+        }
+        .view-content-wrapper {
+             flex-grow: 1; /* 允许内容区域伸展 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>查看文件: <%= filename %></h1>
+            <div class="header-controls">
+                <nav>
+                    <%
+                        let backPath = "/files";
+                        // 确保 currentPath 存在且不为空
+                        if (locals.currentPath && typeof locals.currentPath === 'string') {
+                            const parentDirOfFile = currentPath.includes('/') ? currentPath.substring(0, currentPath.lastIndexOf('/')) || '/' : '/';
+                            if (locals.viewTargetUsername && user.role === 'admin') {
+                                backPath = `/files?path=${encodeURIComponent(parentDirOfFile)}&targetUsername=${encodeURIComponent(viewTargetUsername)}`;
+                            } else {
+                                backPath = `/files?path=${encodeURIComponent(parentDirOfFile)}`;
+                            }
+                        } else if (locals.viewTargetUsername && user.role === 'admin') {
+                             backPath = `/files?targetUsername=${encodeURIComponent(viewTargetUsername)}`;
+                        }
+                    %>
+                    <a href="<%= backPath %>">返回文件列表</a>
+                    <% if (ALLOWED_TEXT_EXTENSIONS && ALLOWED_TEXT_EXTENSIONS.includes(fileExtension)) { %>
+                        <a href="/edit?path=<%= encodeURIComponent(currentPath) %><% if (locals.viewTargetUsername && user.role === 'admin') { %>&targetUsername=<%= encodeURIComponent(viewTargetUsername) %><% } %>" class="button-link">編輯此文件</a>
+                    <% } %>
+                    <a href="/logout">登出</a>
+                </nav>
+                <%- include('partials/theme-switcher') %>
+            </div>
+        </header>
 
+        <% if (locals.message) { %>
+            <p class="message <%= (locals.messageType === 'error') ? 'error-message' : '' %>"><%= message %></p>
+        <% } %>
+        
+        <div class="view-content-wrapper">
+            <div class="view-actions">
+                <a href="/download?path=<%= encodeURIComponent(currentPath) %><% if (locals.viewTargetUsername && user.role === 'admin') { %>&targetUsername=<%= encodeURIComponent(viewTargetUsername) %><% } %>" class="button-link secondary">下載文件</a>
+            </div>
+            <pre class="view-container"><code class="language-<%= fileExtension.substring(1) %>"><%= content %></code></pre>
+        </div>
+
+    </div>
+    <script src="/theme.js"></script>
+    <%# 引入 highlight.js 的脚本，如果需要代码高亮 %>
+    <% if (['.js', '.json', '.css', '.html', '.xml', '.py', '.java', '.c', '.cpp', '.go', '.rb', '.md'].includes(fileExtension)) { %>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+        <%# 如果需要高亮特定语言，可以额外加载 %>
+        <%# <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script> %>
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                document.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+                // // 简单的暗色主题适配 highlight.js 样式
+                // const currentTheme = localStorage.getItem('theme');
+                // const hljsDarkTheme = document.getElementById('hljs-theme-dark');
+                // const hljsLightTheme = document.getElementById('hljs-theme-light');
+                // if (currentTheme === 'dark' && hljsDarkTheme && hljsLightTheme) {
+                //     hljsDarkTheme.removeAttribute('disabled');
+                //     hljsLightTheme.setAttribute('disabled', 'disabled');
+                // } else if (hljsLightTheme && hljsDarkTheme) {
+                //     hljsLightTheme.removeAttribute('disabled');
+                //     hljsDarkTheme.setAttribute('disabled', 'disabled');
+                // }
+            });
+        </script>
+    <% } %>
+</body>
+</html>
