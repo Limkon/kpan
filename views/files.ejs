@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* ... (保留所有其他之前的樣式) ... */
+        /* ... (保留之前的模態框、選擇操作欄、列表/網格視圖等樣式) ... */
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         #selection-action-bar button { margin: 0; }
         .item-checkbox { margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
@@ -61,51 +61,61 @@
         .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
         .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
 
-        /* --- Styles for .file-browser-controls (Updated Layout) --- */
+        /* --- Styles for .file-browser-controls (Single Row Layout) --- */
         .file-browser-controls {
             display: flex;
-            flex-direction: column; 
-            gap: 15px; 
-            margin-bottom: 20px;
-            /* align-items: flex-start; 如果希望所有行都收缩并左对齐，则取消注释此行 */
-        }
-        .file-browser-controls .search-row,
-        .file-browser-controls .actions-row {
-            display: flex;
-            flex-wrap: wrap; 
+            flex-wrap: wrap; /* 允许在小屏幕上换行 */
             align-items: center;
-            gap: 10px; 
-        }
-        .file-browser-controls .search-row {
-            width: 100%; /* 确保搜索行占据全部可用宽度 */
-        }
-        .file-browser-controls .search-row .control-form { 
-            flex-grow: 1; 
-            display: flex;
-        }
-        .file-browser-controls .search-row input[type="search"] {
-            flex-grow: 1; 
-            padding: 8px 10px; font-size: 0.9em; border: 1px solid #ccc; border-radius: 4px; margin: 0;
-        }
-        .file-browser-controls .search-row button {
-            padding: 8px 12px; font-size: 0.9em; margin: 0;
-        }
-        
-        .file-browser-controls .actions-row {
-            align-self: flex-start; /* !!! 新增：使操作行靠左，并且其宽度由内容决定 !!! */
+            gap: 10px; /* 各个组之间的间隙 */
+            margin-bottom: 20px;
         }
 
-        .file-browser-controls .actions-row button, 
-        .file-browser-controls .actions-row .view-toggle button {
+        .file-browser-controls .actions-group-left { /* 左侧的操作按钮组 */
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-shrink: 0; /* 防止按钮组被过度压缩 */
+        }
+        .file-browser-controls .actions-group-left button {
+            padding: 8px 12px; font-size: 0.9em; margin: 0;
+        }
+
+        .file-browser-controls .search-form-right { /* 搜索表单，将靠右 */
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: auto; /* !!! 关键：将搜索表单及其右侧的元素推到右边 !!! */
+            flex-shrink: 0; /* 防止被过度压缩 */
+        }
+        .file-browser-controls .search-form-right input[type="search"] {
+            width: 180px; /* 缩短搜索输入框的长度 */
+            padding: 8px 10px; font-size: 0.9em; border: 1px solid #ccc; border-radius: 4px; margin: 0;
+        }
+        .file-browser-controls .search-form-right button {
+            padding: 8px 12px; font-size: 0.9em; margin: 0;
+        }
+
+        .file-browser-controls .view-toggle { /* 视图切换按钮 */
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-shrink: 0; /* 防止被过度压缩 */
+        }
+         .file-browser-controls .view-toggle button {
              padding: 8px 12px; font-size: 0.9em; margin: 0;
         }
-        .file-browser-controls .actions-row .view-toggle {
-            margin-left: auto; /* 在 actions-row 内部，将视图切换按钮推到其右侧 */
+        /* 当 actions-group-left 不存在时 (例如在搜索结果页)，让搜索表单不要有 margin-left: auto */
+        .file-browser-controls:not(:has(.actions-group-left)) .search-form-right {
+            margin-left: 0;
+            flex-grow: 1; /* 允许搜索表单在没有左侧按钮时占据更多空间 */
         }
-        /* 当 actions-row 只有 view-toggle 时 (搜索结果页) */
-        .file-browser-controls .actions-row:has(.view-toggle:only-child) .view-toggle {
-            margin-left: 0; /* 移除左边距，使其自然靠左 */
+         .file-browser-controls:not(:has(.actions-group-left)) .search-form-right input[type="search"] {
+            flex-grow: 1; /* 允许输入框在表单内伸展 */
         }
+         .file-browser-controls:not(:has(.actions-group-left)) .view-toggle {
+            margin-left: auto; /* 这种情况下，将视图切换推到最右 */
+        }
+
 
     </style>
 </head>
@@ -157,34 +167,26 @@
         <% } %>
 
         <div class="file-browser-controls">
-            <div class="search-row">
-                <form action="/files" method="GET" class="control-form">
-                    <% if (locals.viewTargetUsername && user.role === 'admin') { %>
-                        <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
-                    <% } %>
-                    <input type="search" name="q" placeholder="搜索 <%= locals.viewTargetUsername || user.username %> 的文件..." value="<%= locals.searchQuery || '' %>">
-                    <button type="submit">搜索</button>
-                </form>
-            </div>
-
             <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
-                <div class="actions-row">
+                <div class="actions-group-left">
                     <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
                     <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
                     <button type="button" id="toggleUploadBtn" class="upload-button-main">上傳文件到此</button>
-                    <div class="view-toggle">
-                        <button id="listViewBtn">列表</button>
-                        <button id="gridViewBtn">網格</button>
-                    </div>
-                </div>
-            <% } else if (locals.isSearchResult) { %> 
-                 <div class="actions-row">
-                    <div class="view-toggle"> <%# 在搜索结果页，view-toggle 自然靠左，因为 actions-row 有 align-self: flex-start %>
-                        <button id="listViewBtn">列表</button>
-                        <button id="gridViewBtn">網格</button>
-                    </div>
                 </div>
             <% } %>
+        
+            <form action="/files" method="GET" class="control-form search-form-right">
+                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                    <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                <% } %>
+                <input type="search" name="q" placeholder="搜索..." value="<%= locals.searchQuery || '' %>">
+                <button type="submit">搜索</button>
+            </form>
+        
+            <div class="view-toggle">
+                <button id="listViewBtn">列表</button>
+                <button id="gridViewBtn">網格</button>
+            </div>
         </div>
         
         <div id="selection-action-bar">
@@ -518,7 +520,7 @@
             }
             if (closeMoveModalBtn) closeMoveModalBtn.onclick = () => moveModal.style.display = 'none';
             if (cancelMoveBtn) cancelMoveBtn.onclick = () => moveModal.style.display = 'none';
-            window.onclick = (event) => { if (event.target == moveModal) moveModal.style.display = 'none'; }
+            
             if (confirmMoveBtn) { /* ... (与之前版本相同) ... */ 
                 confirmMoveBtn.addEventListener('click', async () => {
                     const selectedToMove = getSelectedItems(); const destinationPath = moveDestinationInput.value;
@@ -646,19 +648,14 @@
                 const currentPathHiddenInput = createItemForm.querySelector('input[name="currentPath"]');
                 if (currentPathHiddenInput) currentPathHiddenInput.value = IS_SEARCH_RESULT_VIEW ? '/' : CURRENT_PATH_ON_LOAD;
                 
-                // 如果是管理员视图，并且有 targetUsername，也设置到模态框的隐藏字段
                 const targetUsernameHiddenInput = createItemForm.querySelector('input[name="targetUsername"]');
                 if (targetUsernameHiddenInput) {
                     if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                         targetUsernameHiddenInput.value = VIEW_TARGET_USERNAME;
                     } else {
-                        // 如果不是管理员查看特定用户，可以移除或清空这个字段，以防意外提交
-                        // 或者确保后端在非管理员情况下忽略此字段
                         targetUsernameHiddenInput.value = ''; 
                     }
                 }
-
-
                 createItemModal.style.display = 'block';
                 createItemNameInput.focus();
             }
@@ -669,7 +666,7 @@
             if (cancelCreateItemBtn) cancelCreateItemBtn.onclick = () => createItemModal.style.display = 'none';
             window.addEventListener('click', (event) => { 
                 if (event.target == createItemModal) createItemModal.style.display = 'none';
-                if (event.target == moveModal) moveModal.style.display = 'none'; // Also close move modal on outside click
+                if (event.target == moveModal) moveModal.style.display = 'none'; 
             });
         });
         function showRenameForm(encodedName, currentName, isDir) { /* ... (与之前版本相同) ... */ 
