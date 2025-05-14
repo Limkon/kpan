@@ -220,6 +220,8 @@
         <% } %>
         <div id="file-container">
             <% if (items.length > 0) { %>
+                <%# Define adminTargetQueryForActions once before the loop for efficiency %>
+                <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
                 <ul>
                     <% items.forEach(item => { %>
                         <li>
@@ -470,15 +472,18 @@
 
                     try {
                         let fetchUrl = '/api/directories';
+                        let queryParams = [];
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                            fetchUrl += `?targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                            queryParams.push(`targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`);
                         }
-                        // Add current path of items being moved to exclude them and their children
-                        // This needs more sophisticated logic if items are from different dirs (search results)
-                        // For now, assume items are from currentPath if not search, or root if search
-                        const baseSourcePath = IS_SEARCH_RESULT_VIEW ? '/' : CURRENT_PATH_ON_LOAD;
-                        // fetchUrl += `${fetchUrl.includes('?') ? '&' : '?'}excludePath=${encodeURIComponent(baseSourcePath)}`;
-
+                        // Pass paths of items being moved to exclude them from destination list
+                        const pathsToExclude = selectedItems.filter(item => item.isDir).map(item => item.path);
+                        if (pathsToExclude.length > 0) {
+                            queryParams.push(`excludePaths=${encodeURIComponent(pathsToExclude.join(','))}`);
+                        }
+                        if (queryParams.length > 0) {
+                            fetchUrl += `?${queryParams.join('&')}`;
+                        }
 
                         const response = await fetch(fetchUrl);
                         if (!response.ok) throw new Error(`無法獲取目錄列表: ${response.statusText}`);
@@ -505,9 +510,13 @@
                 function buildTree(items, parentUl, parentPath) {
                     items.forEach(item => {
                         // Exclude the items being moved and their potential subdirectories from appearing as destinations
-                        if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || item.path.startsWith(sourcePath + '/'))) {
+                         if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || (sourcePath.startsWith(item.path + '/') && item.path !=='/'))) { // Prevent moving into a subfolder of itself if source is a parent
                             return;
                         }
+                         if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) { // Prevent moving into a subfolder of itself
+                            return;
+                        }
+
 
                         const li = document.createElement('li');
                         li.textContent = item.name;
@@ -564,7 +573,8 @@
                         const payload = {
                             sourcePaths: selectedToMove.map(item => item.path),
                             destinationPath: destinationPath,
-                            csrfToken: CSRF_TOKEN // If CSRF is implemented
+                            // CSRF token should be included if csurf is used
+                            // _csrf: CSRF_TOKEN 
                         };
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             payload.targetUsername = VIEW_TARGET_USERNAME;
@@ -572,7 +582,10 @@
 
                         const response = await fetch('/move-items', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                // 'CSRF-Token': CSRF_TOKEN // If sending CSRF token via header
+                            },
                             body: JSON.stringify(payload)
                         });
                         const result = await response.json();
