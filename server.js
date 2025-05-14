@@ -1,4 +1,4 @@
-// server.js (SQLite 版本 - 包含搜索功能)
+// server.js (SQLite 版本 - 包含搜索功能 - 移除密码长度限制)
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
@@ -16,7 +16,7 @@ const DATA_DIR = path.join(__dirname, 'data');
 const UPLOAD_DIR_BASE = path.join(__dirname, 'uploads');
 const DB_FILE = path.join(DATA_DIR, 'netdisk.sqlite');
 const ALLOWED_TEXT_EXTENSIONS = ['.txt', '.md', '.json', '.js', '.css', '.html', '.xml', '.log', '.csv', '.py', '.java', '.c', '.cpp', '.go', '.rb'];
-const SESSION_SECRET = process.env.SESSION_SECRET || 'a_very_strong_and_unique_secret_key_v6_final_final_SEARCH_UPDATE'; // 强烈建议从环境变量读取
+const SESSION_SECRET = process.env.SESSION_SECRET || 'a_very_strong_and_unique_secret_key_v6_final_final_SEARCH_UPDATE_NO_PW_LEN'; // 强烈建议从环境变量读取
 
 // --- 目錄初始化 ---
 [DATA_DIR, UPLOAD_DIR_BASE].forEach(dir => {
@@ -69,9 +69,7 @@ function resolvePathForUser(usernameForPath, relativePath = '/') {
         throw new Error('無效的目標用戶名。');
     }
     const userRoot = getUserUploadRoot(usernameForPath);
-    // 使用 path.posix.normalize 来处理路径，因为它能更好地处理混合斜杠并标准化为 /
-    // 然后再用 path.join 确保与操作系统兼容，但要注意相对路径的意图
-    const normalizedRelativePath = path.posix.normalize(relativePath).replace(/^(\.\.[/\\])+/, ''); // 防止路径逃逸
+    const normalizedRelativePath = path.posix.normalize(relativePath).replace(/^(\.\.[/\\])+/, '');
     const requestedPath = path.join(userRoot, normalizedRelativePath);
 
     if (!path.resolve(requestedPath).startsWith(path.resolve(userRoot))) {
@@ -81,30 +79,20 @@ function resolvePathForUser(usernameForPath, relativePath = '/') {
     return requestedPath;
 }
 
-/**
- * 递归地在用户目录中搜索文件。
- * @param {string} directoryToSearch - 开始搜索的目录的绝对路径。
- * @param {string} keyword - 要在文件名中搜索的关键字。
- * @param {string} currentRelativePath - 当前相对于用户根目录的路径 (用于构建结果中的路径)。
- * @param {string} userUploadRoot - 用户根上传目录的绝对路径 (用于安全检查和路径构建)。
- * @returns {Promise<Array<Object>>} - 一个解析为找到的文件对象数组的 Promise。
- */
 async function searchFilesRecursively(directoryToSearch, keyword, currentRelativePath = '/', userUploadRoot) {
     let foundItems = [];
     const lowerCaseKeyword = keyword.toLowerCase();
 
     try {
-        // 确保搜索不会超出用户根目录 (尽管初始调用应该由 resolvePathForUser 保证)
         if (!path.resolve(directoryToSearch).startsWith(path.resolve(userUploadRoot))) {
              console.warn(`[Security] 搜索尝试超出用户允许的目录: ${directoryToSearch}`);
-             return []; // 或者抛出错误
+             return [];
         }
 
         const entries = await fsp.readdir(directoryToSearch, { withFileTypes: true });
 
         for (const entry of entries) {
             const entryAbsolutePath = path.join(directoryToSearch, entry.name);
-            // 使用 path.posix.join 来确保相对路径使用 / 分隔符
             const entryRelativePath = path.posix.join(currentRelativePath, entry.name);
 
             if (entry.isFile()) {
@@ -112,25 +100,21 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
                     foundItems.push({
                         name: entry.name,
                         isDir: false,
-                        path: entryRelativePath, // 相对于用户根目录的完整路径
+                        path: entryRelativePath,
                         encodedName: encodeURIComponent(entry.name),
                         encodedPath: encodeURIComponent(entryRelativePath)
                     });
                 }
             } else if (entry.isDirectory()) {
-                // 递归搜索子目录
                 const subDirectoryItems = await searchFilesRecursively(entryAbsolutePath, keyword, entryRelativePath, userUploadRoot);
                 foundItems = foundItems.concat(subDirectoryItems);
             }
         }
     } catch (err) {
-        // 如果读取某个目录出错 (例如权限问题)，记录错误并继续
         console.error(`[Search] 讀取目錄 ${directoryToSearch} 時發生錯誤:`, err.message);
-        // 可以选择不中断整个搜索，只跳过此目录
     }
     return foundItems;
 }
-
 
 // --- Multer 設置 ---
 const storage = multer.diskStorage({
@@ -150,7 +134,6 @@ const storage = multer.diskStorage({
         }
     },
     filename: function (req, file, cb) {
-        // 避免文件名包含路径字符，并进行UTF-8处理
         const safeFilename = path.basename(file.originalname);
         cb(null, Buffer.from(safeFilename, 'latin1').toString('utf8'));
     }
@@ -158,13 +141,12 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {
-        // 再次检查文件名，防止恶意输入
         if (file.originalname.includes('..') || file.originalname.includes('/') || file.originalname.includes('\\')) {
             return cb(new Error('文件名包含無效字符。'), false);
         }
         cb(null, true);
     },
-    limits: { fileSize: 100 * 1024 * 1024 } // 例如：限制文件大小为100MB
+    limits: { fileSize: 100 * 1024 * 1024 }
 });
 
 // --- 認證中間件 ---
@@ -181,7 +163,7 @@ function isAdmin(req, res, next) {
 app.get('/', (req, res) => res.redirect(req.session.user ? '/files' : '/login'));
 
 // 用戶註冊
-app.get('/register', (req, res) => res.render('register', { error: null, csrfToken: req.csrfToken && req.csrfToken() })); // 假设使用了 csurf
+app.get('/register', (req, res) => res.render('register', { error: null, csrfToken: req.csrfToken && req.csrfToken() }));
 app.post('/register', (req, res) => {
     const { username, password, confirmPassword } = req.body;
     if (!username || !password || !confirmPassword) return res.render('register', { error: '所有欄位均為必填項。', csrfToken: req.csrfToken && req.csrfToken() });
@@ -189,10 +171,10 @@ app.post('/register', (req, res) => {
     if (username.includes('/') || username.includes('..') || username.includes('\\') || username.length > 50 || !/^[a-zA-Z0-9_.-]+$/.test(username)) {
         return res.render('register', { error: '用戶名包含無效字符、過長或格式不正確。', csrfToken: req.csrfToken && req.csrfToken() });
     }
-    // 增加密码强度校验 (示例)
-    if (password.length < 8) {
-        return res.render('register', { error: '密碼長度至少需要8位。', csrfToken: req.csrfToken && req.csrfToken() });
-    }
+    // 移除密碼長度限制
+    // if (password.length < 8) {
+    //     return res.render('register', { error: '密碼長度至少需要8位。', csrfToken: req.csrfToken && req.csrfToken() });
+    // }
 
     db.get("SELECT * FROM users WHERE username = ?", [username], (err, row) => {
         if (err) {
@@ -206,14 +188,14 @@ app.post('/register', (req, res) => {
                 console.error("註冊時查詢用戶總數錯誤:", err);
                 return res.render('register', { error: '註冊錯誤，請稍後再試。', csrfToken: req.csrfToken && req.csrfToken() });
             }
-            const hashedPassword = bcrypt.hashSync(password, 12); // 增加 salt rounds
+            const hashedPassword = bcrypt.hashSync(password, 12);
             const userRole = countRow.count === 0 ? 'admin' : 'user';
             db.run("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", [username, hashedPassword, userRole], function (err) {
                 if (err) {
                     console.error("註冊時插入用戶錯誤:", err);
                     return res.render('register', { error: '註冊失敗，請稍後再試。', csrfToken: req.csrfToken && req.csrfToken() });
                 }
-                getUserUploadRoot(username); // 确保用户目录被创建
+                getUserUploadRoot(username);
                 res.redirect('/login?message=註冊成功，請登錄。');
             });
         });
@@ -242,7 +224,6 @@ app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             console.error("登出時銷毀 session 錯誤:", err);
-            // 即使销毁失败，也尝试重定向
         }
         res.redirect('/login');
     });
@@ -260,9 +241,10 @@ app.post('/change-password', isAuthenticated, (req, res) => {
     if (newPassword !== confirmNewPassword) {
         return res.render('change-password', { user: req.session.user, message: '新密碼與確認密碼不匹配。', messageType: 'error', csrfToken: req.csrfToken && req.csrfToken() });
     }
-    if (newPassword.length < 8) { // 增加密码强度校验
-        return res.render('change-password', { user: req.session.user, message: '新密碼長度至少需要8位。', messageType: 'error', csrfToken: req.csrfToken && req.csrfToken() });
-    }
+    // 移除新密碼長度限制
+    // if (newPassword.length < 8) {
+    //     return res.render('change-password', { user: req.session.user, message: '新密碼長度至少需要8位。', messageType: 'error', csrfToken: req.csrfToken && req.csrfToken() });
+    // }
 
     db.get("SELECT password FROM users WHERE id = ?", [userId], (err, userRow) => {
         if (err || !userRow || !bcrypt.compareSync(currentPassword, userRow.password)) {
@@ -283,8 +265,8 @@ app.post('/change-password', isAuthenticated, (req, res) => {
 // --- 文件瀏覽 (修改后支持搜索) ---
 app.get('/files', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
-    const relativeQueryPath = req.query.path || '/'; // 正常浏览时的路径
-    const searchQuery = req.query.q ? req.query.q.trim() : null; // 获取搜索关键字
+    const relativeQueryPath = req.query.path || '/';
+    const searchQuery = req.query.q ? req.query.q.trim() : null;
 
     let targetUsernameForView = actingUser.username;
     let viewAsAdminContext = false;
@@ -304,17 +286,17 @@ app.get('/files', isAuthenticated, async (req, res) => {
     }
 
     try {
-        const userUploadRootPath = getUserUploadRoot(targetUsernameForView); // 获取用户的绝对根上传目录
+        const userUploadRootPath = getUserUploadRoot(targetUsernameForView);
 
         let items = [];
         let pageTitle = `${viewAsAdminContext ? targetUsernameForView : actingUser.username} 的文件`;
         let isSearchResultView = false;
-        let currentDisplayPath = relativeQueryPath; // 用于面包屑和表单的路径
+        let currentDisplayPath = relativeQueryPath;
 
         if (searchQuery) {
             isSearchResultView = true;
             items = await searchFilesRecursively(userUploadRootPath, searchQuery, '/', userUploadRootPath);
-            currentDisplayPath = '/'; // 搜索结果的 "当前路径" 设为根，因为结果来自各处
+            currentDisplayPath = '/';
             pageTitle = `有關 "${searchQuery}" 的搜尋結果 (在 ${viewAsAdminContext ? targetUsernameForView : actingUser.username} 的文件中)`;
             items.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN-u-co-pinyin'));
         } else {
@@ -344,8 +326,8 @@ app.get('/files', isAuthenticated, async (req, res) => {
             searchQuery: searchQuery,
             isSearchResult: isSearchResultView,
             pageTitle: pageTitle,
-            ALLOWED_TEXT_EXTENSIONS: ALLOWED_TEXT_EXTENSIONS, // 传递给模板
-            csrfToken: req.csrfToken && req.csrfToken(), // 传递 CSRF token
+            ALLOWED_TEXT_EXTENSIONS: ALLOWED_TEXT_EXTENSIONS,
+            csrfToken: req.csrfToken && req.csrfToken(),
             message: req.query.message,
             messageType: req.query.messageType
         });
@@ -360,11 +342,10 @@ app.get('/files', isAuthenticated, async (req, res) => {
         let redirectParams = [];
         if (viewAsAdminContext) redirectParams.push(`targetUsername=${encodeURIComponent(targetUsernameForView)}`);
         
-        // 如果是搜索出错，不要带 path 参数，但可以带 q 参数
         if (searchQuery) {
             redirectParams.push(`q=${encodeURIComponent(searchQuery)}`);
-        } else if (relativeQueryPath !== '/') { // 非搜索错误，且不在根目录
-            const parentPath = path.posix.dirname(relativeQueryPath); // 使用 posix.dirname
+        } else if (relativeQueryPath !== '/') {
+            const parentPath = path.posix.dirname(relativeQueryPath);
             if (parentPath !== '.' && parentPath !== '/') {
                  redirectParams.push(`path=${encodeURIComponent(parentPath)}`);
             }
@@ -377,10 +358,8 @@ app.get('/files', isAuthenticated, async (req, res) => {
     }
 });
 
-
-// 文件上傳處理 (POST /upload)
 app.post('/upload', isAuthenticated, (req, res, next) => {
-    upload.array('userFiles', 10)(req, res, (err) => { // 最多同时上传10个文件
+    upload.array('userFiles', 10)(req, res, (err) => {
         if (err) {
             console.error(`[${req.session.user.username}] Multer 上傳錯誤:`, err.message);
             const currentPath = req.body.currentPath || '/';
@@ -400,8 +379,6 @@ app.post('/upload', isAuthenticated, (req, res, next) => {
     });
 });
 
-
-// 創建文件夾
 app.post('/create-folder', isAuthenticated, async (req, res) => {
     const { folderName, currentPath: relativeCurrentPath } = req.body;
     const actingUser = req.session.user;
@@ -409,7 +386,7 @@ app.post('/create-folder', isAuthenticated, async (req, res) => {
     
     let redirectPathQuery = relativeCurrentPath ? `path=${encodeURIComponent(relativeCurrentPath)}` : '';
     const adminQuery = (actingUser.role === 'admin' && req.body.targetUsername) ? `&targetUsername=${encodeURIComponent(req.body.targetUsername)}` : '';
-    if (adminQuery) redirectPathQuery = redirectPathQuery ? `${redirectPathQuery}${adminQuery}` : adminQuery.substring(1); // 避免开头的&
+    if (adminQuery) redirectPathQuery = redirectPathQuery ? `${redirectPathQuery}${adminQuery}` : adminQuery.substring(1);
 
     if (!folderName || folderName.includes('/') || folderName.includes('..') || folderName.includes('\\') || folderName.length > 100 || !/^[^\/\\]+$/.test(folderName)) {
         return res.redirect(`/files?${redirectPathQuery}&message=無效的文件夾名稱。&messageType=error`);
@@ -427,7 +404,6 @@ app.post('/create-folder', isAuthenticated, async (req, res) => {
     }
 });
 
-// 重命名文件/文件夾
 app.post('/rename', isAuthenticated, async (req, res) => {
     const { oldPath: relativeOldPath, newName, currentPath: relativeCurrentPath } = req.body;
     const actingUser = req.session.user;
@@ -436,7 +412,6 @@ app.post('/rename', isAuthenticated, async (req, res) => {
     let redirectPathQuery = relativeCurrentPath ? `path=${encodeURIComponent(relativeCurrentPath)}` : '';
     const adminQuery = (actingUser.role === 'admin' && req.body.targetUsername) ? `&targetUsername=${encodeURIComponent(req.body.targetUsername)}` : '';
     if (adminQuery) redirectPathQuery = redirectPathQuery ? `${redirectPathQuery}${adminQuery}` : adminQuery.substring(1);
-
 
     if (!newName || newName.includes('/') || newName.includes('..') || newName.includes('\\') || newName.length > 255 || !/^[^\/\\]+$/.test(newName)) {
         return res.redirect(`/files?${redirectPathQuery}&message=無效的新名稱。&messageType=error`);
@@ -447,7 +422,6 @@ app.post('/rename', isAuthenticated, async (req, res) => {
 
     try {
         const fullOldPath = resolvePathForUser(targetUsername, relativeOldPath);
-        // 使用 path.posix.dirname 来获取父目录，确保URL友好
         const parentDirOfOld = path.posix.dirname(relativeOldPath);
         const fullNewPath = resolvePathForUser(targetUsername, path.posix.join(parentDirOfOld, newName));
 
@@ -465,7 +439,6 @@ app.post('/rename', isAuthenticated, async (req, res) => {
     }
 });
 
-// 文件下載
 app.get('/download', isAuthenticated, (req, res) => {
     const actingUser = req.session.user;
     const relativeFilePath = req.query.path;
@@ -494,7 +467,6 @@ app.get('/download', isAuthenticated, (req, res) => {
     }
 });
 
-// 刪除文件或文件夾
 app.get('/delete', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeItemPath = req.query.path;
@@ -504,7 +476,6 @@ app.get('/delete', isAuthenticated, async (req, res) => {
     if (!relativeItemPath) {
         return res.redirect(`/files?message=未指定要刪除的項目路徑。&messageType=error`);
     }
-    // 使用 path.posix.dirname
     const parentRelativePath = path.posix.dirname(relativeItemPath);
     let redirectQuery = (parentRelativePath === '.' || parentRelativePath === '/') ? '' : `path=${encodeURIComponent(parentRelativePath)}`;
     const adminQuery = (actingUser.role === 'admin' && req.query.targetUsername) ? `&targetUsername=${encodeURIComponent(req.query.targetUsername)}` : '';
@@ -527,7 +498,6 @@ app.get('/delete', isAuthenticated, async (req, res) => {
     }
 });
 
-// 編輯文本文件 - 顯示頁面
 app.get('/edit', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeFilePath = req.query.path;
@@ -551,7 +521,7 @@ app.get('/edit', isAuthenticated, async (req, res) => {
                 viewTargetUsername: (actingUser.role === 'admin' && req.query.targetUsername) ? req.query.targetUsername : null,
                 filename: filename,
                 content: content,
-                currentPath: relativeFilePath, // 这是相对于用户根目录的路径
+                currentPath: relativeFilePath,
                 csrfToken: req.csrfToken && req.csrfToken(),
                 message: req.query.message,
                 messageType: req.query.messageType
@@ -565,10 +535,9 @@ app.get('/edit', isAuthenticated, async (req, res) => {
     }
 });
 
-// 保存編輯後的文本文件
 app.post('/save/:encodedPath', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
-    const relativeFilePath = decodeURIComponent(req.params.encodedPath); // 这是相对于用户根目录的路径
+    const relativeFilePath = decodeURIComponent(req.params.encodedPath);
     const { fileContent } = req.body;
     const targetUsername = (actingUser.role === 'admin' && req.body.targetUsername) ? req.body.targetUsername : actingUser.username;
 
@@ -586,10 +555,8 @@ app.post('/save/:encodedPath', isAuthenticated, async (req, res) => {
     }
     try {
         const fullFilePath = resolvePathForUser(targetUsername, relativeFilePath);
-        // 确保父目录存在
         const parentDirOfFile = path.dirname(fullFilePath);
         if (!fs.existsSync(parentDirOfFile)) {
-             // 如果父目录不存在，这通常是一个错误，因为文件不应该能被创建在不存在的父目录中通过此接口
             console.error(`[${actingUser.username}] 尝试保存文件到不存在的父目录: ${parentDirOfFile}`);
             return res.status(400).render('edit-file', {
                 user: actingUser,
@@ -601,7 +568,6 @@ app.post('/save/:encodedPath', isAuthenticated, async (req, res) => {
         }
 
         await fsp.writeFile(fullFilePath, fileContent, 'utf8');
-        // 使用 path.posix.dirname
         const parentDirForRedirect = path.posix.dirname(relativeFilePath) || '/';
         const adminQuery = (actingUser.role === 'admin' && req.body.targetUsername) ? `&targetUsername=${encodeURIComponent(req.body.targetUsername)}` : '';
         res.redirect(`/files?path=${encodeURIComponent(parentDirForRedirect)}${adminQuery}&message=文件 "${filename}" 已成功保存。&messageType=success`);
@@ -616,7 +582,6 @@ app.post('/save/:encodedPath', isAuthenticated, async (req, res) => {
         });
     }
 });
-
 
 // 管理員功能
 app.get('/admin', isAuthenticated, isAdmin, (req, res) => {
@@ -645,8 +610,9 @@ app.post('/admin/reset-password/:userId', isAuthenticated, isAdmin, (req, res) =
     if (req.session.user.id === userIdToReset) {
         return res.redirect('/admin?message=不能重置自己的密碼。&messageType=error');
     }
-    if (!newPassword || newPassword.length < 8) { // 增加密码强度校验
-        return res.redirect(`/admin?message=新密碼不能為空且長度至少8位。&messageType=error`);
+    // 移除了新密碼長度限制，只檢查是否為空
+    if (!newPassword) {
+        return res.redirect(`/admin?message=新密碼不能為空。&messageType=error`);
     }
     const hashedNewPassword = bcrypt.hashSync(newPassword, 12);
     db.run("UPDATE users SET password = ? WHERE id = ?", [hashedNewPassword, userIdToReset], function (err) {
@@ -674,7 +640,7 @@ app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => {
             if(err) console.error("管理員刪除用戶時查詢用戶錯誤:", err);
             return res.redirect('/admin?message=未找到用戶。&messageType=error');
         }
-        const userDirToDelete = getUserUploadRoot(user.username); // 使用 getUserUploadRoot
+        const userDirToDelete = getUserUploadRoot(user.username);
         db.run("DELETE FROM users WHERE id = ?", [userIdToDelete], async function (err) {
             if (err) {
                 console.error("管理員刪除用戶時數據庫錯誤:", err);
@@ -688,7 +654,7 @@ app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => {
                     res.redirect(`/admin?message=用戶 ${user.username} 及其文件已刪除。&messageType=success`);
                 } catch (fsErr) {
                     console.error(`刪除用戶 ${user.username} 文件夾錯誤:`, fsErr);
-                    res.redirect(`/admin?message=用戶 ${user.username} 已刪除，但其文件夾刪除失敗。&messageType=warning`); // 改为 warning
+                    res.redirect(`/admin?message=用戶 ${user.username} 已刪除，但其文件夾刪除失敗。&messageType=warning`);
                 }
             } else {
                 res.redirect('/admin?message=未找到用戶或刪除失敗。&messageType=error');
@@ -704,18 +670,17 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
     const usernameForLog = req.session.user ? req.session.user.username : '未認證用戶';
-    console.error(`[${usernameForLog}] 全局錯誤處理: ${req.method} ${req.originalUrl}`, err.stack || err); // 记录堆栈信息
+    console.error(`[${usernameForLog}] 全局錯誤處理: ${req.method} ${req.originalUrl}`, err.stack || err);
     
-    // 避免将敏感的内部错误信息直接暴露给客户端
     let publicMessage = '伺服器內部錯誤 (500)。';
-    if (process.env.NODE_ENV !== 'production' && err.message) { // 开发模式下可以显示更详细的错误
+    if (process.env.NODE_ENV !== 'production' && err.message) {
         publicMessage = err.message;
     }
-    if (err.publicMessage) { // 如果错误对象有自定义的公开消息
+    if (err.publicMessage) {
         publicMessage = err.publicMessage;
     }
 
-    if (res.headersSent) { // 如果头部已发送，则委托给 Express 的默认错误处理器
+    if (res.headersSent) {
         return next(err);
     }
 
@@ -727,15 +692,14 @@ app.use((err, req, res, next) => {
 
 app.listen(port, () => console.log(`伺服器運行在 http://localhost:${port}`));
 
-// 優雅關閉
 process.on('SIGINT', () => {
     console.log('收到 SIGINT 信號，正在關閉伺服器...');
     db.close((err) => {
         if (err) {
             console.error('關閉 SQLite 資料庫時出錯:', err.message);
-            process.exit(1); // 出错则非正常退出
+            process.exit(1);
         }
         console.log('SQLite 資料庫已關閉。');
-        process.exit(0); // 正常退出
+        process.exit(0);
     });
 });
