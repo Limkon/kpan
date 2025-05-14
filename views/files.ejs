@@ -10,7 +10,7 @@
     <style>
         /* ... (保留之前的樣式) ... */
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
-        #selection-action-bar button { margin: 0; }
+        /* #selection-action-bar button { margin: 0; } */ /* Margin handled by .btn or flex gap */
         .item-checkbox { margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
         .file-entry-selectable { display: flex; align-items: center; width: 100%; }
         .file-content-wrapper { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; }
@@ -23,7 +23,7 @@
             overflow: auto; background-color: rgba(0,0,0,0.5); 
         }
         .modal-content { 
-            background-color: var(--modal-bg, #ffffff) !important; /* !important 确保背景色优先 */
+            background-color: var(--modal-bg, #ffffff) !important; 
             color: var(--modal-text-color, #333);
             margin: 10% auto; 
             padding: 20px; 
@@ -33,12 +33,11 @@
             max-width: 500px; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
         }
-        /* 确保暗色主题也明确设置背景 */
         .dark-theme .modal-content {
             --modal-bg: #2c2c2c; 
             --modal-text-color: #e0e0e0; 
             --modal-border-color: #555;
-            background-color: var(--modal-bg) !important; /* !important 确保背景色优先 */
+            background-color: var(--modal-bg) !important;
         }
         .modal-content h3 { margin-top: 0; }
         .modal-content .form-group { margin-bottom: 15px; }
@@ -89,18 +88,16 @@
             padding: 10px 0;
             gap: 10px;
             flex-wrap: wrap;
-            align-items: center; /* Vertically align if buttons have different heights */
-            margin-bottom: 15px; /* Space before upload section if it appears */
+            align-items: center; 
+            margin-bottom: 15px; 
         }
-        #upload-actions-container button {
-            margin: 0; 
-        }
+        /* #upload-actions-container button { margin: 0; } */ /* Margin handled by .btn or flex gap */
         #upload-section { 
-            display: none; /* Initially hidden */
+            display: none; 
             padding: 20px; 
             border: 1px solid #dee2e6; 
             border-radius: 6px; 
-            margin-top: 0; /* Adjusted as upload-actions-container has margin-bottom */
+            margin-top: 0; 
             background-color: #f8f9fa; 
         }
         .dark-theme #upload-section {
@@ -119,7 +116,7 @@
             background-color: #2c2c2c;
         }
         #drop-area.highlight {
-            border-color: #28a745; /* Green highlight on drag over */
+            border-color: #28a745; 
             background-color: #e9f7ef;
         }
         .dark-theme #drop-area.highlight {
@@ -133,11 +130,10 @@
         .dark-theme #drop-area p {
             color: #adb5bd;
         }
-        #upload-button { /* Style for the final submit button */
-            display: none; /* Initially hidden, shown when files are selected */
+        #upload-button { 
+            display: none; 
             margin-top: 15px;
         }
-
 
         .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
         .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
@@ -155,40 +151,38 @@
             align-items: center;
             flex-shrink: 0; 
         }
-        .file-browser-controls .actions-group-left button {
-            padding: 8px 12px; font-size: 0.9em; margin: 0;
-        }
+        /* .file-browser-controls .actions-group-left button { padding: 8px 12px; font-size: 0.9em; margin: 0; } */ /* Covered by .btn */
         .file-browser-controls .search-form-right { 
             display: flex;
-            align-items: center;
+            align-items: center; /* Important for aligning input and button */
             gap: 5px;
             margin-left: auto; 
             flex-shrink: 0; 
         }
         .file-browser-controls .search-form-right input[type="search"] {
             width: 180px; 
-            padding: 8px 10px; font-size: 0.9em; border: 1px solid #ccc; border-radius: 4px; margin: 0;
+            padding: 8px 10px; /* Keep specific padding for input */
+            font-size: 0.9em; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            /* margin: 0; Removed, gap handles spacing */
         }
-        .file-browser-controls .search-form-right button {
-            padding: 8px 12px; font-size: 0.9em; margin: 0;
-        }
+        /* .file-browser-controls .search-form-right button { padding: 8px 12px; font-size: 0.9em; margin: 0; } */ /* Covered by .btn */
         .file-browser-controls .view-toggle { 
             display: flex;
             gap: 8px;
             align-items: center;
             flex-shrink: 0; 
         }
-         .file-browser-controls .view-toggle button {
-            padding: 8px 12px; font-size: 0.9em; margin: 0;
-        }
+         /* .file-browser-controls .view-toggle button { padding: 8px 12px; font-size: 0.9em; margin: 0; } */ /* Covered by .btn */
         .file-browser-controls:not(:has(.actions-group-left)) .search-form-right {
             margin-left: 0;
             flex-grow: 1; 
         }
-         .file-browser-controls:not(:has(.actions-group-left)) .search-form-right input[type="search"] {
+        .file-browser-controls:not(:has(.actions-group-left)) .search-form-right input[type="search"] {
             flex-grow: 1; 
         }
-         .file-browser-controls:not(:has(.actions-group-left)) .view-toggle {
+        .file-browser-controls:not(:has(.actions-group-left)) .view-toggle {
             margin-left: auto; 
         }
         .progress-bar-container {
@@ -225,6 +219,142 @@
             border: 1px solid #003d80;
             color: #f8f9fa;
         }
+
+        /* General Button Styles */
+        .btn {
+            display: inline-block;
+            font-weight: 400;
+            color: #212529; /* Default text color for light theme */
+            text-align: center;
+            vertical-align: middle;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            background-color: #f8f9fa; /* Default light background */
+            border: 1px solid #ced4da;  /* Default light border */
+            padding: 8px 15px;          /* Standardized padding */
+            font-size: 0.9em;           /* Standardized font size */
+            line-height: 1.5;           /* For better vertical alignment of text */
+            border-radius: 4px;         /* Standardized border radius */
+            transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+            text-decoration: none;      /* For <a> tags styled as buttons */
+            margin: 0; /* Reset margin, rely on gap or specific container margins */
+        }
+
+        .btn:hover {
+            color: #212529;
+            background-color: #e2e6ea; /* Slightly darker on hover */
+            border-color: #dae0e5;
+            text-decoration: none;
+        }
+
+        .btn:focus, .btn.focus {
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(211, 212, 213, .5); /* Light focus ring for default */
+        }
+
+        .btn:disabled, .btn.disabled {
+            opacity: .65;
+            cursor: not-allowed;
+        }
+
+        /* Primary Button */
+        .btn-primary {
+            color: #fff;
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            color: #fff;
+            background-color: #0069d9;
+            border-color: #0062cc;
+        }
+        .btn-primary:focus, .btn-primary.focus {
+            box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, .5);
+        }
+
+        /* Secondary Button */
+        .btn-secondary {
+            color: #fff;
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            color: #fff;
+            background-color: #5a6268;
+            border-color: #545b62;
+        }
+        .btn-secondary:focus, .btn-secondary.focus {
+            box-shadow: 0 0 0 0.2rem rgba(130, 138, 145, .5);
+        }
+
+        /* Danger Button */
+        .btn-danger {
+            color: #fff;
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-danger:hover {
+            color: #fff;
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+        .btn-danger:focus, .btn-danger.focus {
+            box-shadow: 0 0 0 0.2rem rgba(225, 83, 97, .5);
+        }
+
+        /* Dark Theme Button Adjustments */
+        .dark-theme .btn {
+            color: #f8f9fa;             /* Light text for dark theme */
+            background-color: #495057;   /* Darker gray background */
+            border-color: #6c757d;     /* Medium gray border */
+        }
+        .dark-theme .btn:hover {
+            color: #f8f9fa;
+            background-color: #5a6268;   /* Slightly lighter gray on hover */
+            border-color: #868e96;
+        }
+        .dark-theme .btn:focus, .dark-theme .btn.focus {
+            box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, .5); /* Darker focus ring */
+        }
+
+        /* For primary, secondary, danger buttons, the light theme colors often have good contrast on dark backgrounds.
+           If specific dark theme colors are needed for these, uncomment and adjust: */
+        /*
+        .dark-theme .btn-primary { color: #fff; background-color: #007bff; border-color: #007bff; }
+        .dark-theme .btn-primary:hover { background-color: #0069d9; border-color: #0062cc; }
+        .dark-theme .btn-primary:focus, .dark-theme .btn-primary.focus { box-shadow: 0 0 0 0.2rem rgba(38,143,255,.5); }
+
+        .dark-theme .btn-secondary { color: #fff; background-color: #6c757d; border-color: #6c757d; }
+        .dark-theme .btn-secondary:hover { background-color: #5a6268; border-color: #545b62; }
+        .dark-theme .btn-secondary:focus, .dark-theme .btn-secondary.focus { box-shadow: 0 0 0 0.2rem rgba(130,138,145,.5); }
+
+        .dark-theme .btn-danger { color: #fff; background-color: #dc3545; border-color: #dc3545; }
+        .dark-theme .btn-danger:hover { background-color: #c82333; border-color: #bd2130; }
+        .dark-theme .btn-danger:focus, .dark-theme .btn-danger.focus { box-shadow: 0 0 0 0.2rem rgba(225,83,97,.5); }
+        */
+        
+        /* Specific for view toggle active state */
+        .view-toggle button.active {
+            color: #fff;
+            background-color: #007bff; /* Primary color */
+            border-color: #007bff;
+        }
+        /* Dark theme active toggle button will inherit primary styles which should be fine */
+        .dark-theme .view-toggle button.active {
+             /* color: #fff; background-color: #007bff; border-color: #007bff; */
+        }
+
+        /* Ensure header nav links styled as buttons have appropriate spacing if needed */
+        .header-controls nav a.btn {
+            margin-left: 5px; /* Example if more spacing is needed */
+        }
+        .header-controls nav a.btn:first-child {
+            margin-left: 0;
+        }
+
     </style>
 </head>
 <body>
@@ -241,9 +371,9 @@
             </h1>
             <div class="header-controls">
                 <nav>
-                    <% if (user.role === 'admin') { %><a href="/admin">管理面板</a><% } %>
-                    <a href="/change-password">修改密碼</a>
-                    <a href="/logout">登出</a>
+                    <% if (user.role === 'admin') { %><a href="/admin" class="btn">管理面板</a><% } %>
+                    <a href="/change-password" class="btn">修改密碼</a>
+                    <a href="/logout" class="btn btn-secondary">登出</a>
                 </nav>
                 <%- include('partials/theme-switcher') %>
             </div>
@@ -277,9 +407,10 @@
         <div class="file-browser-controls">
             <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
                 <div class="actions-group-left">
-                    <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
-                    <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
-                    <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button> </div>
+                    <button type="button" id="show-create-textfile-modal-btn" class="btn btn-primary">新建文本文件</button>
+                    <button type="button" id="show-create-folder-modal-btn" class="btn btn-primary">創建文件夾</button>
+                    <button type="button" id="toggleUploadActionsBtn" class="btn btn-primary upload-button-main">上傳</button> 
+                </div>
             <% } %>
         
             <form action="/files" method="GET" class="control-form search-form-right">
@@ -287,19 +418,19 @@
                     <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
                 <% } %>
                 <input type="search" name="q" placeholder="搜索..." value="<%= locals.searchQuery || '' %>">
-                <button type="submit">搜索</button>
+                <button type="submit" class="btn">搜索</button>
             </form>
         
             <div class="view-toggle">
-                <button id="listViewBtn">列表</button>
-                <button id="gridViewBtn">網格</button>
+                <button id="listViewBtn" class="btn">列表</button>
+                <button id="gridViewBtn" class="btn">網格</button>
             </div>
         </div>
         
         <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
             <div id="upload-actions-container" style="justify-content: flex-start;">
-                <button type="button" id="upload-files-btn">上傳文件</button>
-                <button type="button" id="upload-folder-btn">上傳文件夾</button>
+                <button type="button" id="upload-files-btn" class="btn">上傳文件</button>
+                <button type="button" id="upload-folder-btn" class="btn">上傳文件夾</button>
             </div>
 
             <div id="upload-section">
@@ -311,7 +442,7 @@
                         <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
                         <input type="file" id="userFiles" name="userFiles" multiple style="display: none;"> 
                         <p id="drop-area-text">將文件或文件夾拖拽到此處，或點擊上方按鈕選擇</p>
-                        <button type="submit" id="upload-button">上傳已選項目</button>
+                        <button type="submit" id="upload-button" class="btn btn-primary">上傳已選項目</button>
                     </form>
                     <div id="file-list-preview" style="margin-top:10px; text-align:left;"></div>
                     <div class="progress-bar-container" id="upload-progress-container">
@@ -323,11 +454,11 @@
 
         <div id="selection-action-bar">
             <span id="selection-count" style="margin-right: 15px;">已選擇 0 項</span>
-            <button id="action-edit-btn" disabled>編輯</button>
-            <button id="action-rename-btn" disabled>重命名</button>
-            <button id="action-move-btn" disabled>移動</button>
-            <button id="action-download-btn" disabled>下載選中項</button>
-            <button id="action-delete-btn" class="secondary" disabled>删除</button>
+            <button id="action-edit-btn" class="btn" disabled>編輯</button>
+            <button id="action-rename-btn" class="btn" disabled>重命名</button>
+            <button id="action-move-btn" class="btn" disabled>移動</button>
+            <button id="action-download-btn" class="btn" disabled>下載選中項</button>
+            <button id="action-delete-btn" class="btn btn-danger" disabled>删除</button>
         </div>
 
         <h2><%= locals.isSearchResult ? '搜索結果' : '文件列表' %></h2>
@@ -397,8 +528,8 @@
                                     <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
                                     <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
                                     <input type="text" name="newName" placeholder="新名稱" value="<%= item.name %>" required>
-                                    <button type="submit">確認</button>
-                                    <button type="button" class="secondary" onclick="hideRenameForm('<%= item.encodedName %>'); return false;">取消</button>
+                                    <button type="submit" class="btn btn-primary">確認</button>
+                                    <button type="button" class="btn" onclick="hideRenameForm('<%= item.encodedName %>'); return false;">取消</button>
                                 </form>
                             </div>
                         </li>
@@ -427,8 +558,8 @@
                     <input type="text" id="create-item-name-input" name="" required> 
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="secondary" id="cancel-create-item-btn">取消</button>
-                    <button type="submit" id="confirm-create-item-btn">确认创建</button>
+                    <button type="button" class="btn" id="cancel-create-item-btn">取消</button>
+                    <button type="submit" class="btn btn-primary" id="confirm-create-item-btn">确认创建</button>
                 </div>
             </form>
         </div>
@@ -442,8 +573,9 @@
             </div>
             <p>已選擇目標: <strong id="selected-destination-path">無</strong></p>
             <input type="hidden" id="move-destination-input" value="">
-            <div class="modal-actions"> <button type="button" class="secondary" id="cancel-move-btn">取消</button>
-                <button id="confirm-move-btn" disabled>確認移動</button>
+            <div class="modal-actions"> 
+                <button type="button" class="btn" id="cancel-move-btn">取消</button>
+                <button id="confirm-move-btn" class="btn btn-primary" disabled>確認移動</button>
             </div>
         </div>
     </div>
@@ -482,13 +614,12 @@
             const uploadFolderBtn = document.getElementById('upload-folder-btn');
             const uploadSection = document.getElementById('upload-section');
             const userFilesInput = document.getElementById('userFiles');
-            // const uploadSectionTitle = document.getElementById('upload-section-title'); // Not strictly needed for current logic
             const dropAreaText = document.getElementById('drop-area-text');
             const uploadForm = document.getElementById('upload-form');
             const uploadProgressContainer = document.getElementById('upload-progress-container');
             const uploadProgressBar = document.getElementById('upload-progress-bar');
             const fileListPreview = document.getElementById('file-list-preview');
-            const uploadButton = document.getElementById('upload-button'); // The actual submit button for the form
+            const uploadButton = document.getElementById('upload-button'); 
             const dropArea = document.getElementById('drop-area');
 
 
@@ -761,9 +892,13 @@
                     uploadActionsContainer.style.display = isActionsHidden ? 'flex' : 'none';
                     if (!isActionsHidden) { // If actions are being hidden
                         uploadSection.style.display = 'none'; // Also hide the upload section itself
-                        toggleUploadActionsBtn.textContent = '上傳';
+                        toggleUploadActionsBtn.textContent = '上傳'; // Reset button text
+                        toggleUploadActionsBtn.classList.remove('btn-secondary'); // Revert to primary if it was changed
+                        toggleUploadActionsBtn.classList.add('btn-primary');
                     } else { // If actions are being shown
                         toggleUploadActionsBtn.textContent = '取消上傳操作';
+                        toggleUploadActionsBtn.classList.remove('btn-primary'); // Change to secondary for "cancel" context
+                        toggleUploadActionsBtn.classList.add('btn-secondary');
                     }
                 });
             }
@@ -775,7 +910,11 @@
                     userFilesInput.setAttribute('multiple', '');
                     if (dropAreaText) dropAreaText.textContent = '將文件拖拽到此處進行上傳。';
                     uploadSection.style.display = 'block';
-                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
+                    if (toggleUploadActionsBtn) {
+                        toggleUploadActionsBtn.textContent = '取消上傳操作';
+                        toggleUploadActionsBtn.classList.remove('btn-primary');
+                        toggleUploadActionsBtn.classList.add('btn-secondary');
+                    }
                     userFilesInput.value = null; 
                     fileListPreview.innerHTML = ''; 
                     uploadButton.style.display = 'none'; 
@@ -790,7 +929,11 @@
                     userFilesInput.removeAttribute('multiple'); 
                     if (dropAreaText) dropAreaText.textContent = '將文件夾拖拽到此處進行上傳。';
                     uploadSection.style.display = 'block';
-                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
+                     if (toggleUploadActionsBtn) {
+                        toggleUploadActionsBtn.textContent = '取消上傳操作';
+                        toggleUploadActionsBtn.classList.remove('btn-primary');
+                        toggleUploadActionsBtn.classList.add('btn-secondary');
+                    }
                     userFilesInput.value = null; 
                     fileListPreview.innerHTML = ''; 
                     uploadButton.style.display = 'none';
@@ -824,25 +967,22 @@
                     };
                     xhr.onload = function() {
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        if (xhr.status >= 200 && xhr.status < 400) { // Broader success range for redirects etc.
-                            // Check if response is JSON or if it's a redirect
+                        if (xhr.status >= 200 && xhr.status < 400) { 
                             if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) {
-                                window.location.href = xhr.responseURL; // Follow redirect
+                                window.location.href = xhr.responseURL; 
                             } else {
                                 try {
                                     const jsonResponse = JSON.parse(xhr.responseText);
-                                    if (jsonResponse.success || xhr.status === 200 || xhr.status === 201) { // Check for success property or general success status
+                                    if (jsonResponse.success || xhr.status === 200 || xhr.status === 201) { 
                                         alert(jsonResponse.message || '上傳成功！頁面將刷新。');
                                     } else {
                                         alert(jsonResponse.message || '上傳可能已部分成功或伺服器返回了非預期的成功消息。');
                                     }
                                 } catch (e) {
-                                     // If not JSON, but still a success status, assume success and reload.
-                                     // This handles cases where server redirects with a success message in flash but not JSON.
                                     console.warn("Upload response was not JSON, or parsing failed. Assuming success by page behavior or redirect. Status:", xhr.status);
                                     alert('上傳操作已發送，頁面將刷新以查看結果。');
                                 }
-                                window.location.reload(); // Reload to see changes
+                                window.location.reload(); 
                             }
                         } else {
                             let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
@@ -852,7 +992,7 @@
                                     errorMessage = responseJson.message;
                                 }
                             } catch (e) {
-                                if(xhr.responseText) errorMessage = xhr.responseText.substring(0, 500); // Show part of the response
+                                if(xhr.responseText) errorMessage = xhr.responseText.substring(0, 500); 
                             }
                             alert(errorMessage);
                             console.error('Upload failed:', xhr.status, xhr.responseText);
@@ -863,7 +1003,7 @@
                         alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
                         console.error('Upload network error:', e);
                     };
-                    xhr.openUrl = uploadForm.action; // Store original URL for comparison in onload
+                    xhr.openUrl = uploadForm.action; 
                     xhr.send(formData);
                 });
             }
@@ -871,7 +1011,7 @@
             if (dropArea && userFilesInput && fileListPreview && uploadSection && dropAreaText && uploadActionsContainer && toggleUploadActionsBtn) { 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropArea.addEventListener(eventName, preventDefaults, false);
-                    document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser default for whole page
+                    document.body.addEventListener(eventName, preventDefaults, false); 
                 });
                 function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
                 
@@ -911,30 +1051,29 @@
                     
                     uploadSection.style.display = 'block'; 
                     uploadActionsContainer.style.display = 'flex'; 
-                    toggleUploadActionsBtn.textContent = '取消上傳操作';
+                    if (toggleUploadActionsBtn) {
+                        toggleUploadActionsBtn.textContent = '取消上傳操作';
+                        toggleUploadActionsBtn.classList.remove('btn-primary');
+                        toggleUploadActionsBtn.classList.add('btn-secondary');
+                    }
                 }, false);
 
-                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop); // Keep this
+                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop); 
 
-                function updateFileListPreviewOnDrop() { // Ensure this is defined within scope or globally
+                function updateFileListPreviewOnDrop() { 
                     if (!fileListPreview || !userFilesInput || !uploadButton) return;
                     fileListPreview.innerHTML = '';
                     if (userFilesInput.files.length > 0) {
                         const list = document.createElement('ul');
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
                         let isDirectoryUpload = false;
-                        // Check if webkitRelativePath exists on the first file AND it contains a slash
                         if (userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath && userFilesInput.files[0].webkitRelativePath.includes('/')) {
                            isDirectoryUpload = true;
                         } else if (userFilesInput.webkitdirectory || userFilesInput.directory) { 
-                            // Fallback for some browsers or if input was set to directory mode explicitly
-                            // and webkitRelativePath might not be immediately available on all files[0] before full processing
-                            // This condition is a bit broad, primary check is webkitRelativePath
                             if(userFilesInput.files.length > 0 && userFilesInput.files[0].name === userFilesInput.files[0].webkitRelativePath.split('/')[0]) {
                                 // This heuristic might be unreliable. Sticking to webkitRelativePath is safer.
                             }
                         }
-
 
                         if (isDirectoryUpload) {
                             const folderName = userFilesInput.files[0].webkitRelativePath.split('/')[0];
@@ -1018,11 +1157,10 @@
                 if (currentPathHiddenInput) currentPathHiddenInput.value = IS_SEARCH_RESULT_VIEW ? '/' : CURRENT_PATH_ON_LOAD;
                 
                 const targetUsernameHiddenInput = createItemForm.querySelector('input[name="targetUsername"]');
-                if (targetUsernameHiddenInput) { // Ensure this input exists in the form
+                if (targetUsernameHiddenInput) { 
                     if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                         targetUsernameHiddenInput.value = VIEW_TARGET_USERNAME;
                     } else {
-                         // If not admin view or no target, ensure it's empty or remove if not needed by default
                         targetUsernameHiddenInput.value = ''; 
                     }
                 }
