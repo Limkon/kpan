@@ -38,6 +38,53 @@
         #upload-section { display: none; padding: 20px; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 15px; background-color: #f8f9fa; }
         .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
         .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
+
+        /* --- Styles for .file-browser-controls --- */
+        .file-browser-controls {
+            display: flex;
+            flex-wrap: wrap; /* 允许换行 */
+            align-items: center; /* 垂直居中对齐项目 */
+            gap: 10px; /* 项目之间的间隙 */
+            margin-bottom: 20px;
+        }
+        .file-browser-controls .control-form {
+            display: flex; /* 使内部 input 和 button 在一行 */
+            align-items: center;
+            gap: 5px; /* input 和 button 之间的间隙 */
+            flex-grow: 0; /* 默认不伸展 */
+            flex-shrink: 0; /* 默认不收缩 */
+        }
+        /* 搜索表单可以稍微宽一点 */
+        .file-browser-controls .control-form[action="/files"] {
+            flex-grow: 1; /* 允许搜索表单占据更多可用空间 */
+            min-width: 200px; /* 搜索表单的最小宽度 */
+        }
+        .file-browser-controls .control-form input[type="search"],
+        .file-browser-controls .control-form input[type="text"] {
+            padding: 8px 10px; /* 统一内边距 */
+            font-size: 0.9em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 0; /* 移除默认的 margin */
+        }
+        /* 为新建文本和新建文件夹的输入框设置特定宽度 */
+        .file-browser-controls .control-form input[name="newFileName"],
+        .file-browser-controls .control-form input[name="folderName"] {
+            width: 160px; /* 缩短输入框长度 */
+        }
+        .file-browser-controls .control-form input[type="search"] {
+            flex-grow: 1; /* 搜索输入框在表单内伸展 */
+        }
+        .file-browser-controls .control-form button,
+        .file-browser-controls .upload-button-main {
+            padding: 8px 12px; /* 统一按钮内边距 */
+            font-size: 0.9em;
+            margin: 0; /* 移除默认的 margin */
+        }
+        .file-browser-controls .view-toggle {
+            margin-left: auto; /* 将视图切换按钮推到最右边 */
+        }
+
     </style>
 </head>
 <body>
@@ -88,11 +135,11 @@
         <% } %>
 
         <div class="file-browser-controls">
-            <form action="/files" method="GET" class="control-form" style="flex-grow:1.5;">
+            <form action="/files" method="GET" class="control-form"> <%# 移除了 style="flex-grow:1.5;" %>
                 <% if (locals.viewTargetUsername && user.role === 'admin') { %>
                     <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
                 <% } %>
-                <input type="search" name="q" placeholder="搜索 <%= locals.viewTargetUsername || user.username %> 的文件..." value="<%= locals.searchQuery || '' %>" style="flex-grow:1;">
+                <input type="search" name="q" placeholder="搜索 <%= locals.viewTargetUsername || user.username %> 的文件..." value="<%= locals.searchQuery || '' %>">
                 <button type="submit">搜索</button>
             </form>
 
@@ -241,6 +288,7 @@
 
     <script src="/theme.js"></script>
     <script>
+        // Ensure these are correctly passed from server and available globally or within this scope
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
         const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
@@ -249,6 +297,9 @@
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
 
         document.addEventListener('DOMContentLoaded', () => {
+            // (完整的 JavaScript 逻辑从之前的版本复制过来)
+            // ...
+            // 例如:
             const itemCheckboxes = document.querySelectorAll('.item-checkbox');
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const selectionActionBar = document.getElementById('selection-action-bar');
