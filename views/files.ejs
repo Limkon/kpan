@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
+        /* 保留之前的樣式，並添加新的 */
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         #selection-action-bar button { margin: 0; }
         .item-checkbox { margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
@@ -16,15 +17,36 @@
         .list-view li { position: relative; }
         .list-view .file-content-wrapper > .file-entry { flex-grow: 1; }
         .list-view .file-actions-placeholder { min-width: 150px; text-align: right; font-size: 0.9em; color: #666; }
-        #move-modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
-        .move-modal-content { background-color: #fff; margin: 10% auto; padding: 20px; border: 1px solid #888; border-radius: 8px; width: 80%; max-width: 500px; color: #333; }
-        .move-modal-content h3 { margin-top: 0;}
+        
+        #move-modal, #create-item-modal { /* 通用模態框樣式 */
+            display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content { /* 通用模態框內容樣式 */
+            background-color: var(--modal-bg, #fff); color: var(--modal-text-color, #333);
+            margin: 15% auto; padding: 20px; border: 1px solid var(--modal-border-color, #888);
+            border-radius: 8px; width: 90%; max-width: 450px;
+        }
+        .dark-theme .modal-content {
+             --modal-bg: #2c2c2c; --modal-text-color: #e0e0e0; --modal-border-color: #555;
+        }
+        .modal-content h3 { margin-top: 0; }
+        .modal-content .form-group { margin-bottom: 15px; }
+        .modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .modal-content .form-group input[type="text"] {
+            width: 100%; padding: 10px; box-sizing: border-box;
+            border: 1px solid var(--input-border-color, #ccc); border-radius: 4px;
+            background-color: var(--input-bg-color, #fff); color: var(--input-text-color, #333);
+        }
+        .modal-actions { text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
+
         #directory-tree-container { max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 10px; margin-bottom: 15px; }
         #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
         #directory-tree-container li { padding: 5px 0; cursor: pointer; }
         #directory-tree-container li:hover { background-color: #f0f0f0; } 
         #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } 
-        .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; }
+        .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
+
         .file-entry { display: flex; align-items: center; gap: 8px; }
         .list-view .file-entry .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .grid-view .file-entry { flex-direction: column; justify-content: center; text-align: center; }
@@ -39,52 +61,39 @@
         .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
         .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
 
-        /* --- Styles for .file-browser-controls --- */
+        /* --- Styles for .file-browser-controls (Updated Layout) --- */
         .file-browser-controls {
             display: flex;
-            flex-wrap: wrap; /* 允许换行 */
-            align-items: center; /* 垂直居中对齐项目 */
-            gap: 10px; /* 项目之间的间隙 */
+            flex-direction: column; /* 主方向改为垂直，用于堆叠搜索行和操作行 */
+            gap: 15px; /* 行之间的间隙 */
             margin-bottom: 20px;
         }
-        .file-browser-controls .control-form {
-            display: flex; /* 使内部 input 和 button 在一行 */
+        .file-browser-controls .search-row,
+        .file-browser-controls .actions-row {
+            display: flex;
+            flex-wrap: wrap; /* 允许内部元素换行 */
             align-items: center;
-            gap: 5px; /* input 和 button 之间的间隙 */
-            flex-grow: 0; /* 默认不伸展 */
-            flex-shrink: 0; /* 默认不收缩 */
+            gap: 10px; /* 元素之间的间隙 */
         }
-        /* 搜索表单可以稍微宽一点 */
-        .file-browser-controls .control-form[action="/files"] {
-            flex-grow: 1; /* 允许搜索表单占据更多可用空间 */
-            min-width: 200px; /* 搜索表单的最小宽度 */
+        .file-browser-controls .search-row .control-form { /* 搜索表单 */
+            flex-grow: 1; /* 占据整行 */
+            display: flex;
         }
-        .file-browser-controls .control-form input[type="search"],
-        .file-browser-controls .control-form input[type="text"] {
-            padding: 8px 10px; /* 统一内边距 */
-            font-size: 0.9em;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin: 0; /* 移除默认的 margin */
+        .file-browser-controls .search-row input[type="search"] {
+            flex-grow: 1; /* 输入框伸展 */
+            padding: 8px 10px; font-size: 0.9em; border: 1px solid #ccc; border-radius: 4px; margin: 0;
         }
-        /* 为新建文本和新建文件夹的输入框设置特定宽度 */
-        .file-browser-controls .control-form input[name="newFileName"],
-        .file-browser-controls .control-form input[name="folderName"] {
-            width: 160px; /* 缩短输入框长度 */
-        }
-        .file-browser-controls .control-form input[type="search"] {
-            flex-grow: 1; /* 搜索输入框在表单内伸展 */
-        }
-        .file-browser-controls .control-form button,
-        .file-browser-controls .upload-button-main {
-            padding: 8px 12px; /* 统一按钮内边距 */
-            font-size: 0.9em;
-            margin: 0; /* 移除默认的 margin */
-        }
-        .file-browser-controls .view-toggle {
-            margin-left: auto; /* 将视图切换按钮推到最右边 */
+        .file-browser-controls .search-row button {
+            padding: 8px 12px; font-size: 0.9em; margin: 0;
         }
 
+        .file-browser-controls .actions-row button, /* 针对按钮的通用样式 */
+        .file-browser-controls .actions-row .view-toggle button {
+             padding: 8px 12px; font-size: 0.9em; margin: 0;
+        }
+        .file-browser-controls .actions-row .view-toggle {
+            margin-left: auto; /* 将视图切换按钮推到最右边 */
+        }
     </style>
 </head>
 <body>
@@ -135,35 +144,34 @@
         <% } %>
 
         <div class="file-browser-controls">
-            <form action="/files" method="GET" class="control-form"> <%# 移除了 style="flex-grow:1.5;" %>
-                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
-                    <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
-                <% } %>
-                <input type="search" name="q" placeholder="搜索 <%= locals.viewTargetUsername || user.username %> 的文件..." value="<%= locals.searchQuery || '' %>">
-                <button type="submit">搜索</button>
-            </form>
+            <div class="search-row">
+                <form action="/files" method="GET" class="control-form">
+                    <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                        <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                    <% } %>
+                    <input type="search" name="q" placeholder="搜索 <%= locals.viewTargetUsername || user.username %> 的文件..." value="<%= locals.searchQuery || '' %>">
+                    <button type="submit">搜索</button>
+                </form>
+            </div>
 
             <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
-                <form action="/create-text-file" method="POST" class="control-form">
-                    <input type="hidden" name="currentPath" value="<%= currentPath %>">
-                    <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
-                    <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                    <input type="text" name="newFileName" placeholder="新文本文件名 (如: note.txt)" required>
-                    <button type="submit">新建文本</button>
-                </form>
-                <form action="/create-folder" method="POST" class="control-form">
-                    <input type="hidden" name="currentPath" value="<%= currentPath %>">
-                    <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
-                    <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                    <input type="text" name="folderName" placeholder="新文件夾名稱" required>
-                    <button type="submit">創建文件夾</button>
-                </form>
-                <button type="button" id="toggleUploadBtn" class="upload-button-main">上傳文件到此</button>
+                <div class="actions-row">
+                    <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
+                    <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
+                    <button type="button" id="toggleUploadBtn" class="upload-button-main">上傳文件到此</button>
+                    <div class="view-toggle">
+                        <button id="listViewBtn">列表</button>
+                        <button id="gridViewBtn">網格</button>
+                    </div>
+                </div>
+            <% } else if (locals.isSearchResult) { %> <%# 搜索结果页面只显示视图切换 %>
+                 <div class="actions-row">
+                    <div class="view-toggle" style="margin-left: 0;"> <%# 移除 margin-left: auto 使其左对齐 %>
+                        <button id="listViewBtn">列表</button>
+                        <button id="gridViewBtn">網格</button>
+                    </div>
+                </div>
             <% } %>
-            <div class="view-toggle">
-                <button id="listViewBtn">列表</button>
-                <button id="gridViewBtn">網格</button>
-            </div>
         </div>
         
         <div id="selection-action-bar">
@@ -272,6 +280,30 @@
         </div>
     </div>
 
+    <div id="create-item-modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="close-create-item-modal-btn">&times;</span>
+            <h3 id="create-item-modal-title">创建新项目</h3>
+            <form id="create-item-form" method="POST"> <%# action 将由 JS 设置 %>
+                <input type="hidden" name="currentPath" value="<%= currentPath %>">
+                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                    <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                <% } %>
+                <% if (locals.csrfToken) { %>
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <% } %>
+                <div class="form-group">
+                    <label for="create-item-name-input" id="create-item-name-label">名称:</label>
+                    <input type="text" id="create-item-name-input" name="" required> <%# name 将由 JS 设置 %>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="secondary" id="cancel-create-item-btn">取消</button>
+                    <button type="submit" id="confirm-create-item-btn">确认创建</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="move-modal">
         <div class="move-modal-content">
             <span class="close-modal-btn" id="close-move-modal-btn">&times;</span>
@@ -288,7 +320,6 @@
 
     <script src="/theme.js"></script>
     <script>
-        // Ensure these are correctly passed from server and available globally or within this scope
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
         const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
@@ -297,9 +328,7 @@
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // (完整的 JavaScript 逻辑从之前的版本复制过来)
-            // ...
-            // 例如:
+            // ... (保留之前选择、操作栏、移动模态框等JS逻辑) ...
             const itemCheckboxes = document.querySelectorAll('.item-checkbox');
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const selectionActionBar = document.getElementById('selection-action-bar');
@@ -318,7 +347,7 @@
             const moveDestinationInput = document.getElementById('move-destination-input');
             let currentDirectoryTree = [];
 
-            function getSelectedItems() {
+            function getSelectedItems() { /* ... (与之前版本相同) ... */ 
                 const selected = [];
                 itemCheckboxes.forEach(cb => {
                     if (cb.checked) {
@@ -331,8 +360,7 @@
                 });
                 return selected;
             }
-
-            function updateSelectionActions() {
+            function updateSelectionActions() { /* ... (与之前版本相同) ... */ 
                 const selectedItems = getSelectedItems();
                 const count = selectedItems.length;
                 if (count > 0) {
@@ -355,16 +383,14 @@
                 actionDownloadBtn.disabled = !(count === 1 && !selectedItems[0].isDir);
                 actionDeleteBtn.disabled = !(count > 0);
             }
-
             itemCheckboxes.forEach(checkbox => checkbox.addEventListener('change', updateSelectionActions));
-            if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', (e) => {
+            if (selectAllCheckbox) { /* ... (与之前版本相同) ... */ 
+                 selectAllCheckbox.addEventListener('change', (e) => {
                     itemCheckboxes.forEach(cb => cb.checked = e.target.checked);
                     updateSelectionActions();
                 });
             }
-
-            if (actionEditBtn) {
+            if (actionEditBtn) { /* ... (与之前版本相同) ... */ 
                 actionEditBtn.addEventListener('click', () => {
                     const selected = getSelectedItems();
                     if (actionEditBtn.disabled) return;
@@ -377,13 +403,13 @@
                     }
                 });
             }
-            if (actionRenameBtn) {
-                actionRenameBtn.addEventListener('click', () => {
+            if (actionRenameBtn) { /* ... (与之前版本相同) ... */ 
+                 actionRenameBtn.addEventListener('click', () => {
                     const selected = getSelectedItems();
                     if (selected.length === 1) showRenameForm(selected[0].encodedName, selected[0].name, selected[0].isDir);
                 });
             }
-            if (actionDownloadBtn) {
+            if (actionDownloadBtn) { /* ... (与之前版本相同) ... */
                 actionDownloadBtn.addEventListener('click', () => {
                     const selected = getSelectedItems();
                     if (actionDownloadBtn.disabled) return;
@@ -399,7 +425,7 @@
                     } else alert("打包下載多個文件功能尚未實現。");
                 });
             }
-            if (actionDeleteBtn) {
+            if (actionDeleteBtn) { /* ... (与之前版本相同) ... */ 
                 actionDeleteBtn.addEventListener('click', async () => {
                     const selectedItems = getSelectedItems();
                     if (selectedItems.length === 0) return;
@@ -427,8 +453,8 @@
                     }
                 });
             }
-            if (actionMoveBtn) {
-                actionMoveBtn.addEventListener('click', async () => {
+            if (actionMoveBtn) { /* ... (与之前版本相同) ... */ 
+                 actionMoveBtn.addEventListener('click', async () => {
                     const selectedItems = getSelectedItems();
                     if (selectedItems.length === 0) return;
                     moveDestinationInput.value = ''; selectedDestinationPathDisplay.textContent = '無';
@@ -450,7 +476,7 @@
                     }
                 });
             }
-            function renderDirectoryTree(nodes, container, itemsToMovePaths, currentLevelPath = '/') {
+            function renderDirectoryTree(nodes, container, itemsToMovePaths, currentLevelPath = '/') { /* ... (与之前版本相同) ... */ 
                 container.innerHTML = ''; const ul = document.createElement('ul');
                 const rootLi = document.createElement('li'); rootLi.textContent = '根目錄 (/)';
                 rootLi.dataset.path = '/'; rootLi.addEventListener('click', (e) => selectDestination(e.target, '/'));
@@ -470,7 +496,7 @@
                 }
                 buildTree(nodes, ul, '/'); container.appendChild(ul);
             }
-            function selectDestination(targetElement, path) {
+            function selectDestination(targetElement, path) { /* ... (与之前版本相同) ... */ 
                 document.querySelectorAll('#directory-tree-container li.selected-dir').forEach(el => el.classList.remove('selected-dir'));
                 targetElement.classList.add('selected-dir');
                 selectedDestinationPathDisplay.textContent = path; moveDestinationInput.value = path;
@@ -479,7 +505,7 @@
             if (closeMoveModalBtn) closeMoveModalBtn.onclick = () => moveModal.style.display = 'none';
             if (cancelMoveBtn) cancelMoveBtn.onclick = () => moveModal.style.display = 'none';
             window.onclick = (event) => { if (event.target == moveModal) moveModal.style.display = 'none'; }
-            if (confirmMoveBtn) {
+            if (confirmMoveBtn) { /* ... (与之前版本相同) ... */ 
                 confirmMoveBtn.addEventListener('click', async () => {
                     const selectedToMove = getSelectedItems(); const destinationPath = moveDestinationInput.value;
                     if (selectedToMove.length === 0 || !destinationPath) { alert('請選擇要移動的項目和目標文件夾。'); return; }
@@ -503,9 +529,10 @@
                     moveModal.style.display = 'none';
                 });
             }
+
             const toggleUploadBtn = document.getElementById('toggleUploadBtn');
             const uploadSection = document.getElementById('upload-section');
-            if (toggleUploadBtn && uploadSection) { 
+            if (toggleUploadBtn && uploadSection) { /* ... (与之前版本相同) ... */ 
                 toggleUploadBtn.addEventListener('click', () => {
                     if (uploadSection.style.display === 'none' || uploadSection.style.display === '') {
                         uploadSection.style.display = 'block';
@@ -520,7 +547,7 @@
             const fileInputForDrop = document.getElementById('userFiles'); 
             const fileListPreview = document.getElementById('file-list-preview');
             const uploadFormButton = document.getElementById('upload-button'); 
-            if (dropArea && fileInputForDrop && fileListPreview && uploadFormButton) { 
+            if (dropArea && fileInputForDrop && fileListPreview && uploadFormButton) { /* ... (与之前版本相同) ... */ 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropArea.addEventListener(eventName, preventDefaults, false);
                     document.body.addEventListener(eventName, preventDefaults, false);
@@ -556,7 +583,7 @@
             const fileContainer = document.getElementById('file-container');
             const listViewBtn = document.getElementById('listViewBtn');
             const gridViewBtn = document.getElementById('gridViewBtn');
-            if (fileContainer && listViewBtn && gridViewBtn) { 
+            if (fileContainer && listViewBtn && gridViewBtn) { /* ... (与之前版本相同) ... */
                 function toggleView(viewType) {
                     if (viewType === 'grid') {
                         fileContainer.className = 'grid-view';
@@ -576,8 +603,66 @@
                 gridViewBtn.addEventListener('click', () => toggleView('grid'));
             }
             updateSelectionActions(); 
+
+            // --- 新建项目模态框逻辑 ---
+            const createItemModal = document.getElementById('create-item-modal');
+            const closeCreateItemModalBtn = document.getElementById('close-create-item-modal-btn');
+            const cancelCreateItemBtn = document.getElementById('cancel-create-item-btn');
+            const createItemForm = document.getElementById('create-item-form');
+            const createItemModalTitle = document.getElementById('create-item-modal-title');
+            const createItemNameInput = document.getElementById('create-item-name-input');
+            const createItemNameLabel = document.getElementById('create-item-name-label');
+
+            const showCreateTextfileModalBtn = document.getElementById('show-create-textfile-modal-btn');
+            const showCreateFolderModalBtn = document.getElementById('show-create-folder-modal-btn');
+
+            function openCreateItemModal(type) {
+                if (!createItemModal || !createItemForm) return;
+                createItemForm.reset(); // 清空表单
+                if (type === 'textfile') {
+                    createItemModalTitle.textContent = '新建文本文件';
+                    createItemNameLabel.textContent = '文件名 (例如: mydoc.txt):';
+                    createItemNameInput.name = 'newFileName';
+                    createItemNameInput.placeholder = '例如: notes.txt, script.js';
+                    createItemForm.action = '/create-text-file';
+                } else if (type === 'folder') {
+                    createItemModalTitle.textContent = '创建新文件夹';
+                    createItemNameLabel.textContent = '文件夹名称:';
+                    createItemNameInput.name = 'folderName';
+                    createItemNameInput.placeholder = '例如: 我的文档';
+                    createItemForm.action = '/create-folder';
+                }
+                // 确保 currentPath 和 targetUsername (如果适用) 在模态框的隐藏字段中是最新的
+                // (这些字段已经在模态框的 HTML 中，并会使用页面加载时的 currentPath)
+                // 如果 currentPath 会在客户端动态改变且影响新建操作，则需要在这里更新隐藏字段的值
+                const currentPathHiddenInput = createItemForm.querySelector('input[name="currentPath"]');
+                if (currentPathHiddenInput) currentPathHiddenInput.value = CURRENT_PATH_ON_LOAD; // 或者动态获取当前路径
+
+                createItemModal.style.display = 'block';
+                createItemNameInput.focus();
+            }
+
+            if (showCreateTextfileModalBtn) {
+                showCreateTextfileModalBtn.addEventListener('click', () => openCreateItemModal('textfile'));
+            }
+            if (showCreateFolderModalBtn) {
+                showCreateFolderModalBtn.addEventListener('click', () => openCreateItemModal('folder'));
+            }
+            if (closeCreateItemModalBtn) closeCreateItemModalBtn.onclick = () => createItemModal.style.display = 'none';
+            if (cancelCreateItemBtn) cancelCreateItemBtn.onclick = () => createItemModal.style.display = 'none';
+            window.addEventListener('click', (event) => { // 点击模态框外部关闭
+                if (event.target == createItemModal) createItemModal.style.display = 'none';
+            });
+            // 阻止模态框内部表单提交时的默认行为，如果想用 AJAX 提交 (当前是直接表单提交)
+            // if (createItemForm) {
+            //     createItemForm.addEventListener('submit', function(event) {
+            //         // event.preventDefault(); // 如果用 AJAX
+            //         // ... AJAX 提交逻辑 ...
+            //     });
+            // }
         });
-        function showRenameForm(encodedName, currentName, isDir) {
+
+        function showRenameForm(encodedName, currentName, isDir) { /* ... (与之前版本相同) ... */ 
             document.querySelectorAll('.rename-form').forEach(form => {
                 if (form.id !== 'rename-form-' + encodedName) form.style.display = 'none';
             });
@@ -600,7 +685,7 @@
                 }
             }
         }
-        function hideRenameForm(encodedName) {
+        function hideRenameForm(encodedName) { /* ... (与之前版本相同) ... */ 
             const form = document.getElementById('rename-form-' + encodedName);
             if (form) form.style.display = 'none';
         }
