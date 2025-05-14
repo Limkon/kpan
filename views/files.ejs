@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* 保留之前的樣式，並添加新的 */
+        /* ... (保留所有其他之前的樣式) ... */
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         #selection-action-bar button { margin: 0; }
         .item-checkbox { margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
@@ -18,11 +18,11 @@
         .list-view .file-content-wrapper > .file-entry { flex-grow: 1; }
         .list-view .file-actions-placeholder { min-width: 150px; text-align: right; font-size: 0.9em; color: #666; }
         
-        #move-modal, #create-item-modal { /* 通用模態框樣式 */
+        #move-modal, #create-item-modal { 
             display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
             overflow: auto; background-color: rgba(0,0,0,0.5);
         }
-        .modal-content { /* 通用模態框內容樣式 */
+        .modal-content { 
             background-color: var(--modal-bg, #fff); color: var(--modal-text-color, #333);
             margin: 15% auto; padding: 20px; border: 1px solid var(--modal-border-color, #888);
             border-radius: 8px; width: 90%; max-width: 450px;
@@ -64,36 +64,49 @@
         /* --- Styles for .file-browser-controls (Updated Layout) --- */
         .file-browser-controls {
             display: flex;
-            flex-direction: column; /* 主方向改为垂直，用于堆叠搜索行和操作行 */
-            gap: 15px; /* 行之间的间隙 */
+            flex-direction: column; 
+            gap: 15px; 
             margin-bottom: 20px;
+            /* align-items: flex-start; 如果希望所有行都收缩并左对齐，则取消注释此行 */
         }
         .file-browser-controls .search-row,
         .file-browser-controls .actions-row {
             display: flex;
-            flex-wrap: wrap; /* 允许内部元素换行 */
+            flex-wrap: wrap; 
             align-items: center;
-            gap: 10px; /* 元素之间的间隙 */
+            gap: 10px; 
         }
-        .file-browser-controls .search-row .control-form { /* 搜索表单 */
-            flex-grow: 1; /* 占据整行 */
+        .file-browser-controls .search-row {
+            width: 100%; /* 确保搜索行占据全部可用宽度 */
+        }
+        .file-browser-controls .search-row .control-form { 
+            flex-grow: 1; 
             display: flex;
         }
         .file-browser-controls .search-row input[type="search"] {
-            flex-grow: 1; /* 输入框伸展 */
+            flex-grow: 1; 
             padding: 8px 10px; font-size: 0.9em; border: 1px solid #ccc; border-radius: 4px; margin: 0;
         }
         .file-browser-controls .search-row button {
             padding: 8px 12px; font-size: 0.9em; margin: 0;
         }
+        
+        .file-browser-controls .actions-row {
+            align-self: flex-start; /* !!! 新增：使操作行靠左，并且其宽度由内容决定 !!! */
+        }
 
-        .file-browser-controls .actions-row button, /* 针对按钮的通用样式 */
+        .file-browser-controls .actions-row button, 
         .file-browser-controls .actions-row .view-toggle button {
              padding: 8px 12px; font-size: 0.9em; margin: 0;
         }
         .file-browser-controls .actions-row .view-toggle {
-            margin-left: auto; /* 将视图切换按钮推到最右边 */
+            margin-left: auto; /* 在 actions-row 内部，将视图切换按钮推到其右侧 */
         }
+        /* 当 actions-row 只有 view-toggle 时 (搜索结果页) */
+        .file-browser-controls .actions-row:has(.view-toggle:only-child) .view-toggle {
+            margin-left: 0; /* 移除左边距，使其自然靠左 */
+        }
+
     </style>
 </head>
 <body>
@@ -164,9 +177,9 @@
                         <button id="gridViewBtn">網格</button>
                     </div>
                 </div>
-            <% } else if (locals.isSearchResult) { %> <%# 搜索结果页面只显示视图切换 %>
+            <% } else if (locals.isSearchResult) { %> 
                  <div class="actions-row">
-                    <div class="view-toggle" style="margin-left: 0;"> <%# 移除 margin-left: auto 使其左对齐 %>
+                    <div class="view-toggle"> <%# 在搜索结果页，view-toggle 自然靠左，因为 actions-row 有 align-self: flex-start %>
                         <button id="listViewBtn">列表</button>
                         <button id="gridViewBtn">網格</button>
                     </div>
@@ -284,7 +297,7 @@
         <div class="modal-content">
             <span class="close-modal-btn" id="close-create-item-modal-btn">&times;</span>
             <h3 id="create-item-modal-title">创建新项目</h3>
-            <form id="create-item-form" method="POST"> <%# action 将由 JS 设置 %>
+            <form id="create-item-form" method="POST"> 
                 <input type="hidden" name="currentPath" value="<%= currentPath %>">
                 <% if (locals.viewTargetUsername && user.role === 'admin') { %>
                     <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
@@ -294,7 +307,7 @@
                 <% } %>
                 <div class="form-group">
                     <label for="create-item-name-input" id="create-item-name-label">名称:</label>
-                    <input type="text" id="create-item-name-input" name="" required> <%# name 将由 JS 设置 %>
+                    <input type="text" id="create-item-name-input" name="" required> 
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="secondary" id="cancel-create-item-btn">取消</button>
@@ -320,6 +333,8 @@
 
     <script src="/theme.js"></script>
     <script>
+        // (完整的 JavaScript 逻辑从之前的版本复制过来)
+        // ...
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
         const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
@@ -328,7 +343,6 @@
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // ... (保留之前选择、操作栏、移动模态框等JS逻辑) ...
             const itemCheckboxes = document.querySelectorAll('.item-checkbox');
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const selectionActionBar = document.getElementById('selection-action-bar');
@@ -529,7 +543,6 @@
                     moveModal.style.display = 'none';
                 });
             }
-
             const toggleUploadBtn = document.getElementById('toggleUploadBtn');
             const uploadSection = document.getElementById('upload-section');
             if (toggleUploadBtn && uploadSection) { /* ... (与之前版本相同) ... */ 
@@ -604,7 +617,6 @@
             }
             updateSelectionActions(); 
 
-            // --- 新建项目模态框逻辑 ---
             const createItemModal = document.getElementById('create-item-modal');
             const closeCreateItemModalBtn = document.getElementById('close-create-item-modal-btn');
             const cancelCreateItemBtn = document.getElementById('cancel-create-item-btn');
@@ -612,13 +624,12 @@
             const createItemModalTitle = document.getElementById('create-item-modal-title');
             const createItemNameInput = document.getElementById('create-item-name-input');
             const createItemNameLabel = document.getElementById('create-item-name-label');
-
             const showCreateTextfileModalBtn = document.getElementById('show-create-textfile-modal-btn');
             const showCreateFolderModalBtn = document.getElementById('show-create-folder-modal-btn');
 
             function openCreateItemModal(type) {
                 if (!createItemModal || !createItemForm) return;
-                createItemForm.reset(); // 清空表单
+                createItemForm.reset(); 
                 if (type === 'textfile') {
                     createItemModalTitle.textContent = '新建文本文件';
                     createItemNameLabel.textContent = '文件名 (例如: mydoc.txt):';
@@ -632,36 +643,35 @@
                     createItemNameInput.placeholder = '例如: 我的文档';
                     createItemForm.action = '/create-folder';
                 }
-                // 确保 currentPath 和 targetUsername (如果适用) 在模态框的隐藏字段中是最新的
-                // (这些字段已经在模态框的 HTML 中，并会使用页面加载时的 currentPath)
-                // 如果 currentPath 会在客户端动态改变且影响新建操作，则需要在这里更新隐藏字段的值
                 const currentPathHiddenInput = createItemForm.querySelector('input[name="currentPath"]');
-                if (currentPathHiddenInput) currentPathHiddenInput.value = CURRENT_PATH_ON_LOAD; // 或者动态获取当前路径
+                if (currentPathHiddenInput) currentPathHiddenInput.value = IS_SEARCH_RESULT_VIEW ? '/' : CURRENT_PATH_ON_LOAD;
+                
+                // 如果是管理员视图，并且有 targetUsername，也设置到模态框的隐藏字段
+                const targetUsernameHiddenInput = createItemForm.querySelector('input[name="targetUsername"]');
+                if (targetUsernameHiddenInput) {
+                    if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                        targetUsernameHiddenInput.value = VIEW_TARGET_USERNAME;
+                    } else {
+                        // 如果不是管理员查看特定用户，可以移除或清空这个字段，以防意外提交
+                        // 或者确保后端在非管理员情况下忽略此字段
+                        targetUsernameHiddenInput.value = ''; 
+                    }
+                }
+
 
                 createItemModal.style.display = 'block';
                 createItemNameInput.focus();
             }
 
-            if (showCreateTextfileModalBtn) {
-                showCreateTextfileModalBtn.addEventListener('click', () => openCreateItemModal('textfile'));
-            }
-            if (showCreateFolderModalBtn) {
-                showCreateFolderModalBtn.addEventListener('click', () => openCreateItemModal('folder'));
-            }
+            if (showCreateTextfileModalBtn) showCreateTextfileModalBtn.addEventListener('click', () => openCreateItemModal('textfile'));
+            if (showCreateFolderModalBtn) showCreateFolderModalBtn.addEventListener('click', () => openCreateItemModal('folder'));
             if (closeCreateItemModalBtn) closeCreateItemModalBtn.onclick = () => createItemModal.style.display = 'none';
             if (cancelCreateItemBtn) cancelCreateItemBtn.onclick = () => createItemModal.style.display = 'none';
-            window.addEventListener('click', (event) => { // 点击模态框外部关闭
+            window.addEventListener('click', (event) => { 
                 if (event.target == createItemModal) createItemModal.style.display = 'none';
+                if (event.target == moveModal) moveModal.style.display = 'none'; // Also close move modal on outside click
             });
-            // 阻止模态框内部表单提交时的默认行为，如果想用 AJAX 提交 (当前是直接表单提交)
-            // if (createItemForm) {
-            //     createItemForm.addEventListener('submit', function(event) {
-            //         // event.preventDefault(); // 如果用 AJAX
-            //         // ... AJAX 提交逻辑 ...
-            //     });
-            // }
         });
-
         function showRenameForm(encodedName, currentName, isDir) { /* ... (与之前版本相同) ... */ 
             document.querySelectorAll('.rename-form').forEach(form => {
                 if (form.id !== 'rename-form-' + encodedName) form.style.display = 'none';
