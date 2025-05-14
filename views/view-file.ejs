@@ -10,23 +10,22 @@
     <style>
         .view-container {
             padding: 15px;
-            background-color: var(--viewer-bg, #fdfdfd); /* CSS 变量，方便主题化 */
+            background-color: var(--viewer-bg, #fdfdfd);
             border: 1px solid var(--viewer-border-color, #eee);
             border-radius: 5px;
             margin-top: 15px;
-            font-family: monospace; /* 等宽字体适合查看代码和纯文本 */
+            font-family: monospace;
             font-size: 0.9em;
             line-height: 1.6;
-            overflow-x: auto; /* 内容过长时允许水平滚动 */
-            white-space: pre-wrap; /* 保留空白符序列，但允许正常换行 */
-            word-wrap: break-word; /* 在长单词或URL处换行 */
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
             color: var(--viewer-text-color, #333);
         }
         .view-actions {
             margin-top: 15px;
             text-align: right;
         }
-        /* 暗色主题适配 */
         .dark-theme .view-container {
             --viewer-bg: #2b2b2b;
             --viewer-border-color: #444;
@@ -50,7 +49,6 @@
                 <nav>
                     <%
                         let backPath = "/files";
-                        // 确保 currentPath 存在且不为空
                         if (locals.currentPath && typeof locals.currentPath === 'string') {
                             const parentDirOfFile = currentPath.includes('/') ? currentPath.substring(0, currentPath.lastIndexOf('/')) || '/' : '/';
                             if (locals.viewTargetUsername && user.role === 'admin') {
@@ -61,11 +59,23 @@
                         } else if (locals.viewTargetUsername && user.role === 'admin') {
                              backPath = `/files?targetUsername=${encodeURIComponent(viewTargetUsername)}`;
                         }
+
+                        let editLinkHref = '';
+                        if (locals.ALLOWED_TEXT_EXTENSIONS && locals.fileExtension && ALLOWED_TEXT_EXTENSIONS.includes(fileExtension)) {
+                            editLinkHref = `/edit?path=${encodeURIComponent(currentPath)}`;
+                            if (locals.viewTargetUsername && user.role === 'admin') {
+                                editLinkHref += `&targetUsername=${encodeURIComponent(viewTargetUsername)}`;
+                            }
+                        }
+
+                        let downloadLinkHref = `/download?path=${encodeURIComponent(currentPath)}`;
+                        if (locals.viewTargetUsername && user.role === 'admin') {
+                            downloadLinkHref += `&targetUsername=${encodeURIComponent(viewTargetUsername)}`;
+                        }
                     %>
                     <a href="<%= backPath %>">返回文件列表</a>
-                    <% /* 确保 locals.ALLOWED_TEXT_EXTENSIONS 和 locals.fileExtension 已传递到模板 */ %>
-                    <% if (locals.ALLOWED_TEXT_EXTENSIONS && locals.fileExtension && ALLOWED_TEXT_EXTENSIONS.includes(fileExtension)) { %>
-                        <a href="/edit?path=<%= encodeURIComponent(currentPath) %><% if (locals.viewTargetUsername && user.role === 'admin') { %>&targetUsername=<%= encodeURIComponent(viewTargetUsername) %><% } %>" class="button-link">編輯此文件</a>
+                    <% if (editLinkHref) { %>
+                        <a href="<%= editLinkHref %>" class="button-link">編輯此文件</a>
                     <% } %>
                     <a href="/logout">登出</a>
                 </nav>
@@ -79,16 +89,12 @@
         
         <div class="view-content-wrapper">
             <div class="view-actions">
-                <a href="/download?path=<%= encodeURIComponent(currentPath) %><% if (locals.viewTargetUsername && user.role === 'admin') { %>&targetUsername=<%= encodeURIComponent(viewTargetUsername) %><% } %>" class="button-link secondary">下載文件</a>
+                <a href="<%= downloadLinkHref %>" class="button-link secondary">下載文件</a>
             </div>
-            <% /* 移除了 <code> 标签的 class="language-..." 属性，因为不再使用 highlight.js */ %>
             <pre class="view-container"><%= content %></pre>
-            <% /* 如果内容本身包含 HTML 实体，而您希望它们被渲染为字符，则使用 <%- content %> */ %>
-            <% /* 但对于纯文本或代码查看，<%= content %> 通常更安全，因为它会转义 HTML 特殊字符 */ %>
         </div>
 
     </div>
     <script src="/theme.js"></script>
-    <% /* 移除了 highlight.js 的 JS 引用和相关的初始化脚本 */ %>
 </body>
 </html>
