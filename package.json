@@ -7,7 +7,7 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "archiver": "^5.3.1",
+    "archiver": "^5.3.1", // <--- 確保此行存在
     "bcryptjs": "^2.4.3",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
