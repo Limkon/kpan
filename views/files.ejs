@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* Styles for selection action bar, item checkboxes, modals, etc. */
+        /* ... (保留所有之前的樣式) ... */
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         #selection-action-bar button { margin: 0; }
         .item-checkbox { margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
@@ -109,6 +109,42 @@
         }
          .file-browser-controls:not(:has(.actions-group-left)) .view-toggle {
             margin-left: auto; 
+        }
+
+        /* 進度條樣式調整 */
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e9ecef; /* 更中性的背景色 */
+            border-radius: 4px;
+            margin-top: 10px;
+            padding: 2px; /* 給內部進度條一點空間 */
+            display: none; 
+            box-sizing: border-box;
+        }
+        .progress-bar {
+            display: block; /* 確保其行為像塊級元素 */
+            width: 0%; 
+            height: 20px;
+            background-color: #007bff; 
+            border: 1px solid #0056b3; /* 添加邊框以確保可見性 */
+            border-radius: 2px; /* 配合容器的 padding */
+            text-align: center;
+            line-height: 18px; /* 略小於高度以更好地垂直居中文本(考慮邊框) */
+            color: white; 
+            font-size: 0.8em;
+            font-weight: bold;
+            transition: width 0.1s ease-in-out; /* 加快過渡或移除以立即更新 */
+            box-sizing: border-box;
+            overflow: hidden; /* 確保文本不會在寬度為0時溢出太多 */
+        }
+        .dark-theme .progress-bar-container {
+            background-color: #495057;
+            padding: 2px;
+        }
+        .dark-theme .progress-bar {
+            background-color: #0056b3;
+            border: 1px solid #003d80;
+            color: #f8f9fa;
         }
     </style>
 </head>
@@ -670,10 +706,19 @@
                     xhr.onload = function() {
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
                         if (xhr.status >= 200 && xhr.status < 300) {
-                            if (xhr.responseURL && xhr.responseURL !== xhr.openUrl) {
+                            if (xhr.responseURL && xhr.responseURL !== uploadForm.action) { 
                                 window.location.href = xhr.responseURL; 
                             } else {
-                                alert('上傳成功！頁面將刷新。'); 
+                                try {
+                                    const jsonResponse = JSON.parse(xhr.responseText);
+                                    if (jsonResponse.success) {
+                                        alert(jsonResponse.message || '上傳成功！頁面將刷新。');
+                                    } else {
+                                        alert(jsonResponse.message || '上傳失敗，但伺服器未重定向。');
+                                    }
+                                } catch (e) {
+                                    console.warn("Upload response was not JSON, or parsing fails. Assuming success by page behavior or redirect.");
+                                }
                                 window.location.reload();
                             }
                         } else {
@@ -701,7 +746,7 @@
 
             const dropArea = document.getElementById('drop-area');
             const fileListPreview = document.getElementById('file-list-preview');
-            const uploadFormButton = document.getElementById('upload-button'); 
+            // const uploadFormButton = document.getElementById('upload-button'); // Already declared
 
             if (dropArea && userFilesInput && fileListPreview) { 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -721,6 +766,7 @@
 
                 function updateFileListPreviewOnDrop() {
                     fileListPreview.innerHTML = '';
+                    const uploadFormButton = document.getElementById('upload-button'); 
                     if (userFilesInput.files.length > 0) {
                         const list = document.createElement('ul');
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
@@ -752,7 +798,8 @@
                         if(uploadFormButton) uploadFormButton.style.display = 'none';
                     }
                 }
-                if(userFilesInput.files.length === 0 && uploadFormButton) uploadFormButton.style.display = 'none';
+                const initialUploadButton = document.getElementById('upload-button'); 
+                if(userFilesInput.files.length === 0 && initialUploadButton) initialUploadButton.style.display = 'none';
             }
 
             const fileContainer = document.getElementById('file-container');
