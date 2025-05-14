@@ -89,77 +89,58 @@
             padding: 10px 0;
             gap: 10px;
             flex-wrap: wrap;
-            align-items: center; 
-            margin-bottom: 15px; 
+            align-items: center; /* Vertically align if buttons have different heights */
+            margin-bottom: 15px; /* Space before upload section if it appears */
         }
         #upload-actions-container button {
             margin: 0; 
-            /* Theme variables for upload action buttons */
-            background-color: var(--button-bg, #007bff);
-            color: var(--button-text-color, white);
-            border: 1px solid var(--button-border-color, #007bff);
-            padding: 8px 12px;
-            font-size: 0.9em;
-            border-radius: 4px;
-            cursor: pointer;
         }
-        #upload-actions-container button:hover {
-            background-color: var(--button-hover-bg, #0056b3);
-            border-color: var(--button-hover-border-color, #0056b3);
-        }
-
         #upload-section { 
-            display: none; 
+            display: none; /* Initially hidden */
             padding: 20px; 
-            border: 1px solid var(--input-border-color, #dee2e6); /* Use input border color for consistency */
+            border: 1px solid #dee2e6; 
             border-radius: 6px; 
-            margin-top: 0; 
-            background-color: var(--content-bg, #f8f9fa); /* Use content bg */
+            margin-top: 0; /* Adjusted as upload-actions-container has margin-bottom */
+            background-color: #f8f9fa; 
         }
         .dark-theme #upload-section {
-            /* Variables will be inherited, or define specific if needed */
+            background-color: #3a3a3a;
+            border-color: #444;
         }
         #drop-area {
-            border: 2px dashed var(--accent-color, #007bff); /* Use accent color */
+            border: 2px dashed #007bff;
             padding: 20px;
             text-align: center;
             border-radius: 5px;
-            background-color: var(--input-bg-color, #fff); /* Use input bg for drop area */
+            background-color: #fff;
         }
         .dark-theme #drop-area {
-             /* Variables will be inherited */
+            border-color: #0056b3;
+            background-color: #2c2c2c;
         }
         #drop-area.highlight {
-            border-color: var(--success-color, #28a745); /* Use success color */
-            background-color: var(--hover-bg, #e9f7ef); /* Use hover bg */
+            border-color: #28a745; /* Green highlight on drag over */
+            background-color: #e9f7ef;
         }
         .dark-theme #drop-area.highlight {
-             /* Variables will be inherited */
+            background-color: #333;
         }
         #drop-area p {
             margin-bottom: 15px;
             font-size: 1.1em;
-            color: var(--text-muted-color, #6c757d); /* Use muted text color */
+            color: #6c757d;
         }
         .dark-theme #drop-area p {
-             /* Variables will be inherited */
+            color: #adb5bd;
         }
-        #upload-button { 
-            display: none; 
+        #upload-button { /* Style for the final submit button */
+            display: none; /* Initially hidden, shown when files are selected */
             margin-top: 15px;
-            /* Theme variables for the final upload button */
-            background-color: var(--button-primary-bg, #28a745);
-            color: var(--button-primary-text-color, white);
-            border: 1px solid var(--button-primary-border-color, #28a745);
-        }
-         #upload-button:hover {
-            background-color: var(--button-primary-hover-bg, #218838);
-            border-color: var(--button-primary-hover-border-color, #1e7e34);
         }
 
 
-        .search-results-info { padding: 10px; background-color: var(--info-bg, #e9ecef); border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; color: var(--info-text-color, #333); }
-        .file-location-in-search { font-size: 0.8em; color: var(--text-muted-color, #6c757d); margin-left: 8px; }
+        .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
+        .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
 
         .file-browser-controls {
             display: flex;
@@ -176,26 +157,7 @@
         }
         .file-browser-controls .actions-group-left button {
             padding: 8px 12px; font-size: 0.9em; margin: 0;
-            background-color: var(--button-bg, #007bff);
-            color: var(--button-text-color, white);
-            border: 1px solid var(--button-border-color, #007bff);
-            border-radius: 4px;
-            cursor: pointer;
         }
-        .file-browser-controls .actions-group-left button:hover {
-            background-color: var(--button-hover-bg, #0056b3);
-            border-color: var(--button-hover-border-color, #0056b3);
-        }
-        .file-browser-controls .actions-group-left button.upload-button-main { /* Specific for the main upload toggle */
-             background-color: var(--button-secondary-bg, #6c757d);
-             border-color: var(--button-secondary-border-color, #6c757d);
-        }
-        .file-browser-controls .actions-group-left button.upload-button-main:hover {
-             background-color: var(--button-secondary-hover-bg, #5a6268);
-             border-color: var(--button-secondary-hover-border-color, #545b62);
-        }
-
-
         .file-browser-controls .search-form-right { 
             display: flex;
             align-items: center;
@@ -205,25 +167,11 @@
         }
         .file-browser-controls .search-form-right input[type="search"] {
             width: 180px; 
-            padding: 8px 10px; font-size: 0.9em; 
-            border: 1px solid var(--input-border-color, #ccc); 
-            border-radius: 4px; margin: 0;
-            background-color: var(--input-bg-color, #fff);
-            color: var(--input-text-color, #333);
+            padding: 8px 10px; font-size: 0.9em; border: 1px solid #ccc; border-radius: 4px; margin: 0;
         }
         .file-browser-controls .search-form-right button {
             padding: 8px 12px; font-size: 0.9em; margin: 0;
-            background-color: var(--button-bg, #007bff);
-            color: var(--button-text-color, white);
-            border: 1px solid var(--button-border-color, #007bff);
-            border-radius: 4px;
-            cursor: pointer;
         }
-        .file-browser-controls .search-form-right button:hover {
-            background-color: var(--button-hover-bg, #0056b3);
-            border-color: var(--button-hover-border-color, #0056b3);
-        }
-
         .file-browser-controls .view-toggle { 
             display: flex;
             gap: 8px;
@@ -232,23 +180,7 @@
         }
          .file-browser-controls .view-toggle button {
             padding: 8px 12px; font-size: 0.9em; margin: 0;
-            background-color: var(--button-bg, #f0f0f0); /* Default non-active view toggle */
-            color: var(--button-text-color, #333);
-            border: 1px solid var(--button-border-color, #ccc);
-            border-radius: 4px;
-            cursor: pointer;
         }
-        .file-browser-controls .view-toggle button:hover {
-            background-color: var(--button-hover-bg, #e0e0e0);
-            border-color: var(--button-hover-border-color, #bbb);
-        }
-        .file-browser-controls .view-toggle button.active {
-            background-color: var(--button-active-bg, #007bff);
-            color: var(--button-active-text-color, white);
-            border-color: var(--button-active-border-color, #007bff);
-        }
-
-
         .file-browser-controls:not(:has(.actions-group-left)) .search-form-right {
             margin-left: 0;
             flex-grow: 1; 
@@ -261,7 +193,7 @@
         }
         .progress-bar-container {
             width: 100%;
-            background-color: var(--progress-container-bg, #e9ecef); 
+            background-color: #e9ecef; 
             border-radius: 4px;
             margin-top: 10px;
             padding: 2px; 
@@ -272,98 +204,27 @@
             display: block; 
             width: 0%; 
             height: 20px;
-            background-color: var(--progress-bar-fill-bg, #007bff); 
-            border: 1px solid var(--progress-bar-fill-border, #0056b3); 
+            background-color: #007bff; 
+            border: 1px solid #0056b3; 
             border-radius: 2px; 
             text-align: center;
             line-height: 18px; 
-            color: var(--progress-bar-text-color, white); 
+            color: white; 
             font-size: 0.8em;
             font-weight: bold;
             transition: width 0.1s ease-in-out; 
             box-sizing: border-box;
             overflow: hidden; 
         }
-        /* Dark theme specific for progress bar if needed, otherwise variables handle it */
-        /* .dark-theme .progress-bar-container { ... } */
-        /* .dark-theme .progress-bar { ... } */
-
-        /* Ensure theme variables are defined in :root and .dark-theme in your main style.css or theme.js */
-        /* Example (should be in your global CSS or theme switcher logic):
-        :root {
-            --button-bg: #007bff;
-            --button-text-color: white;
-            --button-border-color: #007bff;
-            --button-hover-bg: #0056b3;
-            --button-hover-border-color: #0056b3;
-            --button-active-bg: #0056b3;
-            --button-active-text-color: white;
-            --button-active-border-color: #0056b3;
-
-            --button-secondary-bg: #6c757d;
-            --button-secondary-text-color: white;
-            --button-secondary-border-color: #6c757d;
-            --button-secondary-hover-bg: #5a6268;
-            --button-secondary-hover-border-color: #545b62;
-            
-            --button-primary-bg: #28a745;
-            --button-primary-text-color: white;
-            --button-primary-border-color: #28a745;
-            --button-primary-hover-bg: #218838;
-            --button-primary-hover-border-color: #1e7e34;
-
-            --input-border-color: #ccc;
-            --input-bg-color: #fff;
-            --input-text-color: #333;
-            --content-bg: #f8f9fa;
-            --accent-color: #007bff;
-            --success-color: #28a745;
-            --hover-bg: #e9f7ef;
-            --text-muted-color: #6c757d;
-            --info-bg: #e9ecef;
-            --info-text-color: #333;
-            --progress-container-bg: #e9ecef;
-            --progress-bar-fill-bg: #007bff;
-            --progress-bar-fill-border: #0056b3;
-            --progress-bar-text-color: white;
+        .dark-theme .progress-bar-container {
+            background-color: #495057;
+            padding: 2px;
         }
-        .dark-theme {
-            --button-bg: #5865F2;
-            --button-text-color: white;
-            --button-border-color: #5865F2;
-            --button-hover-bg: #4752C4;
-            --button-hover-border-color: #4752C4;
-            --button-active-bg: #4752C4;
-            --button-active-text-color: white;
-            --button-active-border-color: #4752C4;
-
-            --button-secondary-bg: #4F545C;
-            --button-secondary-border-color: #4F545C;
-            --button-secondary-hover-bg: #5a6268;
-            --button-secondary-hover-border-color: #545b62;
-
-            --button-primary-bg: #3BA55D;
-            --button-primary-border-color: #3BA55D;
-            --button-primary-hover-bg: #2D7D46;
-            --button-primary-hover-border-color: #2D7D46;
-            
-            --input-border-color: #555;
-            --input-bg-color: #2c2c2c;
-            --input-text-color: #e0e0e0;
-            --content-bg: #3a3a3a;
-            --accent-color: #5865F2;
-            --success-color: #3BA55D;
-            --hover-bg: #333;
-            --text-muted-color: #adb5bd;
-            --info-bg: #495057;
-            --info-text-color: #e0e0e0;
-            --progress-container-bg: #495057;
-            --progress-bar-fill-bg: #5865F2;
-            --progress-bar-fill-border: #4752C4;
-            --progress-bar-text-color: white;
+        .dark-theme .progress-bar {
+            background-color: #0056b3;
+            border: 1px solid #003d80;
+            color: #f8f9fa;
         }
-        */
-
     </style>
 </head>
 <body>
@@ -418,8 +279,7 @@
                 <div class="actions-group-left">
                     <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
                     <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
-                    <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button> 
-                </div>
+                    <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button> </div>
             <% } %>
         
             <form action="/files" method="GET" class="control-form search-form-right">
@@ -451,7 +311,7 @@
                         <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
                         <input type="file" id="userFiles" name="userFiles" multiple style="display: none;"> 
                         <p id="drop-area-text">將文件或文件夾拖拽到此處，或點擊上方按鈕選擇</p>
-                        <button type="submit" id="upload-button" class="button primary">上傳已選項目</button> {/* Added primary class for better theming */}
+                        <button type="submit" id="upload-button">上傳已選項目</button>
                     </form>
                     <div id="file-list-preview" style="margin-top:10px; text-align:left;"></div>
                     <div class="progress-bar-container" id="upload-progress-container">
@@ -622,12 +482,13 @@
             const uploadFolderBtn = document.getElementById('upload-folder-btn');
             const uploadSection = document.getElementById('upload-section');
             const userFilesInput = document.getElementById('userFiles');
+            // const uploadSectionTitle = document.getElementById('upload-section-title'); // Not strictly needed for current logic
             const dropAreaText = document.getElementById('drop-area-text');
             const uploadForm = document.getElementById('upload-form');
             const uploadProgressContainer = document.getElementById('upload-progress-container');
             const uploadProgressBar = document.getElementById('upload-progress-bar');
             const fileListPreview = document.getElementById('file-list-preview');
-            const uploadButton = document.getElementById('upload-button'); 
+            const uploadButton = document.getElementById('upload-button'); // The actual submit button for the form
             const dropArea = document.getElementById('drop-area');
 
 
@@ -795,15 +656,16 @@
                                 if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                                     deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
                                 }
-                                const response = await fetch(deleteUrl, { method: 'GET' }); 
-                                if (response.ok && response.redirected) reloadPage = true; 
+                                const response = await fetch(deleteUrl, { method: 'GET' }); // Changed to GET as per original logic
+                                if (response.ok && response.redirected) reloadPage = true; // Assuming redirect means success
                                 else if (!response.ok) { console.error('刪除失敗:', item.name, response.status); allSucceeded = false; }
                             } catch (error) { console.error('刪除項目時出錯:', item.name, error); allSucceeded = false; }
                         }
-                        if (reloadPage || !allSucceeded) { 
+                        if (reloadPage || !allSucceeded) { // Reload if any redirect happened or if not all succeeded
                             alert(allSucceeded ? "選中項目已嘗試刪除，頁面將刷新。" : "部分項目刪除失敗，頁面將刷新。");
                             window.location.reload();
                         }
+                        // These lines might not be reached if page reloads, but good for non-reload scenarios
                         if(selectAllCheckbox) selectAllCheckbox.checked = false;
                         document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false); 
                         updateSelectionActions();
@@ -841,7 +703,7 @@
                 function buildTree(items, parentUl, parentPath) {
                     items.forEach(item => {
                         if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || (sourcePath.startsWith(item.path + '/') && item.path !=='/'))) return;
-                        if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) return; 
+                        if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) return; // Prevent moving into a subfolder of itself if it's part of the selection
                         const li = document.createElement('li'); li.textContent = item.name; li.dataset.path = item.path;
                         li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, item.path); });
                         parentUl.appendChild(li);
@@ -871,6 +733,7 @@
                         if (item.isDir && (destinationPath === item.path || destinationPath.startsWith(item.path + '/'))) {
                             alert(`不能將文件夾 "${item.name}" 移動到其自身或其子文件夾中。`); return;
                         }
+                         // Check if destination is one of the selected items (if selected item is a file and dest is that file's path - though unlikely for folder dest)
                         if (!item.isDir && destinationPath === item.path) {
                              alert(`目標路徑不能與源文件 "${item.name}" 相同。`); return;
                         }
@@ -896,10 +759,10 @@
                 toggleUploadActionsBtn.addEventListener('click', () => {
                     const isActionsHidden = uploadActionsContainer.style.display === 'none' || uploadActionsContainer.style.display === '';
                     uploadActionsContainer.style.display = isActionsHidden ? 'flex' : 'none';
-                    if (!isActionsHidden) { 
-                        uploadSection.style.display = 'none'; 
+                    if (!isActionsHidden) { // If actions are being hidden
+                        uploadSection.style.display = 'none'; // Also hide the upload section itself
                         toggleUploadActionsBtn.textContent = '上傳';
-                    } else { 
+                    } else { // If actions are being shown
                         toggleUploadActionsBtn.textContent = '取消上傳操作';
                     }
                 });
@@ -961,22 +824,25 @@
                     };
                     xhr.onload = function() {
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        if (xhr.status >= 200 && xhr.status < 400) { 
+                        if (xhr.status >= 200 && xhr.status < 400) { // Broader success range for redirects etc.
+                            // Check if response is JSON or if it's a redirect
                             if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) {
-                                window.location.href = xhr.responseURL; 
+                                window.location.href = xhr.responseURL; // Follow redirect
                             } else {
                                 try {
                                     const jsonResponse = JSON.parse(xhr.responseText);
-                                    if (jsonResponse.success || xhr.status === 200 || xhr.status === 201) { 
+                                    if (jsonResponse.success || xhr.status === 200 || xhr.status === 201) { // Check for success property or general success status
                                         alert(jsonResponse.message || '上傳成功！頁面將刷新。');
                                     } else {
                                         alert(jsonResponse.message || '上傳可能已部分成功或伺服器返回了非預期的成功消息。');
                                     }
                                 } catch (e) {
+                                     // If not JSON, but still a success status, assume success and reload.
+                                     // This handles cases where server redirects with a success message in flash but not JSON.
                                     console.warn("Upload response was not JSON, or parsing failed. Assuming success by page behavior or redirect. Status:", xhr.status);
                                     alert('上傳操作已發送，頁面將刷新以查看結果。');
                                 }
-                                window.location.reload(); 
+                                window.location.reload(); // Reload to see changes
                             }
                         } else {
                             let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
@@ -986,7 +852,7 @@
                                     errorMessage = responseJson.message;
                                 }
                             } catch (e) {
-                                if(xhr.responseText) errorMessage = xhr.responseText.substring(0, 500); 
+                                if(xhr.responseText) errorMessage = xhr.responseText.substring(0, 500); // Show part of the response
                             }
                             alert(errorMessage);
                             console.error('Upload failed:', xhr.status, xhr.responseText);
@@ -997,7 +863,7 @@
                         alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
                         console.error('Upload network error:', e);
                     };
-                    xhr.openUrl = uploadForm.action; 
+                    xhr.openUrl = uploadForm.action; // Store original URL for comparison in onload
                     xhr.send(formData);
                 });
             }
@@ -1005,7 +871,7 @@
             if (dropArea && userFilesInput && fileListPreview && uploadSection && dropAreaText && uploadActionsContainer && toggleUploadActionsBtn) { 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropArea.addEventListener(eventName, preventDefaults, false);
-                    document.body.addEventListener(eventName, preventDefaults, false); 
+                    document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser default for whole page
                 });
                 function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
                 
@@ -1048,37 +914,30 @@
                     toggleUploadActionsBtn.textContent = '取消上傳操作';
                 }, false);
 
-                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop); 
+                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop); // Keep this
 
-                function updateFileListPreviewOnDrop() { 
+                function updateFileListPreviewOnDrop() { // Ensure this is defined within scope or globally
                     if (!fileListPreview || !userFilesInput || !uploadButton) return;
                     fileListPreview.innerHTML = '';
                     if (userFilesInput.files.length > 0) {
                         const list = document.createElement('ul');
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
                         let isDirectoryUpload = false;
+                        // Check if webkitRelativePath exists on the first file AND it contains a slash
                         if (userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath && userFilesInput.files[0].webkitRelativePath.includes('/')) {
                            isDirectoryUpload = true;
-                        } else if (userFilesInput.hasAttribute('webkitdirectory') || userFilesInput.hasAttribute('directory')) { 
-                            // Check if the input is in directory mode.
-                            // This is a more reliable check for directory mode after selection.
-                            if (userFilesInput.files.length > 0) { // Ensure there are files selected
-                                isDirectoryUpload = true; 
-                                // Heuristic: if all files share the same top-level folder name in webkitRelativePath
-                                const firstPathSegment = userFilesInput.files[0].webkitRelativePath.split('/')[0];
-                                for(let i=1; i < userFilesInput.files.length; i++) {
-                                    if(!userFilesInput.files[i].webkitRelativePath || userFilesInput.files[i].webkitRelativePath.split('/')[0] !== firstPathSegment) {
-                                        isDirectoryUpload = false; // Not a consistent folder upload
-                                        break;
-                                    }
-                                }
+                        } else if (userFilesInput.webkitdirectory || userFilesInput.directory) { 
+                            // Fallback for some browsers or if input was set to directory mode explicitly
+                            // and webkitRelativePath might not be immediately available on all files[0] before full processing
+                            // This condition is a bit broad, primary check is webkitRelativePath
+                            if(userFilesInput.files.length > 0 && userFilesInput.files[0].name === userFilesInput.files[0].webkitRelativePath.split('/')[0]) {
+                                // This heuristic might be unreliable. Sticking to webkitRelativePath is safer.
                             }
                         }
 
 
                         if (isDirectoryUpload) {
-                            // Attempt to get the folder name from the first file's relative path
-                            const folderName = userFilesInput.files[0].webkitRelativePath ? userFilesInput.files[0].webkitRelativePath.split('/')[0] : "選定的文件夾";
+                            const folderName = userFilesInput.files[0].webkitRelativePath.split('/')[0];
                             const listItem = document.createElement('li');
                             listItem.textContent = `文件夾: ${folderName} (${userFilesInput.files.length} 個文件)`;
                             listItem.style.fontSize = '0.9em';
@@ -1098,6 +957,7 @@
                         uploadButton.style.display = 'none';
                     }
                 }
+                // Initial state for upload button
                 if (userFilesInput && uploadButton && userFilesInput.files.length === 0) {
                      uploadButton.style.display = 'none';
                 }
@@ -1158,10 +1018,11 @@
                 if (currentPathHiddenInput) currentPathHiddenInput.value = IS_SEARCH_RESULT_VIEW ? '/' : CURRENT_PATH_ON_LOAD;
                 
                 const targetUsernameHiddenInput = createItemForm.querySelector('input[name="targetUsername"]');
-                if (targetUsernameHiddenInput) { 
+                if (targetUsernameHiddenInput) { // Ensure this input exists in the form
                     if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                         targetUsernameHiddenInput.value = VIEW_TARGET_USERNAME;
                     } else {
+                         // If not admin view or no target, ensure it's empty or remove if not needed by default
                         targetUsernameHiddenInput.value = ''; 
                     }
                 }
