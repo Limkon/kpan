@@ -9,76 +9,69 @@
     <style>
         /* 使编辑器容器和文本区域更具响应性 */
         .editor-container {
-            display: flex; /* 使用 flex 布局 */
-            flex-direction: column; /* 垂直排列子元素 */
-            flex-grow: 1; /* 允许容器在父容器中伸展 (如果父容器是flex) */
-            height: calc(100vh - 200px); /* 示例：视口高度减去头部和一些边距，可以调整 */
-            /* 或者设置一个最小高度 */
-            /* min-height: 500px; */
+            display: flex; 
+            flex-direction: column; 
+            flex-grow: 1; 
+            height: calc(100vh - 220px); /* 稍微调整以适应可能的页眉高度增加 */
         }
-
         .editor-container form {
             display: flex;
             flex-direction: column;
-            flex-grow: 1; /* 表单也伸展 */
+            flex-grow: 1; 
             height: 100%;
         }
-
         textarea#fileContent {
             width: 100%;
-            /* flex-grow: 1; 使文本区域填充表单中的可用空间 */
-            height: 100%; /* 填充父表单的高度 */
-            min-height: 300px; /* 保证一个最小的可编辑高度 */
-            box-sizing: border-box; /* padding 和 border 不会增加总宽度/高度 */
-            font-family: monospace; /* 使用等宽字体以便于代码编辑 */
+            height: 100%; 
+            min-height: 300px; 
+            box-sizing: border-box; 
+            font-family: monospace; 
             font-size: 0.95em;
             line-height: 1.5;
-            border: 1px solid #ced4da; /* 与其他输入框一致 */
-            border-radius: 5px;      /* 与其他输入框一致 */
+            border: 1px solid #ced4da; 
+            border-radius: 5px;      
             padding: 10px;
-            margin-bottom: 15px; /* 与下方按钮的间距 */
-            resize: vertical; /* 允许用户垂直调整大小 */
+            margin-bottom: 15px; 
+            resize: vertical; 
         }
-
         .editor-actions {
-            margin-top: auto; /* 将按钮推到底部 (如果表单是flex容器) */
+            margin-top: auto; 
             text-align: right;
             display: flex;
             gap: 10px;
             justify-content: flex-end;
         }
-        
-        /* 确保 .container 也能适应内容高度 */
         body > .container {
             display: flex;
             flex-direction: column;
-            min-height: calc(100vh - 40px); /* 减去 body 的 padding 和 container 的 margin */
+            min-height: calc(100vh - 40px); 
         }
-
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
+        <header> 
             <h1>編輯文件: <%= filename %></h1>
-            <nav>
-                <%
-                    let backPath = "/files";
-                    // 确保 currentPath 存在且不为空，否则 path.dirname 会出错
-                    if (locals.currentPath && typeof locals.currentPath === 'string') {
-                        const parentDirOfFile = currentPath.includes('/') ? currentPath.substring(0, currentPath.lastIndexOf('/')) || '/' : '/';
-                        if (locals.viewTargetUsername && user.role === 'admin') {
-                            backPath = `/files?path=${encodeURIComponent(parentDirOfFile)}&targetUsername=${encodeURIComponent(viewTargetUsername)}`;
-                        } else {
-                            backPath = `/files?path=${encodeURIComponent(parentDirOfFile)}`;
+            <div class="header-controls"> 
+                <nav>
+                    <%
+                        let backPath = "/files";
+                        if (locals.currentPath && typeof locals.currentPath === 'string') {
+                            const parentDirOfFile = currentPath.includes('/') ? currentPath.substring(0, currentPath.lastIndexOf('/')) || '/' : '/';
+                            if (locals.viewTargetUsername && user.role === 'admin') {
+                                backPath = `/files?path=${encodeURIComponent(parentDirOfFile)}&targetUsername=${encodeURIComponent(viewTargetUsername)}`;
+                            } else {
+                                backPath = `/files?path=${encodeURIComponent(parentDirOfFile)}`;
+                            }
+                        } else if (locals.viewTargetUsername && user.role === 'admin') {
+                             backPath = `/files?targetUsername=${encodeURIComponent(viewTargetUsername)}`;
                         }
-                    } else if (locals.viewTargetUsername && user.role === 'admin') {
-                         backPath = `/files?targetUsername=${encodeURIComponent(viewTargetUsername)}`; // Fallback if currentPath is missing
-                    }
-                %>
-                <a href="<%= backPath %>">返回文件列表</a>
-                <a href="/logout">登出</a>
-            </nav>
+                    %>
+                    <a href="<%= backPath %>">返回文件列表</a>
+                    <a href="/logout">登出</a>
+                </nav>
+                <%- include('partials/theme-switcher') %>
+            </div>
         </header>
 
         <% if (locals.message) { %>
@@ -101,7 +94,6 @@
             </form>
         </div>
     </div>
-    <%- include('partials/theme-switcher') %>
     <script src="/theme.js"></script>
 </body>
 </html>
