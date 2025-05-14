@@ -153,23 +153,22 @@
                                 <div class="file-entry">
                                      <%
                                         const ext = itemDisplayName.includes('.') ? itemDisplayName.substring(itemDisplayName.lastIndexOf('.') + 1).toLowerCase() : '';
-                                        let largeIcon = '📄';
-                                        if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(ext)) { largeIcon = '📝';}
-                                        else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
-                                        else if (['pdf'].includes(ext)) { largeIcon = '📕';}
-                                        else if (['doc', 'docx'].includes(ext)) { largeIcon = '📃';}
-                                        else if (['xls', 'xlsx'].includes(ext)) { largeIcon = '📊';}
-                                        else if (['ppt', 'pptx'].includes(ext)) { largeIcon = '🖥️';}
-                                        else if (['zip', 'rar', 'tar', 'gz'].includes(ext)) { largeIcon = '📦';}
-                                        else if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) { largeIcon = '🎵';}
-                                        else if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) { largeIcon = '🎬';}
+                                        let largeIcon = '📄'; // Default icon
+                                        if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(ext)) { largeIcon = '📝';} // Text/Code
+                                        else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; } // Image
+                                        else if (['pdf'].includes(ext)) { largeIcon = '📕';} // PDF
+                                        else if (['doc', 'docx'].includes(ext)) { largeIcon = '📃';} // Word
+                                        else if (['xls', 'xlsx'].includes(ext)) { largeIcon = '📊';} // Excel
+                                        else if (['ppt', 'pptx'].includes(ext)) { largeIcon = '🖥️';} // PowerPoint
+                                        else if (['zip', 'rar', 'tar', 'gz'].includes(ext)) { largeIcon = '📦';} // Archive
+                                        else if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) { largeIcon = '🎵';} // Audio
+                                        else if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) { largeIcon = '🎬';} // Video
                                     %>
                                     <span class="file-icon-large"><%= largeIcon %></span>
                                     <span class="file-name"><%= itemDisplayName %></span>
                                 </div>
                             <% } %>
-                            <span class="file-actions" style="display:none;">
-                                <a href="#" class="action-link rename-link" onclick="showRenameForm('<%= item.encodedName %>', '<%= itemDisplayName.replace(/'/g, '\\\'') %>', <%= item.isDir %>); return false;">重命名(隱藏)</a>
+                            <span class="file-actions" style="display:none;"> <a href="#" class="action-link rename-link" onclick="showRenameForm('<%= item.encodedName %>', '<%= itemDisplayName.replace(/'/g, '\\\'') %>', <%= item.isDir %>); return false;">重命名(隱藏)</a>
                             </span>
                             <div class="rename-form" id="rename-form-<%= item.encodedName %>">
                                 <form action="/rename" method="POST" class="control-form inline-form">
@@ -225,20 +224,23 @@
         const dropArea = document.getElementById('drop-area');
         const fileInput = document.getElementById('userFiles');
         const fileListPreview = document.getElementById('file-list-preview');
-        const uploadButton = document.getElementById('upload-button');
+        const uploadButton = document.getElementById('upload-button'); // Button inside upload section
         if (dropArea && fileInput && fileListPreview && uploadButton) {
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 dropArea.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser opening file
             });
             function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
             ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false));
             ['dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false));
+
             dropArea.addEventListener('drop', handleDrop, false);
             function handleDrop(e) {
                 fileInput.files = e.dataTransfer.files;
                 updateFileListPreview();
             }
+
             fileInput.addEventListener('change', updateFileListPreview);
             function updateFileListPreview() {
                 fileListPreview.innerHTML = '';
@@ -247,7 +249,17 @@
                     list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
                     for (let i = 0; i < fileInput.files.length; i++) {
                         const listItem = document.createElement('li');
-                        listItem.textContent = fileInput.files[i].name + ' (' + (files[i].size / 1024).toFixed(2) + ' KB)';
+                        // Display file size in a more readable format
+                        const fileSize = fileInput.files[i].size;
+                        let sizeString;
+                        if (fileSize < 1024) {
+                            sizeString = fileSize + ' Bytes';
+                        } else if (fileSize < 1024 * 1024) {
+                            sizeString = (fileSize / 1024).toFixed(2) + ' KB';
+                        } else {
+                            sizeString = (fileSize / (1024 * 1024)).toFixed(2) + ' MB';
+                        }
+                        listItem.textContent = fileInput.files[i].name + ' (' + sizeString + ')';
                         listItem.style.fontSize = '0.9em'; listItem.style.color = '#333';
                         list.appendChild(listItem);
                     }
@@ -260,22 +272,26 @@
             if(fileInput.files.length === 0) uploadButton.style.display = 'none';
         }
 
+
         // View Toggle
         const fileContainer = document.getElementById('file-container');
         const listViewBtn = document.getElementById('listViewBtn');
         const gridViewBtn = document.getElementById('gridViewBtn');
         if (fileContainer && listViewBtn && gridViewBtn) {
             function toggleView(viewType) {
-                fileContainer.className = viewType === 'grid' ? 'grid-view' : 'list-view';
+                fileContainer.className = viewType === 'grid' ? 'grid-view' : 'list-view'; // Set class on the container of <ul>
                 gridViewBtn.classList.toggle('active', viewType === 'grid');
                 listViewBtn.classList.toggle('active', viewType === 'list');
                 localStorage.setItem('fileView', viewType);
             }
+            // Initialize view based on localStorage or default to 'list'
             toggleView(localStorage.getItem('fileView') || 'list');
         }
 
+
         // Rename Form
         function showRenameForm(encodedName, currentName, isDir) {
+            // Hide all other rename forms first
             document.querySelectorAll('.rename-form').forEach(form => form.style.display = 'none');
             const form = document.getElementById('rename-form-' + encodedName);
             if (form) {
@@ -300,25 +316,29 @@
         const itemCheckboxes = document.querySelectorAll('.file-item-checkbox');
 
         function getSelectedItems() {
+            // Helper function to get all currently selected items
             return Array.from(itemCheckboxes)
                         .filter(checkbox => checkbox.checked)
                         .map(checkbox => ({
-                            path: checkbox.value,
+                            path: checkbox.value, // Relative path from user's root
                             name: checkbox.dataset.name,
                             isDir: checkbox.dataset.isdir === 'true',
-                            encodedName: checkbox.dataset.encodedname
+                            encodedName: checkbox.dataset.encodedname // For triggering rename form
                         }));
         }
 
         function updateGlobalActionButtons() {
             const selectedItems = getSelectedItems();
             const count = selectedItems.length;
+
             globalDownloadBtn.disabled = count === 0;
             globalDeleteBtn.disabled = count === 0;
             globalMoveBtn.disabled = count === 0;
-            globalRenameBtn.disabled = count !== 1;
+            globalRenameBtn.disabled = count !== 1; // Enable rename only if exactly one item is selected
+
             if (selectAllCheckbox) {
                  selectAllCheckbox.checked = count > 0 && count === itemCheckboxes.length;
+                 // Set indeterminate state if some but not all are checked
                  selectAllCheckbox.indeterminate = count > 0 && count < itemCheckboxes.length;
             }
         }
@@ -331,68 +351,74 @@
         function handleGlobalRename() {
             const selectedItems = getSelectedItems();
             if (selectedItems.length === 1) {
-                showRenameForm(selectedItems[0].encodedName, selectedItems[0].name, selectedItems[0].isDir);
+                const item = selectedItems[0];
+                // Trigger the existing inline rename form for this item
+                showRenameForm(item.encodedName, item.name, item.isDir);
             }
         }
 
         // --- Batch Operations Fetch Logic ---
-        async function performBatchOperation(url, items, additionalData = {}) {
-            const actingUser = "<%= user.username %>"; // Current logged-in user
+        async function performBatchOperation(url, itemsData, additionalData = {}) {
+            const actingUser = "<%= user.username %>";
             const currentPathVal = "<%= currentPath %>";
+            // Safely get targetUsername from EJS, default to null if not admin viewing other user
             const targetUsernameVal = <%= locals.viewTargetUsername && user.role === 'admin' ? JSON.stringify(viewTargetUsername) : null %>;
+
+            const bodyPayload = {
+                items: itemsData, // This will be an array of {path, isDir} for delete/move, or array of paths for download
+                targetUsername: targetUsernameVal,
+                currentPath: currentPathVal,
+                ...additionalData
+            };
 
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        items: items,
-                        targetUsername: targetUsernameVal,
-                        currentPath: currentPathVal, // For redirecting back to the correct folder
-                        ...additionalData
-                    })
+                    body: JSON.stringify(bodyPayload)
                 });
-                // For delete and move, backend redirects, so we check for redirect or handle JSON
-                if (response.redirected) {
-                    window.location.href = response.url; // Follow redirect which should include messages
-                } else if (response.ok && url === '/batch-download') { // Special handling for download
-                     // The browser should handle the download via res.attachment() in backend
-                     // If not, this might need a form submission trick as discussed
-                     // For now, assume backend handles direct download response
-                     // We might need to create a temporary form and submit it for download
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/batch-download';
 
-                    items.forEach(item => { // Assuming 'items' here are just paths for download
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = 'paths[]';
-                        input.value = item.path; // Or just item if items are paths directly
-                        form.appendChild(input);
-                    });
-                    if (targetUsernameVal) {
-                        const inputTarget = document.createElement('input');
-                        inputTarget.type = 'hidden'; inputTarget.name = 'targetUsername'; inputTarget.value = targetUsernameVal;
-                        form.appendChild(inputTarget);
+                if (url === '/batch-download') {
+                    if (response.ok) {
+                        // Trigger browser download
+                        const blob = await response.blob();
+                        const downloadUrl = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = downloadUrl;
+                        // Extract filename from Content-Disposition header if available
+                        const disposition = response.headers.get('content-disposition');
+                        let filename = 'download.zip'; // Default filename
+                        if (disposition && disposition.indexOf('attachment') !== -1) {
+                            const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                            const matches = filenameRegex.exec(disposition);
+                            if (matches != null && matches[1]) {
+                                filename = matches[1].replace(/['"]/g, '');
+                            }
+                        }
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(downloadUrl);
+                        a.remove();
+                    } else {
+                        // Handle error response for download (e.g., show message from server)
+                        const errorData = await response.json().catch(() => ({ message: '下載失敗，且無法解析錯誤回應。' }));
+                        alert(`下載錯誤: ${errorData.message}`);
                     }
-                    const inputCurrentPath = document.createElement('input');
-                    inputCurrentPath.type = 'hidden'; inputCurrentPath.name = 'currentPath'; inputCurrentPath.value = currentPathVal;
-                    form.appendChild(inputCurrentPath);
-
-                    document.body.appendChild(form);
-                    form.submit();
-                    document.body.removeChild(form);
-
-                } else if (!response.ok) {
+                } else if (response.redirected) { // For delete and move, backend redirects
+                    window.location.href = response.url;
+                } else if (!response.ok) { // Other non-redirecting errors
                     const errorData = await response.json().catch(() => ({ message: '操作失敗，且無法解析錯誤回應。' }));
                     alert(`錯誤: ${errorData.message}`);
                 } else {
-                    // For non-redirecting success, if any (e.g. if backend sent JSON for success)
-                    // window.location.reload(); // Or handle specific JSON response
+                    // If backend sends JSON success for non-redirecting operations (if any in future)
+                    // const successData = await response.json();
+                    // alert(successData.message);
+                    // window.location.reload(); // Or update UI dynamically
                 }
             } catch (error) {
-                console.error('批量操作錯誤:', error);
+                console.error('批量操作 Fetch 錯誤:', error);
                 alert('執行操作時發生網路或客戶端錯誤。');
             }
         }
@@ -401,49 +427,50 @@
         function handleGlobalDownload() {
             const selectedItems = getSelectedItems();
             if (selectedItems.length === 0) return;
-            // For download, we typically just need the paths
             const pathsToDownload = selectedItems.map(item => item.path);
-            performBatchOperation('/batch-download', pathsToDownload);
+            performBatchOperation('/batch-download', pathsToDownload); // Pass paths array as itemsData
         }
 
         function handleGlobalDelete() {
             const selectedItems = getSelectedItems();
             if (selectedItems.length === 0) return;
             if (!confirm(`確定要刪除選中的 ${selectedItems.length} 個項目嗎？此操作無法撤銷。`)) return;
-            performBatchOperation('/batch-delete', selectedItems.map(item => ({ path: item.path, isDir: item.isDir })));
+            // For delete, backend expects an array of {path, isDir} objects
+            const itemsToDelete = selectedItems.map(item => ({ path: item.path, isDir: item.isDir }));
+            performBatchOperation('/batch-delete', itemsToDelete);
         }
 
         const movePopup = document.getElementById('move-destination-popup');
         const destinationPathInput = document.getElementById('destinationPath');
-        let itemsToMoveGlobally = [];
+        let itemsToMoveGlobally = []; // Stores the items selected when "Move" was clicked
 
         function showMovePopup() {
-            itemsToMoveGlobally = getSelectedItems();
+            itemsToMoveGlobally = getSelectedItems(); // Capture selected items when popup is shown
             if (itemsToMoveGlobally.length === 0) return;
-            destinationPathInput.value = '/';
+            destinationPathInput.value = '/'; // Reset to root or last used valid path
             movePopup.style.display = 'block';
+            destinationPathInput.focus();
         }
         function hideMovePopup() {
             movePopup.style.display = 'none';
         }
         function handleActualMove(event) {
-            event.preventDefault();
+            event.preventDefault(); // Prevent default form submission
             const destination = destinationPathInput.value.trim();
             if (!destination.startsWith('/')) {
                 alert('目標路徑必須以 / 開頭 (相對於用戶根目錄)。');
                 return;
             }
             if (itemsToMoveGlobally.length > 0) {
-                performBatchOperation('/move-items',
-                    itemsToMoveGlobally.map(item => ({ path: item.path, isDir: item.isDir, name: item.name })),
-                    { destinationPath: destination }
-                );
+                // For move, backend expects an array of {path, isDir, name} objects and destinationPath
+                const itemsPayload = itemsToMoveGlobally.map(item => ({ path: item.path, isDir: item.isDir, name: item.name }));
+                performBatchOperation('/move-items', itemsPayload, { destinationPath: destination });
             }
-            hideMovePopup();
+            hideMovePopup(); // Close popup after initiating move
         }
 
-        // Initial setup
-        updateGlobalActionButtons();
+        // Initial setup and event listeners for checkboxes
+        updateGlobalActionButtons(); // Call on page load
         itemCheckboxes.forEach(cb => cb.addEventListener('change', updateGlobalActionButtons));
 
     </script>
