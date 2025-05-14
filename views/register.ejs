@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>註冊 - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
-    <link id="theme-stylesheet" rel="stylesheet" href=""> </head>
+    <link id="theme-stylesheet" rel="stylesheet" href="">
+</head>
 <body>
+    <div class="page-header-container">
+        <%- include('partials/theme-switcher') %>
+    </div>
+
     <div class="auth-container">
         <div class="auth-form-container">
             <h1>註冊</h1>
@@ -14,6 +19,9 @@
                 <p class="error-message"><%= error %></p>
             <% } %>
             <form action="/register" method="POST">
+                <% if (locals.csrfToken) { %>
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <% } %>
                 <div class="form-group">
                     <label for="username">用戶名:</label>
                     <input type="text" id="username" name="username" required>
@@ -31,7 +39,6 @@
             <p class="auth-switch">已有帳戶? <a href="/login">登錄</a></p>
         </div>
     </div>
-    <%- include('partials/theme-switcher') %>
     <script src="/theme.js"></script>
 </body>
 </html>
