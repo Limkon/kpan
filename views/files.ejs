@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* ... (保留所有之前的樣式 - 与 files_ejs_modal_create ID 中的版本一致) ... */
+        /* Styles for selection action bar, item checkboxes, modals, etc. */
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         #selection-action-bar button { margin: 0; }
         .item-checkbox { margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
@@ -61,6 +61,7 @@
         .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
         .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
 
+        /* Styles for .file-browser-controls (Single Row Layout) */
         .file-browser-controls {
             display: flex;
             flex-wrap: wrap; 
@@ -164,7 +165,7 @@
                 <div class="actions-group-left">
                     <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
                     <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
-                    <button type="button" id="toggleUploadBtn" class="upload-button-main">上傳文件到此</button>
+                    <button type="button" id="toggleUploadBtn" class="upload-button-main">上傳</button>
                 </div>
             <% } %>
         
@@ -199,9 +200,9 @@
                         <input type="hidden" name="currentPath" value="<%= currentPath %>">
                         <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
                         <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                        <input type="file" id="userFiles" name="userFiles" multiple style="display: none;">
-                        <p>將文件拖拽到此處，或 <label for="userFiles">點擊選擇文件</label></p>
-                        <button type="submit" id="upload-button">上傳已選文件</button>
+                        <input type="file" id="userFiles" name="userFiles" multiple webkitdirectory directory style="display: none;">
+                        <p>將文件或文件夾拖拽到此處，或 <label for="userFiles" id="select-files-label">點擊選擇文件或文件夾</label></p>
+                        <button type="submit" id="upload-button">上傳已選項目</button>
                     </form>
                     <div id="file-list-preview" style="margin-top:10px; text-align:left;"></div>
                 </div>
@@ -353,14 +354,12 @@
             const moveDestinationInput = document.getElementById('move-destination-input');
             let currentDirectoryTree = [];
 
-            // Function to get currently selected items by querying the DOM directly
             function getSelectedItems() {
                 const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                 const selected = [];
-                console.log(`getSelectedItems: Found ${currentCheckboxes.length} checkboxes.`);
+                // console.log(`getSelectedItems: Found ${currentCheckboxes.length} checkboxes.`); 
                 currentCheckboxes.forEach((cb, index) => {
-                    // Log the state of each checkbox being inspected
-                    console.log(`Inspecting Checkbox ${index} (path: ${cb.dataset.path}, name: ${cb.dataset.name}): checked = ${cb.checked}`);
+                    // console.log(`Inspecting Checkbox ${index} (path: ${cb.dataset.path}, name: ${cb.dataset.name}): checked = ${cb.checked}`); 
                     if (cb.checked) {
                         selected.push({
                             path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
@@ -369,14 +368,13 @@
                         });
                     }
                 });
-                console.log('getSelectedItems: Total selected =', selected.length, '; Selected items:', JSON.stringify(selected.map(s => s.name)));
+                // console.log('getSelectedItems: Total selected =', selected.length, '; Selected items:', JSON.stringify(selected.map(s => s.name))); 
                 return selected;
             }
 
             function updateSelectionActions() {
                 const selectedItems = getSelectedItems(); 
                 const count = selectedItems.length;
-                // console.log('updateSelectionActions - count:', count); 
 
                 if (selectionActionBar && selectionCountDisplay) { 
                     if (count > 0) {
@@ -402,22 +400,19 @@
                 if (actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
             }
 
-            // Attach listeners to checkboxes that are present on DOMContentLoaded
-            const initialItemCheckboxes = document.querySelectorAll('.item-checkbox');
-            console.log(`Attaching 'change' listeners to ${initialItemCheckboxes.length} initial checkboxes.`);
-            initialItemCheckboxes.forEach((checkbox, index) => {
+            const itemCheckboxesForListeners = document.querySelectorAll('.item-checkbox');
+            itemCheckboxesForListeners.forEach((checkbox, index) => {
                 checkbox.addEventListener('change', (event) => {
-                    console.log(`Checkbox ${index} (path: ${event.target.dataset.path}) 'change' event. New checked state: ${event.target.checked}`);
+                    // console.log(`Checkbox ${index} (path: ${event.target.dataset.path}) 'change' event. New checked state: ${event.target.checked}`); 
                     updateSelectionActions(); 
                 });
             });
             
             if (selectAllCheckbox) {
                 selectAllCheckbox.addEventListener('change', (e) => {
-                    console.log(`Select All checkbox changed to: ${e.target.checked}`);
                     const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                     currentCheckboxes.forEach(cb => {
-                        if (cb.checked !== e.target.checked) { // Only change if different to avoid redundant events if any
+                        if (cb.checked !== e.target.checked) { 
                            cb.checked = e.target.checked;
                         }
                     });
@@ -427,11 +422,8 @@
 
             if (actionEditBtn) {
                 actionEditBtn.addEventListener('click', () => {
-                    const selected = getSelectedItems(); // Always get fresh selection
-                    if (actionEditBtn.disabled) {
-                        console.log("編輯按鈕被禁用，但仍被點擊。選中項:", selected);
-                        return;
-                    }
+                    const selected = getSelectedItems();
+                    if (actionEditBtn.disabled) return;
                     if (selected.length === 1) {
                         let url = `/edit?path=${selected[0].encodedPath}`;
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
@@ -443,7 +435,7 @@
             }
             if (actionRenameBtn) {
                 actionRenameBtn.addEventListener('click', () => {
-                    const selected = getSelectedItems(); // Always get fresh selection
+                    const selected = getSelectedItems();
                      if (actionRenameBtn.disabled) return;
                     if (selected.length === 1) showRenameForm(selected[0].encodedName, selected[0].name, selected[0].isDir);
                 });
@@ -451,20 +443,20 @@
             
             if (actionDownloadBtn) {
                 actionDownloadBtn.addEventListener('click', () => {
-                    const selectedItems = getSelectedItems(); // Crucial: get fresh selection
-                    console.log("下載按鈕點擊，選中項:", selectedItems); 
+                    const selectedItems = getSelectedItems(); 
+                    // console.log("下載按鈕點擊，選中項:", selectedItems); 
 
                     if (selectedItems.length === 0) {
                         alert("請至少選擇一個項目進行下載。"); 
                         return;
                     }
                      if (actionDownloadBtn.disabled) { 
-                        console.log("下載按鈕被禁用，但仍被點擊。");
+                        // console.log("下載按鈕被禁用，但仍被點擊。");
                         return;
                     }
 
                     if (selectedItems.length === 1 && !selectedItems[0].isDir) {
-                        console.log("準備下載單個文件:", selectedItems[0]);
+                        // console.log("準備下載單個文件:", selectedItems[0]);
                         let url = `/download?path=${selectedItems[0].encodedPath}`;
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
@@ -477,7 +469,7 @@
                         tempLink.click();
                         document.body.removeChild(tempLink);
                     } else {
-                        console.log("準備打包下載 (多選或文件夾):", selectedItems);
+                        // console.log("準備打包下載 (多選或文件夾):", selectedItems);
                         const form = document.createElement('form');
                         form.method = 'POST';
                         form.action = '/download-archive';
@@ -493,7 +485,7 @@
                         }));
                         itemsInput.value = JSON.stringify(itemsForPayload);
                         form.appendChild(itemsInput);
-                        console.log("打包下載的項目數據 (itemsInput.value):", itemsInput.value);
+                        // console.log("打包下載的項目數據 (itemsInput.value):", itemsInput.value);
 
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             const targetUserInput = document.createElement('input');
@@ -510,7 +502,7 @@
                             form.appendChild(csrfInput);
                         }
                         document.body.appendChild(form);
-                        console.log("提交打包下載表單...");
+                        // console.log("提交打包下載表單...");
                         try {
                             form.submit();
                         } catch (e) {
@@ -526,7 +518,7 @@
 
             if (actionDeleteBtn) {
                 actionDeleteBtn.addEventListener('click', async () => {
-                    const selectedItems = getSelectedItems(); // Get fresh selection
+                    const selectedItems = getSelectedItems(); 
                     if (selectedItems.length === 0) return;
                     const itemNames = selectedItems.map(item => item.rawName).join(', ');
                     if (confirm(`確定要刪除選中的 ${selectedItems.length} 個項目 (${itemNames}) 嗎？此操作不可恢復！`)) {
@@ -547,14 +539,14 @@
                             window.location.reload();
                         }
                         if(selectAllCheckbox) selectAllCheckbox.checked = false;
-                        document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false); // Re-query to uncheck
+                        document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false); 
                         updateSelectionActions();
                     }
                 });
             }
             if (actionMoveBtn) {
                 actionMoveBtn.addEventListener('click', async () => {
-                    const selectedItems = getSelectedItems(); // Get fresh selection
+                    const selectedItems = getSelectedItems(); 
                     if (selectedItems.length === 0) return;
                     moveDestinationInput.value = ''; selectedDestinationPathDisplay.textContent = '無';
                     confirmMoveBtn.disabled = true; directoryTreeContainer.innerHTML = '<p>正在加載目錄...</p>';
@@ -606,7 +598,7 @@
             
             if (confirmMoveBtn) {
                 confirmMoveBtn.addEventListener('click', async () => {
-                    const selectedToMove = getSelectedItems(); // Get fresh selection
+                    const selectedToMove = getSelectedItems(); 
                     const destinationPath = moveDestinationInput.value;
                     if (selectedToMove.length === 0 || !destinationPath) { alert('請選擇要移動的項目和目標文件夾。'); return; }
                     for (const item of selectedToMove) {
@@ -631,6 +623,9 @@
             }
             const toggleUploadBtn = document.getElementById('toggleUploadBtn');
             const uploadSection = document.getElementById('upload-section');
+            const userFilesInput = document.getElementById('userFiles'); 
+            const selectFilesLabel = document.getElementById('select-files-label'); 
+
             if (toggleUploadBtn && uploadSection) { 
                 toggleUploadBtn.addEventListener('click', () => {
                     if (uploadSection.style.display === 'none' || uploadSection.style.display === '') {
@@ -638,15 +633,16 @@
                         toggleUploadBtn.textContent = '隱藏上傳區域';
                     } else {
                         uploadSection.style.display = 'none';
-                        toggleUploadBtn.textContent = '上傳文件到此';
+                        toggleUploadBtn.textContent = '上傳'; 
                     }
                 });
             }
+            
             const dropArea = document.getElementById('drop-area');
-            const fileInputForDrop = document.getElementById('userFiles'); 
             const fileListPreview = document.getElementById('file-list-preview');
             const uploadFormButton = document.getElementById('upload-button'); 
-            if (dropArea && fileInputForDrop && fileListPreview && uploadFormButton) { 
+
+            if (dropArea && userFilesInput && fileListPreview && uploadFormButton) { 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropArea.addEventListener(eventName, preventDefaults, false);
                     document.body.addEventListener(eventName, preventDefaults, false);
@@ -654,22 +650,42 @@
                 function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
                 ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false));
                 ['dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false));
+                
                 dropArea.addEventListener('drop', handleDrop, false);
                 function handleDrop(e) {
-                    fileInputForDrop.files = e.dataTransfer.files;
+                    userFilesInput.files = e.dataTransfer.files; 
                     updateFileListPreviewOnDrop();
                 }
-                fileInputForDrop.addEventListener('change', updateFileListPreviewOnDrop);
+                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop);
+
                 function updateFileListPreviewOnDrop() {
                     fileListPreview.innerHTML = '';
-                    if (fileInputForDrop.files.length > 0) {
+                    if (userFilesInput.files.length > 0) {
                         const list = document.createElement('ul');
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
-                        for (let i = 0; i < fileInputForDrop.files.length; i++) {
+                        
+                        let isDirectoryUpload = false;
+                        if (userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath) {
+                            const firstFileRelativePath = userFilesInput.files[0].webkitRelativePath;
+                            if (firstFileRelativePath.includes('/')) {
+                                isDirectoryUpload = true;
+                            }
+                        }
+
+                        if (isDirectoryUpload) {
+                            const folderName = userFilesInput.files[0].webkitRelativePath.split('/')[0];
                             const listItem = document.createElement('li');
-                            listItem.textContent = fileInputForDrop.files[i].name + (fileInputForDrop.files[i].size ? ` (${(fileInputForDrop.files[i].size / 1024).toFixed(1)} KB)` : '');
+                            listItem.textContent = `文件夾: ${folderName} (${userFilesInput.files.length} 個文件)`;
                             listItem.style.fontSize = '0.9em';
+                            listItem.style.fontWeight = 'bold';
                             list.appendChild(listItem);
+                        } else { 
+                            for (let i = 0; i < userFilesInput.files.length; i++) {
+                                const listItem = document.createElement('li');
+                                listItem.textContent = userFilesInput.files[i].name + (userFilesInput.files[i].size ? ` (${(userFilesInput.files[i].size / 1024).toFixed(1)} KB)` : '');
+                                listItem.style.fontSize = '0.9em';
+                                list.appendChild(listItem);
+                            }
                         }
                         fileListPreview.appendChild(list);
                         uploadFormButton.style.display = 'inline-block';
@@ -677,8 +693,9 @@
                         uploadFormButton.style.display = 'none';
                     }
                 }
-                if(fileInputForDrop.files.length === 0) uploadFormButton.style.display = 'none';
+                if(userFilesInput.files.length === 0) uploadFormButton.style.display = 'none';
             }
+
             const fileContainer = document.getElementById('file-container');
             const listViewBtn = document.getElementById('listViewBtn');
             const gridViewBtn = document.getElementById('gridViewBtn');
