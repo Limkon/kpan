@@ -11,7 +11,7 @@ body {
     align-items: center;
     min-height: 100vh;
     box-sizing: border-box;
-    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -33,46 +33,46 @@ body {
     justify-content: center;
     align-items: center;
     width: 100%;
-    min-height: 80vh; /* Ensure it takes up most of the viewport height */
+    min-height: 80vh; 
     padding: 20px;
+    flex-grow: 1; /* Allow auth container to take available space */
 }
-
 .auth-form-container {
     background-color: #fff;
-    padding: 25px 30px; /* More padding for auth forms */
+    padding: 25px 30px; 
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 400px; /* Optimal width for auth forms */
-    text-align: center; /* Center form elements like h1 and p */
+    max-width: 400px; 
+    text-align: center; 
 }
 .auth-form-container h1 {
-    font-size: 1.8em; /* Slightly larger for auth pages */
+    font-size: 1.8em; 
     margin-bottom: 25px;
     color: #343a40;
 }
 .auth-form-container .form-group {
     margin-bottom: 20px;
-    text-align: left; /* Align labels and inputs to the left */
+    text-align: left; 
 }
 .auth-form-container label {
     display: block;
-    margin-bottom: 8px; /* More space below label */
+    margin-bottom: 8px; 
     font-weight: 600;
     color: #495057;
 }
 .auth-form-container input[type="text"],
 .auth-form-container input[type="password"] {
     width: 100%;
-    padding: 12px 15px; /* Larger padding for inputs */
+    padding: 12px 15px; 
     font-size: 1em;
-    margin-bottom: 0; /* Remove default margin from unified controls */
+    margin-bottom: 0; 
 }
 .auth-form-container .full-width-button {
     width: 100%;
-    padding: 12px 15px; /* Larger button padding */
+    padding: 12px 15px; 
     font-size: 1.05em;
-    margin-top: 10px; /* Space above button */
+    margin-top: 10px; 
     margin-bottom: 0;
 }
 .auth-form-container .auth-switch {
@@ -85,61 +85,134 @@ body {
     font-weight: 500;
 }
 
-
+/* --- Header Styling --- */
 header {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: column; 
+    align-items: flex-start; 
+    justify-content: space-between; 
     margin-bottom: 20px;
     padding-bottom: 15px;
     border-bottom: 1px solid #dee2e6;
+    width: 100%; 
 }
-header h1 { margin: 0 0 10px 0; font-size: 1.6em; color: #343a40; }
-header nav { display: flex; flex-wrap: wrap; gap: 10px; }
-header nav a { margin-left: 0; text-decoration: none; color: #007bff; font-weight: 500; padding: 5px 0; }
+header h1 { 
+    margin: 0 0 10px 0; 
+    font-size: 1.6em; 
+    color: #343a40;
+    flex-shrink: 0; 
+}
+.header-controls { 
+    display: flex;
+    align-items: center;
+    gap: 20px; 
+    width: 100%; 
+}
+header nav { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 15px; 
+    align-items: center;
+}
+header nav a { 
+    text-decoration: none; 
+    color: #007bff; 
+    font-weight: 500; 
+    padding: 5px 0; 
+}
+
+/* --- Theme Switcher Styling (In Header or Page Top) --- */
+.theme-switcher-container {
+    display: flex; 
+    align-items: center;
+    gap: 8px; 
+    padding: 5px; 
+    background-color: transparent; 
+    border-radius: 6px;
+    margin-left: auto; /* Pushes to the right in .header-controls */
+}
+.theme-switcher-container .theme-label { 
+    margin-right: 0; 
+    font-size: 0.9em;
+    color: var(--text-color, #495057); /* Use CSS var for theming */
+    font-weight: 500;
+    white-space: nowrap; 
+}
+.theme-switcher-container select#theme-select { 
+    padding: 6px 8px;
+    font-size: 0.9em;
+    border-radius: 4px;
+    border: 1px solid var(--input-border-color, #ced4da); /* Use CSS var */
+    margin: 0;
+    width: auto;
+    background-color: var(--input-bg-color, #fff); /* Use CSS var */
+    color: var(--input-text-color, #495057); /* Use CSS var */
+}
+
+/* For pages like login/register where theme switcher is at the very top */
+.page-header-container {
+    width: 100%;
+    max-width: 960px; /* Match .container or adjust */
+    margin: 0 auto 10px auto;
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 15px; /* Adjust padding to align with .container's content area */
+    box-sizing: border-box;
+}
+.page-header-container .theme-switcher-container {
+    margin-left: 0; /* No auto margin needed here as parent handles alignment */
+}
+
 
 /* General h1, h2 for non-auth pages */
-.container > h1:not(.auth-form-container h1) { text-align: center; font-size: 1.8em; margin-bottom: 15px; color: #343a40; }
+.container > h1:not(.auth-form-container h1):not(header h1) { 
+    text-align: center; 
+    font-size: 1.8em; 
+    margin-bottom: 15px; 
+    color: #343a40; 
+}
 h2 {
-    font-size: 1.3em; border-bottom: 2px solid #007bff; padding-bottom: 6px;
-    margin-top: 25px; margin-bottom: 15px; color: #343a40;
+    font-size: 1.3em; 
+    border-bottom: 2px solid #007bff; 
+    padding-bottom: 6px;
+    margin-top: 25px; 
+    margin-bottom: 15px; 
+    color: #343a40;
 }
 h2:first-of-type { margin-top: 0; }
 
-
-/* Unified Control Styling (from previous version, slight adjustments) */
+/* Unified Control Styling */
 input[type="text"], input[type="password"],
 select, textarea,
 button, .button-link {
     display: inline-block;
     width: auto;
     padding: 10px 15px;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--input-border-color, #ced4da);
     border-radius: 5px;
     box-sizing: border-box;
     font-size: 0.95em;
     line-height: 1.5;
     vertical-align: middle;
     margin: 5px;
+    background-color: var(--input-bg-color, #fff);
+    color: var(--input-text-color, #495057);
     transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 input[type="file"] {
     display: block; width: 100%; padding: 8px 10px; margin-bottom: 10px;
-    border: 1px solid #ced4da; border-radius: 5px; box-sizing: border-box; font-size: 0.95em;
+    border: 1px solid var(--input-border-color, #ced4da); 
+    border-radius: 5px; box-sizing: border-box; font-size: 0.95em;
 }
-textarea { min-height: 100px; }
+textarea { min-height: 100px; } 
 
-input[type="text"]:not(.auth-form-container input), /* Avoid double styling */
-input[type="password"]:not(.auth-form-container input),
-select,
-textarea {
-    background-color: #fff; color: #495057;
-}
 input[type="text"]:focus:not(.auth-form-container input),
 input[type="password"]:focus:not(.auth-form-container input),
-select:focus,
+select:focus:not(#theme-select),
 textarea:focus {
-    border-color: #80bdff; box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); outline: none;
+    border-color: #80bdff; 
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); 
+    outline: none;
 }
 
 button, button[type="submit"], .button-link {
@@ -157,6 +230,8 @@ button.secondary:hover, .button-link.secondary:hover { background-color: #5a6268
 .message { padding: 10px 12px; border-radius: 5px; margin-bottom: 15px; font-size: 0.95em; }
 .error-message { color: #842029; background-color: #f8d7da; border: 1px solid #f5c2c7; }
 .message:not(.error-message) { color: #0f5132; background-color: #d1e7dd; border: 1px solid #badbcc;}
+.warning-message { color: #664d03; background-color: #fff3cd; border-color: #ffecb5; } /* Added warning message style */
+
 
 .current-path { margin-bottom: 15px; padding: 10px; background-color: #e9ecef; border-radius: 5px; font-size: 0.9em; color: #495057; word-break: break-all; }
 .current-path a { font-weight: 500; }
@@ -168,14 +243,11 @@ button.secondary:hover, .button-link.secondary:hover { background-color: #5a6268
 .file-browser-controls .control-form input[type="text"] { flex-grow: 1; margin: 0; }
 .file-browser-controls .control-form button { flex-shrink: 0; margin: 0; }
 .file-browser-controls .upload-button-main, .file-browser-controls .view-toggle button { margin: 0; flex-shrink: 0; }
-.view-toggle { display: flex; gap: 8px; margin-left: auto; }
+.view-toggle { display: flex; gap: 8px; margin-left: auto; } 
 .view-toggle button { background-color: #6c757d; font-size: 0.9em; }
 .view-toggle button.active { background-color: #007bff; }
 
-#upload-section {
-    display: none; padding: 15px; border: 1px solid #dee2e6;
-    border-radius: 6px; margin-top: 15px; background-color: #f8f9fa;
-}
+#upload-section { display: none; padding: 15px; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 15px; background-color: #f8f9fa;}
 #upload-section h2 { margin-top: 0; font-size: 1.1em; }
 #drop-area {
     border: 2px dashed #adb5bd; border-radius: 6px; padding: 25px; text-align: center;
@@ -189,10 +261,10 @@ button.secondary:hover, .button-link.secondary:hover { background-color: #5a6268
 #file-list-preview li { font-size: 0.85em; color: #343a40; padding: 3px 0; }
 
 #file-container ul { list-style-type: none; padding: 0; margin:0;}
-
 .list-view li {
     padding: 10px; margin-bottom: -1px; display: flex; justify-content: space-between; align-items: center;
     border: 1px solid #dee2e6; background-color: #fff;
+    position: relative; 
 }
 .list-view li:first-child { border-top-left-radius: 5px; border-top-right-radius: 5px; }
 .list-view li:last-child { border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; margin-bottom: 0; }
@@ -200,15 +272,15 @@ button.secondary:hover, .button-link.secondary:hover { background-color: #5a6268
 .list-view .file-icon-large, .list-view .file-icon { display: none !important; }
 .list-view .file-name { font-weight: 500; color: #007bff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95em; }
 .list-view .file-entry a.file-name:hover { text-decoration: underline; }
-.list-view .file-entry .file-name { color: #212529; }
-.list-view .file-actions { white-space: nowrap; display: flex; gap: 6px; }
-.list-view .file-actions .action-link { margin-left: 0; font-size: 0.8em; padding: 4px 8px; }
+.list-view .file-entry .file-name { color: #212529; } 
+.list-view .file-actions-placeholder { min-width: 150px; text-align: right; font-size: 0.9em; color: #666; }
 
 .grid-view ul { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .grid-view li {
     padding: 10px; min-height: 130px; background-color: #fff; border: 1px solid #dee2e6; border-radius: 6px;
     text-align: center; display: flex; flex-direction: column; align-items: center;
     justify-content: flex-start; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    position: relative; 
 }
 .grid-view .file-icon { display: none !important; }
 .grid-view .file-icon-large { font-size: 2.8em; margin-bottom: 6px; display: inline-block !important; line-height:1; }
@@ -221,10 +293,19 @@ button.secondary:hover, .button-link.secondary:hover { background-color: #5a6268
 .grid-view .file-actions { display: flex; flex-direction: column; gap: 4px; width: 100%; margin-top: auto; }
 .grid-view .file-actions .action-link { font-size: 0.75em; padding: 4px 6px; background-color: #f1f3f5; border-radius: 4px; color: #495057; display: block; }
 
-.rename-form { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; width:100%; }
-.rename-form form.inline-form { display: flex; gap: 6px; align-items: center; }
-.rename-form input[type="text"] { flex-grow: 1; font-size: 0.9em; padding: 6px 8px; margin:0; }
-.rename-form button { font-size: 0.85em; padding: 6px 10px; margin:0; }
+.rename-form {
+    display: none; position: absolute; left: 25px; right: 5px; top: calc(100% + 2px);
+    background-color: var(--rename-form-bg, #ffffff); padding: 12px;
+    border: 1px solid var(--rename-form-border-color, #cccccc);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 100;
+    border-radius: 6px; max-width: 400px; box-sizing: border-box;
+}
+.grid-view li .rename-form { 
+    left: 50%; transform: translateX(-50%) translateY(5px); 
+    width: calc(100% - 10px); max-width: 300px;
+}
+.rename-form form.inline-form { display: flex; gap: 8px; }
+.rename-form input[type="text"] { flex-grow: 1; }
 
 .admin-table-container { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; min-width: 500px; }
@@ -235,59 +316,77 @@ table td form { display: inline-flex !important; gap: 5px !important; align-item
 table td form input[type="password"] { width: 120px !important; padding: 5px !important; font-size: 0.85em !important; margin:0; }
 table td form button { margin:0; }
 
-textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin:0; }
+textarea#fileContent { /* Styles in edit-file.ejs are more specific */
+    min-height: 50vh; font-size: 0.9rem; margin:0; 
+}
 .editor-actions { margin-top: 15px; text-align: right; display: flex; gap: 10px; justify-content: flex-end; }
 .editor-actions button { margin-left: 0; margin-bottom:0; }
 
 .note { font-size: 0.85em; margin-top: 15px; padding: 10px; background-color: #f1f3f5; border-left: 4px solid #007bff; }
 
-/* Theme Switcher Styles */
-.theme-switcher-container {
-    position: fixed;
-    bottom: 15px;
-    right: 15px;
-    padding: 10px 15px;
-    background-color: #fff;
-    border-radius: 6px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-    z-index: 1000;
-    border: 1px solid #dee2e6;
-}
-.theme-switcher-container label {
-    margin-right: 8px;
-    font-size: 0.9em;
-    color: #495057;
-    font-weight: 500;
-}
-.theme-switcher-container select {
-    padding: 6px 8px; /* Smaller padding for select */
-    font-size: 0.9em;
-    border-radius: 4px;
-    border: 1px solid #ced4da;
-    margin: 0; /* Reset margin */
-    width: auto; /* Allow select to size to content */
-}
-
-
 /* Responsive adjustments */
-@media (min-width: 576px) {
+@media (min-width: 768px) { 
+    header {
+        flex-direction: row;
+        align-items: center; 
+    }
+    header h1 {
+        margin-bottom: 0; 
+        font-size: 1.75em;
+    }
+    .header-controls {
+        width: auto; 
+        margin-left: auto; 
+    }
     .container { padding: 20px 25px; }
-    header { flex-direction: row; align-items: center; }
-    header h1 { margin-bottom: 0; font-size: 1.75em; }
+    .auth-form-container { padding: 30px 40px; }
+    h1:not(.auth-form-container h1):not(header h1) { font-size: 2em; }
+    h2 { font-size: 1.4em; }
+    .grid-view ul { grid-template-columns: repeat(3, 1fr); }
+    .file-browser-controls .control-form { min-width: 300px; }
+}
+
+@media (min-width: 576px) { 
     .file-browser-controls { flex-direction: row; align-items: center; }
     .file-browser-controls .control-form { flex-grow: 0; min-width: 250px; }
     .file-browser-controls .upload-button-main { width: auto; }
     #drop-area #upload-button { width: auto; }
     .grid-view ul { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
 }
-@media (min-width: 768px) {
-    .container { padding: 25px 30px; }
-    .auth-form-container { padding: 30px 40px; } /* More padding on larger auth forms */
-    h1:not(.auth-form-container h1) { font-size: 2em; } /* General h1 */
-    h2 { font-size: 1.4em; }
-    .grid-view ul { grid-template-columns: repeat(3, 1fr); }
-    .file-browser-controls .control-form { min-width: 300px; }
-}
+
 @media (min-width: 992px) {
      .grid-view ul { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 }
+
+/* Dark theme specific styles */
+body.dark-theme {
+    --text-color: #e0e0e0;
+    --input-border-color: #555;
+    --input-bg-color: #333;
+    --input-text-color: #e0e0e0;
+    --container-bg: #2c2c2c; /* For .rename-form background */
+    --border-color: #444;    /* For .rename-form border */
+}
+.dark-theme .theme-switcher-container .theme-label {
+    color: #e0e0e0;
+}
+.dark-theme .theme-switcher-container select#theme-select {
+    background-color: #333;
+    color: #e0e0e0;
+    border-color: #555;
+}
+.dark-theme .rename-form { 
+    background-color: var(--rename-form-bg, #3a3a3a); /* Fallback if CSS var not supported */
+    border-color: var(--rename-form-border-color, #555);
+    color: #e0e0e0; 
+}
+.dark-theme .rename-form input[type="text"] { 
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+    border-color: #555;
+}
+/* Add other dark theme overrides as needed */
+.dark-theme .message { color: #e0e0e0; background-color: #33414e; border-color: #4a5b6c; }
+.dark-theme .error-message { color: #f5c6cb; background-color: #5c2c31; border-color: #842029; }
+.dark-theme .warning-message { color: #ffeeba; background-color: #856404; border-color: #ffeeba;}
+
