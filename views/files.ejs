@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* ... (保留所有之前的樣式) ... */
+        /* ... (保留之前的樣式) ... */
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         #selection-action-bar button { margin: 0; }
         .item-checkbox { margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
@@ -20,15 +20,25 @@
         
         #move-modal, #create-item-modal { 
             display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: auto; background-color: rgba(0,0,0,0.5);
+            overflow: auto; background-color: rgba(0,0,0,0.5); 
         }
         .modal-content { 
-            background-color: var(--modal-bg, #fff); color: var(--modal-text-color, #333);
-            margin: 15% auto; padding: 20px; border: 1px solid var(--modal-border-color, #888);
-            border-radius: 8px; width: 90%; max-width: 450px;
+            background-color: var(--modal-bg, #ffffff) !important; /* !important 确保背景色优先 */
+            color: var(--modal-text-color, #333);
+            margin: 10% auto; 
+            padding: 20px; 
+            border: 1px solid var(--modal-border-color, #888);
+            border-radius: 8px; 
+            width: 90%; 
+            max-width: 500px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
         }
+        /* 确保暗色主题也明确设置背景 */
         .dark-theme .modal-content {
-             --modal-bg: #2c2c2c; --modal-text-color: #e0e0e0; --modal-border-color: #555;
+             --modal-bg: #2c2c2c; 
+             --modal-text-color: #e0e0e0; 
+             --modal-border-color: #555;
+             background-color: var(--modal-bg) !important; /* !important 确保背景色优先 */
         }
         .modal-content h3 { margin-top: 0; }
         .modal-content .form-group { margin-bottom: 15px; }
@@ -40,11 +50,27 @@
         }
         .modal-actions { text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
 
-        #directory-tree-container { max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 10px; margin-bottom: 15px; }
+        #directory-tree-container { 
+            max-height: 250px; 
+            overflow-y: auto; 
+            border: 1px solid var(--input-border-color, #eee); 
+            padding: 10px; 
+            margin-bottom: 15px; 
+            background-color: var(--input-bg-color, #fff); 
+        }
+        .dark-theme #directory-tree-container {
+            border-color: #444;
+            background-color: #3a3a3a;
+        }
         #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
-        #directory-tree-container li { padding: 5px 0; cursor: pointer; }
-        #directory-tree-container li:hover { background-color: #f0f0f0; } 
+        #directory-tree-container li { padding: 5px 0; cursor: pointer; border-bottom: 1px dashed var(--input-border-color, #eee); }
+        #directory-tree-container li:last-child { border-bottom: none; }
+        #directory-tree-container li:hover { background-color: var(--hover-bg, #f0f0f0); } 
+        .dark-theme #directory-tree-container li:hover { --hover-bg: #4a4a4a; }
         #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } 
+        .dark-theme #directory-tree-container li.selected-dir { background-color: #0056b3; }
+
+
         .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
 
         .file-entry { display: flex; align-items: center; gap: 8px; }
@@ -390,7 +416,6 @@
             const moveDestinationInput = document.getElementById('move-destination-input');
             let currentDirectoryTree = [];
 
-            // Function to get currently selected items by querying the DOM directly
             function getSelectedItems() {
                 const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                 const selected = [];
@@ -734,10 +759,10 @@
                             console.error('Upload failed:', xhr.status, xhr.responseText);
                         }
                     };
-                    xhr.onerror = function() {
+                    xhr.onerror = function(e) { // 添加事件参数 e
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        alert('上傳過程中發生網絡錯誤。');
-                        console.error('Upload network error.');
+                        alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
+                        console.error('Upload network error:', e);
                     };
                     xhr.send(formData);
                 });
@@ -745,7 +770,7 @@
 
             const dropArea = document.getElementById('drop-area');
             const fileListPreview = document.getElementById('file-list-preview');
-            const uploadFormButton = document.getElementById('upload-button'); 
+            // const uploadFormButton = document.getElementById('upload-button'); // Already declared
 
             if (dropArea && userFilesInput && fileListPreview) { 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
