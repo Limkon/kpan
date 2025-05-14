@@ -376,14 +376,16 @@
     </div>
 
     <div id="move-modal">
-        <div class="modal-content"> <span class="close-modal-btn" id="close-move-modal-btn">&times;</span>
+        <div class="modal-content"> 
+            <span class="close-modal-btn" id="close-move-modal-btn">&times;</span>
             <h3>移動選中項目到:</h3>
             <div id="directory-tree-container">
                 <p>正在加載目錄...</p>
             </div>
             <p>已選擇目標: <strong id="selected-destination-path">無</strong></p>
             <input type="hidden" id="move-destination-input" value="">
-            <div class="modal-actions"> <button type="button" class="secondary" id="cancel-move-btn">取消</button>
+            <div class="modal-actions"> 
+                <button type="button" class="secondary" id="cancel-move-btn">取消</button>
                 <button id="confirm-move-btn" disabled>確認移動</button>
             </div>
         </div>
@@ -419,9 +421,7 @@
             function getSelectedItems() {
                 const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                 const selected = [];
-                // console.log(`getSelectedItems: Found ${currentCheckboxes.length} checkboxes.`); 
-                currentCheckboxes.forEach((cb, index) => {
-                    // console.log(`Inspecting Checkbox ${index} (path: ${cb.dataset.path}, name: ${cb.dataset.name}): checked = ${cb.checked}`); 
+                currentCheckboxes.forEach((cb) => {
                     if (cb.checked) {
                         selected.push({
                             path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
@@ -430,7 +430,6 @@
                         });
                     }
                 });
-                // console.log('getSelectedItems: Total selected =', selected.length, '; Selected items:', JSON.stringify(selected.map(s => s.name))); 
                 return selected;
             }
 
@@ -463,9 +462,8 @@
             }
 
             const itemCheckboxesForListeners = document.querySelectorAll('.item-checkbox');
-            itemCheckboxesForListeners.forEach((checkbox, index) => {
-                checkbox.addEventListener('change', (event) => {
-                    // console.log(`Checkbox ${index} (path: ${event.target.dataset.path}) 'change' event. New checked state: ${event.target.checked}`); 
+            itemCheckboxesForListeners.forEach((checkbox) => {
+                checkbox.addEventListener('change', () => {
                     updateSelectionActions(); 
                 });
             });
@@ -506,19 +504,15 @@
             if (actionDownloadBtn) {
                 actionDownloadBtn.addEventListener('click', () => {
                     const selectedItems = getSelectedItems(); 
-                    // console.log("下載按鈕點擊，選中項:", selectedItems); 
-
                     if (selectedItems.length === 0) {
                         alert("請至少選擇一個項目進行下載。"); 
                         return;
                     }
                      if (actionDownloadBtn.disabled) { 
-                        // console.log("下載按鈕被禁用，但仍被點擊。");
                         return;
                     }
 
                     if (selectedItems.length === 1 && !selectedItems[0].isDir) {
-                        // console.log("準備下載單個文件:", selectedItems[0]);
                         let url = `/download?path=${selectedItems[0].encodedPath}`;
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
@@ -531,7 +525,6 @@
                         tempLink.click();
                         document.body.removeChild(tempLink);
                     } else {
-                        // console.log("準備打包下載 (多選或文件夾):", selectedItems);
                         const form = document.createElement('form');
                         form.method = 'POST';
                         form.action = '/download-archive';
@@ -547,7 +540,6 @@
                         }));
                         itemsInput.value = JSON.stringify(itemsForPayload);
                         form.appendChild(itemsInput);
-                        // console.log("打包下載的項目數據 (itemsInput.value):", itemsInput.value);
 
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             const targetUserInput = document.createElement('input');
@@ -564,7 +556,6 @@
                             form.appendChild(csrfInput);
                         }
                         document.body.appendChild(form);
-                        // console.log("提交打包下載表單...");
                         try {
                             form.submit();
                         } catch (e) {
@@ -591,7 +582,7 @@
                                 if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                                     deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
                                 }
-                                const response = await fetch(deleteUrl, { method: 'GET' }); // Should be DELETE, but form is GET
+                                const response = await fetch(deleteUrl, { method: 'GET' });
                                 if (response.ok && response.redirected) reloadPage = true;
                                 else if (!response.ok) { console.error('刪除失敗:', item.name, response.status); allSucceeded = false; }
                             } catch (error) { console.error('刪除項目時出錯:', item.name, error); allSucceeded = false; }
@@ -636,8 +627,8 @@
                 ul.appendChild(rootLi);
                 function buildTree(items, parentUl, parentPath) {
                     items.forEach(item => {
-                        if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || (sourcePath.startsWith(item.path + '/') && item.path !=='/'))) return; // Exclude item if it's one of the sources or a parent of a source
-                        if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) return; // Exclude item if it's a child of a source folder
+                        if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || (sourcePath.startsWith(item.path + '/') && item.path !=='/'))) return; 
+                        if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) return; 
                         const li = document.createElement('li'); li.textContent = item.name; li.dataset.path = item.path;
                         li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, item.path); });
                         parentUl.appendChild(li);
@@ -759,7 +750,7 @@
                             console.error('Upload failed:', xhr.status, xhr.responseText);
                         }
                     };
-                    xhr.onerror = function(e) { // 添加事件参数 e
+                    xhr.onerror = function(e) { 
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
                         alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
                         console.error('Upload network error:', e);
@@ -770,12 +761,11 @@
 
             const dropArea = document.getElementById('drop-area');
             const fileListPreview = document.getElementById('file-list-preview');
-            // const uploadFormButton = document.getElementById('upload-button'); // Already declared
 
             if (dropArea && userFilesInput && fileListPreview) { 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropArea.addEventListener(eventName, preventDefaults, false);
-                    document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser default for whole page
+                    document.body.addEventListener(eventName, preventDefaults, false); 
                 });
                 function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
                 ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false));
@@ -783,16 +773,13 @@
                 
                 dropArea.addEventListener('drop', handleDrop, false);
                 function handleDrop(e) {
-                    // When items are dropped, assign them to the hidden file input
                     userFilesInput.files = e.dataTransfer.files; 
-                    updateFileListPreviewOnDrop(); // Then update the preview
+                    updateFileListPreviewOnDrop(); 
                 }
-                // Also update preview if files are selected via the input dialog
                 userFilesInput.addEventListener('change', updateFileListPreviewOnDrop);
 
-                // This function updates the preview list of files/folders to be uploaded.
                 function updateFileListPreviewOnDrop() {
-                    fileListPreview.innerHTML = ''; // Clear previous preview
+                    fileListPreview.innerHTML = ''; 
                     const uploadFormButton = document.getElementById('upload-button'); 
                     
                     if (userFilesInput.files.length > 0) {
@@ -800,10 +787,7 @@
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
                         
                         let isDirectoryUpload = false;
-                        // Check the first file's webkitRelativePath. 
-                        // If it exists and contains a '/', it indicates a folder was selected/dropped.
-                        // The `webkitRelativePath` property provides the path of the file relative to the selected directory.
-                        // e.g., "folderName/image.jpg" or "folderName/subFolderName/doc.txt"
+                        // 檢查第一個檔案的 webkitRelativePath 是否包含 '/' 來判斷是否為資料夾上傳
                         if (userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath) {
                             const firstFileRelativePath = userFilesInput.files[0].webkitRelativePath;
                             if (firstFileRelativePath.includes('/')) {
@@ -812,8 +796,7 @@
                         }
 
                         if (isDirectoryUpload) {
-                            // If it's a directory upload, display the top-level folder name and total file count.
-                            // The folder name is extracted from the first segment of the webkitRelativePath.
+                            // 如果是資料夾上傳，顯示頂層資料夾名稱和檔案總數
                             const folderName = userFilesInput.files[0].webkitRelativePath.split('/')[0];
                             const listItem = document.createElement('li');
                             listItem.textContent = `文件夾: ${folderName} (${userFilesInput.files.length} 個文件)`;
@@ -821,9 +804,7 @@
                             listItem.style.fontWeight = 'bold';
                             list.appendChild(listItem);
                         } else { 
-                            // If not a directory upload (i.e., individual files were selected/dropped),
-                            // list each file with its name and size.
-                            // In this case, webkitRelativePath might be empty or just the filename itself (without '/').
+                            // 如果是單獨檔案上傳，列出每個檔案的名稱和大小
                             for (let i = 0; i < userFilesInput.files.length; i++) {
                                 const listItem = document.createElement('li');
                                 listItem.textContent = userFilesInput.files[i].name + (userFilesInput.files[i].size ? ` (${(userFilesInput.files[i].size / 1024).toFixed(1)} KB)` : '');
@@ -832,12 +813,11 @@
                             }
                         }
                         fileListPreview.appendChild(list);
-                        if(uploadFormButton) uploadFormButton.style.display = 'inline-block'; // Show upload button
+                        if(uploadFormButton) uploadFormButton.style.display = 'inline-block'; 
                     } else {
-                        if(uploadFormButton) uploadFormButton.style.display = 'none'; // Hide upload button if no files
+                        if(uploadFormButton) uploadFormButton.style.display = 'none'; 
                     }
                 }
-                // Initially hide the upload button if no files are pre-selected (shouldn't happen on fresh load)
                 const initialUploadButton = document.getElementById('upload-button'); 
                 if(userFilesInput.files.length === 0 && initialUploadButton) initialUploadButton.style.display = 'none';
             }
