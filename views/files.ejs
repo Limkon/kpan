@@ -358,9 +358,9 @@
             function getSelectedItems() {
                 const currentCheckboxes = document.querySelectorAll('.item-checkbox'); // Always get fresh list
                 const selected = [];
-                // console.log(`getSelectedItems: Found ${currentCheckboxes.length} checkboxes in total.`);
+                console.log(`getSelectedItems: Found ${currentCheckboxes.length} checkboxes in total.`);
                 currentCheckboxes.forEach((cb, index) => {
-                    // console.log(`Checkbox ${index} (path: ${cb.dataset.path}): checked = ${cb.checked}`);
+                    console.log(`Checkbox ${index} (path: ${cb.dataset.path}): checked = ${cb.checked}`);
                     if (cb.checked) {
                         selected.push({
                             path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
