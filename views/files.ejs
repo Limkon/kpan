@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* ... (保留所有之前的樣式) ... */
+        /* ... (保留大部分之前的樣式) ... */
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         #selection-action-bar button { margin: 0; }
         .item-checkbox { margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
@@ -23,21 +23,20 @@
             overflow: auto; background-color: rgba(0,0,0,0.5); 
         }
         .modal-content { 
-            background-color: var(--modal-bg, #ffffff) !important; 
-            color: var(--modal-text-color, #333);
+            background-color: #ffffff !important; /* 強制默認白色背景 */
+            color: #333333 !important; /* 強制默認文字顏色 */
             margin: 10% auto; 
             padding: 20px; 
-            border: 1px solid var(--modal-border-color, #888);
+            border: 1px solid #888888;
             border-radius: 8px; 
             width: 90%; 
             max-width: 500px; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
         }
-        .dark-theme .modal-content {
-             --modal-bg: #2c2c2c; 
-             --modal-text-color: #e0e0e0; 
-             --modal-border-color: #555;
-             background-color: var(--modal-bg) !important; 
+        .dark-theme .modal-content { /* 暗色主題下的模態框樣式 */
+             background-color: #2c2c2c !important; /* 強制暗色背景 */
+             color: #e0e0e0 !important; /* 強制暗色文字 */
+             border-color: #555 !important;
         }
         .modal-content h3 { margin-top: 0; }
         .modal-content .form-group { margin-bottom: 15px; }
@@ -77,6 +76,7 @@
 
         .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
 
+        /* ... (其他樣式與上一個版本相同) ... */
         .file-entry { display: flex; align-items: center; gap: 8px; }
         .list-view .file-entry .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .grid-view .file-entry { flex-direction: column; justify-content: center; text-align: center; }
@@ -174,7 +174,6 @@
             border: 1px solid #003d80;
             color: #f8f9fa;
         }
-        /* 为文件和文件夹选择按钮添加一些间距 */
         #upload-options button { margin-right: 10px; }
     </style>
 </head>
@@ -271,9 +270,8 @@
                         <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
                         <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
                         
-                        <%# 用于选择文件的 input (隐藏) %>
+                        <%# 两个隐藏的 input，分别用于文件和文件夹选择 %>
                         <input type="file" id="userFiles-files" name="userFiles" multiple style="display: none;">
-                        <%# 用于选择文件夹的 input (隐藏) %>
                         <input type="file" id="userFiles-folder" name="userFiles" multiple webkitdirectory directory style="display: none;">
                         
                         <button type="submit" id="upload-button" style="display:none;">上傳已選項目</button>
@@ -489,29 +487,29 @@
                 });
             }
 
-            if (actionEditBtn) { /* ... (与之前版本相同) ... */ }
-            if (actionRenameBtn) { /* ... (与之前版本相同) ... */ }
-            if (actionDownloadBtn) { /* ... (与之前版本相同, 包含打包下载逻辑) ... */ }
-            if (actionDeleteBtn) { /* ... (与之前版本相同) ... */ }
-            if (actionMoveBtn) { /* ... (与之前版本相同) ... */ }
-            function renderDirectoryTree(nodes, container, itemsToMovePaths, currentLevelPath = '/') { /* ... (与之前版本相同) ... */ }
-            function selectDestination(targetElement, path) { /* ... (与之前版本相同) ... */ }
+            if (actionEditBtn) { /* (与之前版本相同) */ }
+            if (actionRenameBtn) { /* (与之前版本相同) */ }
+            if (actionDownloadBtn) { /* (与之前版本相同，包含打包下载逻辑) */ }
+            if (actionDeleteBtn) { /* (与之前版本相同) */ }
+            if (actionMoveBtn) { /* (与之前版本相同) */ }
+            function renderDirectoryTree(nodes, container, itemsToMovePaths, currentLevelPath = '/') { /* (与之前版本相同) */ }
+            function selectDestination(targetElement, path) { /* (与之前版本相同) */ }
             if (closeMoveModalBtn) closeMoveModalBtn.onclick = () => moveModal.style.display = 'none';
-            if (cancelMoveBtn) cancelMoveBtn.onclick = () => moveModal.style.display = 'none';
-            if (confirmMoveBtn) { /* ... (与之前版本相同) ... */ }
+            if (cancelMoveModalBtn) cancelMoveBtn.onclick = () => moveModal.style.display = 'none';
+            if (confirmMoveBtn) { /* (与之前版本相同) */ }
             
             const toggleUploadBtn = document.getElementById('toggleUploadBtn');
             const uploadSection = document.getElementById('upload-section');
-            // const userFilesInput = document.getElementById('userFiles'); // 改为两个单独的 input
             const uploadForm = document.getElementById('upload-form'); 
             const uploadProgressContainer = document.getElementById('upload-progress-container');
             const uploadProgressBar = document.getElementById('upload-progress-bar');
 
-            // 新的 input 元素
             const userFilesForFilesInput = document.getElementById('userFiles-files');
             const userFilesForFolderInput = document.getElementById('userFiles-folder');
             const selectFilesBtn = document.getElementById('select-files-btn');
             const selectFolderBtn = document.getElementById('select-folder-btn');
+            const fileListPreview = document.getElementById('file-list-preview'); // 确保 fileListPreview 在此作用域可见
+            const uploadFormButton = document.getElementById('upload-button'); // 确保 upload-button 在此作用域可见
 
 
             if (toggleUploadBtn && uploadSection) { 
@@ -533,133 +531,7 @@
                 selectFolderBtn.addEventListener('click', () => userFilesForFolderInput.click());
             }
 
-
-            function handleFileUpload(filesObject) { // 接收 FileList 对象
-                console.log("handleFileUpload - filesObject:", filesObject);
-                if (!filesObject || filesObject.length === 0) {
-                    alert('請選擇要上傳的文件或文件夾。');
-                    if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                    return;
-                }
-
-                const formData = new FormData(); // 创建新的 FormData 对象
-                
-                // 添加表单中的其他隐藏字段
-                const currentPathInput = uploadForm.querySelector('input[name="currentPath"]');
-                if (currentPathInput) formData.append('currentPath', currentPathInput.value);
-
-                const targetUsernameInput = uploadForm.querySelector('input[name="targetUsername"]');
-                if (targetUsernameInput && targetUsernameInput.value) formData.append('targetUsername', targetUsernameInput.value);
-                
-                if (CSRF_TOKEN) { // 如果 CSRF_TOKEN 存在且非空
-                    formData.append('_csrf', CSRF_TOKEN);
-                }
-
-                console.log("FormData initial fields (currentPath, targetUsername, _csrf):");
-                for (let [key, value] of formData.entries()) {
-                    console.log(`  ${key}: ${value}`);
-                }
-
-                console.log(`Total files to append to FormData: ${filesObject.length}`);
-                for (let i = 0; i < filesObject.length; i++) {
-                    const file = filesObject[i];
-                    // 对于文件夹上传，浏览器会自动处理 webkitRelativePath，我们只需将文件附加到 FormData
-                    // Multer 后端会根据 webkitRelativePath 处理文件路径
-                    formData.append('userFiles', file, file.name); 
-                    console.log(`Appending file to FormData: name="${file.name}", size=${file.size}, type="${file.type}", webkitRelativePath="${file.webkitRelativePath}"`);
-                }
-                
-                console.log("FormData entries after appending files:");
-                 for (let [key, value] of formData.entries()) {
-                    if (value instanceof File) {
-                        console.log(`  ${key}: File { name: "${value.name}", size: ${value.size}, type: "${value.type}", webkitRelativePath: "${value.webkitRelativePath}" }`);
-                    } else {
-                        console.log(`  ${key}: ${value}`);
-                    }
-                }
-
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', uploadForm.action, true);
-                
-                if (uploadProgressContainer && uploadProgressBar) {
-                    uploadProgressContainer.style.display = 'block';
-                    uploadProgressBar.style.width = '0%';
-                    uploadProgressBar.textContent = '0%';
-                }
-
-                xhr.upload.onprogress = function(event) { /* ... (与之前版本相同) ... */ };
-                xhr.onload = function() { /* ... (与之前版本相同) ... */ };
-                xhr.onerror = function(e) { /* ... (与之前版本相同) ... */ };
-                
-                console.log("使用 XHR 發送上傳數據 (formData)...");
-                xhr.send(formData);
-            }
-
-            if (uploadForm) { // 主上传表单的提交按钮触发
-                 uploadForm.addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    // 确定是哪个 input 触发的 (虽然现在是统一的 FileList)
-                    // 但我们实际上会从 userFilesForFilesInput 或 userFilesForFolderInput 获取 FileList
-                    // 此处假设 FileList 已通过 change 事件更新到某个共享变量或直接从触发的 input 获取
-                    // 为简化，我们假设 userFilesForFilesInput (或 folder) 的 change 事件已填充了 FileList
-                    // 但更稳妥的是，让具体的按钮/input change 事件直接调用 handleFileUpload
-                    console.log("Upload form submitted, but XHR is handled by input change events or drag-drop.");
-                    // 通常这里的 submit 按钮是最后一步，但由于我们用按钮触发 input.click()，
-                    // 真正的文件选择和处理在 input 的 change 事件中
-                    // 如果用户选择了文件然后点击这个总的提交按钮：
-                    const filesToUpload = userFilesForFilesInput.files.length > 0 ? userFilesForFilesInput.files : userFilesForFolderInput.files;
-                    if(filesToUpload.length > 0) {
-                        handleFileUpload(filesToUpload);
-                    } else {
-                        alert('請先選擇文件或文件夾。');
-                    }
-                });
-            }
-            
-            // 为两个文件输入框分别添加 change 事件监听器
-            if(userFilesForFilesInput) {
-                userFilesForFilesInput.addEventListener('change', function(event) {
-                    console.log("userFiles-files 'change' event. Files selected:", event.target.files.length);
-                    updateFileListPreviewOnDrop(event.target.files); // 更新文件预览
-                    // 注意：不在这里直接调用 handleFileUpload，等待用户点击“上传已选项目”按钮
-                    // 或者如果希望选择后自动准备上传，可以修改逻辑
-                    // 如果希望选择后用户点击“上传已选项目”才开始上传，则需要确保upload-button的逻辑
-                });
-            }
-            if(userFilesForFolderInput) {
-                userFilesForFolderInput.addEventListener('change', function(event) {
-                    console.log("userFiles-folder 'change' event. Files selected (folder):", event.target.files.length);
-                    updateFileListPreviewOnDrop(event.target.files);
-                });
-            }
-
-
-            const dropArea = document.getElementById('drop-area');
-            const fileListPreview = document.getElementById('file-list-preview');
-            
-            if (dropArea && fileListPreview) { 
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, preventDefaults, false);
-                    document.body.addEventListener(eventName, preventDefaults, false);
-                });
-                function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-                ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false));
-                ['dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false));
-                
-                dropArea.addEventListener('drop', handleDrop, false);
-                function handleDrop(e) {
-                    // 当文件拖拽时，我们无法区分是文件还是文件夹，浏览器会提供 FileList
-                    // 将文件列表直接交给 updateFileListPreviewOnDrop 处理
-                    console.log("Drop event. Files count:", e.dataTransfer.files.length);
-                    updateFileListPreviewOnDrop(e.dataTransfer.files, true); // true 表示这是拖拽的文件
-                    // 将拖拽的文件也赋给一个隐藏的 input，以便表单提交时能获取
-                    // (如果仍然依赖于 input.files 进行提交的话)
-                    // userFilesForFilesInput.files = e.dataTransfer.files; // 或者一个新的拖拽专用input
-                }
-            }
-
-            // 更新 updateFileListPreviewOnDrop 以接收 FileList
-            function updateFileListPreviewOnDrop(files, isDragDrop = false) {
+            function updateFileListPreview(files, inputType) { // inputType: 'files' or 'folder'
                 if (!fileListPreview) return;
                 fileListPreview.innerHTML = '';
                 const uploadButton = document.getElementById('upload-button'); 
@@ -669,31 +541,16 @@
                     return;
                 }
 
-                // 将 FileList 赋给其中一个（或两者，取决于希望如何处理后续提交）
-                // 如果是拖拽，可以认为是非文件夹模式，除非能从 File 对象中判断
-                // 但拖拽的文件对象一般不包含 webkitRelativePath
-                if(isDragDrop && userFilesForFilesInput) {
-                    userFilesForFilesInput.files = files;
-                     if(userFilesForFolderInput) userFilesForFolderInput.value = ''; // 清空另一个
-                } else if (!isDragDrop && userFilesForFilesInput && userFilesForFilesInput.files === files) {
-                    // 由文件选择输入框触发，它已经更新了自己的 files
-                     if(userFilesForFolderInput) userFilesForFolderInput.value = '';
-                } else if (!isDragDrop && userFilesForFolderInput && userFilesForFolderInput.files === files) {
-                     if(userFilesForFilesInput) userFilesForFilesInput.value = '';
-                }
-
-
                 const list = document.createElement('ul');
                 list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
-                let isDirectoryUpload = false;
-                if (files[0] && files[0].webkitRelativePath) {
-                    const firstFileRelativePath = files[0].webkitRelativePath;
-                    if (firstFileRelativePath && firstFileRelativePath.includes('/')) { // 检查 firstFileRelativePath 是否为 null 或 undefined
-                        isDirectoryUpload = true;
-                    }
+                
+                console.log(`updateFileListPreview: Input type: ${inputType}, Files count: ${files.length}`);
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    console.log(`  File ${i}: name="${file.name}", webkitRelativePath="${file.webkitRelativePath}", size=${file.size}, type="${file.type}"`);
                 }
 
-                if (isDirectoryUpload) {
+                if (inputType === 'folder' && files[0] && files[0].webkitRelativePath && files[0].webkitRelativePath.includes('/')) {
                     const folderName = files[0].webkitRelativePath.split('/')[0];
                     const listItem = document.createElement('li');
                     listItem.textContent = `文件夾: ${folderName} (${files.length} 個文件)`;
@@ -711,7 +568,149 @@
                 fileListPreview.appendChild(list);
                 if(uploadButton) uploadButton.style.display = 'inline-block';
             }
+            
+            if(userFilesForFilesInput) {
+                userFilesForFilesInput.addEventListener('change', function(event) {
+                    console.log("Input 'userFiles-files' changed. Files selected:", event.target.files.length);
+                    updateFileListPreview(event.target.files, 'files');
+                    if (userFilesForFolderInput) userFilesForFolderInput.value = ''; // 清空另一个
+                });
+            }
+            if(userFilesForFolderInput) {
+                userFilesForFolderInput.addEventListener('change', function(event) {
+                    console.log("Input 'userFiles-folder' changed. Files selected:", event.target.files.length);
+                    updateFileListPreview(event.target.files, 'folder');
+                    if (userFilesForFilesInput) userFilesForFilesInput.value = ''; // 清空另一个
+                });
+            }
+            
+            if (uploadForm) {
+                uploadForm.addEventListener('submit', function(event) {
+                    event.preventDefault(); 
+                    
+                    let filesToUpload = null;
+                    // 确定实际哪个 input 有文件，优先文件夹选择
+                    if (userFilesForFolderInput && userFilesForFolderInput.files.length > 0) {
+                        filesToUpload = userFilesForFolderInput.files;
+                        console.log("Uploading from folder input.");
+                    } else if (userFilesForFilesInput && userFilesForFilesInput.files.length > 0) {
+                        filesToUpload = userFilesForFilesInput.files;
+                        console.log("Uploading from files input.");
+                    }
 
+                    if (!filesToUpload || filesToUpload.length === 0) {
+                        alert('請選擇要上傳的文件或文件夾。');
+                        return;
+                    }
+
+                    const formData = new FormData(); 
+                    
+                    const currentPathHiddenInput = uploadForm.querySelector('input[name="currentPath"]');
+                    if (currentPathHiddenInput) formData.append('currentPath', currentPathHiddenInput.value);
+
+                    const targetUsernameHiddenInput = uploadForm.querySelector('input[name="targetUsername"]');
+                    if (targetUsernameHiddenInput && targetUsernameHiddenInput.value) formData.append('targetUsername', targetUsernameHiddenInput.value);
+                    
+                    if (CSRF_TOKEN) { 
+                        formData.append('_csrf', CSRF_TOKEN);
+                    }
+
+                    console.log("FormData initial fields (currentPath, targetUsername, _csrf):");
+                    for (let [key, value] of formData.entries()) { console.log(`  ${key}: ${value}`); }
+
+                    console.log(`Total files to append to FormData: ${filesToUpload.length}`);
+                    for (let i = 0; i < filesToUpload.length; i++) {
+                        const file = filesToUpload[i];
+                        formData.append('userFiles', file, file.webkitRelativePath || file.name); // 使用 webkitRelativePath (如果存在) 或 file.name
+                        console.log(`Appending file to FormData: name="${file.name}", webkitRelativePath="${file.webkitRelativePath}", size=${file.size}, type="${file.type}"`);
+                    }
+                    
+                    console.log("FormData entries after appending files:");
+                     for (let [key, value] of formData.entries()) {
+                        if (value instanceof File) {
+                            console.log(`  ${key}: File { name: "${value.name}", size: ${value.size}, type: "${value.type}", webkitRelativePath: "${value.webkitRelativePath}" }`);
+                        } else {
+                            console.log(`  ${key}: ${value}`);
+                        }
+                    }
+
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', uploadForm.action, true);
+                    
+                    if (uploadProgressContainer && uploadProgressBar) {
+                        uploadProgressContainer.style.display = 'block';
+                        uploadProgressBar.style.width = '0%';
+                        uploadProgressBar.textContent = '0%';
+                    }
+                    xhr.upload.onprogress = function(event) {
+                        if (event.lengthComputable) {
+                            const percentComplete = Math.round((event.loaded / event.total) * 100);
+                            if (uploadProgressBar) {
+                                uploadProgressBar.style.width = percentComplete + '%';
+                                uploadProgressBar.textContent = percentComplete + '%';
+                            }
+                        }
+                    };
+                    xhr.onload = function() {
+                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                        console.log("XHR Upload onload. Status:", xhr.status, "ResponseURL:", xhr.responseURL, "ResponseText (first 200 chars):", xhr.responseText.substring(0, 200));
+                        if (xhr.status >= 200 && xhr.status < 400) { 
+                            if (xhr.responseURL && xhr.responseURL !== uploadForm.action && xhr.responseURL.includes('/files')) { 
+                                console.log("XHR detected redirect to files page, navigating...");
+                                window.location.href = xhr.responseURL; 
+                            } else {
+                                console.log("XHR success, but no clear redirect to /files or responseURL same as action. Reloading.");
+                                window.location.reload();
+                            }
+                        } else {
+                            let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
+                            try {
+                                const responseJson = JSON.parse(xhr.responseText);
+                                if (responseJson && responseJson.message) {
+                                    errorMessage = responseJson.message;
+                                }
+                            } catch (e) {
+                                if(xhr.responseText) errorMessage = xhr.responseText;
+                            }
+                            alert(errorMessage);
+                            console.error('Upload failed through XHR:', xhr.status, xhr.responseText);
+                        }
+                    };
+                    xhr.onerror = function(e) { 
+                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                        alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
+                        console.error('Upload network error (xhr.onerror):', e, "Status:", xhr.status, "StatusText:", xhr.statusText);
+                    };
+                    console.log("使用 XHR 發送上傳數據...");
+                    xhr.send(formData);
+                });
+            }
+            
+            const dropArea = document.getElementById('drop-area');
+            // const fileListPreview = document.getElementById('file-list-preview'); // Already declared
+
+            if (dropArea && fileListPreview) { 
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false);
+                });
+                function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+                ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false));
+                ['dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false));
+                
+                dropArea.addEventListener('drop', handleDrop, false);
+                function handleDrop(e) {
+                    console.log("Drop event. Files count:", e.dataTransfer.files.length);
+                     // 拖拽的文件总是被认为是普通文件，而不是文件夹整体
+                    if (userFilesForFilesInput) { // 优先使用普通文件上传的input
+                        userFilesForFilesInput.files = e.dataTransfer.files; 
+                        if (userFilesForFolderInput) userFilesForFolderInput.value = ''; // 清空文件夹选择
+                    } else if (userFilesForFolderInput) { // 备用，如果普通文件input不存在
+                         userFilesForFolderInput.files = e.dataTransfer.files;
+                    }
+                    updateFileListPreview(e.dataTransfer.files, 'drop');
+                }
+            }
 
             const fileContainer = document.getElementById('file-container');
             const listViewBtn = document.getElementById('listViewBtn');
