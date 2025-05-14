@@ -35,10 +35,10 @@
         }
         /* 确保暗色主题也明确设置背景 */
         .dark-theme .modal-content {
-             --modal-bg: #2c2c2c; 
-             --modal-text-color: #e0e0e0; 
-             --modal-border-color: #555;
-             background-color: var(--modal-bg) !important; /* !important 确保背景色优先 */
+            --modal-bg: #2c2c2c; 
+            --modal-text-color: #e0e0e0; 
+            --modal-border-color: #555;
+            background-color: var(--modal-bg) !important; /* !important 确保背景色优先 */
         }
         .modal-content h3 { margin-top: 0; }
         .modal-content .form-group { margin-bottom: 15px; }
@@ -124,7 +124,7 @@
             flex-shrink: 0; 
         }
          .file-browser-controls .view-toggle button {
-             padding: 8px 12px; font-size: 0.9em; margin: 0;
+            padding: 8px 12px; font-size: 0.9em; margin: 0;
         }
         .file-browser-controls:not(:has(.actions-group-left)) .search-form-right {
             margin-left: 0;
@@ -286,12 +286,12 @@
                         <li>
                             <div class="file-entry-selectable">
                                 <input type="checkbox" class="item-checkbox"
-                                       data-path="<%= item.path %>"
-                                       data-encoded-path="<%= item.encodedPath %>"
-                                       data-name="<%= item.name %>"
-                                       data-encoded-name="<%= item.encodedName %>"
-                                       data-is-dir="<%= item.isDir %>"
-                                       data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>">
+                                        data-path="<%= item.path %>"
+                                        data-encoded-path="<%= item.encodedPath %>"
+                                        data-name="<%= item.name %>"
+                                        data-encoded-name="<%= item.encodedName %>"
+                                        data-is-dir="<%= item.isDir %>"
+                                        data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>">
                                 <div class="file-content-wrapper">
                                     <% if (item.isDir) { %>
                                         <div class="file-entry">
@@ -376,16 +376,16 @@
     </div>
 
     <div id="move-modal">
-        <div class="move-modal-content">
-            <span class="close-modal-btn" id="close-move-modal-btn">&times;</span>
+        <div class="modal-content"> <span class="close-modal-btn" id="close-move-modal-btn">&times;</span>
             <h3>移動選中項目到:</h3>
             <div id="directory-tree-container">
                 <p>正在加載目錄...</p>
             </div>
             <p>已選擇目標: <strong id="selected-destination-path">無</strong></p>
             <input type="hidden" id="move-destination-input" value="">
-            <button id="confirm-move-btn" disabled>確認移動</button>
-            <button type="button" class="secondary" id="cancel-move-btn">取消</button>
+            <div class="modal-actions"> <button type="button" class="secondary" id="cancel-move-btn">取消</button>
+                <button id="confirm-move-btn" disabled>確認移動</button>
+            </div>
         </div>
     </div>
 
@@ -475,7 +475,7 @@
                     const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                     currentCheckboxes.forEach(cb => {
                         if (cb.checked !== e.target.checked) { 
-                           cb.checked = e.target.checked;
+                            cb.checked = e.target.checked;
                         }
                     });
                     updateSelectionActions(); 
@@ -591,7 +591,7 @@
                                 if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                                     deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
                                 }
-                                const response = await fetch(deleteUrl, { method: 'GET' });
+                                const response = await fetch(deleteUrl, { method: 'GET' }); // Should be DELETE, but form is GET
                                 if (response.ok && response.redirected) reloadPage = true;
                                 else if (!response.ok) { console.error('刪除失敗:', item.name, response.status); allSucceeded = false; }
                             } catch (error) { console.error('刪除項目時出錯:', item.name, error); allSucceeded = false; }
@@ -636,8 +636,8 @@
                 ul.appendChild(rootLi);
                 function buildTree(items, parentUl, parentPath) {
                     items.forEach(item => {
-                        if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || (sourcePath.startsWith(item.path + '/') && item.path !=='/'))) return;
-                        if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) return;
+                        if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || (sourcePath.startsWith(item.path + '/') && item.path !=='/'))) return; // Exclude item if it's one of the sources or a parent of a source
+                        if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) return; // Exclude item if it's a child of a source folder
                         const li = document.createElement('li'); li.textContent = item.name; li.dataset.path = item.path;
                         li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, item.path); });
                         parentUl.appendChild(li);
@@ -775,7 +775,7 @@
             if (dropArea && userFilesInput && fileListPreview) { 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropArea.addEventListener(eventName, preventDefaults, false);
-                    document.body.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser default for whole page
                 });
                 function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
                 ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false));
@@ -783,25 +783,37 @@
                 
                 dropArea.addEventListener('drop', handleDrop, false);
                 function handleDrop(e) {
+                    // When items are dropped, assign them to the hidden file input
                     userFilesInput.files = e.dataTransfer.files; 
-                    updateFileListPreviewOnDrop();
+                    updateFileListPreviewOnDrop(); // Then update the preview
                 }
+                // Also update preview if files are selected via the input dialog
                 userFilesInput.addEventListener('change', updateFileListPreviewOnDrop);
 
+                // This function updates the preview list of files/folders to be uploaded.
                 function updateFileListPreviewOnDrop() {
-                    fileListPreview.innerHTML = '';
+                    fileListPreview.innerHTML = ''; // Clear previous preview
                     const uploadFormButton = document.getElementById('upload-button'); 
+                    
                     if (userFilesInput.files.length > 0) {
                         const list = document.createElement('ul');
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
+                        
                         let isDirectoryUpload = false;
+                        // Check the first file's webkitRelativePath. 
+                        // If it exists and contains a '/', it indicates a folder was selected/dropped.
+                        // The `webkitRelativePath` property provides the path of the file relative to the selected directory.
+                        // e.g., "folderName/image.jpg" or "folderName/subFolderName/doc.txt"
                         if (userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath) {
                             const firstFileRelativePath = userFilesInput.files[0].webkitRelativePath;
                             if (firstFileRelativePath.includes('/')) {
                                 isDirectoryUpload = true;
                             }
                         }
+
                         if (isDirectoryUpload) {
+                            // If it's a directory upload, display the top-level folder name and total file count.
+                            // The folder name is extracted from the first segment of the webkitRelativePath.
                             const folderName = userFilesInput.files[0].webkitRelativePath.split('/')[0];
                             const listItem = document.createElement('li');
                             listItem.textContent = `文件夾: ${folderName} (${userFilesInput.files.length} 個文件)`;
@@ -809,6 +821,9 @@
                             listItem.style.fontWeight = 'bold';
                             list.appendChild(listItem);
                         } else { 
+                            // If not a directory upload (i.e., individual files were selected/dropped),
+                            // list each file with its name and size.
+                            // In this case, webkitRelativePath might be empty or just the filename itself (without '/').
                             for (let i = 0; i < userFilesInput.files.length; i++) {
                                 const listItem = document.createElement('li');
                                 listItem.textContent = userFilesInput.files[i].name + (userFilesInput.files[i].size ? ` (${(userFilesInput.files[i].size / 1024).toFixed(1)} KB)` : '');
@@ -817,11 +832,12 @@
                             }
                         }
                         fileListPreview.appendChild(list);
-                        if(uploadFormButton) uploadFormButton.style.display = 'inline-block';
+                        if(uploadFormButton) uploadFormButton.style.display = 'inline-block'; // Show upload button
                     } else {
-                        if(uploadFormButton) uploadFormButton.style.display = 'none';
+                        if(uploadFormButton) uploadFormButton.style.display = 'none'; // Hide upload button if no files
                     }
                 }
+                // Initially hide the upload button if no files are pre-selected (shouldn't happen on fresh load)
                 const initialUploadButton = document.getElementById('upload-button'); 
                 if(userFilesInput.files.length === 0 && initialUploadButton) initialUploadButton.style.display = 'none';
             }
