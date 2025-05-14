@@ -336,7 +336,6 @@
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // const itemCheckboxes = document.querySelectorAll('.item-checkbox'); // Initialized once
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const selectionActionBar = document.getElementById('selection-action-bar');
             const selectionCountDisplay = document.getElementById('selection-count');
@@ -356,11 +355,12 @@
 
             // Function to get currently selected items by querying the DOM directly
             function getSelectedItems() {
-                const currentCheckboxes = document.querySelectorAll('.item-checkbox'); // Always get fresh list
+                const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                 const selected = [];
-                console.log(`getSelectedItems: Found ${currentCheckboxes.length} checkboxes in total.`);
+                console.log(`getSelectedItems: Found ${currentCheckboxes.length} checkboxes.`);
                 currentCheckboxes.forEach((cb, index) => {
-                    console.log(`Checkbox ${index} (path: ${cb.dataset.path}): checked = ${cb.checked}`);
+                    // Log the state of each checkbox being inspected
+                    console.log(`Inspecting Checkbox ${index} (path: ${cb.dataset.path}, name: ${cb.dataset.name}): checked = ${cb.checked}`);
                     if (cb.checked) {
                         selected.push({
                             path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
@@ -369,12 +369,12 @@
                         });
                     }
                 });
-                console.log('getSelectedItems (end of function):', selected.length, 'items selected.');
+                console.log('getSelectedItems: Total selected =', selected.length, '; Selected items:', JSON.stringify(selected.map(s => s.name)));
                 return selected;
             }
 
             function updateSelectionActions() {
-                const selectedItems = getSelectedItems(); // Uses the function that re-queries checkboxes
+                const selectedItems = getSelectedItems(); 
                 const count = selectedItems.length;
                 // console.log('updateSelectionActions - count:', count); 
 
@@ -402,21 +402,32 @@
                 if (actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
             }
 
-            // Re-query itemCheckboxes for attaching event listeners as well, to be consistent
-            const itemCheckboxesForListeners = document.querySelectorAll('.item-checkbox');
-            itemCheckboxesForListeners.forEach(checkbox => checkbox.addEventListener('change', updateSelectionActions));
+            // Attach listeners to checkboxes that are present on DOMContentLoaded
+            const initialItemCheckboxes = document.querySelectorAll('.item-checkbox');
+            console.log(`Attaching 'change' listeners to ${initialItemCheckboxes.length} initial checkboxes.`);
+            initialItemCheckboxes.forEach((checkbox, index) => {
+                checkbox.addEventListener('change', (event) => {
+                    console.log(`Checkbox ${index} (path: ${event.target.dataset.path}) 'change' event. New checked state: ${event.target.checked}`);
+                    updateSelectionActions(); 
+                });
+            });
             
             if (selectAllCheckbox) {
                 selectAllCheckbox.addEventListener('change', (e) => {
-                    const currentCheckboxes = document.querySelectorAll('.item-checkbox'); // Re-query for select all action
-                    currentCheckboxes.forEach(cb => cb.checked = e.target.checked);
-                    updateSelectionActions();
+                    console.log(`Select All checkbox changed to: ${e.target.checked}`);
+                    const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
+                    currentCheckboxes.forEach(cb => {
+                        if (cb.checked !== e.target.checked) { // Only change if different to avoid redundant events if any
+                           cb.checked = e.target.checked;
+                        }
+                    });
+                    updateSelectionActions(); 
                 });
             }
 
             if (actionEditBtn) {
                 actionEditBtn.addEventListener('click', () => {
-                    const selected = getSelectedItems();
+                    const selected = getSelectedItems(); // Always get fresh selection
                     if (actionEditBtn.disabled) {
                         console.log("編輯按鈕被禁用，但仍被點擊。選中項:", selected);
                         return;
@@ -432,7 +443,7 @@
             }
             if (actionRenameBtn) {
                 actionRenameBtn.addEventListener('click', () => {
-                    const selected = getSelectedItems();
+                    const selected = getSelectedItems(); // Always get fresh selection
                      if (actionRenameBtn.disabled) return;
                     if (selected.length === 1) showRenameForm(selected[0].encodedName, selected[0].name, selected[0].isDir);
                 });
@@ -506,10 +517,7 @@
                             console.error("表單提交錯誤:", e);
                             alert("觸發下載時發生錯誤，請查看控制台。");
                         }
-                        // It's good practice to remove the form after submission, 
-                        // though for a synchronous submit, the page will likely navigate away or reload.
-                        // setTimeout(() => document.body.removeChild(form), 100); // Small delay
-                        if (form.parentNode === document.body) { // Check if still in DOM
+                        if (form.parentNode === document.body) { 
                            document.body.removeChild(form);
                         }
                     }
@@ -518,7 +526,7 @@
 
             if (actionDeleteBtn) {
                 actionDeleteBtn.addEventListener('click', async () => {
-                    const selectedItems = getSelectedItems();
+                    const selectedItems = getSelectedItems(); // Get fresh selection
                     if (selectedItems.length === 0) return;
                     const itemNames = selectedItems.map(item => item.rawName).join(', ');
                     if (confirm(`確定要刪除選中的 ${selectedItems.length} 個項目 (${itemNames}) 嗎？此操作不可恢復！`)) {
@@ -539,15 +547,14 @@
                             window.location.reload();
                         }
                         if(selectAllCheckbox) selectAllCheckbox.checked = false;
-                        // Re-query checkboxes before trying to uncheck them, in case DOM changed
-                        document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false);
+                        document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false); // Re-query to uncheck
                         updateSelectionActions();
                     }
                 });
             }
             if (actionMoveBtn) {
                 actionMoveBtn.addEventListener('click', async () => {
-                    const selectedItems = getSelectedItems();
+                    const selectedItems = getSelectedItems(); // Get fresh selection
                     if (selectedItems.length === 0) return;
                     moveDestinationInput.value = ''; selectedDestinationPathDisplay.textContent = '無';
                     confirmMoveBtn.disabled = true; directoryTreeContainer.innerHTML = '<p>正在加載目錄...</p>';
@@ -599,7 +606,8 @@
             
             if (confirmMoveBtn) {
                 confirmMoveBtn.addEventListener('click', async () => {
-                    const selectedToMove = getSelectedItems(); const destinationPath = moveDestinationInput.value;
+                    const selectedToMove = getSelectedItems(); // Get fresh selection
+                    const destinationPath = moveDestinationInput.value;
                     if (selectedToMove.length === 0 || !destinationPath) { alert('請選擇要移動的項目和目標文件夾。'); return; }
                     for (const item of selectedToMove) {
                         if (item.isDir && (destinationPath === item.path || destinationPath.startsWith(item.path + '/'))) {
