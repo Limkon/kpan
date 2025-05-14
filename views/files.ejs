@@ -8,135 +8,33 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        #selection-action-bar {
-            padding: 10px;
-            background-color: #f0f0f0; 
-            border-bottom: 1px solid #ccc; 
-            margin-bottom: 15px;
-            display: none; 
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-        }
-        #selection-action-bar button {
-            margin: 0;
-        }
-        .item-checkbox {
-            margin-right: 10px;
-            width: 18px; 
-            height: 18px;
-            vertical-align: middle;
-        }
-        .file-entry-selectable { 
-            display: flex;
-            align-items: center;
-            width: 100%;
-        }
-        .file-content-wrapper { 
-            flex-grow: 1;
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-        .list-view li { 
-            position: relative; 
-        }
-        .list-view .file-content-wrapper > .file-entry {
-             flex-grow: 1; 
-        }
-        .list-view .file-actions-placeholder { 
-            min-width: 150px; 
-            text-align: right;
-            font-size: 0.9em;
-            color: #666;
-        }
-        #move-modal {
-            display: none;
-            position: fixed;
-            z-index: 1001;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.5);
-        }
-        .move-modal-content {
-            background-color: #fff; 
-            margin: 10% auto;
-            padding: 20px;
-            border: 1px solid #888; 
-            border-radius: 8px;
-            width: 80%;
-            max-width: 500px;
-            color: #333; 
-        }
+        #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
+        #selection-action-bar button { margin: 0; }
+        .item-checkbox { margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
+        .file-entry-selectable { display: flex; align-items: center; width: 100%; }
+        .file-content-wrapper { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; }
+        .list-view li { position: relative; }
+        .list-view .file-content-wrapper > .file-entry { flex-grow: 1; }
+        .list-view .file-actions-placeholder { min-width: 150px; text-align: right; font-size: 0.9em; color: #666; }
+        #move-modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .move-modal-content { background-color: #fff; margin: 10% auto; padding: 20px; border: 1px solid #888; border-radius: 8px; width: 80%; max-width: 500px; color: #333; }
         .move-modal-content h3 { margin-top: 0;}
-        #directory-tree-container {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #eee; 
-            padding: 10px;
-            margin-bottom: 15px;
-        }
+        #directory-tree-container { max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 10px; margin-bottom: 15px; }
         #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
         #directory-tree-container li { padding: 5px 0; cursor: pointer; }
         #directory-tree-container li:hover { background-color: #f0f0f0; } 
         #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } 
         .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; }
-        .file-entry {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .list-view .file-entry .file-name {
-             overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
-        .grid-view .file-entry {
-            flex-direction: column;
-            justify-content: center;
-            text-align: center;
-        }
-        #select-all-container {
-            display: flex;
-            align-items: center;
-            padding: 5px 10px;
-            background-color: #f9f9f9; 
-            border-bottom: 1px solid #eee; 
-        }
+        .file-entry { display: flex; align-items: center; gap: 8px; }
+        .list-view .file-entry .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .grid-view .file-entry { flex-direction: column; justify-content: center; text-align: center; }
+        #select-all-container { display: flex; align-items: center; padding: 5px 10px; background-color: #f9f9f9; border-bottom: 1px solid #eee; }
         #select-all-container label { margin-left: 5px; font-weight: normal;}
-        .rename-form {
-            display: none;
-            position: absolute;
-            left: 25px; 
-            right: 5px; 
-            top: calc(100% + 2px); 
-            background-color: var(--rename-form-bg, #ffffff); 
-            padding: 12px;
-            border: 1px solid var(--rename-form-border-color, #cccccc);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            z-index: 100;
-            border-radius: 6px;
-            max-width: 400px; 
-            box-sizing: border-box;
-        }
-        .grid-view li .rename-form { 
-            left: 50%;
-            transform: translateX(-50%) translateY(5px); 
-            width: calc(100% - 10px); 
-            max-width: 300px;
-        }
-        .rename-form form.inline-form { 
-            display: flex;
-            gap: 8px;
-        }
-        .rename-form input[type="text"] {
-            flex-grow: 1;
-        }
-        .dark-theme .rename-form {
-            --rename-form-bg: #3a3a3a;
-            --rename-form-border-color: #555;
-        }
+        .rename-form { display: none; position: absolute; left: 25px; right: 5px; top: calc(100% + 2px); background-color: var(--rename-form-bg, #ffffff); padding: 12px; border: 1px solid var(--rename-form-border-color, #cccccc); box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 100; border-radius: 6px; max-width: 400px; box-sizing: border-box; }
+        .grid-view li .rename-form { left: 50%; transform: translateX(-50%) translateY(5px); width: calc(100% - 10px); max-width: 300px; }
+        .rename-form form.inline-form { display: flex; gap: 8px; }
+        .rename-form input[type="text"] { flex-grow: 1; }
+        .dark-theme .rename-form { --rename-form-bg: #3a3a3a; --rename-form-border-color: #555; }
         #upload-section { display: none; padding: 20px; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 15px; background-color: #f8f9fa; }
         .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
         .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
@@ -190,7 +88,7 @@
         <% } %>
 
         <div class="file-browser-controls">
-            <form action="/files" method="GET" class="control-form" style="flex-grow:2;">
+            <form action="/files" method="GET" class="control-form" style="flex-grow:1.5;">
                 <% if (locals.viewTargetUsername && user.role === 'admin') { %>
                     <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
                 <% } %>
@@ -199,6 +97,13 @@
             </form>
 
             <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
+                <form action="/create-text-file" method="POST" class="control-form">
+                    <input type="hidden" name="currentPath" value="<%= currentPath %>">
+                    <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
+                    <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
+                    <input type="text" name="newFileName" placeholder="新文本文件名 (如: note.txt)" required>
+                    <button type="submit">新建文本</button>
+                </form>
                 <form action="/create-folder" method="POST" class="control-form">
                     <input type="hidden" name="currentPath" value="<%= currentPath %>">
                     <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
@@ -273,7 +178,11 @@
                                             <%
                                                 const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
                                                 let largeIcon = '📄';
-                                                if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(ext)) { largeIcon = '📝';}
+                                                let isViewableTextFile = false;
+                                                if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
+                                                    isViewableTextFile = true;
+                                                    largeIcon = '📝';
+                                                }
                                                 else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
                                                 else if (['pdf'].includes(ext)) { largeIcon = '📕';}
                                                 else if (['doc', 'docx', 'odt'].includes(ext)) { largeIcon = '📃';}
@@ -284,7 +193,11 @@
                                                 else if (['mp4', 'mov', 'avi', 'mkv', 'webm', 'wmv'].includes(ext)) { largeIcon = '🎬';}
                                             %>
                                             <span class="file-icon-large"><%= largeIcon %></span>
-                                            <span class="file-name"><%= item.name %></span>
+                                            <% if (isViewableTextFile) { %>
+                                                <a href="/view?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name" title="點擊查看"><%= item.name %></a>
+                                            <% } else { %>
+                                                <span class="file-name"><%= item.name %></span>
+                                            <% } %>
                                             <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
                                         </div>
                                     <% } %>
@@ -541,7 +454,7 @@
             }
             const toggleUploadBtn = document.getElementById('toggleUploadBtn');
             const uploadSection = document.getElementById('upload-section');
-            if (toggleUploadBtn && uploadSection) { /* ... (original logic from previous version) ... */ 
+            if (toggleUploadBtn && uploadSection) { 
                 toggleUploadBtn.addEventListener('click', () => {
                     if (uploadSection.style.display === 'none' || uploadSection.style.display === '') {
                         uploadSection.style.display = 'block';
@@ -556,7 +469,7 @@
             const fileInputForDrop = document.getElementById('userFiles'); 
             const fileListPreview = document.getElementById('file-list-preview');
             const uploadFormButton = document.getElementById('upload-button'); 
-            if (dropArea && fileInputForDrop && fileListPreview && uploadFormButton) { /* ... (original logic from previous version for drag-drop) ... */ 
+            if (dropArea && fileInputForDrop && fileListPreview && uploadFormButton) { 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropArea.addEventListener(eventName, preventDefaults, false);
                     document.body.addEventListener(eventName, preventDefaults, false);
@@ -592,7 +505,7 @@
             const fileContainer = document.getElementById('file-container');
             const listViewBtn = document.getElementById('listViewBtn');
             const gridViewBtn = document.getElementById('gridViewBtn');
-            if (fileContainer && listViewBtn && gridViewBtn) { /* ... (original logic from previous version for view toggle) ... */
+            if (fileContainer && listViewBtn && gridViewBtn) { 
                 function toggleView(viewType) {
                     if (viewType === 'grid') {
                         fileContainer.className = 'grid-view';
