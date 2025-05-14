@@ -5,15 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理員面板 - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
-    <link id="theme-stylesheet" rel="stylesheet" href=""> </head>
+    <link id="theme-stylesheet" rel="stylesheet" href="">
+</head>
 <body>
     <div class="container">
         <header>
             <h1>管理員面板 - 用戶管理</h1>
-            <nav>
-                <a href="/files">我的文件</a>
-                <a href="/logout">登出</a>
-            </nav>
+            <div class="header-controls">
+                <nav>
+                    <a href="/files">我的文件</a>
+                    <a href="/logout">登出</a>
+                </nav>
+                <%- include('partials/theme-switcher') %>
+            </div>
         </header>
 
         <% if (locals.message) { %>
@@ -42,6 +46,9 @@
                                     <% if (currentUser.id !== u.id) { %>
                                         <a href="/files?targetUsername=<%= encodeURIComponent(u.username) %>" class="action-link" style="background-color: #17a2b8; color: white;">查看文件</a>
                                         <form action="/admin/reset-password/<%= u.id %>" method="POST" style="display: inline; margin-left: 10px;">
+                                            <% if (locals.csrfToken) { %>
+                                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                            <% } %>
                                             <input type="password" name="newPassword" placeholder="輸入新密碼" required>
                                             <button type="submit" class="action-link" style="background-color: #ffc107; color: #212529;" onclick="return confirm('確定要為用戶 <%= u.username.replace(/'/g, '\\\'') %> 重置密碼嗎？');">重置密碼</button>
                                         </form>
@@ -60,7 +67,6 @@
         </div>
          <p class="note">注意：刪除用戶將同時刪除其所有上傳的文件。</p>
     </div>
-    <%- include('partials/theme-switcher') %>
     <script src="/theme.js"></script>
 </body>
 </html>
