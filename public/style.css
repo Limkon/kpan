@@ -1,5 +1,4 @@
 /* public/style.css */
-/* ... (之前的樣式保持不變，從 net_disk_css_v8 複製) ... */
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     background-color: #f8f9fa;
@@ -12,7 +11,7 @@ body {
     align-items: center;
     min-height: 100vh;
     box-sizing: border-box;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
 }
 
 .container {
@@ -27,53 +26,101 @@ body {
     box-sizing: border-box;
 }
 
+/* --- Authentication Page Specific Styles --- */
 .auth-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     width: 100%;
-    min-height: 80vh;
+    min-height: 80vh; /* Ensure it takes up most of the viewport height */
     padding: 20px;
 }
+
 .auth-form-container {
     background-color: #fff;
-    padding: 25px 30px;
+    padding: 25px 30px; /* More padding for auth forms */
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 400px;
-    text-align: center;
+    max-width: 400px; /* Optimal width for auth forms */
+    text-align: center; /* Center form elements like h1 and p */
 }
-.auth-form-container h1 { font-size: 1.8em; margin-bottom: 25px; color: #343a40; }
-.auth-form-container .form-group { margin-bottom: 20px; text-align: left; }
-.auth-form-container label { display: block; margin-bottom: 8px; font-weight: 600; color: #495057; }
+.auth-form-container h1 {
+    font-size: 1.8em; /* Slightly larger for auth pages */
+    margin-bottom: 25px;
+    color: #343a40;
+}
+.auth-form-container .form-group {
+    margin-bottom: 20px;
+    text-align: left; /* Align labels and inputs to the left */
+}
+.auth-form-container label {
+    display: block;
+    margin-bottom: 8px; /* More space below label */
+    font-weight: 600;
+    color: #495057;
+}
 .auth-form-container input[type="text"],
 .auth-form-container input[type="password"] {
-    width: 100%; padding: 12px 15px; font-size: 1em; margin-bottom: 0;
+    width: 100%;
+    padding: 12px 15px; /* Larger padding for inputs */
+    font-size: 1em;
+    margin-bottom: 0; /* Remove default margin from unified controls */
 }
-.auth-form-container .full-width-button { width: 100%; padding: 12px 15px; font-size: 1.05em; margin-top: 10px; margin-bottom: 0; }
-.auth-form-container .auth-switch { margin-top: 20px; font-size: 0.9em; color: #6c757d; }
-.auth-form-container .auth-switch a { color: #007bff; font-weight: 500; }
+.auth-form-container .full-width-button {
+    width: 100%;
+    padding: 12px 15px; /* Larger button padding */
+    font-size: 1.05em;
+    margin-top: 10px; /* Space above button */
+    margin-bottom: 0;
+}
+.auth-form-container .auth-switch {
+    margin-top: 20px;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+.auth-form-container .auth-switch a {
+    color: #007bff;
+    font-weight: 500;
+}
+
 
 header {
-    display: flex; flex-direction: column; align-items: flex-start;
-    margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #dee2e6;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #dee2e6;
 }
 header h1 { margin: 0 0 10px 0; font-size: 1.6em; color: #343a40; }
 header nav { display: flex; flex-wrap: wrap; gap: 10px; }
 header nav a { margin-left: 0; text-decoration: none; color: #007bff; font-weight: 500; padding: 5px 0; }
 
+/* General h1, h2 for non-auth pages */
 .container > h1:not(.auth-form-container h1) { text-align: center; font-size: 1.8em; margin-bottom: 15px; color: #343a40; }
-h2 { font-size: 1.3em; border-bottom: 2px solid #007bff; padding-bottom: 6px; margin-top: 25px; margin-bottom: 15px; color: #343a40; }
+h2 {
+    font-size: 1.3em; border-bottom: 2px solid #007bff; padding-bottom: 6px;
+    margin-top: 25px; margin-bottom: 15px; color: #343a40;
+}
 h2:first-of-type { margin-top: 0; }
 
+
+/* Unified Control Styling (from previous version, slight adjustments) */
 input[type="text"], input[type="password"],
 select, textarea,
 button, .button-link {
-    display: inline-block; width: auto; padding: 10px 15px; border: 1px solid #ced4da;
-    border-radius: 5px; box-sizing: border-box; font-size: 0.95em; line-height: 1.5;
-    vertical-align: middle; margin: 5px;
+    display: inline-block;
+    width: auto;
+    padding: 10px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 0.95em;
+    line-height: 1.5;
+    vertical-align: middle;
+    margin: 5px;
     transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 input[type="file"] {
@@ -82,13 +129,16 @@ input[type="file"] {
 }
 textarea { min-height: 100px; }
 
-input[type="text"]:not(.auth-form-container input),
+input[type="text"]:not(.auth-form-container input), /* Avoid double styling */
 input[type="password"]:not(.auth-form-container input),
-select, textarea { background-color: #fff; color: #495057; }
-
+select,
+textarea {
+    background-color: #fff; color: #495057;
+}
 input[type="text"]:focus:not(.auth-form-container input),
 input[type="password"]:focus:not(.auth-form-container input),
-select:focus, textarea:focus {
+select:focus,
+textarea:focus {
     border-color: #80bdff; box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); outline: none;
 }
 
@@ -112,8 +162,7 @@ button.secondary:hover, .button-link.secondary:hover { background-color: #5a6268
 .current-path a { font-weight: 500; }
 
 .file-browser-controls {
-    margin-bottom: 10px; /* Reduced margin */
-    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
 }
 .file-browser-controls .control-form { display: flex; flex-grow: 1; gap: 8px; min-width: 200px; }
 .file-browser-controls .control-form input[type="text"] { flex-grow: 1; margin: 0; }
@@ -122,43 +171,6 @@ button.secondary:hover, .button-link.secondary:hover { background-color: #5a6268
 .view-toggle { display: flex; gap: 8px; margin-left: auto; }
 .view-toggle button { background-color: #6c757d; font-size: 0.9em; }
 .view-toggle button.active { background-color: #007bff; }
-
-/* Global Actions Bar */
-.global-actions-bar {
-    padding: 8px 0; /* Reduced padding */
-    margin-bottom: 15px;
-    border-bottom: 1px solid #e0e0e0; /* Themed border */
-    display: flex;
-    gap: 8px; /* Reduced gap */
-    align-items: center;
-    flex-wrap: wrap;
-}
-.global-actions-bar button, .global-actions-bar .button-link {
-    margin: 0; /* Remove default margin from buttons inside this bar */
-    padding: 8px 12px; /* Slightly smaller padding for action buttons */
-    font-size: 0.9em;
-}
-.global-actions-bar button:disabled {
-    background-color: #e9ecef;
-    border-color: #e9ecef;
-    color: #6c757d !important;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-.global-actions-bar label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.9em;
-    color: var(--text-color);
-    margin-right: 10px;
-}
-.global-actions-bar input[type="checkbox"] {
-    margin: 0; /* Reset margin for checkbox */
-    width: auto; /* Allow checkbox to size naturally */
-    vertical-align: middle;
-}
-
 
 #upload-section {
     display: none; padding: 15px; border: 1px solid #dee2e6;
@@ -185,35 +197,29 @@ button.secondary:hover, .button-link.secondary:hover { background-color: #5a6268
 .list-view li:first-child { border-top-left-radius: 5px; border-top-right-radius: 5px; }
 .list-view li:last-child { border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; margin-bottom: 0; }
 .list-view .file-entry { display: flex; align-items: center; flex-grow: 1; overflow: hidden; }
-.list-view .file-item-checkbox { margin-right: 10px; width:auto; /* Checkbox specific */ }
 .list-view .file-icon-large, .list-view .file-icon { display: none !important; }
 .list-view .file-name { font-weight: 500; color: #007bff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95em; }
 .list-view .file-entry a.file-name:hover { text-decoration: underline; }
 .list-view .file-entry .file-name { color: #212529; }
-/* .list-view .file-actions is removed from HTML, so no style needed here for it */
+.list-view .file-actions { white-space: nowrap; display: flex; gap: 6px; }
+.list-view .file-actions .action-link { margin-left: 0; font-size: 0.8em; padding: 4px 8px; }
 
 .grid-view ul { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .grid-view li {
     padding: 10px; min-height: 130px; background-color: #fff; border: 1px solid #dee2e6; border-radius: 6px;
     text-align: center; display: flex; flex-direction: column; align-items: center;
-    justify-content: flex-start; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; /* For checkbox positioning */
-}
-.grid-view .file-item-checkbox {
-    position: absolute; /* Position checkbox in grid view */
-    top: 8px;
-    left: 8px;
-    width: auto;
-    margin:0;
+    justify-content: flex-start; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 .grid-view .file-icon { display: none !important; }
-.grid-view .file-icon-large { font-size: 2.8em; margin-bottom: 6px; display: inline-block !important; line-height:1; margin-top: 20px; /* Space for checkbox */ }
+.grid-view .file-icon-large { font-size: 2.8em; margin-bottom: 6px; display: inline-block !important; line-height:1; }
 .grid-view .file-icon-large.folder-icon { color: #ffc107; }
 .grid-view .file-name {
     font-size: 0.8em; font-weight: 500; color: #343a40; word-break: break-all;
     margin-bottom: 6px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2;
     -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; min-height: 2.2em;
 }
-/* .grid-view .file-actions is removed from HTML */
+.grid-view .file-actions { display: flex; flex-direction: column; gap: 4px; width: 100%; margin-top: auto; }
+.grid-view .file-actions .action-link { font-size: 0.75em; padding: 4px 6px; background-color: #f1f3f5; border-radius: 4px; color: #495057; display: block; }
 
 .rename-form { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; width:100%; }
 .rename-form form.inline-form { display: flex; gap: 6px; align-items: center; }
@@ -235,36 +241,35 @@ textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin:0; }
 
 .note { font-size: 0.85em; margin-top: 15px; padding: 10px; background-color: #f1f3f5; border-left: 4px solid #007bff; }
 
+/* Theme Switcher Styles */
 .theme-switcher-container {
-    position: fixed; bottom: 15px; right: 15px; padding: 10px 15px;
-    background-color: var(--container-background, #fff); /* Use CSS var for theme consistency */
-    border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-    z-index: 1000; border: 1px solid var(--border-color, #dee2e6); /* Use CSS var */
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    padding: 10px 15px;
+    background-color: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    z-index: 1000;
+    border: 1px solid #dee2e6;
 }
-.theme-switcher-container label { margin-right: 8px; font-size: 0.9em; color: var(--text-color, #495057); font-weight: 500; }
+.theme-switcher-container label {
+    margin-right: 8px;
+    font-size: 0.9em;
+    color: #495057;
+    font-weight: 500;
+}
 .theme-switcher-container select {
-    padding: 6px 8px; font-size: 0.9em; border-radius: 4px;
-    border: 1px solid var(--input-border, #ced4da); /* Use CSS var */
-    background-color: var(--input-bg, #fff); /* Use CSS var */
-    color: var(--text-color, #495057); /* Use CSS var */
-    margin: 0; width: auto;
+    padding: 6px 8px; /* Smaller padding for select */
+    font-size: 0.9em;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    margin: 0; /* Reset margin */
+    width: auto; /* Allow select to size to content */
 }
 
-/* Move Destination Popup Styles */
-#move-destination-popup {
-    display: none; position: fixed; left: 50%; top: 50%;
-    transform: translate(-50%, -50%);
-    background-color: var(--container-background, #fff);
-    padding: 25px; border: 1px solid var(--border-color, #ccc);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.25); z-index: 1001;
-    border-radius: 8px; width: 90%; max-width: 450px;
-}
-#move-destination-popup h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.2em; color: var(--header-text-color, #343a40); }
-#move-destination-popup label { margin-bottom: 8px; font-size: 0.9em; }
-#move-destination-popup input[type="text"] { width: 100%; margin-bottom: 15px; }
-#move-destination-popup div { display: flex; justify-content: flex-end; gap: 10px; }
 
-
+/* Responsive adjustments */
 @media (min-width: 576px) {
     .container { padding: 20px 25px; }
     header { flex-direction: row; align-items: center; }
@@ -277,8 +282,8 @@ textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin:0; }
 }
 @media (min-width: 768px) {
     .container { padding: 25px 30px; }
-    .auth-form-container { padding: 30px 40px; }
-    h1:not(.auth-form-container h1) { font-size: 2em; }
+    .auth-form-container { padding: 30px 40px; } /* More padding on larger auth forms */
+    h1:not(.auth-form-container h1) { font-size: 2em; } /* General h1 */
     h2 { font-size: 1.4em; }
     .grid-view ul { grid-template-columns: repeat(3, 1fr); }
     .file-browser-controls .control-form { min-width: 300px; }
@@ -286,4 +291,3 @@ textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin:0; }
 @media (min-width: 992px) {
      .grid-view ul { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 }
-

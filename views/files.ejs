@@ -5,52 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= locals.viewTargetUsername ? viewTargetUsername + ' 的文件' : user.username + ' 的文件' %> - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
-    <link id="theme-stylesheet" rel="stylesheet" href="">
-    <style>
+    <link id="theme-stylesheet" rel="stylesheet" href=""> <style>
         #upload-section {
             display: none;
             padding: 20px;
-            border: 1px solid #dee2e6; /* Will be themed */
+            border: 1px solid #dee2e6; /* 應由主題CSS控制 */
             border-radius: 6px;
             margin-top: 15px;
-            background-color: #f8f9fa; /* Will be themed */
+            background-color: #f8f9fa; /* 應由主題CSS控制 */
         }
-        .global-actions-bar {
-            padding: 10px 0;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #eee; /* Will be themed */
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .global-actions-bar button, .global-actions-bar .button-link {
-            margin-bottom: 5px;
-        }
-        .file-item-checkbox {
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-        #move-destination-popup {
-            display: none;
-            position: fixed;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            background-color: var(--container-background, #fff);
-            padding: 20px;
-            border: 1px solid var(--border-color, #ccc);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 1001;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 450px;
-        }
-        #move-destination-popup label { margin-bottom: 8px; display: block; }
-        #move-destination-popup input[type="text"] { width: 100%; margin-bottom: 10px; box-sizing: border-box;}
-        #move-destination-popup .popup-actions button { margin-right: 10px;}
-        #move-destination-popup .popup-actions { margin-top:15px; text-align: right; }
-
     </style>
 </head>
 <body>
@@ -73,7 +36,7 @@
         </header>
 
         <% if (locals.message) { %>
-            <p class="message <%= (locals.messageType === 'error') ? 'error-message' : '' %>"><%= message %></p>
+            <p class="message <%= (locals.messageType === 'error' || (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('沒有選擇文件')))) ? 'error-message' : '' %>"><%= message %></p>
         <% } %>
 
         <div class="current-path">
@@ -99,21 +62,11 @@
                 <input type="text" name="folderName" placeholder="新文件夾名稱" required>
                 <button type="submit">創建文件夾</button>
             </form>
-            <button type="button" id="toggleUploadBtnGlobal" class="upload-button-main">上傳文件</button>
+            <button type="button" id="toggleUploadBtn" class="upload-button-main">上傳文件</button>
             <div class="view-toggle">
                 <button id="listViewBtn" onclick="toggleView('list')">列表</button>
                 <button id="gridViewBtn" onclick="toggleView('grid')">網格</button>
             </div>
-        </div>
-
-        <div class="global-actions-bar">
-            <label for="selectAllCheckbox">
-                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)"> 全選
-            </label>
-            <button id="globalRenameBtn" disabled onclick="handleGlobalRename()">重命名</button>
-            <button id="globalDownloadBtn" disabled onclick="handleGlobalDownload()">下載選中</button>
-            <button id="globalDeleteBtn" disabled onclick="handleGlobalDelete()">刪除選中</button>
-            <button id="globalMoveBtn" disabled onclick="showMovePopup()">移動選中到...</button>
         </div>
 
         <div id="upload-section">
@@ -138,12 +91,10 @@
                 <ul>
                     <% items.forEach(item => { %>
                         <li>
-                            <input type="checkbox" class="file-item-checkbox" value="<%= item.path %>" data-name="<%= item.name %>" data-isdir="<%= item.isDir %>" data-encodedname="<%= item.encodedName %>" onchange="updateGlobalActionButtons()">
                             <% const itemDisplayName = item.name; %>
                             <% const itemPathForLink = item.path; %>
                             <% const encodedItemPathForLink = item.encodedPath; %>
                             <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
-
                             <% if (item.isDir) { %>
                                 <div class="file-entry">
                                     <span class="file-icon-large folder-icon">📁</span>
@@ -153,22 +104,30 @@
                                 <div class="file-entry">
                                      <%
                                         const ext = itemDisplayName.includes('.') ? itemDisplayName.substring(itemDisplayName.lastIndexOf('.') + 1).toLowerCase() : '';
-                                        let largeIcon = '📄'; // Default icon
-                                        if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(ext)) { largeIcon = '📝';} // Text/Code
-                                        else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; } // Image
-                                        else if (['pdf'].includes(ext)) { largeIcon = '📕';} // PDF
-                                        else if (['doc', 'docx'].includes(ext)) { largeIcon = '📃';} // Word
-                                        else if (['xls', 'xlsx'].includes(ext)) { largeIcon = '📊';} // Excel
-                                        else if (['ppt', 'pptx'].includes(ext)) { largeIcon = '🖥️';} // PowerPoint
-                                        else if (['zip', 'rar', 'tar', 'gz'].includes(ext)) { largeIcon = '📦';} // Archive
-                                        else if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) { largeIcon = '🎵';} // Audio
-                                        else if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) { largeIcon = '🎬';} // Video
+                                        let largeIcon = '📄';
+                                        if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(ext)) { largeIcon = '📝';}
+                                        else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
+                                        else if (['pdf'].includes(ext)) { largeIcon = '📕';}
+                                        else if (['doc', 'docx'].includes(ext)) { largeIcon = '📃';}
+                                        else if (['xls', 'xlsx'].includes(ext)) { largeIcon = '📊';}
+                                        else if (['ppt', 'pptx'].includes(ext)) { largeIcon = '🖥️';}
+                                        else if (['zip', 'rar', 'tar', 'gz'].includes(ext)) { largeIcon = '📦';}
+                                        else if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) { largeIcon = '🎵';}
+                                        else if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) { largeIcon = '🎬';}
                                     %>
                                     <span class="file-icon-large"><%= largeIcon %></span>
                                     <span class="file-name"><%= itemDisplayName %></span>
                                 </div>
                             <% } %>
-                            <span class="file-actions" style="display:none;"> <a href="#" class="action-link rename-link" onclick="showRenameForm('<%= item.encodedName %>', '<%= itemDisplayName.replace(/'/g, '\\\'') %>', <%= item.isDir %>); return false;">重命名(隱藏)</a>
+                            <span class="file-actions">
+                                <a href="#" class="action-link rename-link" onclick="showRenameForm('<%= item.encodedName %>', '<%= itemDisplayName.replace(/'/g, '\\\'') %>', <%= item.isDir %>); return false;">重命名</a>
+                                <% if (!item.isDir) { %>
+                                    <% if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'log', 'csv', 'py', 'java', 'c', 'cpp', 'go', 'rb'].includes(itemDisplayName.includes('.') ? itemDisplayName.substring(itemDisplayName.lastIndexOf('.') + 1).toLowerCase() : '')) { %>
+                                        <a href="/edit?path=<%= encodedItemPathForLink %><%= adminTargetQueryForActions %>" class="action-link edit-link">編輯</a>
+                                    <% } %>
+                                    <a href="/download?path=<%= encodedItemPathForLink %><%= adminTargetQueryForActions %>" class="action-link">下載</a>
+                                <% } %>
+                                <a href="/delete?path=<%= encodedItemPathForLink %>&isDir=<%= item.isDir %><%= adminTargetQueryForActions %>" class="action-link delete-link" onclick="return confirm('確定要刪除 <%= itemDisplayName.replace(/'/g, '\\\'') %><%= item.isDir ? ' 及其所有內容' : '' %> 嗎？');">删除</a>
                             </span>
                             <div class="rename-form" id="rename-form-<%= item.encodedName %>">
                                 <form action="/rename" method="POST" class="control-form inline-form">
@@ -191,56 +150,42 @@
             <% } %>
         </div>
     </div>
-
-    <div id="move-destination-popup">
-        <h3>移動選中項目到:</h3>
-        <form id="move-form" onsubmit="handleActualMove(event)">
-            <div>
-                <label for="destinationPath">目標路徑 (例如 /我的文件夾/子文件夾):</label>
-                <input type="text" id="destinationPath" name="destinationPath" value="/" required>
-            </div>
-            <div class="popup-actions">
-                <button type="submit">確認移動</button>
-                <button type="button" class="secondary" onclick="hideMovePopup()">取消</button>
-            </div>
-        </form>
-    </div>
-
     <%- include('partials/theme-switcher') %>
     <script src="/theme.js"></script>
     <script>
-        // Toggle Upload Section
-        const toggleUploadBtn = document.getElementById('toggleUploadBtnGlobal');
+        // Script for files.ejs (toggle upload, drag-drop, view toggle, rename form)
+        const toggleUploadBtn = document.getElementById('toggleUploadBtn');
         const uploadSection = document.getElementById('upload-section');
         if (toggleUploadBtn && uploadSection) {
             toggleUploadBtn.addEventListener('click', () => {
-                const isHidden = uploadSection.style.display === 'none' || uploadSection.style.display === '';
-                uploadSection.style.display = isHidden ? 'block' : 'none';
-                toggleUploadBtn.textContent = isHidden ? '隱藏上傳區域' : '上傳文件';
+                if (uploadSection.style.display === 'none' || uploadSection.style.display === '') {
+                    uploadSection.style.display = 'block';
+                    toggleUploadBtn.textContent = '隱藏上傳區域';
+                } else {
+                    uploadSection.style.display = 'none';
+                    toggleUploadBtn.textContent = '上傳文件';
+                }
             });
         }
 
-        // Drag and Drop
         const dropArea = document.getElementById('drop-area');
         const fileInput = document.getElementById('userFiles');
         const fileListPreview = document.getElementById('file-list-preview');
-        const uploadButton = document.getElementById('upload-button'); // Button inside upload section
+        const uploadButton = document.getElementById('upload-button');
+
         if (dropArea && fileInput && fileListPreview && uploadButton) {
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 dropArea.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser opening file
+                document.body.addEventListener(eventName, preventDefaults, false);
             });
             function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-
             ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false));
             ['dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false));
-
             dropArea.addEventListener('drop', handleDrop, false);
             function handleDrop(e) {
                 fileInput.files = e.dataTransfer.files;
                 updateFileListPreview();
             }
-
             fileInput.addEventListener('change', updateFileListPreview);
             function updateFileListPreview() {
                 fileListPreview.innerHTML = '';
@@ -249,17 +194,7 @@
                     list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
                     for (let i = 0; i < fileInput.files.length; i++) {
                         const listItem = document.createElement('li');
-                        // Display file size in a more readable format
-                        const fileSize = fileInput.files[i].size;
-                        let sizeString;
-                        if (fileSize < 1024) {
-                            sizeString = fileSize + ' Bytes';
-                        } else if (fileSize < 1024 * 1024) {
-                            sizeString = (fileSize / 1024).toFixed(2) + ' KB';
-                        } else {
-                            sizeString = (fileSize / (1024 * 1024)).toFixed(2) + ' MB';
-                        }
-                        listItem.textContent = fileInput.files[i].name + ' (' + sizeString + ')';
+                        listItem.textContent = fileInput.files[i].name;
                         listItem.style.fontSize = '0.9em'; listItem.style.color = '#333';
                         list.appendChild(listItem);
                     }
@@ -272,207 +207,40 @@
             if(fileInput.files.length === 0) uploadButton.style.display = 'none';
         }
 
-
-        // View Toggle
         const fileContainer = document.getElementById('file-container');
         const listViewBtn = document.getElementById('listViewBtn');
         const gridViewBtn = document.getElementById('gridViewBtn');
         if (fileContainer && listViewBtn && gridViewBtn) {
             function toggleView(viewType) {
-                fileContainer.className = viewType === 'grid' ? 'grid-view' : 'list-view'; // Set class on the container of <ul>
-                gridViewBtn.classList.toggle('active', viewType === 'grid');
-                listViewBtn.classList.toggle('active', viewType === 'list');
-                localStorage.setItem('fileView', viewType);
+                if (viewType === 'grid') {
+                    fileContainer.className = 'grid-view';
+                    gridViewBtn.classList.add('active');
+                    listViewBtn.classList.remove('active');
+                    localStorage.setItem('fileView', 'grid');
+                } else {
+                    fileContainer.className = 'list-view';
+                    listViewBtn.classList.add('active');
+                    gridViewBtn.classList.remove('active');
+                    localStorage.setItem('fileView', 'list');
+                }
             }
-            // Initialize view based on localStorage or default to 'list'
-            toggleView(localStorage.getItem('fileView') || 'list');
+            const preferredView = localStorage.getItem('fileView');
+            toggleView(preferredView || 'list');
         }
 
-
-        // Rename Form
         function showRenameForm(encodedName, currentName, isDir) {
-            // Hide all other rename forms first
             document.querySelectorAll('.rename-form').forEach(form => form.style.display = 'none');
             const form = document.getElementById('rename-form-' + encodedName);
             if (form) {
                 form.style.display = 'block';
-                const input = form.querySelector('input[name="newName"]');
-                input.value = currentName; // Pre-fill with current name
-                input.focus();
-                input.select();
+                form.querySelector('input[name="newName"]').focus();
+                form.querySelector('input[name="newName"]').select();
             }
         }
         function hideRenameForm(encodedName) {
             const form = document.getElementById('rename-form-' + encodedName);
             if (form) form.style.display = 'none';
         }
-
-        // Global Actions Logic
-        const globalRenameBtn = document.getElementById('globalRenameBtn');
-        const globalDownloadBtn = document.getElementById('globalDownloadBtn');
-        const globalDeleteBtn = document.getElementById('globalDeleteBtn');
-        const globalMoveBtn = document.getElementById('globalMoveBtn');
-        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-        const itemCheckboxes = document.querySelectorAll('.file-item-checkbox');
-
-        function getSelectedItems() {
-            // Helper function to get all currently selected items
-            return Array.from(itemCheckboxes)
-                        .filter(checkbox => checkbox.checked)
-                        .map(checkbox => ({
-                            path: checkbox.value, // Relative path from user's root
-                            name: checkbox.dataset.name,
-                            isDir: checkbox.dataset.isdir === 'true',
-                            encodedName: checkbox.dataset.encodedname // For triggering rename form
-                        }));
-        }
-
-        function updateGlobalActionButtons() {
-            const selectedItems = getSelectedItems();
-            const count = selectedItems.length;
-
-            globalDownloadBtn.disabled = count === 0;
-            globalDeleteBtn.disabled = count === 0;
-            globalMoveBtn.disabled = count === 0;
-            globalRenameBtn.disabled = count !== 1; // Enable rename only if exactly one item is selected
-
-            if (selectAllCheckbox) {
-                 selectAllCheckbox.checked = count > 0 && count === itemCheckboxes.length;
-                 // Set indeterminate state if some but not all are checked
-                 selectAllCheckbox.indeterminate = count > 0 && count < itemCheckboxes.length;
-            }
-        }
-
-        function toggleSelectAll(checked) {
-            itemCheckboxes.forEach(checkbox => checkbox.checked = checked);
-            updateGlobalActionButtons();
-        }
-
-        function handleGlobalRename() {
-            const selectedItems = getSelectedItems();
-            if (selectedItems.length === 1) {
-                const item = selectedItems[0];
-                // Trigger the existing inline rename form for this item
-                showRenameForm(item.encodedName, item.name, item.isDir);
-            }
-        }
-
-        // --- Batch Operations Fetch Logic ---
-        async function performBatchOperation(url, itemsData, additionalData = {}) {
-            const actingUser = "<%= user.username %>";
-            const currentPathVal = "<%= currentPath %>";
-            // Safely get targetUsername from EJS, default to null if not admin viewing other user
-            const targetUsernameVal = <%= locals.viewTargetUsername && user.role === 'admin' ? JSON.stringify(viewTargetUsername) : null %>;
-
-            const bodyPayload = {
-                items: itemsData, // This will be an array of {path, isDir} for delete/move, or array of paths for download
-                targetUsername: targetUsernameVal,
-                currentPath: currentPathVal,
-                ...additionalData
-            };
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(bodyPayload)
-                });
-
-                if (url === '/batch-download') {
-                    if (response.ok) {
-                        // Trigger browser download
-                        const blob = await response.blob();
-                        const downloadUrl = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.style.display = 'none';
-                        a.href = downloadUrl;
-                        // Extract filename from Content-Disposition header if available
-                        const disposition = response.headers.get('content-disposition');
-                        let filename = 'download.zip'; // Default filename
-                        if (disposition && disposition.indexOf('attachment') !== -1) {
-                            const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-                            const matches = filenameRegex.exec(disposition);
-                            if (matches != null && matches[1]) {
-                                filename = matches[1].replace(/['"]/g, '');
-                            }
-                        }
-                        a.download = filename;
-                        document.body.appendChild(a);
-                        a.click();
-                        window.URL.revokeObjectURL(downloadUrl);
-                        a.remove();
-                    } else {
-                        // Handle error response for download (e.g., show message from server)
-                        const errorData = await response.json().catch(() => ({ message: '下載失敗，且無法解析錯誤回應。' }));
-                        alert(`下載錯誤: ${errorData.message}`);
-                    }
-                } else if (response.redirected) { // For delete and move, backend redirects
-                    window.location.href = response.url;
-                } else if (!response.ok) { // Other non-redirecting errors
-                    const errorData = await response.json().catch(() => ({ message: '操作失敗，且無法解析錯誤回應。' }));
-                    alert(`錯誤: ${errorData.message}`);
-                } else {
-                    // If backend sends JSON success for non-redirecting operations (if any in future)
-                    // const successData = await response.json();
-                    // alert(successData.message);
-                    // window.location.reload(); // Or update UI dynamically
-                }
-            } catch (error) {
-                console.error('批量操作 Fetch 錯誤:', error);
-                alert('執行操作時發生網路或客戶端錯誤。');
-            }
-        }
-
-
-        function handleGlobalDownload() {
-            const selectedItems = getSelectedItems();
-            if (selectedItems.length === 0) return;
-            const pathsToDownload = selectedItems.map(item => item.path);
-            performBatchOperation('/batch-download', pathsToDownload); // Pass paths array as itemsData
-        }
-
-        function handleGlobalDelete() {
-            const selectedItems = getSelectedItems();
-            if (selectedItems.length === 0) return;
-            if (!confirm(`確定要刪除選中的 ${selectedItems.length} 個項目嗎？此操作無法撤銷。`)) return;
-            // For delete, backend expects an array of {path, isDir} objects
-            const itemsToDelete = selectedItems.map(item => ({ path: item.path, isDir: item.isDir }));
-            performBatchOperation('/batch-delete', itemsToDelete);
-        }
-
-        const movePopup = document.getElementById('move-destination-popup');
-        const destinationPathInput = document.getElementById('destinationPath');
-        let itemsToMoveGlobally = []; // Stores the items selected when "Move" was clicked
-
-        function showMovePopup() {
-            itemsToMoveGlobally = getSelectedItems(); // Capture selected items when popup is shown
-            if (itemsToMoveGlobally.length === 0) return;
-            destinationPathInput.value = '/'; // Reset to root or last used valid path
-            movePopup.style.display = 'block';
-            destinationPathInput.focus();
-        }
-        function hideMovePopup() {
-            movePopup.style.display = 'none';
-        }
-        function handleActualMove(event) {
-            event.preventDefault(); // Prevent default form submission
-            const destination = destinationPathInput.value.trim();
-            if (!destination.startsWith('/')) {
-                alert('目標路徑必須以 / 開頭 (相對於用戶根目錄)。');
-                return;
-            }
-            if (itemsToMoveGlobally.length > 0) {
-                // For move, backend expects an array of {path, isDir, name} objects and destinationPath
-                const itemsPayload = itemsToMoveGlobally.map(item => ({ path: item.path, isDir: item.isDir, name: item.name }));
-                performBatchOperation('/move-items', itemsPayload, { destinationPath: destination });
-            }
-            hideMovePopup(); // Close popup after initiating move
-        }
-
-        // Initial setup and event listeners for checkboxes
-        updateGlobalActionButtons(); // Call on page load
-        itemCheckboxes.forEach(cb => cb.addEventListener('change', updateGlobalActionButtons));
-
     </script>
 </body>
 </html>
