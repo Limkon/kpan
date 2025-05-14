@@ -20,24 +20,15 @@
         
         #move-modal, #create-item-modal { 
             display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: auto; background-color: rgba(0,0,0,0.5); /* 半透明黑色背景遮罩 */
+            overflow: auto; background-color: rgba(0,0,0,0.5);
         }
         .modal-content { 
-            background-color: var(--modal-bg, #ffffff); /* 使用 CSS 變數，默認為白色 */
-            color: var(--modal-text-color, #333);
-            margin: 10% auto; /* 調整垂直邊距，使其更居中 */
-            padding: 20px; 
-            border: 1px solid var(--modal-border-color, #888);
-            border-radius: 8px; 
-            width: 90%; 
-            max-width: 500px; /* 調整最大寬度 */
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* 添加陰影使其更突出 */
+            background-color: var(--modal-bg, #fff); color: var(--modal-text-color, #333);
+            margin: 15% auto; padding: 20px; border: 1px solid var(--modal-border-color, #888);
+            border-radius: 8px; width: 90%; max-width: 450px;
         }
-        .dark-theme .modal-content { /* 暗色主題下的模態框樣式 */
-             --modal-bg: #2c2c2c; 
-             --modal-text-color: #e0e0e0; 
-             --modal-border-color: #555;
-             background-color: var(--modal-bg); /* 確保暗色主題下背景色被應用 */
+        .dark-theme .modal-content {
+             --modal-bg: #2c2c2c; --modal-text-color: #e0e0e0; --modal-border-color: #555;
         }
         .modal-content h3 { margin-top: 0; }
         .modal-content .form-group { margin-bottom: 15px; }
@@ -49,27 +40,11 @@
         }
         .modal-actions { text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
 
-        #directory-tree-container { 
-            max-height: 250px; /* 稍微減小高度 */
-            overflow-y: auto; 
-            border: 1px solid var(--input-border-color, #eee); /* 使用主題變數 */
-            padding: 10px; 
-            margin-bottom: 15px; 
-            background-color: var(--input-bg-color, #fff); /* 確保目錄樹容器有背景 */
-        }
-        .dark-theme #directory-tree-container {
-            border-color: #444;
-            background-color: #3a3a3a;
-        }
+        #directory-tree-container { max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 10px; margin-bottom: 15px; }
         #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
-        #directory-tree-container li { padding: 5px 0; cursor: pointer; border-bottom: 1px dashed var(--input-border-color, #eee); }
-        #directory-tree-container li:last-child { border-bottom: none; }
-        #directory-tree-container li:hover { background-color: var(--hover-bg, #f0f0f0); } 
-        .dark-theme #directory-tree-container li:hover { --hover-bg: #4a4a4a; }
+        #directory-tree-container li { padding: 5px 0; cursor: pointer; }
+        #directory-tree-container li:hover { background-color: #f0f0f0; } 
         #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } 
-        .dark-theme #directory-tree-container li.selected-dir { background-color: #0056b3; }
-
-
         .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
 
         .file-entry { display: flex; align-items: center; gap: 8px; }
@@ -390,8 +365,6 @@
 
     <script src="/theme.js"></script>
     <script>
-        // (完整的 JavaScript 逻辑从之前的版本复制过来)
-        // ... (确保所有函数和事件监听器都已包含)
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
         const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
@@ -417,6 +390,7 @@
             const moveDestinationInput = document.getElementById('move-destination-input');
             let currentDirectoryTree = [];
 
+            // Function to get currently selected items by querying the DOM directly
             function getSelectedItems() {
                 const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                 const selected = [];
