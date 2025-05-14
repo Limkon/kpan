@@ -23,7 +23,7 @@
             overflow: auto; background-color: rgba(0,0,0,0.5); 
         }
         .modal-content { 
-            background-color: var(--modal-bg, #ffffff) !important; 
+            background-color: var(--modal-bg, #ffffff) !important; /* !important 确保背景色优先 */
             color: var(--modal-text-color, #333);
             margin: 10% auto; 
             padding: 20px; 
@@ -33,11 +33,12 @@
             max-width: 500px; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
         }
+        /* 确保暗色主题也明确设置背景 */
         .dark-theme .modal-content {
-            --modal-bg: #2c2c2c; 
-            --modal-text-color: #e0e0e0; 
-            --modal-border-color: #555;
-            background-color: var(--modal-bg) !important;
+             --modal-bg: #2c2c2c; 
+             --modal-text-color: #e0e0e0; 
+             --modal-border-color: #555;
+             background-color: var(--modal-bg) !important; /* !important 确保背景色优先 */
         }
         .modal-content h3 { margin-top: 0; }
         .modal-content .form-group { margin-bottom: 15px; }
@@ -69,6 +70,7 @@
         #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } 
         .dark-theme #directory-tree-container li.selected-dir { background-color: #0056b3; }
 
+
         .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
 
         .file-entry { display: flex; align-items: center; gap: 8px; }
@@ -81,34 +83,7 @@
         .rename-form form.inline-form { display: flex; gap: 8px; }
         .rename-form input[type="text"] { flex-grow: 1; }
         .dark-theme .rename-form { --rename-form-bg: #3a3a3a; --rename-form-border-color: #555; }
-        
-        #upload-section { 
-            display: none; /* 預設隱藏 */
-            padding: 20px; 
-            border: 1px solid #dee2e6; 
-            border-radius: 6px; 
-            margin-top: 15px; 
-            background-color: #f8f9fa; 
-            position: relative; /* For close button positioning */
-        }
-        #close-upload-section-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
-            border: none;
-            font-size: 1.2em;
-            cursor: pointer;
-        }
-        .dark-theme #upload-section {
-            background-color: #3a3a3a;
-            border-color: #555;
-        }
-        .dark-theme #close-upload-section-btn {
-            color: #e0e0e0;
-        }
-
-
+        #upload-section { display: none; padding: 20px; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 15px; background-color: #f8f9fa; }
         .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
         .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
 
@@ -149,7 +124,7 @@
             flex-shrink: 0; 
         }
          .file-browser-controls .view-toggle button {
-            padding: 8px 12px; font-size: 0.9em; margin: 0;
+             padding: 8px 12px; font-size: 0.9em; margin: 0;
         }
         .file-browser-controls:not(:has(.actions-group-left)) .search-form-right {
             margin-left: 0;
@@ -249,8 +224,7 @@
                 <div class="actions-group-left">
                     <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
                     <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
-                    <button type="button" id="trigger-file-upload-btn">上傳檔案</button>
-                    <button type="button" id="trigger-folder-upload-btn">上傳資料夾</button>
+                    <button type="button" id="toggleUploadBtn" class="upload-button-main">上傳</button>
                 </div>
             <% } %>
         
@@ -279,15 +253,14 @@
 
         <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
             <div id="upload-section">
-                <button type="button" id="close-upload-section-btn" title="關閉上傳區域">&times;</button>
                 <h2>上傳到 "<%= currentPath === '/' ? '根目錄' : currentPath.split('/').pop() %>"</h2>
                 <div id="drop-area">
                     <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="currentPath" value="<%= currentPath %>">
                         <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
                         <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                        <input type="file" id="userFiles" name="userFiles" multiple style="display: none;">
-                        <p>將文件或文件夾拖拽到此處，或 <label for="userFiles" id="select-files-label">點擊選擇</label></p>
+                        <input type="file" id="userFiles" name="userFiles" multiple webkitdirectory directory style="display: none;">
+                        <p>將文件或文件夾拖拽到此處，或 <label for="userFiles" id="select-files-label">點擊選擇文件或文件夾</label></p>
                         <button type="submit" id="upload-button">上傳已選項目</button>
                     </form>
                     <div id="file-list-preview" style="margin-top:10px; text-align:left;"></div>
@@ -313,12 +286,12 @@
                         <li>
                             <div class="file-entry-selectable">
                                 <input type="checkbox" class="item-checkbox"
-                                        data-path="<%= item.path %>"
-                                        data-encoded-path="<%= item.encodedPath %>"
-                                        data-name="<%= item.name %>"
-                                        data-encoded-name="<%= item.encodedName %>"
-                                        data-is-dir="<%= item.isDir %>"
-                                        data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>">
+                                       data-path="<%= item.path %>"
+                                       data-encoded-path="<%= item.encodedPath %>"
+                                       data-name="<%= item.name %>"
+                                       data-encoded-name="<%= item.encodedName %>"
+                                       data-is-dir="<%= item.isDir %>"
+                                       data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>">
                                 <div class="file-content-wrapper">
                                     <% if (item.isDir) { %>
                                         <div class="file-entry">
@@ -403,7 +376,7 @@
     </div>
 
     <div id="move-modal">
-        <div class="modal-content"> 
+        <div class="move-modal-content">
             <span class="close-modal-btn" id="close-move-modal-btn">&times;</span>
             <h3>移動選中項目到:</h3>
             <div id="directory-tree-container">
@@ -411,10 +384,8 @@
             </div>
             <p>已選擇目標: <strong id="selected-destination-path">無</strong></p>
             <input type="hidden" id="move-destination-input" value="">
-            <div class="modal-actions"> 
-                <button type="button" class="secondary" id="cancel-move-btn">取消</button>
-                <button id="confirm-move-btn" disabled>確認移動</button>
-            </div>
+            <button id="confirm-move-btn" disabled>確認移動</button>
+            <button type="button" class="secondary" id="cancel-move-btn">取消</button>
         </div>
     </div>
 
@@ -445,24 +416,12 @@
             const moveDestinationInput = document.getElementById('move-destination-input');
             let currentDirectoryTree = [];
 
-            // 上傳相關 DOM 元素
-            const triggerFileUploadBtn = document.getElementById('trigger-file-upload-btn');
-            const triggerFolderUploadBtn = document.getElementById('trigger-folder-upload-btn');
-            const uploadSection = document.getElementById('upload-section');
-            const userFilesInput = document.getElementById('userFiles'); // 主檔案輸入框
-            const selectFilesLabel = document.getElementById('select-files-label'); // 點擊選擇的標籤
-            const uploadForm = document.getElementById('upload-form'); 
-            const fileListPreview = document.getElementById('file-list-preview');
-            const uploadProgressContainer = document.getElementById('upload-progress-container');
-            const uploadProgressBar = document.getElementById('upload-progress-bar');
-            const closeUploadSectionBtn = document.getElementById('close-upload-section-btn');
-            const uploadSubmitButton = document.getElementById('upload-button'); // 上傳已選項目按鈕
-
-
             function getSelectedItems() {
                 const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                 const selected = [];
-                currentCheckboxes.forEach((cb) => {
+                // console.log(`getSelectedItems: Found ${currentCheckboxes.length} checkboxes.`); 
+                currentCheckboxes.forEach((cb, index) => {
+                    // console.log(`Inspecting Checkbox ${index} (path: ${cb.dataset.path}, name: ${cb.dataset.name}): checked = ${cb.checked}`); 
                     if (cb.checked) {
                         selected.push({
                             path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
@@ -471,6 +430,7 @@
                         });
                     }
                 });
+                // console.log('getSelectedItems: Total selected =', selected.length, '; Selected items:', JSON.stringify(selected.map(s => s.name))); 
                 return selected;
             }
 
@@ -503,8 +463,9 @@
             }
 
             const itemCheckboxesForListeners = document.querySelectorAll('.item-checkbox');
-            itemCheckboxesForListeners.forEach((checkbox) => {
-                checkbox.addEventListener('change', () => {
+            itemCheckboxesForListeners.forEach((checkbox, index) => {
+                checkbox.addEventListener('change', (event) => {
+                    // console.log(`Checkbox ${index} (path: ${event.target.dataset.path}) 'change' event. New checked state: ${event.target.checked}`); 
                     updateSelectionActions(); 
                 });
             });
@@ -514,7 +475,7 @@
                     const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                     currentCheckboxes.forEach(cb => {
                         if (cb.checked !== e.target.checked) { 
-                            cb.checked = e.target.checked;
+                           cb.checked = e.target.checked;
                         }
                     });
                     updateSelectionActions(); 
@@ -545,15 +506,19 @@
             if (actionDownloadBtn) {
                 actionDownloadBtn.addEventListener('click', () => {
                     const selectedItems = getSelectedItems(); 
+                    // console.log("下載按鈕點擊，選中項:", selectedItems); 
+
                     if (selectedItems.length === 0) {
                         alert("請至少選擇一個項目進行下載。"); 
                         return;
                     }
                      if (actionDownloadBtn.disabled) { 
+                        // console.log("下載按鈕被禁用，但仍被點擊。");
                         return;
                     }
 
                     if (selectedItems.length === 1 && !selectedItems[0].isDir) {
+                        // console.log("準備下載單個文件:", selectedItems[0]);
                         let url = `/download?path=${selectedItems[0].encodedPath}`;
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
@@ -566,6 +531,7 @@
                         tempLink.click();
                         document.body.removeChild(tempLink);
                     } else {
+                        // console.log("準備打包下載 (多選或文件夾):", selectedItems);
                         const form = document.createElement('form');
                         form.method = 'POST';
                         form.action = '/download-archive';
@@ -581,6 +547,7 @@
                         }));
                         itemsInput.value = JSON.stringify(itemsForPayload);
                         form.appendChild(itemsInput);
+                        // console.log("打包下載的項目數據 (itemsInput.value):", itemsInput.value);
 
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             const targetUserInput = document.createElement('input');
@@ -597,6 +564,7 @@
                             form.appendChild(csrfInput);
                         }
                         document.body.appendChild(form);
+                        // console.log("提交打包下載表單...");
                         try {
                             form.submit();
                         } catch (e) {
@@ -668,8 +636,8 @@
                 ul.appendChild(rootLi);
                 function buildTree(items, parentUl, parentPath) {
                     items.forEach(item => {
-                        if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || (sourcePath.startsWith(item.path + '/') && item.path !=='/'))) return; 
-                        if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) return; 
+                        if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || (sourcePath.startsWith(item.path + '/') && item.path !=='/'))) return;
+                        if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) return;
                         const li = document.createElement('li'); li.textContent = item.name; li.dataset.path = item.path;
                         li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, item.path); });
                         parentUl.appendChild(li);
@@ -715,134 +683,26 @@
                     moveModal.style.display = 'none';
                 });
             }
+            const toggleUploadBtn = document.getElementById('toggleUploadBtn');
+            const uploadSection = document.getElementById('upload-section');
+            const userFilesInput = document.getElementById('userFiles'); 
+            const selectFilesLabel = document.getElementById('select-files-label'); 
+            const uploadForm = document.getElementById('upload-form'); 
+            const uploadProgressContainer = document.getElementById('upload-progress-container');
+            const uploadProgressBar = document.getElementById('upload-progress-bar');
 
-            // --- 新增/修改的上傳邏輯 ---
-            if (triggerFileUploadBtn) {
-                triggerFileUploadBtn.addEventListener('click', () => {
-                    if (!userFilesInput || !uploadSection || !selectFilesLabel) return;
-                    userFilesInput.removeAttribute('webkitdirectory');
-                    userFilesInput.removeAttribute('directory');
-                    selectFilesLabel.textContent = '點擊選擇檔案';
-                    uploadSection.style.display = 'block';
-                    userFilesInput.value = null; // 清空先前選擇
-                    fileListPreview.innerHTML = ''; // 清空預覽
-                    if (uploadSubmitButton) uploadSubmitButton.style.display = 'none'; // 隱藏上傳按鈕直到選擇檔案
-                    userFilesInput.click();
-                });
-            }
-
-            if (triggerFolderUploadBtn) {
-                triggerFolderUploadBtn.addEventListener('click', () => {
-                    if (!userFilesInput || !uploadSection || !selectFilesLabel) return;
-                    userFilesInput.setAttribute('webkitdirectory', 'true');
-                    userFilesInput.setAttribute('directory', 'true');
-                    selectFilesLabel.textContent = '點擊選擇資料夾';
-                    uploadSection.style.display = 'block';
-                    userFilesInput.value = null; // 清空先前選擇
-                    fileListPreview.innerHTML = ''; // 清空預覽
-                    if (uploadSubmitButton) uploadSubmitButton.style.display = 'none'; // 隱藏上傳按鈕直到選擇檔案
-                    userFilesInput.click();
-                });
-            }
-
-            if (closeUploadSectionBtn && uploadSection) {
-                closeUploadSectionBtn.addEventListener('click', () => {
-                    uploadSection.style.display = 'none';
-                    if (userFilesInput) userFilesInput.value = null; // 清空選擇的檔案
-                    if (fileListPreview) fileListPreview.innerHTML = ''; // 清空預覽
-                    if (uploadProgressContainer) uploadProgressContainer.style.display = 'none'; // 隱藏進度條
-                    if (uploadSubmitButton) uploadSubmitButton.style.display = 'none'; // 隱藏上傳按鈕
+            if (toggleUploadBtn && uploadSection) { 
+                toggleUploadBtn.addEventListener('click', () => {
+                    if (uploadSection.style.display === 'none' || uploadSection.style.display === '') {
+                        uploadSection.style.display = 'block';
+                        toggleUploadBtn.textContent = '隱藏上傳區域';
+                    } else {
+                        uploadSection.style.display = 'none';
+                        toggleUploadBtn.textContent = '上傳'; 
+                    }
                 });
             }
             
-            if (userFilesInput) {
-                userFilesInput.addEventListener('change', updateFileListPreview);
-            }
-
-            // 更新檔案列表預覽的函數
-            function updateFileListPreview() {
-                if (!userFilesInput || !fileListPreview || !uploadSubmitButton) return;
-                fileListPreview.innerHTML = ''; // 清空之前的預覽
-                
-                if (userFilesInput.files.length > 0) {
-                    const list = document.createElement('ul');
-                    list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
-                    
-                    // 檢查 input 是否處於資料夾模式，並且第一個檔案的 webkitRelativePath 是否表明它來自資料夾結構
-                    const isFolderMode = userFilesInput.hasAttribute('webkitdirectory');
-                    let isDirectoryUpload = false;
-                    if (isFolderMode && userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath && userFilesInput.files[0].webkitRelativePath.includes('/')) {
-                        isDirectoryUpload = true;
-                    } else if (!isFolderMode && userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath && userFilesInput.files[0].webkitRelativePath.includes('/')){
-                        // 這種情況可能是拖放資料夾到非資料夾模式的 input，也視為資料夾上傳
-                        isDirectoryUpload = true;
-                    }
-
-
-                    if (isDirectoryUpload) {
-                        const folderName = userFilesInput.files[0].webkitRelativePath.split('/')[0];
-                        const listItem = document.createElement('li');
-                        listItem.textContent = `文件夾: ${folderName} (${userFilesInput.files.length} 個文件)`;
-                        listItem.style.fontSize = '0.9em';
-                        listItem.style.fontWeight = 'bold';
-                        list.appendChild(listItem);
-                    } else { 
-                        for (let i = 0; i < userFilesInput.files.length; i++) {
-                            const listItem = document.createElement('li');
-                            listItem.textContent = userFilesInput.files[i].name + (userFilesInput.files[i].size ? ` (${(userFilesInput.files[i].size / 1024).toFixed(1)} KB)` : '');
-                            listItem.style.fontSize = '0.9em';
-                            list.appendChild(listItem);
-                        }
-                    }
-                    fileListPreview.appendChild(list);
-                    uploadSubmitButton.style.display = 'inline-block'; // 顯示上傳按鈕
-                } else {
-                    uploadSubmitButton.style.display = 'none'; // 如果沒有選擇檔案，隱藏上傳按鈕
-                }
-            }
-            
-            // 拖放區域處理
-            const dropArea = document.getElementById('drop-area');
-            if (dropArea && userFilesInput && fileListPreview && uploadSection && selectFilesLabel && uploadSubmitButton) { 
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, preventDefaults, false);
-                    document.body.addEventListener(eventName, preventDefaults, false); 
-                });
-                function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-                
-                ['dragenter', 'dragover'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false)
-                });
-                ['dragleave', 'drop'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false)
-                });
-                
-                dropArea.addEventListener('drop', handleDrop, false);
-
-                function handleDrop(e) {
-                    const dt = e.dataTransfer;
-                    const files = dt.files;
-
-                    if (files.length > 0) {
-                        // 檢查拖入的是否為資料夾 (基於 webkitRelativePath)
-                        if (files[0].webkitRelativePath && files[0].webkitRelativePath.includes('/')) {
-                            userFilesInput.setAttribute('webkitdirectory', 'true');
-                            userFilesInput.setAttribute('directory', 'true');
-                            selectFilesLabel.textContent = '點擊選擇資料夾 (已拖入資料夾)';
-                        } else {
-                            userFilesInput.removeAttribute('webkitdirectory');
-                            userFilesInput.removeAttribute('directory');
-                            selectFilesLabel.textContent = '點擊選擇檔案 (已拖入檔案)';
-                        }
-                        userFilesInput.files = files; // 將拖放的檔案賦給 input
-                        uploadSection.style.display = 'block'; // 顯示上傳區域
-                        updateFileListPreview(); // 更新預覽
-                    }
-                }
-            }
-
-
-            // 上傳表單提交處理 (基本不變)
             if (uploadForm && userFilesInput) {
                 uploadForm.addEventListener('submit', function(event) {
                     event.preventDefault(); 
@@ -899,20 +759,72 @@
                             console.error('Upload failed:', xhr.status, xhr.responseText);
                         }
                     };
-                    xhr.onerror = function(e) { 
+                    xhr.onerror = function(e) { // 添加事件参数 e
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
                         alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
                         console.error('Upload network error:', e);
                     };
                     xhr.send(formData);
                 });
-                 // 初始化時隱藏“上傳已選項目”按鈕，因為還沒有選擇檔案
-                if (uploadSubmitButton) {
-                    uploadSubmitButton.style.display = 'none';
-                }
             }
-            // --- 上傳邏輯結束 ---
 
+            const dropArea = document.getElementById('drop-area');
+            const fileListPreview = document.getElementById('file-list-preview');
+            // const uploadFormButton = document.getElementById('upload-button'); // Already declared
+
+            if (dropArea && userFilesInput && fileListPreview) { 
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false);
+                });
+                function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+                ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false));
+                ['dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false));
+                
+                dropArea.addEventListener('drop', handleDrop, false);
+                function handleDrop(e) {
+                    userFilesInput.files = e.dataTransfer.files; 
+                    updateFileListPreviewOnDrop();
+                }
+                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop);
+
+                function updateFileListPreviewOnDrop() {
+                    fileListPreview.innerHTML = '';
+                    const uploadFormButton = document.getElementById('upload-button'); 
+                    if (userFilesInput.files.length > 0) {
+                        const list = document.createElement('ul');
+                        list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
+                        let isDirectoryUpload = false;
+                        if (userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath) {
+                            const firstFileRelativePath = userFilesInput.files[0].webkitRelativePath;
+                            if (firstFileRelativePath.includes('/')) {
+                                isDirectoryUpload = true;
+                            }
+                        }
+                        if (isDirectoryUpload) {
+                            const folderName = userFilesInput.files[0].webkitRelativePath.split('/')[0];
+                            const listItem = document.createElement('li');
+                            listItem.textContent = `文件夾: ${folderName} (${userFilesInput.files.length} 個文件)`;
+                            listItem.style.fontSize = '0.9em';
+                            listItem.style.fontWeight = 'bold';
+                            list.appendChild(listItem);
+                        } else { 
+                            for (let i = 0; i < userFilesInput.files.length; i++) {
+                                const listItem = document.createElement('li');
+                                listItem.textContent = userFilesInput.files[i].name + (userFilesInput.files[i].size ? ` (${(userFilesInput.files[i].size / 1024).toFixed(1)} KB)` : '');
+                                listItem.style.fontSize = '0.9em';
+                                list.appendChild(listItem);
+                            }
+                        }
+                        fileListPreview.appendChild(list);
+                        if(uploadFormButton) uploadFormButton.style.display = 'inline-block';
+                    } else {
+                        if(uploadFormButton) uploadFormButton.style.display = 'none';
+                    }
+                }
+                const initialUploadButton = document.getElementById('upload-button'); 
+                if(userFilesInput.files.length === 0 && initialUploadButton) initialUploadButton.style.display = 'none';
+            }
 
             const fileContainer = document.getElementById('file-container');
             const listViewBtn = document.getElementById('listViewBtn');
@@ -986,7 +898,6 @@
             window.addEventListener('click', (event) => { 
                 if (event.target == createItemModal) createItemModal.style.display = 'none';
                 if (event.target == moveModal) moveModal.style.display = 'none'; 
-                // 注意：點擊 uploadSection 外部不應關閉它，因為檔案選擇對話框會使其失去焦點
             });
         });
         function showRenameForm(encodedName, currentName, isDir) { 
