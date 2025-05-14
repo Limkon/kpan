@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* ... (保留所有之前的樣式) ... */
+        /* Styles for selection action bar, item checkboxes, modals, etc. */
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         #selection-action-bar button { margin: 0; }
         .item-checkbox { margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
@@ -23,7 +23,7 @@
             overflow: auto; background-color: rgba(0,0,0,0.5); 
         }
         .modal-content { 
-            background-color: var(--modal-bg, #ffffff) !important; /* 再次確保背景色 */
+            background-color: var(--modal-bg, #ffffff) !important; /* 確保背景色優先 */
             color: var(--modal-text-color, #333);
             margin: 10% auto; 
             padding: 20px; 
@@ -33,7 +33,7 @@
             max-width: 500px; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
         }
-        .dark-theme .modal-content {
+        .dark-theme .modal-content { /* 暗色主題下的模態框樣式 */
              --modal-bg: #2c2c2c; 
              --modal-text-color: #e0e0e0; 
              --modal-border-color: #555;
@@ -64,7 +64,7 @@
         }
         .dark-theme #directory-tree-container {
             border-color: #444;
-            background-color: #3a3a3a; 
+            background-color: #3a3a3a; /* 暗色主題目錄樹背景 */
         }
         #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
         #directory-tree-container li { padding: 5px 0; cursor: pointer; border-bottom: 1px dashed var(--input-border-color, #eee); }
@@ -469,14 +469,14 @@
             const itemCheckboxesForListeners = document.querySelectorAll('.item-checkbox');
             itemCheckboxesForListeners.forEach((checkbox, index) => {
                 checkbox.addEventListener('change', (event) => {
-                    console.log(`Checkbox ${index} (path: ${event.target.dataset.path}) 'change' event. New checked state: ${event.target.checked}`); 
+                    // console.log(`Checkbox ${index} (path: ${event.target.dataset.path}) 'change' event. New checked state: ${event.target.checked}`); 
                     updateSelectionActions(); 
                 });
             });
             
             if (selectAllCheckbox) {
                 selectAllCheckbox.addEventListener('change', (e) => {
-                    console.log(`Select All checkbox changed to: ${e.target.checked}`);
+                    // console.log(`Select All checkbox changed to: ${e.target.checked}`);
                     const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                     currentCheckboxes.forEach(cb => {
                         if (cb.checked !== e.target.checked) { 
@@ -511,19 +511,19 @@
             if (actionDownloadBtn) {
                 actionDownloadBtn.addEventListener('click', () => {
                     const selectedItems = getSelectedItems(); 
-                    console.log("下載按鈕點擊，選中項:", selectedItems.length, "個"); 
+                    // console.log("下載按鈕點擊，選中項:", selectedItems.length, "個"); 
 
                     if (selectedItems.length === 0) {
                         alert("請至少選擇一個項目進行下載。"); 
                         return;
                     }
                      if (actionDownloadBtn.disabled) { 
-                        console.log("下載按鈕被禁用，但仍被點擊。");
+                        // console.log("下載按鈕被禁用，但仍被點擊。");
                         return;
                     }
 
                     if (selectedItems.length === 1 && !selectedItems[0].isDir) {
-                        console.log("準備下載單個文件:", selectedItems[0]);
+                        // console.log("準備下載單個文件:", selectedItems[0]);
                         let url = `/download?path=${selectedItems[0].encodedPath}`;
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
@@ -536,7 +536,7 @@
                         tempLink.click();
                         document.body.removeChild(tempLink);
                     } else {
-                        console.log("準備打包下載 (多選或文件夾):", selectedItems);
+                        // console.log("準備打包下載 (多選或文件夾):", selectedItems);
                         const form = document.createElement('form');
                         form.method = 'POST';
                         form.action = '/download-archive';
@@ -552,7 +552,7 @@
                         }));
                         itemsInput.value = JSON.stringify(itemsForPayload);
                         form.appendChild(itemsInput);
-                        console.log("打包下載的項目數據 (itemsInput.value):", itemsInput.value);
+                        // console.log("打包下載的項目數據 (itemsInput.value):", itemsInput.value);
 
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             const targetUserInput = document.createElement('input');
@@ -569,7 +569,7 @@
                             form.appendChild(csrfInput);
                         }
                         document.body.appendChild(form);
-                        console.log("提交打包下載表單...");
+                        // console.log("提交打包下載表單...");
                         try {
                             form.submit();
                         } catch (e) {
@@ -751,13 +751,12 @@
                     xhr.onload = function() {
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
                         console.log("XHR Upload onload. Status:", xhr.status, "ResponseURL:", xhr.responseURL, "ResponseText:", xhr.responseText.substring(0, 200));
-                        if (xhr.status >= 200 && xhr.status < 400) { // Consider 3xx redirects as potentially successful if they go to /files
+                        if (xhr.status >= 200 && xhr.status < 400) { 
                             if (xhr.responseURL && xhr.responseURL !== uploadForm.action && xhr.responseURL.includes('/files')) { 
                                 console.log("XHR detected redirect to files page, navigating...");
                                 window.location.href = xhr.responseURL; 
                             } else {
                                 console.log("XHR success, but no clear redirect to /files or responseURL same as action. Reloading.");
-                                // alert('上傳操作已發送，頁面將刷新。'); 
                                 window.location.reload();
                             }
                         } else {
