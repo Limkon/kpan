@@ -87,8 +87,8 @@ app.use(session({
 // const csrf = require('csurf');
 // app.use(csrf());
 // app.use((req, res, next) => {
-//     res.locals.csrfToken = req.csrfToken ? req.csrfToken() : null; 
-//     next();
+//     res.locals.csrfToken = req.csrfToken ? req.csrfToken() : null; 
+//     next();
 // });
 
 
@@ -111,7 +111,9 @@ function resolvePathForUser(usernameForPath, relativePath = '/') {
     if (typeof relativePath === 'string' && relativePath.includes('?')) {
         cleanRelativePath = relativePath.split('?')[0];
     }
+    // 使用 path.posix.normalize 來處理客戶端傳來的 POSIX 風格路徑
     const normalizedRelativePath = path.posix.normalize(cleanRelativePath).replace(/^(\.\.([/\\]|$))+/, '');
+    // 使用 path.join 來構建特定於操作系統的絕對路徑
     const requestedPath = path.join(userRoot, normalizedRelativePath);
 
     if (!path.resolve(requestedPath).startsWith(path.resolve(userRoot))) {
@@ -180,69 +182,71 @@ async function getDirectoryTreeRecursive(directoryToScan, userUploadRoot, curren
 }
 
 // --- Multer 設置 ---
-// ########## MODIFIED SECTION START ##########
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // On the server, file.originalname will be what the client put as the third argument
-        // in formData.append(), which is file.webkitRelativePath (e.g., "FolderName/file.txt") or file.name.
-        console.log(`[Multer Destination] Received file with originalname (client's webkitRelativePath or name): ${file.originalname}`);
+        // 在伺服器端，file.originalname 將是客戶端在 formData.append() 的第三個參數中放入的內容，
+        // 即 file.webkitRelativePath (例如 "FolderName/file.txt") 或 file.name。
+        console.log(`[Multer Destination] 收到文件，originalname (客戶端的 webkitRelativePath 或 name): ${file.originalname}`);
         const actingUsername = req.session.user.username;
         const targetUsername = (req.session.user.role === 'admin' && req.body.targetUsername) ? req.body.targetUsername : actingUsername;
-        const baseUploadPath = req.body.currentPath || '/'; // This is where the user wants to upload, e.g., /documents
-        console.log(`[Multer Destination] actingUsername: ${actingUsername}, targetUsername: ${targetUsername}, baseUploadPath: ${baseUploadPath}`);
+        // baseUploadPath 是用戶選擇的上傳根路徑，例如 /documents
+        const baseUploadPath = req.body.currentPath || '/';
+        console.log(`[Multer Destination] 操作用戶: ${actingUsername}, 目標用戶: ${targetUsername}, 基礎上傳路徑: ${baseUploadPath}`);
 
-        // file.originalname could be "MyFolder/MySubFolder/actualFile.txt" or just "actualFile.txt"
-        // We need to extract the directory part to create it relative to baseUploadPath
-        const directoryStructureWithinUpload = path.dirname(file.originalname); // e.g., "MyFolder/MySubFolder" or "." if no structure
+        // file.originalname 可能是 "MyFolder/MySubFolder/actualFile.txt" 或僅 "actualFile.txt"
+        // 我們需要使用 path.posix.dirname 提取目錄部分，因為 webkitRelativePath 是 POSIX 風格的
+        const directoryStructureWithinUpload = path.posix.dirname(file.originalname);
+        console.log(`[Multer Destination] 從 originalname 提取的原始目錄結構: ${directoryStructureWithinUpload}`);
 
         let finalDirectoryForFile;
+        // 如果 directoryStructureWithinUpload 不是 "." (表示 originalname 中包含路徑分隔符)
         if (directoryStructureWithinUpload && directoryStructureWithinUpload !== '.') {
-            // If there's a folder structure, join it with the user's chosen base path
+            // 如果存在文件夾結構，將其與用戶選擇的基礎路徑結合
             finalDirectoryForFile = path.posix.join(baseUploadPath, directoryStructureWithinUpload);
         } else {
-            // No internal folder structure, so the file goes directly into the baseUploadPath
+            // 沒有內部文件夾結構，文件直接放入 baseUploadPath
             finalDirectoryForFile = baseUploadPath;
         }
-        console.log(`[Multer Destination] Calculated finalDirectoryForFile (where the file's containing folder is): ${finalDirectoryForFile}`);
+        console.log(`[Multer Destination] 計算出的最終文件所在目錄 (相對於用戶根目錄): ${finalDirectoryForFile}`);
         
         try {
-            // Resolve the full path on the server for the directory that will contain the file
+            // 解析文件將存放的目錄在伺服器上的完整絕對路徑
             const resolvedUploadDir = resolvePathForUser(targetUsername, finalDirectoryForFile);
-            console.log(`[Multer Destination] Resolved server path for directory: ${resolvedUploadDir}`);
+            console.log(`[Multer Destination] 解析後的伺服器目錄絕對路徑: ${resolvedUploadDir}`);
             
-            // Ensure this directory exists; if not, create it recursively
+            // 確保此目錄存在；如果不存在，則遞歸創建
             if (!fs.existsSync(resolvedUploadDir)) {
                 fs.mkdirSync(resolvedUploadDir, { recursive: true });
-                console.log(`[Multer Destination] Created directory: ${resolvedUploadDir}`);
+                console.log(`[Multer Destination] 已創建目錄: ${resolvedUploadDir}`);
             }
-            cb(null, resolvedUploadDir); // Tell multer to save the file in this resolved directory
+            cb(null, resolvedUploadDir); // 告知 multer 在此解析後的目錄中保存文件
         } catch (err) {
-            console.error(`[Multer Destination ERROR] For target ${targetUsername}, aiming to create structure for path ${finalDirectoryForFile}:`, err);
+            console.error(`[Multer Destination ERROR] 目標用戶 ${targetUsername}，嘗試為路徑 ${finalDirectoryForFile} 創建結構時出錯:`, err);
             return cb(new Error(`上傳目標路徑處理錯誤: ${err.message}`));
         }
     },
     filename: function (req, file, cb) {
-        // file.originalname is the full relative path from the client (e.g., "MyFolder/MySubFolder/actualFile.txt")
-        // We need only the actual base name of the file (e.g., "actualFile.txt")
-        const actualFileName = path.basename(file.originalname);
-        console.log(`[Multer Filename] Full originalname from client: ${file.originalname}, extracted actualFileName for disk: ${actualFileName}`);
-        cb(null, Buffer.from(actualFileName, 'latin1').toString('utf8')); // Keep buffer for special chars
+        // file.originalname 是來自客戶端的完整相對路徑 (例如 "MyFolder/MySubFolder/actualFile.txt")
+        // 我們只需要文件的實際基本名稱 (例如 "actualFile.txt")，使用 path.posix.basename
+        const actualFileName = path.posix.basename(file.originalname);
+        console.log(`[Multer Filename] 客戶端完整 originalname: ${file.originalname}, 提取的磁碟文件名: ${actualFileName}`);
+        // 使用 Buffer 處理可能存在的特殊字符文件名
+        cb(null, Buffer.from(actualFileName, 'latin1').toString('utf8'));
     }
 });
-// ########## MODIFIED SECTION END ##########
 
 const upload = multer({ storage: storage,
     fileFilter: (req, file, cb) => {
-        // path.basename is applied to file.originalname (which is webkitRelativePath or name)
-        // This check should be on the actual filename part, not the whole path.
-        const actualFileName = path.basename(file.originalname);
+        // 對 file.originalname (即 webkitRelativePath 或 name) 應用 path.posix.basename
+        // 此檢查應針對實際文件名部分，而不是整個路徑。
+        const actualFileName = path.posix.basename(file.originalname);
         if (actualFileName.includes('..') || actualFileName.includes('/') || actualFileName.includes('\\')) {
-            console.warn(`[Multer FileFilter] Invalid characters in extracted filename: ${actualFileName} (from original: ${file.originalname})`);
+            console.warn(`[Multer FileFilter] 提取的文件名中包含無效字符: ${actualFileName} (來自 original: ${file.originalname})`);
             return cb(new Error('文件名包含無效字符。'), false);
         }
         cb(null, true);
     },
-    limits: { fileSize: 100 * 1024 * 1024 } // 100 MB limit
+    limits: { fileSize: 100 * 1024 * 1024 } // 100 MB 限制
 });
 
 
@@ -405,10 +409,10 @@ app.get('/files', isAuthenticated, async (req, res) => {
 });
 
 app.post('/upload', isAuthenticated, (req, res, next) => {
-    console.log(`[POST /upload] Request received. User: ${req.session.user.username}, Body:`, req.body);
-    upload.array('userFiles', 100)(req, res, (err) => { // Increased limit for folder uploads
+    console.log(`[POST /upload] 請求已收到。用戶: ${req.session.user.username}, 請求體:`, req.body);
+    upload.array('userFiles', 200)(req, res, (err) => { // 增加同時上傳文件數量限制以應對大型文件夾
         if (err) {
-            console.error(`[POST /upload] Multer 上傳錯誤 for user ${req.session.user.username}:`, err.message, err.stack);
+            console.error(`[POST /upload] 用戶 ${req.session.user.username} 的 Multer 上傳錯誤:`, err.message, err.stack);
             const currentPath = req.body.currentPath || '/';
             const redirectParams = new URLSearchParams();
             if (currentPath !== '/') redirectParams.set('path', currentPath);
@@ -419,7 +423,7 @@ app.post('/upload', isAuthenticated, (req, res, next) => {
             redirectParams.set('messageType', 'error');
             return res.redirect(`/files?${redirectParams.toString()}`);
         }
-        console.log(`[POST /upload] Multer processed ${req.files ? req.files.length : 0} files for user ${req.session.user.username}.`);
+        console.log(`[POST /upload] Multer 已為用戶 ${req.session.user.username} 處理 ${req.files ? req.files.length : 0} 個文件。`);
         const currentPath = req.body.currentPath || '/';
         const redirectParams = new URLSearchParams();
         if (currentPath !== '/') redirectParams.set('path', currentPath);
@@ -428,12 +432,11 @@ app.post('/upload', isAuthenticated, (req, res, next) => {
         }
 
         if (!req.files || req.files.length === 0) {
-            // This case might also be hit if a user drops an empty folder and the client-side logic for empty folder
-            // creation is bypassed or fails, resulting in no files being submitted.
-            // The empty folder creation is handled by '/create-folder' via client-side logic.
-            // So, if we reach here with no files, it's likely an actual "no files selected" scenario or an error.
+            // 此情況也可能在用戶拖放空文件夾且客戶端空文件夾創建邏輯被繞過或失敗時發生，導致沒有文件被提交。
+            // 空文件夾創建由客戶端邏輯通過 '/create-folder' 處理。
+            // 因此，如果此處沒有文件，則可能是實際的“未選擇文件”情況或錯誤。
             redirectParams.set('message', encodeURIComponent('沒有選擇文件或非空文件夾。'));
-            redirectParams.set('messageType', 'warning'); // Changed to warning as empty folder upload is separate
+            redirectParams.set('messageType', 'warning'); // 改為警告，因為空文件夾上傳是分開處理的
             return res.redirect(`/files?${redirectParams.toString()}`);
         }
         
@@ -520,9 +523,9 @@ app.get('/download', isAuthenticated, (req, res) => {
 });
 
 app.post('/download-archive', isAuthenticated, async (req, res) => {
-    console.log("[/download-archive] Received request.");
+    console.log("[/download-archive] 請求已收到。");
     console.log("[/download-archive] req.headers['content-type']:", req.headers['content-type']);
-    console.log("[/download-archive] Raw req.body:", JSON.stringify(req.body, null, 2));
+    console.log("[/download-archive] 原始 req.body:", JSON.stringify(req.body, null, 2));
 
     const actingUser = req.session.user;
     const itemsToArchiveString = req.body.items;
@@ -531,9 +534,9 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
     if (itemsToArchiveString && typeof itemsToArchiveString === 'string') {
         try {
             itemsToArchive = JSON.parse(itemsToArchiveString);
-            console.log("[/download-archive] Parsed items from req.body.items:", itemsToArchive);
+            console.log("[/download-archive] 從 req.body.items 解析的項目:", itemsToArchive);
         } catch (e) {
-            console.error("[/download-archive] Failed to parse items JSON from req.body.items:", e);
+            console.error("[/download-archive] 從 req.body.items 解析 JSON 失敗:", e);
             let redirectUrl = req.headers.referer || '/files';
             const errorParams = new URLSearchParams({ message: '打包下載失敗：項目數據格式錯誤。', messageType: 'error' }).toString();
             redirectUrl = redirectUrl.includes('?') ? `${redirectUrl.split('?')[0]}?${errorParams}` : `${redirectUrl}?${errorParams}`;
@@ -541,9 +544,9 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
         }
     } else if (req.body.items && Array.isArray(req.body.items)) {
         itemsToArchive = req.body.items;
-        console.log("[/download-archive] Items directly from req.body.items (likely parsed by express.json):", itemsToArchive);
+        console.log("[/download-archive] 直接從 req.body.items 獲取的項目 (可能已被 express.json 解析):", itemsToArchive);
     } else {
-        console.log("[/download-archive] req.body.items is missing or not a string/array.");
+        console.log("[/download-archive] req.body.items 缺失或不是字符串/數組。");
     }
 
     let targetUsername = actingUser.username;
@@ -564,7 +567,7 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
     }
 
     if (!itemsToArchive || !Array.isArray(itemsToArchive) || itemsToArchive.length === 0) {
-        console.log("[/download-archive] No items to archive after parsing.");
+        console.log("[/download-archive] 解析後沒有要打包的項目。");
         let redirectUrl = req.headers.referer || '/files';
         const errorParams = new URLSearchParams({ message: '未選擇要下載的項目或解析失敗。', messageType: 'error' }).toString();
         redirectUrl = redirectUrl.includes('?') ? `${redirectUrl.split('?')[0]}?${errorParams}` : `${redirectUrl}?${errorParams}`;
@@ -597,7 +600,7 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
     try {
         for (const item of itemsToArchive) {
             if (!item || typeof item.path !== 'string' || typeof item.name !== 'string') {
-                console.warn(`[/download-archive] Invalid item structure in archive list:`, item);
+                console.warn(`[/download-archive] 打包列表中的項目結構無效:`, item);
                 archive.append(`錯誤：一個無效的項目結構被傳遞。\n`, { name: `打包錯誤日誌.txt` });
                 continue;
             }
@@ -608,6 +611,7 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
                 continue;
             }
             const stat = await fsp.stat(fullPath);
+            // 在 ZIP 中的條目名稱應為相對於用戶根目錄的 POSIX 路徑
             const entryNameInZip = item.path.startsWith('/') ? item.path.substring(1) : item.path;
             if (stat.isFile()) {
                 archive.file(fullPath, { name: entryNameInZip });
@@ -620,7 +624,7 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
         archive.append(`內部錯誤：處理某些文件時發生問題。\n${error.message}\n`, { name: `內部伺服器錯誤日誌.txt` });
     }
     
-    console.log(`[/download-archive] Finalizing archive: ${archiveName}`);
+    console.log(`[/download-archive] 正在完成壓縮包: ${archiveName}`);
     await archive.finalize();
 });
 
@@ -823,10 +827,13 @@ app.post('/move-items', isAuthenticated, async (req, res) => {
         let errors = []; let successes = 0;
         for (const sourceRelPath of sourcePaths) {
             const fullSourcePath = resolvePathForUser(targetUsernameForMove, sourceRelPath);
-            const itemName = path.basename(fullSourcePath);
-            const fullNewPath = path.join(fullDestinationPath, itemName);
+            const itemName = path.basename(fullSourcePath); // 使用 path.basename 以兼容操作系統
+            const fullNewPath = path.join(fullDestinationPath, itemName); // 使用 path.join 以兼容操作系統
             if (fs.existsSync(fullSourcePath) && fs.statSync(fullSourcePath).isDirectory()) {
-                if (fullNewPath.startsWith(fullSourcePath + path.sep) || fullNewPath === fullSourcePath) {
+                // 確保 fullSourcePath 和 fullNewPath 都是絕對路徑且已正規化
+                const normalizedFullSourcePath = path.resolve(fullSourcePath);
+                const normalizedFullNewPath = path.resolve(fullNewPath);
+                if (normalizedFullNewPath.startsWith(normalizedFullSourcePath + path.sep) || normalizedFullNewPath === normalizedFullSourcePath) {
                     errors.push(`無法將文件夾 "${itemName}" 移動到其自身或其子文件夾中。`); continue;
                 }
             }
@@ -876,10 +883,6 @@ app.post('/admin/add-user', isAuthenticated, isAdmin, (req, res) => {
     if (newUsername.includes('/') || newUsername.includes('..') || newUsername.includes('\\') || newUsername.length > 50 || !/^[a-zA-Z0-9_.-]+$/.test(newUsername)) {
         return res.redirect('/admin?message=新用戶名包含無效字符、過長或格式不正確。&messageType=error');
     }
-    // REMOVED: Restriction on creating user named 'admin'
-    // if (newUsername.toLowerCase() === 'admin') {
-    //     return res.redirect('/admin?message=不能創建名為 "admin" 的用戶。&messageType=error');
-    // }
     db.get("SELECT * FROM users WHERE username = ?", [newUsername], (err, existingUser) => {
         if (err) {
             console.error("管理員添加用戶時檢查用戶名錯誤:", err);
@@ -926,7 +929,6 @@ app.post('/admin/reset-password/:userId', isAuthenticated, isAdmin, (req, res) =
 app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => {
     const userIdToDelete = parseInt(req.params.userId, 10);
     if (isNaN(userIdToDelete)) { return res.redirect('/admin?message=無效的用戶ID。&messageType=error');}
-    // This check correctly prevents self-deletion
     if (req.session.user.id === userIdToDelete) { return res.redirect('/admin?message=不能刪除自己。&messageType=error');}
     
     db.get("SELECT username FROM users WHERE id = ?", [userIdToDelete], (err, user) => {
@@ -934,10 +936,6 @@ app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => {
             if(err) console.error("管理員刪除用戶時查詢用戶錯誤:", err);
             return res.redirect('/admin?message=未找到用戶。&messageType=error');
         }
-        // REMOVED: Special protection for user named 'admin'. Self-delete protection is sufficient.
-        // if (user.username.toLowerCase() === 'admin') {
-        //     return res.redirect('/admin?message=不能刪除主要的 "admin" 管理員帳戶。&messageType=error');
-        // }
         const userDirToDelete = getUserUploadRoot(user.username);
         db.run("DELETE FROM users WHERE id = ?", [userIdToDelete], async function (err) {
             if (err) { console.error("管理員刪除用戶時數據庫錯誤:", err); return res.redirect('/admin?message=刪除用戶失敗。&messageType=error');}
