@@ -184,41 +184,60 @@ async function getDirectoryTreeRecursive(directoryToScan, userUploadRoot, curren
 // --- Multer 設置 ---
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // 文件將首先被保存到由 currentPath 決定的基礎目錄中。
-        // 結構將在 /upload 路由處理器中創建。
-        console.log(`[Multer Temp Dest] file.originalname (應為客戶端 append 第三參數傳來的純文件名): ${file.originalname}`);
+        // file.originalname 應該是客戶端傳來的 webkitRelativePath (例如 "A/a.txt")
+        // 或者是單個文件的文件名
+        console.log(`[Multer Dest] file.originalname (應為客戶端傳來的路徑或文件名): ${file.originalname}`);
         const actingUsername = req.session.user.username;
         const targetUsername = (req.session.user.role === 'admin' && req.body.targetUsername) ? req.body.targetUsername : actingUsername;
-        const baseUploadPath = req.body.currentPath || '/'; 
-        console.log(`[Multer Temp Dest] 操作用戶: ${actingUsername}, 目標用戶: ${targetUsername}, 基礎上傳路徑: ${baseUploadPath}`);
+        const baseUploadPath = req.body.currentPath || '/'; // 用戶在UI中所在的當前目錄
+        console.log(`[Multer Dest] 操作用戶: ${actingUsername}, 目標用戶: ${targetUsername}, 基礎上傳路徑 (UI當前路徑): ${baseUploadPath}`);
 
+        // 從 file.originalname (例如 "A/a.txt" 或 "file.txt") 中提取目錄部分
+        // 必須使用 path.posix.dirname 因為 webkitRelativePath (如果存在) 是 POSIX 風格
+        const directoryStructureWithinUpload = path.posix.dirname(file.originalname);
+        console.log(`[Multer Dest] 從 originalname 提取的目錄結構: ${directoryStructureWithinUpload}`);
+
+        let finalDirectoryForFile = baseUploadPath; // 默認是基礎上傳路徑 (UI當前路徑)
+        if (directoryStructureWithinUpload && directoryStructureWithinUpload !== '.') {
+            // 如果 originalname 中包含目錄結構 (例如 "A")，則將其附加到基礎路徑上
+            finalDirectoryForFile = path.posix.join(baseUploadPath, directoryStructureWithinUpload);
+        }
+        console.log(`[Multer Dest] 計算出的文件最終存放目錄 (相對用戶根目錄的路徑): ${finalDirectoryForFile}`);
+        
         try {
-            const resolvedBaseUploadDir = resolvePathForUser(targetUsername, baseUploadPath);
-            console.log(`[Multer Temp Dest] 解析後的臨時存儲基礎伺服器路徑: ${resolvedBaseUploadDir}`);
-            if (!fs.existsSync(resolvedBaseUploadDir)) {
-                fs.mkdirSync(resolvedBaseUploadDir, { recursive: true });
-                 console.log(`[Multer Temp Dest] 已創建基礎目錄: ${resolvedBaseUploadDir}`);
+            // 解析文件將存放的目錄在伺服器上的完整絕對路徑
+            const resolvedUploadDirAbsolute = resolvePathForUser(targetUsername, finalDirectoryForFile);
+            console.log(`[Multer Dest] 解析後的伺服器絕對目錄路徑: ${resolvedUploadDirAbsolute}`);
+            
+            // 確保此目錄存在；如果不存在，則遞歸創建
+            if (!fs.existsSync(resolvedUploadDirAbsolute)) {
+                fs.mkdirSync(resolvedUploadDirAbsolute, { recursive: true });
+                console.log(`[Multer Dest] 已創建目錄: ${resolvedUploadDirAbsolute}`);
             }
-            cb(null, resolvedBaseUploadDir); // 先保存到基礎路徑
+            cb(null, resolvedUploadDirAbsolute); // 告知 multer 在此解析後的目錄中保存文件
         } catch (err) {
-            console.error(`[Multer Temp Dest ERROR] 目標用戶 ${targetUsername}, 基礎路徑 ${baseUploadPath}:`, err);
-            return cb(new Error(`上傳臨時目標路徑處理錯誤: ${err.message}`));
+            console.error(`[Multer Dest ERROR] 目標用戶 ${targetUsername}, 嘗試為路徑 ${finalDirectoryForFile} 創建結構時出錯:`, err);
+            return cb(new Error(`上傳目標路徑處理錯誤: ${err.message}`));
         }
     },
     filename: function (req, file, cb) {
-        // 客戶端現在將純 file.name 作為 formData.append for 'userFiles' 的第三個參數
-        const pureFilename = path.basename(file.originalname); // 應該已經是純文件名，但為安全起見使用 basename
-        console.log(`[Multer Filename] originalname: ${file.originalname}, 使用純文件名作為磁碟名: ${pureFilename}`);
-        cb(null, Buffer.from(pureFilename, 'latin1').toString('utf8'));
+        // file.originalname 可能是 "A/a.txt" 或 "file.txt"
+        // 我們需要文件的基本名稱 (例如 "a.txt" 或 "file.txt")
+        // 必須使用 path.posix.basename
+        const actualFileName = path.posix.basename(file.originalname);
+        console.log(`[Multer Filename] originalname: ${file.originalname}, 提取的磁碟文件名: ${actualFileName}`);
+        cb(null, Buffer.from(actualFileName, 'latin1').toString('utf8')); // 使用 Buffer 處理特殊字符
     }
 });
 
 const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {
-        const actualFileName = path.basename(file.originalname); // 仍然檢查純文件名
+        // 這裡的 file.originalname 應該是客戶端傳來的 webkitRelativePath 或文件名
+        // 我們應該檢查 path.posix.basename(file.originalname) 是否包含非法字符
+        const actualFileName = path.posix.basename(file.originalname);
         if (actualFileName.includes('..') || actualFileName.includes('/') || actualFileName.includes('\\')) {
-            console.warn(`[Multer FileFilter] 文件名中包含無效字符: ${actualFileName}`);
+            console.warn(`[Multer FileFilter] 文件名 (${actualFileName}) 中包含無效字符 (來自 originalname: ${file.originalname})`);
             return cb(new Error('文件名包含無效字符。'), false);
         }
         cb(null, true);
@@ -255,10 +274,10 @@ app.post('/register', (req, res) => {
         db.get("SELECT COUNT(*) as count FROM users", (err, countRow) => {
             if (err) { console.error("註冊時查詢用戶總數錯誤:", err); return res.render('register', { error: '註冊錯誤，請稍後再試。', csrfToken: res.locals.csrfToken });}
             const hashedPassword = bcrypt.hashSync(password, 12);
-            const userRole = 'user';
+            const userRole = 'user'; // 默認新註冊用戶為 'user'
             db.run("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", [username, hashedPassword, userRole], function (err) {
                 if (err) { console.error("註冊時插入用戶錯誤:", err); return res.render('register', { error: '註冊失敗，請稍後再試。', csrfToken: res.locals.csrfToken }); }
-                getUserUploadRoot(username);
+                getUserUploadRoot(username); // 確保為新用戶創建上傳目錄
                 res.redirect('/login?message=註冊成功，請登錄。');
             });
         });
@@ -342,7 +361,7 @@ app.get('/files', isAuthenticated, async (req, res) => {
         if (searchQuery) {
             isSearchResultView = true;
             items = await searchFilesRecursively(userUploadRootPath, searchQuery, '/', userUploadRootPath);
-            currentDisplayPath = '/';
+            currentDisplayPath = '/'; // 搜索結果總是相對於根目錄
             pageTitle = `有關 "${searchQuery}" 的搜尋結果 (在 ${viewAsAdminContext ? targetUsernameForView : actingUser.username} 的文件中)`;
             items.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN-u-co-pinyin'));
         } else {
@@ -386,8 +405,8 @@ app.get('/files', isAuthenticated, async (req, res) => {
 });
 
 app.post('/upload', isAuthenticated, (req, res, next) => {
-    console.log(`[POST /upload] 請求已收到。用戶: ${req.session.user.username}`);
-    upload.array('userFiles', 200)(req, res, async (err) => { // 改為 async
+    console.log(`[POST /upload] 請求已收到。用戶: ${req.session.user.username}, Body:`, req.body);
+    upload.array('userFiles', 200)(req, res, (err) => { 
         if (err) {
             console.error(`[POST /upload] 用戶 ${req.session.user.username} 的 Multer 上傳錯誤:`, err.message, err.stack);
             const currentPathForRedirectOnError = req.body.currentPath || '/';
@@ -402,104 +421,23 @@ app.post('/upload', isAuthenticated, (req, res, next) => {
         }
 
         console.log(`[POST /upload] Multer 已為用戶 ${req.session.user.username} 處理 ${req.files ? req.files.length : 0} 個文件。`);
-        console.log(`[POST /upload] req.body (檢查 userFileRelativePaths):`, req.body);
-
-        const currentPath = req.body.currentPath || '/'; // 用戶在 UI 中選擇的基礎路徑
-        const targetUsername = (req.session.user.role === 'admin' && req.body.targetUsername) ? req.body.targetUsername : req.session.user.username;
-        const userFileRelativePaths = req.body.userFileRelativePaths; // 例如 ["A/a.txt", "A/b.txt"]
+        
+        const currentPath = req.body.currentPath || '/';
+        const redirectParams = new URLSearchParams();
+        if (currentPath !== '/') redirectParams.set('path', currentPath);
+         if (req.session.user.role === 'admin' && req.body.targetUsername) {
+            redirectParams.set('targetUsername', req.body.targetUsername);
+        }
 
         if (!req.files || req.files.length === 0) {
-            const noFilesRedirectParams = new URLSearchParams();
-            if (currentPath !== '/') noFilesRedirectParams.set('path', currentPath);
-            if (req.session.user.role === 'admin' && req.body.targetUsername) {
-                noFilesRedirectParams.set('targetUsername', req.body.targetUsername);
-            }
-            noFilesRedirectParams.set('message', encodeURIComponent('沒有選擇文件或非空文件夾。'));
-            noFilesRedirectParams.set('messageType', 'warning');
-            return res.redirect(`/files?${noFilesRedirectParams.toString()}`);
+            redirectParams.set('message', encodeURIComponent('沒有選擇文件或非空文件夾。'));
+            redirectParams.set('messageType', 'warning');
+            return res.redirect(`/files?${redirectParams.toString()}`);
         }
-
-        if (!userFileRelativePaths || !Array.isArray(userFileRelativePaths) || userFileRelativePaths.length !== req.files.length) {
-            console.error(`[POST /upload] 文件數量 (${req.files.length}) 與相對路徑數量 (${userFileRelativePaths ? userFileRelativePaths.length : 0}) 不匹配!`);
-            // 清理已上傳的臨時文件
-            for (const tempFile of req.files) {
-                try { 
-                    if (fs.existsSync(tempFile.path)) { // 確保文件存在再刪除
-                        await fsp.unlink(tempFile.path); 
-                        console.log(`[POST /upload] 已清理臨時文件: ${tempFile.path}`);
-                    }
-                } catch (e) { 
-                    console.warn(`[POST /upload] 清理臨時文件 ${tempFile.path} 失敗: ${e.message}`); 
-                }
-            }
-            const mismatchRedirectParams = new URLSearchParams();
-            if (currentPath !== '/') mismatchRedirectParams.set('path', currentPath);
-             if (req.session.user.role === 'admin' && req.body.targetUsername) {
-                mismatchRedirectParams.set('targetUsername', req.body.targetUsername);
-            }
-            mismatchRedirectParams.set('message', encodeURIComponent('上傳處理失敗：文件和路徑信息不匹配。'));
-            mismatchRedirectParams.set('messageType', 'error');
-            return res.redirect(`/files?${mismatchRedirectParams.toString()}`);
-        }
-
-        try {
-            for (let i = 0; i < req.files.length; i++) {
-                const tempUploadedFile = req.files[i]; // multer 保存的臨時文件信息 (在 currentPath 下)
-                const clientIntendedRelativePath = userFileRelativePaths[i]; // 客戶端提供的完整相對路徑，例如 "A/a.txt"
-
-                console.log(`[POST /upload] 正在處理: 臨時文件名=${tempUploadedFile.filename}, 客戶端相對路徑=${clientIntendedRelativePath}`);
-
-                // 從 clientIntendedRelativePath 提取真實的文件夾結構和文件名
-                const intendedDirStructureOnly = path.posix.dirname(clientIntendedRelativePath); // 例如 "A" 或 "." (如果沒有子目錄)
-                const intendedFileNameOnly = path.posix.basename(clientIntendedRelativePath);     // 例如 "a.txt"
-
-                if (tempUploadedFile.filename !== intendedFileNameOnly) {
-                    console.warn(`[POST /upload] 文件名不匹配! Multer 保存為 ${tempUploadedFile.filename}, 客戶端路徑暗示為 ${intendedFileNameOnly}. 將使用客戶端路徑中的文件名.`);
-                }
-
-                // 最終文件應該存放的目錄 (相對於用戶根目錄)
-                let finalTargetDirForFileRelative = currentPath; 
-                if (intendedDirStructureOnly && intendedDirStructureOnly !== '.') {
-                    finalTargetDirForFileRelative = path.posix.join(currentPath, intendedDirStructureOnly); 
-                }
-
-                const resolvedFinalDirAbsolute = resolvePathForUser(targetUsername, finalTargetDirForFileRelative);
-                const resolvedFinalPathAbsolute = path.join(resolvedFinalDirAbsolute, intendedFileNameOnly); 
-
-                if (!fs.existsSync(resolvedFinalDirAbsolute)) {
-                    console.log(`[POST /upload] 正在創建最終目錄: ${resolvedFinalDirAbsolute}`);
-                    await fsp.mkdir(resolvedFinalDirAbsolute, { recursive: true });
-                }
-                
-                // 確保源文件存在再移動
-                if (fs.existsSync(tempUploadedFile.path)) {
-                    console.log(`[POST /upload] 正在移動 ${tempUploadedFile.path} 到 ${resolvedFinalPathAbsolute}`);
-                    await fsp.rename(tempUploadedFile.path, resolvedFinalPathAbsolute);
-                } else {
-                    console.warn(`[POST /upload] 臨時文件 ${tempUploadedFile.path} 未找到，無法移動。可能已被提前清理或從未成功寫入。`);
-                }
-            }
-
-            const successRedirectParams = new URLSearchParams();
-            if (currentPath !== '/') successRedirectParams.set('path', currentPath);
-            if (req.session.user.role === 'admin' && req.body.targetUsername) {
-                successRedirectParams.set('targetUsername', req.body.targetUsername);
-            }
-            successRedirectParams.set('message', encodeURIComponent('項目上傳成功。'));
-            successRedirectParams.set('messageType', 'success');
-            res.redirect(`/files?${successRedirectParams.toString()}`);
-
-        } catch (moveError) {
-            console.error(`[POST /upload] 上傳後移動文件時出錯:`, moveError);
-            const moveErrorRedirectParams = new URLSearchParams();
-            if (currentPath !== '/') moveErrorRedirectParams.set('path', currentPath);
-            if (req.session.user.role === 'admin' && req.body.targetUsername) {
-                moveErrorRedirectParams.set('targetUsername', req.body.targetUsername);
-            }
-            moveErrorRedirectParams.set('message', encodeURIComponent('上傳成功但整理文件時出錯。'));
-            moveErrorRedirectParams.set('messageType', 'error');
-            return res.redirect(`/files?${moveErrorRedirectParams.toString()}`);
-        }
+        
+        redirectParams.set('message', encodeURIComponent('項目上傳成功。'));
+        redirectParams.set('messageType', 'success');
+        res.redirect(`/files?${redirectParams.toString()}`);
     });
 });
 
