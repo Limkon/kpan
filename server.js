@@ -1,4 +1,4 @@
-// server.js (SQLite 版本 - 真正完整版 - 已修改)
+// server.js (SQLite 版本 - 真正完整版)
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
@@ -7,10 +7,10 @@ const fsp = fs.promises;
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const sqlite3 = require('sqlite3').verbose();
-const archiver = require('archiver');
+const archiver = require('archiver'); 
 
 const app = express();
-const port = process.env.PORT || 8100;
+const port = process.env.PORT || 8100; 
 
 // --- 常量定義 ---
 const DATA_DIR = path.join(__dirname, 'data');
@@ -31,7 +31,7 @@ const SESSION_SECRET = process.env.SESSION_SECRET || 'a_very_very_strong_and_uni
 const db = new sqlite3.Database(DB_FILE, (err) => {
     if (err) { console.error('無法連接到 SQLite 資料庫:', err.message); throw err; }
     console.log('已成功連接到 SQLite 資料庫。');
-    db.serialize(() => {
+    db.serialize(() => { 
         db.run(`CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
@@ -42,7 +42,7 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             else {
                 console.log("'users' 表格已準備就緒。");
                 const initialAdminUsername = 'admin';
-                const initialAdminPassword = 'admin';
+                const initialAdminPassword = 'admin'; 
                 db.get("SELECT * FROM users WHERE username = ?", [initialAdminUsername], (err, adminUser) => {
                     if (err) {
                         console.error('检查初始管理员时出错:', err.message);
@@ -50,13 +50,13 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
                     }
                     if (!adminUser) {
                         const hashedPassword = bcrypt.hashSync(initialAdminPassword, 12);
-                        db.run("INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-                            [initialAdminUsername, hashedPassword, 'admin'],
+                        db.run("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", 
+                            [initialAdminUsername, hashedPassword, 'admin'], 
                             function (err) {
                                 if (err) console.error('创建初始管理员失败:', err.message);
                                 else {
                                     console.log(`初始管理员 '${initialAdminUsername}' 已创建。`);
-                                    getUserUploadRoot(initialAdminUsername);
+                                    getUserUploadRoot(initialAdminUsername); 
                                 }
                             }
                         );
@@ -70,17 +70,17 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
 // --- 中間件設置 ---
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: true })); 
+app.use(express.json()); 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        sameSite: 'lax'
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production', 
+        httpOnly: true, 
+        sameSite: 'lax' 
     }
 }));
 // CSRF Protection (Example - uncomment and configure if used)
@@ -132,7 +132,7 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
         const entries = await fsp.readdir(directoryToSearch, { withFileTypes: true });
         for (const entry of entries) {
             const entryAbsolutePath = path.join(directoryToSearch, entry.name);
-            const entryRelativePath = path.posix.join(currentRelativePath, entry.name);
+            const entryRelativePath = path.posix.join(currentRelativePath, entry.name); 
             if (entry.isFile()) {
                 if (entry.name.toLowerCase().includes(lowerCaseKeyword)) {
                     foundItems.push({
@@ -165,7 +165,7 @@ async function getDirectoryTreeRecursive(directoryToScan, userUploadRoot, curren
                 if (entry.name.startsWith('.') || entry.name === 'node_modules') {
                     continue;
                 }
-                const entryRelativePath = path.posix.join(currentRelativePath, entry.name);
+                const entryRelativePath = path.posix.join(currentRelativePath, entry.name); 
                 if (pathsToExclude.some(excludePath => entryRelativePath === excludePath || entryRelativePath.startsWith(excludePath + '/'))) {
                     continue;
                 }
@@ -191,7 +191,9 @@ const storage = multer.diskStorage({
         let finalDestinationPath = baseUploadPath;
 
         if (file.webkitRelativePath && typeof file.webkitRelativePath === 'string') {
-            const relativeFolderPath = path.dirname(file.webkitRelativePath);
+            // file.webkitRelativePath 的格式通常是 "FolderName/SubFolder/file.txt"
+            // 我們需要提取文件夾結構部分，不包括文件名
+            const relativeFolderPath = path.dirname(file.webkitRelativePath); 
             console.log(`[Multer Destination] file.webkitRelativePath: ${file.webkitRelativePath}, parsed relativeFolderPath: ${relativeFolderPath}`);
             if (relativeFolderPath && relativeFolderPath !== '.') {
                 finalDestinationPath = path.posix.join(baseUploadPath, relativeFolderPath);
@@ -202,6 +204,7 @@ const storage = multer.diskStorage({
         try {
             const resolvedUploadDir = resolvePathForUser(targetUsername, finalDestinationPath);
             console.log(`[Multer Destination] Resolved upload directory: ${resolvedUploadDir}`);
+            // 確保目標路徑存在，如果不存在則遞歸創建
             if (!fs.existsSync(resolvedUploadDir)) {
                 fs.mkdirSync(resolvedUploadDir, { recursive: true });
                 console.log(`[Multer Destination] Created directory: ${resolvedUploadDir}`);
@@ -213,9 +216,10 @@ const storage = multer.diskStorage({
         }
     },
     filename: function (req, file, cb) {
-        const safeFilename = path.basename(file.originalname);
+        // 對於文件夾上傳，file.originalname 仍然是原始文件名 (不含路徑)
+        const safeFilename = path.basename(file.originalname); 
         console.log(`[Multer Filename] originalname: ${file.originalname}, safeFilename: ${safeFilename}`);
-        cb(null, Buffer.from(safeFilename, 'latin1').toString('utf8'));
+        cb(null, Buffer.from(safeFilename, 'latin1').toString('utf8')); 
     }
 });
 const upload = multer({ storage: storage, 
@@ -838,11 +842,10 @@ app.get('/admin', isAuthenticated, isAdmin, (req, res) => {
         });
     });
 });
-
 app.post('/admin/add-user', isAuthenticated, isAdmin, (req, res) => {
-    const { newUsername, newPassword, confirmNewPassword, newUserRole } = req.body; // 新增 newUserRole
-    if (!newUsername || !newPassword || !confirmNewPassword || !newUserRole) { // 檢查 newUserRole
-        return res.redirect('/admin?message=所有新用戶欄位（包括角色）均為必填項。&messageType=error');
+    const { newUsername, newPassword, confirmNewPassword } = req.body;
+    if (!newUsername || !newPassword || !confirmNewPassword) {
+        return res.redirect('/admin?message=所有新用戶欄位均為必填項。&messageType=error');
     }
     if (newPassword !== confirmNewPassword) {
         return res.redirect('/admin?message=新用戶的兩次密碼輸入不匹配。&messageType=error');
@@ -850,15 +853,9 @@ app.post('/admin/add-user', isAuthenticated, isAdmin, (req, res) => {
     if (newUsername.includes('/') || newUsername.includes('..') || newUsername.includes('\\') || newUsername.length > 50 || !/^[a-zA-Z0-9_.-]+$/.test(newUsername)) {
         return res.redirect('/admin?message=新用戶名包含無效字符、過長或格式不正確。&messageType=error');
     }
-    if (newUserRole !== 'user' && newUserRole !== 'admin') { // 驗證角色
-        return res.redirect('/admin?message=無效的用戶角色。&messageType=error');
+    if (newUsername.toLowerCase() === 'admin') { 
+        return res.redirect('/admin?message=不能創建名為 "admin" 的用戶。&messageType=error');
     }
-
-    // 移除禁止創建名為 'admin' 的用戶的限制
-    // if (newUsername.toLowerCase() === 'admin') { 
-    // return res.redirect('/admin?message=不能創建名為 "admin" 的用戶。&messageType=error');
-    // }
-
     db.get("SELECT * FROM users WHERE username = ?", [newUsername], (err, existingUser) => {
         if (err) {
             console.error("管理員添加用戶時檢查用戶名錯誤:", err);
@@ -869,27 +866,24 @@ app.post('/admin/add-user', isAuthenticated, isAdmin, (req, res) => {
         }
         const hashedPassword = bcrypt.hashSync(newPassword, 12);
         db.run("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", 
-            [newUsername, hashedPassword, newUserRole], // 使用 newUserRole
+            [newUsername, hashedPassword, 'user'], 
             function (err) {
                 if (err) {
                     console.error("管理員添加用戶時插入數據庫錯誤:", err);
                     return res.redirect('/admin?message=添加用戶失敗，請稍後再試。&messageType=error');
                 }
                 getUserUploadRoot(newUsername); 
-                res.redirect(`/admin?message=用戶 "${newUsername}" (角色: ${newUserRole}) 已成功創建。&messageType=success`);
+                res.redirect(`/admin?message=用戶 "${newUsername}" 已成功創建。&messageType=success`);
             }
         );
     });
 });
-
 app.post('/admin/reset-password/:userId', isAuthenticated, isAdmin, (req, res) => { 
     const userIdToReset = parseInt(req.params.userId, 10);
     const { newPassword } = req.body;
     if (isNaN(userIdToReset)) { return res.redirect('/admin?message=無效的用戶ID。&messageType=error');}
-    // 允許管理員重置自己的密碼，但需謹慎
-    // if (req.session.user.id === userIdToReset) { return res.redirect('/admin?message=不能重置自己的密碼。&messageType=error');}
+    if (req.session.user.id === userIdToReset) { return res.redirect('/admin?message=不能重置自己的密碼。&messageType=error');}
     if (!newPassword) { return res.redirect(`/admin?message=新密碼不能為空。&messageType=error`);}
-    
     const hashedNewPassword = bcrypt.hashSync(newPassword, 12);
     db.run("UPDATE users SET password = ? WHERE id = ?", [hashedNewPassword, userIdToReset], function (err) {
         if (err || this.changes === 0) {
@@ -902,83 +896,33 @@ app.post('/admin/reset-password/:userId', isAuthenticated, isAdmin, (req, res) =
         });
     });
 });
-
 app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => { 
     const userIdToDelete = parseInt(req.params.userId, 10);
     if (isNaN(userIdToDelete)) { return res.redirect('/admin?message=無效的用戶ID。&messageType=error');}
-    
-    // 允許管理員刪除自己，但需極度謹慎，並確保至少有一個管理員帳戶存在（此處未做最後一個管理員檢查）
-    // if (req.session.user.id === userIdToDelete) { return res.redirect('/admin?message=不能刪除自己。&messageType=error');}
-
-    db.get("SELECT username, role FROM users WHERE id = ?", [userIdToDelete], (err, user) => {
+    if (req.session.user.id === userIdToDelete) { return res.redirect('/admin?message=不能刪除自己。&messageType=error');}
+    db.get("SELECT username FROM users WHERE id = ?", [userIdToDelete], (err, user) => {
         if (err || !user) {
             if(err) console.error("管理員刪除用戶時查詢用戶錯誤:", err);
             return res.redirect('/admin?message=未找到用戶。&messageType=error');
         }
-
-        // 移除禁止刪除名為 'admin' 的用戶的限制
-        // if (user.username.toLowerCase() === 'admin') {
-        //     return res.redirect('/admin?message=不能刪除主要的 "admin" 管理員帳戶。&messageType=error');
-        // }
-        
-        // 新增：檢查是否為最後一個管理員帳戶 (可選，但建議)
-        if (user.role === 'admin') {
-            db.get("SELECT COUNT(*) as adminCount FROM users WHERE role = 'admin'", (countErr, row) => {
-                if (countErr) {
-                    console.error("檢查管理員數量時出錯:", countErr);
-                    return res.redirect('/admin?message=刪除用戶時發生內部錯誤。&messageType=error');
-                }
-                if (row.adminCount <= 1 && req.session.user.id === userIdToDelete) {
-                     // 如果是最後一個管理員且是當前用戶試圖刪除自己
-                    return res.redirect(`/admin?message=警告：不能刪除系統中最後一個管理員帳戶（您自己）。&messageType=error`);
-                }
-                 if (row.adminCount <= 1 && user.id === userIdToDelete) {
-                    // 如果是最後一個管理員（即使不是當前用戶操作，但目標是最後一個管理員）
-                    // 這裡可以選擇阻止，或者允許但帶有更強警告
-                    // 根據用戶要求“内置管理员账户可以被删除”，這裡允許，但前端應有強烈警告
-                    console.warn(`警告：正在嘗試刪除系統中最後一個管理員帳戶: ${user.username}`);
-                }
-                proceedWithDeletion(user, userIdToDelete, req, res);
-            });
-        } else {
-            proceedWithDeletion(user, userIdToDelete, req, res);
+        if (user.username.toLowerCase() === 'admin') {
+            return res.redirect('/admin?message=不能刪除主要的 "admin" 管理員帳戶。&messageType=error');
         }
-    });
-});
-
-async function proceedWithDeletion(user, userIdToDelete, req, res) {
-    const userDirToDelete = getUserUploadRoot(user.username);
-    db.run("DELETE FROM users WHERE id = ?", [userIdToDelete], async function (err) {
-        if (err) { console.error("管理員刪除用戶時數據庫錯誤:", err); return res.redirect('/admin?message=刪除用戶失敗。&messageType=error');}
-        if (this.changes > 0) {
-            try {
-                if (fs.existsSync(userDirToDelete)) { await fsp.rm(userDirToDelete, { recursive: true, force: true });}
-                
-                // 如果刪除的是當前登入的管理員自己，則登出
-                if (req.session.user && req.session.user.id === userIdToDelete) {
-                    req.session.destroy(logoutErr => {
-                        if (logoutErr) console.error("刪除自己後登出錯誤:", logoutErr);
-                        res.redirect(`/login?message=用戶 ${user.username} 及其文件已刪除。您已自動登出。`);
-                    });
-                } else {
+        const userDirToDelete = getUserUploadRoot(user.username);
+        db.run("DELETE FROM users WHERE id = ?", [userIdToDelete], async function (err) {
+            if (err) { console.error("管理員刪除用戶時數據庫錯誤:", err); return res.redirect('/admin?message=刪除用戶失敗。&messageType=error');}
+            if (this.changes > 0) {
+                try {
+                    if (fs.existsSync(userDirToDelete)) { await fsp.rm(userDirToDelete, { recursive: true, force: true });}
                     res.redirect(`/admin?message=用戶 ${user.username} 及其文件已刪除。&messageType=success`);
-                }
-            } catch (fsErr) {
-                console.error(`刪除用戶 ${user.username} 文件夾錯誤:`, fsErr);
-                // 即使文件夾刪除失敗，用戶記錄也已刪除
-                if (req.session.user && req.session.user.id === userIdToDelete) {
-                     req.session.destroy(logoutErr => {
-                        if (logoutErr) console.error("刪除自己後登出錯誤:", logoutErr);
-                        res.redirect(`/login?message=用戶 ${user.username} 已刪除，但其文件夾刪除失敗。您已自動登出。`);
-                    });
-                } else {
+                } catch (fsErr) {
+                    console.error(`刪除用戶 ${user.username} 文件夾錯誤:`, fsErr);
                     res.redirect(`/admin?message=用戶 ${user.username} 已刪除，但其文件夾刪除失敗。&messageType=warning`);
                 }
-            }
-        } else { res.redirect('/admin?message=未找到用戶或刪除失敗。&messageType=error');}
+            } else { res.redirect('/admin?message=未找到用戶或刪除失敗。&messageType=error');}
+        });
     });
-}
-
+});
 
 app.use((req, res, next) => { 
     res.status(404).render('error', { user: req.session.user, message: '找不到頁面 (404)。', csrfToken: res.locals.csrfToken });
