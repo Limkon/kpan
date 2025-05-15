@@ -11,19 +11,32 @@
         /* ... (保留之前的樣式) ... */
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         #selection-action-bar button { margin: 0; }
-        .item-checkbox { margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
+        
+        /* 默認隱藏複選框 */
+        .item-checkbox { 
+            display: none; /* 默認隱藏 */
+            margin-right: 10px; 
+            width: 18px; 
+            height: 18px; 
+            vertical-align: middle; 
+        }
+        /* 當 multi-select-mode-active class 存在於 #file-container 時顯示複選框 */
+        #file-container.multi-select-mode-active .item-checkbox {
+            display: inline-block; /* 或者 'flex'，取決於您的佈局需求 */
+        }
+
         .file-entry-selectable { display: flex; align-items: center; width: 100%; }
         .file-content-wrapper { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; }
         .list-view li { position: relative; }
         .list-view .file-content-wrapper > .file-entry { flex-grow: 1; }
         .list-view .file-actions-placeholder { min-width: 150px; text-align: right; font-size: 0.9em; color: #666; }
         
-        #move-modal, #create-item-modal, #overwrite-confirm-modal { /* Added #overwrite-confirm-modal */
+        #move-modal, #create-item-modal, #overwrite-confirm-modal {
             display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
             overflow: auto; background-color: rgba(0,0,0,0.5); 
         }
         .modal-content { 
-            background-color: var(--modal-bg, #ffffff) !important; /* !important 确保背景色优先 */
+            background-color: var(--modal-bg, #ffffff) !important;
             color: var(--modal-text-color, #333);
             margin: 10% auto; 
             padding: 20px; 
@@ -33,12 +46,11 @@
             max-width: 500px; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
         }
-        /* 确保暗色主题也明确设置背景 */
         .dark-theme .modal-content {
             --modal-bg: #2c2c2c; 
             --modal-text-color: #e0e0e0; 
             --modal-border-color: #555;
-            background-color: var(--modal-bg) !important; /* !important 确保背景色优先 */
+            background-color: var(--modal-bg) !important;
         }
         .modal-content h3 { margin-top: 0; }
         .modal-content .form-group { margin-bottom: 15px; }
@@ -75,156 +87,72 @@
         .file-entry { display: flex; align-items: center; gap: 8px; }
         .list-view .file-entry .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .grid-view .file-entry { flex-direction: column; justify-content: center; text-align: center; }
-        #select-all-container { display: flex; align-items: center; padding: 5px 10px; background-color: #f9f9f9; border-bottom: 1px solid #eee; }
+        
+        /* 默認隱藏全選容器 */
+        #select-all-container { 
+            display: none; /* 默認隱藏 */
+            align-items: center; 
+            padding: 5px 10px; 
+            background-color: #f9f9f9; 
+            border-bottom: 1px solid #eee; 
+        }
+        /* 當 multi-select-mode-active class 存在於 #file-container 且有項目時，JS 會控制顯示 */
+        #file-container.multi-select-mode-active #select-all-container.has-items {
+             display: flex;
+        }
         #select-all-container label { margin-left: 5px; font-weight: normal;}
+
         .rename-form { display: none; position: absolute; left: 25px; right: 5px; top: calc(100% + 2px); background-color: var(--rename-form-bg, #ffffff); padding: 12px; border: 1px solid var(--rename-form-border-color, #cccccc); box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 100; border-radius: 6px; max-width: 400px; box-sizing: border-box; }
         .grid-view li .rename-form { left: 50%; transform: translateX(-50%) translateY(5px); width: calc(100% - 10px); max-width: 300px; }
         .rename-form form.inline-form { display: flex; gap: 8px; }
         .rename-form input[type="text"] { flex-grow: 1; }
         .dark-theme .rename-form { --rename-form-bg: #3a3a3a; --rename-form-border-color: #555; }
         
-        /* Upload Section Styles */
         #upload-actions-container {
-            display: none; /* Initially hidden */
+            display: none; 
             padding: 10px 0;
             gap: 10px;
             flex-wrap: wrap;
-            align-items: center; /* Vertically align if buttons have different heights */
-            margin-bottom: 15px; /* Space before upload section if it appears */
+            align-items: center; 
+            margin-bottom: 15px; 
         }
-        #upload-actions-container button {
-            margin: 0; 
-        }
+        #upload-actions-container button { margin: 0; }
         #upload-section { 
-            display: none; /* Initially hidden */
+            display: none; 
             padding: 20px; 
             border: 1px solid #dee2e6; 
             border-radius: 6px; 
-            margin-top: 0; /* Adjusted as upload-actions-container has margin-bottom */
+            margin-top: 0; 
             background-color: #f8f9fa; 
         }
-        .dark-theme #upload-section {
-            background-color: #3a3a3a;
-            border-color: #444;
-        }
-        #drop-area {
-            border: 2px dashed #007bff;
-            padding: 20px;
-            text-align: center;
-            border-radius: 5px;
-            background-color: #fff;
-        }
-        .dark-theme #drop-area {
-            border-color: #0056b3;
-            background-color: #2c2c2c;
-        }
-        #drop-area.highlight {
-            border-color: #28a745; /* Green highlight on drag over */
-            background-color: #e9f7ef;
-        }
-        .dark-theme #drop-area.highlight {
-            background-color: #333;
-        }
-        #drop-area p {
-            margin-bottom: 15px;
-            font-size: 1.1em;
-            color: #6c757d;
-        }
-        .dark-theme #drop-area p {
-            color: #adb5bd;
-        }
-        #upload-button { /* Style for the final submit button */
-            display: none; /* Initially hidden, shown when files are selected */
-            margin-top: 15px;
-        }
-
+        .dark-theme #upload-section { background-color: #3a3a3a; border-color: #444; }
+        #drop-area { border: 2px dashed #007bff; padding: 20px; text-align: center; border-radius: 5px; background-color: #fff; }
+        .dark-theme #drop-area { border-color: #0056b3; background-color: #2c2c2c; }
+        #drop-area.highlight { border-color: #28a745; background-color: #e9f7ef; }
+        .dark-theme #drop-area.highlight { background-color: #333; }
+        #drop-area p { margin-bottom: 15px; font-size: 1.1em; color: #6c757d; }
+        .dark-theme #drop-area p { color: #adb5bd; }
+        #upload-button { display: none; margin-top: 15px; }
 
         .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
         .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
 
-        .file-browser-controls {
-            display: flex;
-            flex-wrap: wrap; 
-            align-items: center;
-            gap: 10px; 
-            margin-bottom: 20px;
-        }
-        .file-browser-controls .actions-group-left { 
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-shrink: 0; 
-        }
-        .file-browser-controls .actions-group-left button {
-            padding: 8px 12px; font-size: 0.9em; margin: 0;
-        }
-        .file-browser-controls .search-form-right { 
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-left: auto; 
-            flex-shrink: 0; 
-        }
-        .file-browser-controls .search-form-right input[type="search"] {
-            width: 180px; 
-            padding: 8px 10px; font-size: 0.9em; border: 1px solid #ccc; border-radius: 4px; margin: 0;
-        }
-        .file-browser-controls .search-form-right button {
-            padding: 8px 12px; font-size: 0.9em; margin: 0;
-        }
-        .file-browser-controls .view-toggle { 
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-shrink: 0; 
-        }
-         .file-browser-controls .view-toggle button {
-            padding: 8px 12px; font-size: 0.9em; margin: 0;
-        }
-        .file-browser-controls:not(:has(.actions-group-left)) .search-form-right {
-            margin-left: 0;
-            flex-grow: 1; 
-        }
-         .file-browser-controls:not(:has(.actions-group-left)) .search-form-right input[type="search"] {
-            flex-grow: 1; 
-        }
-         .file-browser-controls:not(:has(.actions-group-left)) .view-toggle {
-            margin-left: auto; 
-        }
-        .progress-bar-container {
-            width: 100%;
-            background-color: #e9ecef; 
-            border-radius: 4px;
-            margin-top: 10px;
-            padding: 2px; 
-            display: none; 
-            box-sizing: border-box;
-        }
-        .progress-bar {
-            display: block; 
-            width: 0%; 
-            height: 20px;
-            background-color: #007bff; 
-            border: 1px solid #0056b3; 
-            border-radius: 2px; 
-            text-align: center;
-            line-height: 18px; 
-            color: white; 
-            font-size: 0.8em;
-            font-weight: bold;
-            transition: width 0.1s ease-in-out; 
-            box-sizing: border-box;
-            overflow: hidden; 
-        }
-        .dark-theme .progress-bar-container {
-            background-color: #495057;
-            padding: 2px;
-        }
-        .dark-theme .progress-bar {
-            background-color: #0056b3;
-            border: 1px solid #003d80;
-            color: #f8f9fa;
-        }
+        .file-browser-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .file-browser-controls .actions-group-left { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+        .file-browser-controls .actions-group-left button { padding: 8px 12px; font-size: 0.9em; margin: 0; }
+        .file-browser-controls .search-form-right { display: flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
+        .file-browser-controls .search-form-right input[type="search"] { width: 180px; padding: 8px 10px; font-size: 0.9em; border: 1px solid #ccc; border-radius: 4px; margin: 0; }
+        .file-browser-controls .search-form-right button { padding: 8px 12px; font-size: 0.9em; margin: 0; }
+        .file-browser-controls .view-toggle { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+        .file-browser-controls .view-toggle button { padding: 8px 12px; font-size: 0.9em; margin: 0; }
+        .file-browser-controls:not(:has(.actions-group-left)) .search-form-right { margin-left: 0; flex-grow: 1; }
+        .file-browser-controls:not(:has(.actions-group-left)) .search-form-right input[type="search"] { flex-grow: 1; }
+        .file-browser-controls:not(:has(.actions-group-left)) .view-toggle { margin-left: auto; }
+        
+        .progress-bar-container { width: 100%; background-color: #e9ecef; border-radius: 4px; margin-top: 10px; padding: 2px; display: none; box-sizing: border-box; }
+        .progress-bar { display: block; width: 0%; height: 20px; background-color: #007bff; border: 1px solid #0056b3; border-radius: 2px; text-align: center; line-height: 18px; color: white; font-size: 0.8em; font-weight: bold; transition: width 0.1s ease-in-out; box-sizing: border-box; overflow: hidden; }
+        .dark-theme .progress-bar-container { background-color: #495057; padding: 2px; }
+        .dark-theme .progress-bar { background-color: #0056b3; border: 1px solid #003d80; color: #f8f9fa; }
     </style>
 </head>
 <body>
@@ -279,8 +207,10 @@
                 <div class="actions-group-left">
                     <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
                     <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
-                    <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button> </div>
+                    <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button> 
+                </div>
             <% } %>
+             <button type="button" id="toggle-multi-select-btn" style="margin-left: 10px;">啟用多選</button>
         
             <form action="/files" method="GET" class="control-form search-form-right">
                 <% if (locals.viewTargetUsername && user.role === 'admin') { %>
@@ -332,13 +262,11 @@
 
         <h2><%= locals.isSearchResult ? '搜索結果' : '文件列表' %></h2>
         <% if (items.length > 0) { %>
-            <div id="select-all-container">
-                <input type="checkbox" id="select-all-checkbox">
+            <div id="select-all-container"> <input type="checkbox" id="select-all-checkbox">
                 <label for="select-all-checkbox">全選/取消全選</label>
             </div>
         <% } %>
-        <div id="file-container">
-            <% if (items.length > 0) { %>
+        <div id="file-container"> <% if (items.length > 0) { %>
                 <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
                 <ul>
                     <% items.forEach(item => { %>
@@ -448,7 +376,8 @@
         </div>
     </div>
 
-    <div id="overwrite-confirm-modal" class="modal" style="display:none; z-index: 1002;"> <div class="modal-content">
+    <div id="overwrite-confirm-modal" class="modal" style="display:none; z-index: 1002;">
+        <div class="modal-content">
             <span class="close-modal-btn" id="close-overwrite-modal-btn">&times;</span>
             <h3>確認操作</h3>
             <p id="overwrite-message">一個同名項目已存在。您要覆蓋它嗎？</p>
@@ -468,12 +397,14 @@
         const CURRENT_USER_ROLE = "<%= user.role %>";
         const CURRENT_PATH_ON_LOAD = "<%= currentPath %>";
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
-        // Get existing item names from the EJS context
         const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify(items.map(item => item.name.toLowerCase())) %>;
+        const HAS_ITEMS_ON_PAGE = <%= items.length > 0 %>;
 
 
         document.addEventListener('DOMContentLoaded', () => {
+            const fileContainer = document.getElementById('file-container'); // 主要的文件列表容器
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const selectAllContainer = document.getElementById('select-all-container');
             const selectionActionBar = document.getElementById('selection-action-bar');
             const selectionCountDisplay = document.getElementById('selection-count');
             const actionEditBtn = document.getElementById('action-edit-btn');
@@ -490,28 +421,60 @@
             const moveDestinationInput = document.getElementById('move-destination-input');
             let currentDirectoryTree = [];
 
-            // --- Upload related elements ---
             const toggleUploadActionsBtn = document.getElementById('toggleUploadActionsBtn');
             const uploadActionsContainer = document.getElementById('upload-actions-container');
             const uploadFilesBtn = document.getElementById('upload-files-btn');
             const uploadFolderBtn = document.getElementById('upload-folder-btn');
             const uploadSection = document.getElementById('upload-section');
             const userFilesInput = document.getElementById('userFiles');
-            // const uploadSectionTitle = document.getElementById('upload-section-title'); // Not strictly needed for current logic
             const dropAreaText = document.getElementById('drop-area-text');
             const uploadForm = document.getElementById('upload-form');
             const uploadProgressContainer = document.getElementById('upload-progress-container');
             const uploadProgressBar = document.getElementById('upload-progress-bar');
             const fileListPreview = document.getElementById('file-list-preview');
-            const uploadButton = document.getElementById('upload-button'); // The actual submit button for the form
+            const uploadButton = document.getElementById('upload-button'); 
             const dropArea = document.getElementById('drop-area');
 
-            // --- Overwrite Confirmation Modal Elements ---
             const overwriteModal = document.getElementById('overwrite-confirm-modal');
             const overwriteMessage = document.getElementById('overwrite-message');
             const overwriteConfirmBtn = document.getElementById('overwrite-confirm-btn');
             const overwriteAbandonBtn = document.getElementById('overwrite-abandon-btn');
             const closeOverwriteModalBtn = document.getElementById('close-overwrite-modal-btn');
+
+            // 新增：多選模式相關
+            const toggleMultiSelectBtn = document.getElementById('toggle-multi-select-btn');
+            let multiSelectModeActive = false;
+
+            function updateMultiSelectModeUI() {
+                if (!fileContainer || !toggleMultiSelectBtn) return;
+
+                if (multiSelectModeActive) {
+                    fileContainer.classList.add('multi-select-mode-active');
+                    toggleMultiSelectBtn.textContent = '取消多選';
+                    if (selectAllContainer && HAS_ITEMS_ON_PAGE) {
+                        selectAllContainer.style.display = 'flex';
+                        // selectAllContainer.classList.add('has-items'); // Redundant if JS handles display directly
+                    }
+                } else {
+                    fileContainer.classList.remove('multi-select-mode-active');
+                    toggleMultiSelectBtn.textContent = '啟用多選';
+                    if (selectAllContainer) {
+                        selectAllContainer.style.display = 'none';
+                        // selectAllContainer.classList.remove('has-items');
+                    }
+                    // 清除非多選模式下的選擇
+                    document.querySelectorAll('.item-checkbox:checked').forEach(cb => cb.checked = false);
+                    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                }
+                updateSelectionActions(); // 更新操作欄狀態
+            }
+            
+            if (toggleMultiSelectBtn) {
+                toggleMultiSelectBtn.addEventListener('click', () => {
+                    multiSelectModeActive = !multiSelectModeActive;
+                    updateMultiSelectModeUI();
+                });
+            }
 
 
             function getSelectedItems() {
@@ -534,7 +497,8 @@
                 const count = selectedItems.length;
 
                 if (selectionActionBar && selectionCountDisplay) { 
-                    if (count > 0) {
+                    // 只有在多選模式激活且有選中項時才顯示操作欄
+                    if (multiSelectModeActive && count > 0) {
                         selectionActionBar.style.display = 'flex';
                         selectionCountDisplay.textContent = `已選擇 ${count} 項`;
                     } else {
@@ -543,18 +507,20 @@
                 }
                 
                 let canEdit = false;
-                if (count === 1 && selectedItems[0] && !selectedItems[0].isDir) { 
+                // 編輯按鈕只在單選文件且為可編輯類型時可用 (且多選模式激活)
+                if (multiSelectModeActive && count === 1 && selectedItems[0] && !selectedItems[0].isDir) { 
                     const fileName = selectedItems[0].name;
                     const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
                     if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
                         canEdit = true;
                     }
                 }
-                if (actionEditBtn) actionEditBtn.disabled = !canEdit;
-                if (actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
-                if (actionMoveBtn) actionMoveBtn.disabled = !(count > 0);
-                if (actionDownloadBtn) actionDownloadBtn.disabled = !(count > 0);
-                if (actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
+                // 如果不在多選模式，所有操作按鈕都應禁用
+                if (actionEditBtn) actionEditBtn.disabled = !multiSelectModeActive || !canEdit;
+                if (actionRenameBtn) actionRenameBtn.disabled = !multiSelectModeActive || !(count === 1);
+                if (actionMoveBtn) actionMoveBtn.disabled = !multiSelectModeActive || !(count > 0);
+                if (actionDownloadBtn) actionDownloadBtn.disabled = !multiSelectModeActive || !(count > 0);
+                if (actionDeleteBtn) actionDeleteBtn.disabled = !multiSelectModeActive || !(count > 0);
             }
 
             const itemCheckboxesForListeners = document.querySelectorAll('.item-checkbox');
@@ -564,8 +530,9 @@
                 });
             });
             
-            if (selectAllCheckbox) {
+            if (selectAllCheckbox && selectAllContainer) {
                 selectAllCheckbox.addEventListener('change', (e) => {
+                    if (!multiSelectModeActive) return; // 僅在多選模式下響應
                     const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                     currentCheckboxes.forEach(cb => {
                         if (cb.checked !== e.target.checked) { 
@@ -576,10 +543,16 @@
                 });
             }
 
+            // 初始化UI狀態
+            updateMultiSelectModeUI(); 
+            // 其餘的事件監聽器和函數 (actionEditBtn, actionRenameBtn, 等) ...
+            // ... (此處省略了之前已有的下載、刪除、移動、上傳、重命名、創建等功能的 JS 代碼，它們應保持不變) ...
+            // --- 確保所有之前的 JS 功能 (如編輯、重命名、移動、下載、刪除、上傳、創建文件/文件夾、視圖切換等) 都在這裡 ---
+            // --- 並且它們的操作按鈕的啟用/禁用邏輯現在也受到 multiSelectModeActive 的影響 (已在 updateSelectionActions 中處理) ---
             if (actionEditBtn) {
                 actionEditBtn.addEventListener('click', () => {
                     const selected = getSelectedItems();
-                    if (actionEditBtn.disabled) return;
+                    if (actionEditBtn.disabled) return; // 已包含多選模式檢查
                     if (selected.length === 1) {
                         let url = `/edit?path=${selected[0].encodedPath}`;
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
@@ -592,7 +565,7 @@
             if (actionRenameBtn) {
                 actionRenameBtn.addEventListener('click', () => {
                     const selected = getSelectedItems();
-                     if (actionRenameBtn.disabled) return;
+                     if (actionRenameBtn.disabled) return; // 已包含多選模式檢查
                     if (selected.length === 1) showRenameForm(selected[0].encodedName, selected[0].name, selected[0].isDir);
                 });
             }
@@ -600,11 +573,9 @@
             if (actionDownloadBtn) {
                 actionDownloadBtn.addEventListener('click', () => {
                     const selectedItems = getSelectedItems(); 
-                    if (selectedItems.length === 0) {
+                    if (actionDownloadBtn.disabled) return; // 已包含多選模式檢查
+                    if (selectedItems.length === 0) { // 雖然 disabled 會阻止，但雙重保險
                         alert("請至少選擇一個項目進行下載。"); 
-                        return;
-                    }
-                     if (actionDownloadBtn.disabled) { 
                         return;
                     }
 
@@ -668,7 +639,9 @@
             if (actionDeleteBtn) {
                 actionDeleteBtn.addEventListener('click', async () => {
                     const selectedItems = getSelectedItems(); 
+                    if (actionDeleteBtn.disabled) return; // 已包含多選模式檢查
                     if (selectedItems.length === 0) return;
+
                     const itemNames = selectedItems.map(item => item.rawName).join(', ');
                     if (confirm(`確定要刪除選中的 ${selectedItems.length} 個項目 (${itemNames}) 嗎？此操作不可恢復！`)) {
                         let allSucceeded = true; let reloadPage = false;
@@ -678,16 +651,15 @@
                                 if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                                     deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
                                 }
-                                const response = await fetch(deleteUrl, { method: 'GET' }); // Changed to GET as per original logic
-                                if (response.ok && response.redirected) reloadPage = true; // Assuming redirect means success
+                                const response = await fetch(deleteUrl, { method: 'GET' });
+                                if (response.ok && response.redirected) reloadPage = true; 
                                 else if (!response.ok) { console.error('刪除失敗:', item.name, response.status); allSucceeded = false; }
                             } catch (error) { console.error('刪除項目時出錯:', item.name, error); allSucceeded = false; }
                         }
-                        if (reloadPage || !allSucceeded) { // Reload if any redirect happened or if not all succeeded
+                        if (reloadPage || !allSucceeded) { 
                             alert(allSucceeded ? "選中項目已嘗試刪除，頁面將刷新。" : "部分項目刪除失敗，頁面將刷新。");
                             window.location.reload();
                         }
-                        // These lines might not be reached if page reloads, but good for non-reload scenarios
                         if(selectAllCheckbox) selectAllCheckbox.checked = false;
                         document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false); 
                         updateSelectionActions();
@@ -697,7 +669,9 @@
             if (actionMoveBtn) {
                 actionMoveBtn.addEventListener('click', async () => {
                     const selectedItems = getSelectedItems(); 
+                    if (actionMoveBtn.disabled) return; // 已包含多選模式檢查
                     if (selectedItems.length === 0) return;
+
                     moveDestinationInput.value = ''; selectedDestinationPathDisplay.textContent = '無';
                     confirmMoveBtn.disabled = true; directoryTreeContainer.innerHTML = '<p>正在加載目錄...</p>';
                     moveModal.style.display = 'block';
@@ -725,7 +699,7 @@
                 function buildTree(items, parentUl, parentPath) {
                     items.forEach(item => {
                         if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || (sourcePath.startsWith(item.path + '/') && item.path !=='/'))) return;
-                        if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) return; // Prevent moving into a subfolder of itself if it's part of the selection
+                        if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) return;
                         const li = document.createElement('li'); li.textContent = item.name; li.dataset.path = item.path;
                         li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, item.path); });
                         parentUl.appendChild(li);
@@ -755,7 +729,6 @@
                         if (item.isDir && (destinationPath === item.path || destinationPath.startsWith(item.path + '/'))) {
                             alert(`不能將文件夾 "${item.name}" 移動到其自身或其子文件夾中。`); return;
                         }
-                         // Check if destination is one of the selected items (if selected item is a file and dest is that file's path - though unlikely for folder dest)
                         if (!item.isDir && destinationPath === item.path) {
                              alert(`目標路徑不能與源文件 "${item.name}" 相同。`); return;
                         }
@@ -776,23 +749,18 @@
                 });
             }
 
-            // --- Overwrite Confirmation Modal Logic ---
             function showOverwriteConfirmationModal(itemName) {
                 return new Promise((resolve) => {
                     if (!overwriteModal || !overwriteMessage || !overwriteConfirmBtn || !overwriteAbandonBtn || !closeOverwriteModalBtn) {
                         console.error("Overwrite modal elements not found!");
-                        resolve('abandon'); // Default to abandon if modal is broken
+                        resolve('abandon'); 
                         return;
                     }
                     overwriteMessage.textContent = `一個名為 "${itemName}" 的項目已存在於當前目錄。您要覆蓋它嗎？`;
                     overwriteModal.style.display = 'block';
 
-                    const handleConfirm = () => {
-                        cleanupAndResolve('overwrite');
-                    };
-                    const handleAbandon = () => {
-                        cleanupAndResolve('abandon');
-                    };
+                    const handleConfirm = () => { cleanupAndResolve('overwrite'); };
+                    const handleAbandon = () => { cleanupAndResolve('abandon'); };
 
                     function cleanupAndResolve(decision) {
                         overwriteModal.style.display = 'none';
@@ -808,16 +776,14 @@
                 });
             }
 
-
-            // --- New Upload Logic with Overwrite Check ---
             if (toggleUploadActionsBtn && uploadActionsContainer && uploadSection) {
                 toggleUploadActionsBtn.addEventListener('click', () => {
                     const isActionsHidden = uploadActionsContainer.style.display === 'none' || uploadActionsContainer.style.display === '';
                     uploadActionsContainer.style.display = isActionsHidden ? 'flex' : 'none';
-                    if (!isActionsHidden) { // If actions are being hidden
-                        uploadSection.style.display = 'none'; // Also hide the upload section itself
+                    if (!isActionsHidden) { 
+                        uploadSection.style.display = 'none'; 
                         toggleUploadActionsBtn.textContent = '上傳';
-                    } else { // If actions are being shown
+                    } else { 
                         toggleUploadActionsBtn.textContent = '取消上傳操作';
                     }
                 });
@@ -854,7 +820,7 @@
             }
             
             if (uploadForm && userFilesInput) {
-                uploadForm.addEventListener('submit', async function(event) { // Made async
+                uploadForm.addEventListener('submit', async function(event) { 
                     event.preventDefault(); 
                     if (userFilesInput.files.length === 0) {
                         alert('請選擇要上傳的文件或文件夾。');
@@ -865,17 +831,7 @@
                     const finalFilesToUpload = [];
 
                     for (const file of originalFiles) {
-                        // For folder uploads, webkitRelativePath provides the full path including the folder.
-                        // We only care about the top-level file/folder name for collision in the *current* directory.
                         let nameToCheck = file.name;
-                        if (file.webkitRelativePath) {
-                           // If it's a file within a dropped folder, its name is file.name.
-                           // If it's the folder itself, webkitRelativePath might be just "folderName/" or "folderName/fileName.txt"
-                           // The check should be against the first segment of webkitRelativePath if it's a folder drop.
-                           // However, multer handles directory creation. The conflict check is for items directly in currentPath.
-                           // So, file.name is usually correct for the first level of items.
-                        }
-
                         if (EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase())) {
                             const userDecision = await showOverwriteConfirmationModal(nameToCheck);
                             if (userDecision === 'overwrite') {
@@ -893,12 +849,11 @@
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
                         if (fileListPreview) fileListPreview.innerHTML = '';
                         if (uploadButton) uploadButton.style.display = 'none';
-                        if (userFilesInput) userFilesInput.value = null; // Clear the selection
+                        if (userFilesInput) userFilesInput.value = null; 
                         return;
                     }
 
                     const formData = new FormData(); 
-                    // Append other hidden fields from the original form
                     const currentPathInput = uploadForm.querySelector('input[name="currentPath"]');
                     if (currentPathInput) formData.append('currentPath', currentPathInput.value);
                     
@@ -908,11 +863,9 @@
                     const csrfInput = uploadForm.querySelector('input[name="_csrf"]');
                     if (csrfInput) formData.append('_csrf', csrfInput.value);
 
-                    // Append the filtered files
                     for (const file of finalFilesToUpload) {
                         formData.append('userFiles', file, file.webkitRelativePath || file.name);
                     }
-
 
                     const xhr = new XMLHttpRequest();
                     xhr.open('POST', uploadForm.action, true);
@@ -957,7 +910,7 @@
                                     errorMessage = responseJson.message;
                                 }
                             } catch (e) {
-                                if(xhr.responseText) errorMessage = xhr.responseText.substring(0, 500); // Show part of the response
+                                if(xhr.responseText) errorMessage = xhr.responseText.substring(0, 500); 
                             }
                             alert(errorMessage);
                             console.error('Upload failed:', xhr.status, xhr.responseText);
@@ -968,7 +921,7 @@
                         alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
                         console.error('Upload network error:', e);
                     };
-                    xhr.openUrl = uploadForm.action; // Store original URL for comparison in onload
+                    xhr.openUrl = uploadForm.action; 
                     xhr.send(formData);
                 });
             }
@@ -976,7 +929,7 @@
             if (dropArea && userFilesInput && fileListPreview && uploadSection && dropAreaText && uploadActionsContainer && toggleUploadActionsBtn) { 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropArea.addEventListener(eventName, preventDefaults, false);
-                    document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser default for whole page
+                    document.body.addEventListener(eventName, preventDefaults, false); 
                 });
                 function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
                 
@@ -986,19 +939,14 @@
                 dropArea.addEventListener('drop', (e) => {
                     preventDefaults(e);
                     dropArea.classList.remove('highlight');
-
                     const items = e.dataTransfer.items;
                     let isLikelyFolderDrop = false;
                     if (items && items.length > 0) {
                         for (let i = 0; i < items.length; i++) {
                             const entry = items[i].webkitGetAsEntry ? items[i].webkitGetAsEntry() : null;
-                            if (entry && entry.isDirectory) {
-                                isLikelyFolderDrop = true;
-                                break;
-                            }
+                            if (entry && entry.isDirectory) { isLikelyFolderDrop = true; break; }
                         }
                     }
-                    
                     if (isLikelyFolderDrop) {
                         userFilesInput.setAttribute('webkitdirectory', '');
                         userFilesInput.setAttribute('directory', '');
@@ -1010,43 +958,30 @@
                         userFilesInput.setAttribute('multiple', '');
                         if(dropAreaText) dropAreaText.textContent = '已拖入文件，準備上傳。';
                     }
-
                     userFilesInput.files = e.dataTransfer.files; 
-                    updateFileListPreviewOnDrop(); // This will also show the upload button
-                    
+                    updateFileListPreviewOnDrop();
                     uploadSection.style.display = 'block'; 
                     uploadActionsContainer.style.display = 'flex'; 
                     toggleUploadActionsBtn.textContent = '取消上傳操作';
                 }, false);
-
-                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop); // Keep this
-
-                function updateFileListPreviewOnDrop() { // Ensure this is defined within scope or globally
+                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop); 
+                function updateFileListPreviewOnDrop() { 
                     if (!fileListPreview || !userFilesInput || !uploadButton) return;
                     fileListPreview.innerHTML = '';
                     if (userFilesInput.files.length > 0) {
                         const list = document.createElement('ul');
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
                         let isDirectoryUpload = false;
-                        // Check if webkitRelativePath exists on the first file AND it contains a slash
                         if (userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath && userFilesInput.files[0].webkitRelativePath.includes('/')) {
                            isDirectoryUpload = true;
                         } else if (userFilesInput.webkitdirectory || userFilesInput.directory) { 
-                            // Fallback for some browsers or if input was set to directory mode explicitly
-                            // and webkitRelativePath might not be immediately available on all files[0] before full processing
-                            // This condition is a bit broad, primary check is webkitRelativePath
-                            if(userFilesInput.files.length > 0 && userFilesInput.files[0].name === userFilesInput.files[0].webkitRelativePath.split('/')[0]) {
-                                // This heuristic might be unreliable. Sticking to webkitRelativePath is safer.
-                            }
+                            if(userFilesInput.files.length > 0 && userFilesInput.files[0].name === userFilesInput.files[0].webkitRelativePath.split('/')[0]) { }
                         }
-
-
                         if (isDirectoryUpload) {
                             const folderName = userFilesInput.files[0].webkitRelativePath.split('/')[0];
                             const listItem = document.createElement('li');
                             listItem.textContent = `文件夾: ${folderName} (${userFilesInput.files.length} 個文件)`;
-                            listItem.style.fontSize = '0.9em';
-                            listItem.style.fontWeight = 'bold';
+                            listItem.style.fontSize = '0.9em'; listItem.style.fontWeight = 'bold';
                             list.appendChild(listItem);
                         } else { 
                             for (let i = 0; i < userFilesInput.files.length; i++) {
@@ -1062,25 +997,24 @@
                         uploadButton.style.display = 'none';
                     }
                 }
-                // Initial state for upload button
                 if (userFilesInput && uploadButton && userFilesInput.files.length === 0) {
                      uploadButton.style.display = 'none';
                 }
             }
 
-
-            const fileContainer = document.getElementById('file-container');
             const listViewBtn = document.getElementById('listViewBtn');
             const gridViewBtn = document.getElementById('gridViewBtn');
             if (fileContainer && listViewBtn && gridViewBtn) { 
                 function toggleView(viewType) {
                     if (viewType === 'grid') {
                         fileContainer.className = 'grid-view';
+                        if (multiSelectModeActive) fileContainer.classList.add('multi-select-mode-active'); // 保持多選模式 class
                         gridViewBtn.classList.add('active');
                         listViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'grid');
                     } else { 
                         fileContainer.className = 'list-view';
+                        if (multiSelectModeActive) fileContainer.classList.add('multi-select-mode-active'); // 保持多選模式 class
                         listViewBtn.classList.add('active');
                         gridViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'list');
@@ -1091,7 +1025,7 @@
                 listViewBtn.addEventListener('click', () => toggleView('list'));
                 gridViewBtn.addEventListener('click', () => toggleView('grid'));
             }
-            updateSelectionActions(); 
+            // updateSelectionActions(); // 已在 updateMultiSelectModeUI 中調用
 
             const createItemModal = document.getElementById('create-item-modal');
             const closeCreateItemModalBtn = document.getElementById('close-create-item-modal-btn');
@@ -1123,11 +1057,10 @@
                 if (currentPathHiddenInput) currentPathHiddenInput.value = IS_SEARCH_RESULT_VIEW ? '/' : CURRENT_PATH_ON_LOAD;
                 
                 const targetUsernameHiddenInput = createItemForm.querySelector('input[name="targetUsername"]');
-                if (targetUsernameHiddenInput) { // Ensure this input exists in the form
+                if (targetUsernameHiddenInput) { 
                     if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                         targetUsernameHiddenInput.value = VIEW_TARGET_USERNAME;
                     } else {
-                         // If not admin view or no target, ensure it's empty or remove if not needed by default
                         targetUsernameHiddenInput.value = ''; 
                     }
                 }
@@ -1142,11 +1075,9 @@
             window.addEventListener('click', (event) => { 
                 if (event.target == createItemModal) createItemModal.style.display = 'none';
                 if (event.target == moveModal) moveModal.style.display = 'none'; 
-                if (event.target == overwriteModal) { // Close overwrite modal on outside click
-                    // To prevent accidental abandon, you might want to make this explicit via button only
-                    // For now, let's assume clicking outside is like abandoning.
+                if (event.target == overwriteModal) { 
                     const abandonButton = overwriteModal.querySelector('#overwrite-abandon-btn');
-                    if (abandonButton) abandonButton.click(); // Programmatically click abandon
+                    if (abandonButton) abandonButton.click(); 
                 }
             });
         });
