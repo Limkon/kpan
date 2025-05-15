@@ -108,6 +108,7 @@
         }
         #select-all-container label { margin-left: 5px; font-weight: normal;}
 
+        /* 重命名對話框樣式調整 */
         .rename-form {
             display: none;
             position: absolute;
@@ -115,7 +116,7 @@
             right: 5px;
             top: calc(100% + 2px);
             background-color: var(--rename-form-bg, #ffffff);
-            padding: 8px; 
+            padding: 10px; /* 調整容器內邊距 */
             border: 1px solid var(--rename-form-border-color, #cccccc);
             box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
             z-index: 100;
@@ -131,25 +132,45 @@
         }
         .rename-form form.inline-form {
             display: flex;
-            gap: 6px; 
+            gap: 8px; 
             align-items: center; 
         }
+
+        .rename-form input[type="text"],
+        .rename-form button {
+            box-sizing: border-box; 
+            font-size: 0.9em;      
+            line-height: 1.4;    
+            padding-top: 4px;      
+            padding-bottom: 4px;   
+            border: 1px solid var(--rename-form-border-color, #cccccc); 
+            border-radius: 4px;    
+            margin: 0;             
+            height: auto;          /* 允許高度由內容、內邊距和邊框決定 */
+        }
+
         .rename-form input[type="text"] {
             flex-grow: 1;
-            padding: 5px 8px; /* 調整輸入框內邊距 */
-            font-size: 0.85em; /* 調整字體大小 */
-            height: auto; 
-            line-height: normal; 
+            padding-left: 8px;
+            padding-right: 8px;
         }
+
         .rename-form button {
-            padding: 5px 10px; /* 調整按鈕內邊距 */
-            font-size: 0.85em; /* 調整字體大小 */
-            height: auto;
-            line-height: normal;
+            padding-left: 12px;  
+            padding-right: 12px;
+            cursor: pointer;
+            background-color: var(--button-bg-color, #f0f0f0); 
+            color: var(--button-text-color, #333);
+            white-space: nowrap; 
         }
         .dark-theme .rename-form {
             --rename-form-bg: #3a3a3a;
             --rename-form-border-color: #555;
+        }
+        .dark-theme .rename-form button { /* 暗色主題下按鈕顏色 */
+            background-color: var(--button-dark-bg-color, #555);
+            color: var(--button-dark-text-color, #f0f0f0);
+            border-color: var(--rename-form-dark-border-color, #666); /* 可選，如果按鈕邊框顏色也需不同 */
         }
         
         #upload-actions-container { display: none; padding: 10px 0; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
@@ -169,12 +190,15 @@
 
         .file-browser-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
         .file-browser-controls .actions-group-left { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+        
+        /* 將 #toggle-multi-select-btn 的樣式與左側組按鈕統一 */
         .file-browser-controls .actions-group-left button,
-        #toggle-multi-select-btn { /* 將多選按鈕樣式與左側組按鈕統一 */
+        #toggle-multi-select-btn { 
             padding: 8px 12px; 
             font-size: 0.9em; 
-            margin: 0;
+            margin: 0; /* 如果父級 .file-browser-controls 已有 gap，這裡的 margin 可能不需要 */
         }
+
         .file-browser-controls .search-form-right { display: flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
         .file-browser-controls .search-form-right input[type="search"] { width: 180px; padding: 8px 10px; font-size: 0.9em; border: 1px solid #ccc; border-radius: 4px; margin: 0; }
         .file-browser-controls .search-form-right button { padding: 8px 12px; font-size: 0.9em; margin: 0; }
@@ -423,7 +447,7 @@
 
     <script src="/theme.js"></script>
     <script>
-        // ... (JavaScript 變量定義保持不變) ...
+        // ... (JavaScript 保持不變) ...
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
         const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
@@ -434,7 +458,6 @@
         const HAS_ITEMS_ON_PAGE = <%= items.length > 0 %>;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // ... (DOM 元素獲取保持不變) ...
             const fileContainer = document.getElementById('file-container');
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const selectAllContainer = document.getElementById('select-all-container');
