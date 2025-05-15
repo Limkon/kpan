@@ -1128,10 +1128,34 @@
                 uploadForm.addEventListener('submit', async function(event) {
                     event.preventDefault(); // 阻止默認表單提交
 
+                    // --- 修改這裡的判斷邏輯 ---
+                    // 檢查是否選擇了文件，或者是否選擇了目錄（即使是空的）
+                    const isDirectorySelection = userFilesInput.hasAttribute('webkitdirectory') || userFilesInput.hasAttribute('directory');
+
                     if (userFilesInput.files.length === 0) {
-                        alert('請選擇要上傳的文件或文件夾。');
-                        return;
+                        if (!isDirectorySelection) {
+                            // 如果沒有文件，且不是目錄選擇，則彈出提示並返回
+                            alert('請選擇要上傳的文件或文件夾。');
+                            return;
+                        }
+                        // 如果是目錄選擇（即使是空的），則繼續執行，以便後端創建空目錄
+                        console.log("Empty directory selected, proceeding with upload to create folder structure.");
+                        // 對於空目錄，我們仍然需要觸發後端路由來創建目錄結構
+                        // 我們可以發送一個不包含文件的 FormData，但包含 currentPath 和可能的 targetUsername
+                        const formData = new FormData();
+                        const currentPathInput = uploadForm.querySelector('input[name="currentPath"]');
+                        if (currentPathInput) formData.append('currentPath', currentPathInput.value);
+                        const targetUsernameInput = uploadForm.querySelector('input[name="targetUsername"]');
+                        if (targetUsernameInput) formData.append('targetUsername', targetUsernameInput.value);
+                        const csrfInput = uploadForm.querySelector('input[name="_csrf"]');
+                        if (csrfInput) formData.append('_csrf', csrfInput.value);
+
+                        // 發送這個 FormData
+                        sendUploadRequest(formData); // 使用一個新的函數來處理 XMLHttpRequest
+                        return; // 結束提交處理函數
                     }
+                    // --- 修改結束 ---
+
 
                     const originalFiles = Array.from(userFilesInput.files);
                     const finalFilesToUpload = [];
@@ -1195,74 +1219,80 @@
                         formData.append('userFiles', file, file.webkitRelativePath || file.name);
                     }
 
-                    // 使用 XMLHttpRequest 進行文件上傳，以便顯示進度
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('POST', uploadForm.action, true);
-                    // 顯示進度條
-                    if (uploadProgressContainer && uploadProgressBar) {
-                        uploadProgressContainer.style.display = 'block';
-                        uploadProgressBar.style.width = '0%';
-                        uploadProgressBar.textContent = '0%';
-                    }
-                    // 監聽上傳進度事件
-                    xhr.upload.onprogress = function(event) {
-                        if (event.lengthComputable) {
-                            const percentComplete = Math.round((event.loaded / event.total) * 100);
-                            if (uploadProgressBar) {
-                                uploadProgressBar.style.width = percentComplete + '%';
-                                uploadProgressBar.textContent = percentComplete + '%';
-                            }
-                        }
-                    };
-                    // 監聽上傳完成事件
-                    xhr.onload = function() {
-                        // 隱藏進度條
-                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        // 檢查響應狀態
-                        if (xhr.status >= 200 && xhr.status < 400) {
-                            // 如果後端重定向到 /files 頁面，則直接跳轉
-                            if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) {
-                                window.location.href = xhr.responseURL;
-                            } else {
-                                // 否則嘗試解析 JSON 響應並顯示消息
-                                try {
-                                    const jsonResponse = JSON.parse(xhr.responseText);
-                                    if (jsonResponse.success || xhr.status === 200 || xhr.status === 201) {
-                                        alert(jsonResponse.message || '上傳成功！頁面將刷新。');
-                                    } else {
-                                        alert(jsonResponse.message || '上傳可能已部分成功或伺服器返回了非預期的成功消息。');
-                                    }
-                                } catch (e) {
-                                    console.warn("Upload response was not JSON, or parsing failed. Assuming success by page behavior or redirect. Status:", xhr.status);
-                                    alert('上傳操作已發送，頁面將刷新以查看結果。');
-                                }
-                                window.location.reload(); // 刷新頁面以顯示新文件
-                            }
-                        } else {
-                            // 處理上傳失敗
-                            let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
-                            try {
-                                const responseJson = JSON.parse(xhr.responseText);
-                                if (responseJson && responseJson.message) {
-                                    errorMessage = responseJson.message;
-                                }
-                            } catch (e) {
-                                if(xhr.responseText) errorMessage = xhr.responseText.substring(0, 500); // 顯示部分響應文本
-                            }
-                            alert(errorMessage);
-                            console.error('Upload failed:', xhr.status, xhr.responseText);
-                        }
-                    };
-                    // 監聽網絡錯誤
-                    xhr.onerror = function(e) {
-                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
-                        console.error('Upload network error:', e);
-                    };
-                    xhr.openUrl = uploadForm.action; // 儲存打開的 URL
-                    xhr.send(formData); // 發送 FormData
+                    // 發送 FormData
+                    sendUploadRequest(formData); // 使用新的函數來處理 XMLHttpRequest
                 });
             }
+
+            // 新增的函數，用於處理 XMLHttpRequest 發送 FormData
+            function sendUploadRequest(formData) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', uploadForm.action, true);
+                // 顯示進度條
+                if (uploadProgressContainer && uploadProgressBar) {
+                    uploadProgressContainer.style.display = 'block';
+                    uploadProgressBar.style.width = '0%';
+                    uploadProgressBar.textContent = '0%';
+                }
+                // 監聽上傳進度事件
+                xhr.upload.onprogress = function(event) {
+                    if (event.lengthComputable) {
+                        const percentComplete = Math.round((event.loaded / event.total) * 100);
+                        if (uploadProgressBar) {
+                            uploadProgressBar.style.width = percentComplete + '%';
+                            uploadProgressBar.textContent = percentComplete + '%';
+                        }
+                    }
+                };
+                // 監聽上傳完成事件
+                xhr.onload = function() {
+                    // 隱藏進度條
+                    if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                    // 檢查響應狀態
+                    if (xhr.status >= 200 && xhr.status < 400) {
+                        // 如果後端重定向到 /files 頁面，則直接跳轉
+                        if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) {
+                            window.location.href = xhr.responseURL;
+                        } else {
+                            // 否則嘗試解析 JSON 響應並顯示消息
+                            try {
+                                const jsonResponse = JSON.parse(xhr.responseText);
+                                if (jsonResponse.success || xhr.status === 200 || xhr.status === 201) {
+                                    alert(jsonResponse.message || '上傳成功！頁面將刷新。');
+                                } else {
+                                    alert(jsonResponse.message || '上傳可能已部分成功或伺服器返回了非預期的成功消息。');
+                                }
+                            } catch (e) {
+                                console.warn("Upload response was not JSON, or parsing failed. Assuming success by page behavior or redirect. Status:", xhr.status);
+                                alert('上傳操作已發送，頁面將刷新以查看結果。');
+                            }
+                            window.location.reload(); // 刷新頁面以顯示新文件
+                        }
+                    } else {
+                        // 處理上傳失敗
+                        let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
+                        try {
+                            const responseJson = JSON.parse(xhr.responseText);
+                            if (responseJson && responseJson.message) {
+                                errorMessage = responseJson.message;
+                            }
+                        } catch (e) {
+                            if(xhr.responseText) errorMessage = xhr.responseText.substring(0, 500); // 顯示部分響應文本
+                        }
+                        alert(errorMessage);
+                        console.error('Upload failed:', xhr.status, xhr.responseText);
+                    }
+                };
+                // 監聽網絡錯誤
+                xhr.onerror = function(e) {
+                    if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                    alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
+                    console.error('Upload network error:', e);
+                };
+                xhr.openUrl = uploadForm.action; // 儲存打開的 URL
+                xhr.send(formData); // 發送 FormData
+            }
+
 
             // 拖拽上傳功能
             if (dropArea && userFilesInput && fileListPreview && uploadSection && dropAreaText && uploadActionsContainer && toggleUploadActionsBtn) {
