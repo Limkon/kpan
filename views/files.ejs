@@ -18,6 +18,10 @@
             --button-secondary-text-color: #ffffff;
             --button-secondary-border-color: #6c757d;
 
+            /* --button-light-secondary-bg-color: #f8f9fa; -- 之前取消按鈕用的，太白 */
+            /* --button-light-secondary-text-color: #343a40; */
+            /* --button-light-secondary-border-color: #ced4da; */
+
             --input-border-color: #ccc;
             --input-bg-color: #fff;
             --input-text-color: #333;
@@ -39,9 +43,13 @@
             --button-secondary-text-color: #ffffff;
             --button-secondary-border-color: #545b62;
             
-            --input-border-color: #555; 
-            --input-bg-color: #2c2c2c;   
-            --input-text-color: #e0e0e0; 
+            /* --button-light-secondary-bg-color: #3a3a3a; */
+            /* --button-light-secondary-text-color: #e0e0e0; */
+            /* --button-light-secondary-border-color: #555; */
+
+            --input-border-color: #555; /* 暗色主題的輸入框邊框 */
+            --input-bg-color: #2c2c2c;   /* 暗色主題的輸入框背景 */
+            --input-text-color: #e0e0e0; /* 暗色主題的輸入框文字 */
             
             --modal-bg: #2c2c2c;
             --modal-text-color: #e0e0e0;
@@ -174,12 +182,12 @@
         .rename-form input[type="text"],
         .rename-form button {
             box-sizing: border-box; 
-            font-size: 0.9em;     
-            line-height: 1.4;   
-            padding-top: 6px;     
-            padding-bottom: 6px;  
-            border-radius: 4px;   
-            margin: 0;            
+            font-size: 0.9em;      
+            line-height: 1.4;    
+            padding-top: 6px;      
+            padding-bottom: 6px;   
+            border-radius: 4px;    
+            margin: 0;             
         }
 
         .rename-form input[type="text"] {
@@ -192,7 +200,7 @@
         }
 
         .rename-form button {
-            padding-left: 12px; 
+            padding-left: 12px;  
             padding-right: 12px;
             cursor: pointer;
             white-space: nowrap; 
@@ -205,7 +213,7 @@
             color: var(--button-primary-text-color);
             border-color: var(--button-primary-border-color);
         }
-        .rename-form button.secondary { 
+        .rename-form button.secondary { /* 取消按鈕使用次要按鈕顏色 */
             background-color: var(--button-secondary-bg-color);
             color: var(--button-secondary-text-color);
             border-color: var(--button-secondary-border-color);
@@ -422,7 +430,7 @@
                                         <div class="file-entry">
                                             <%
                                                 const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
-                                                let largeIcon = '📄'; 
+                                                let largeIcon = '📄';
                                                 let isViewableTextFile = false;
                                                 if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
                                                     isViewableTextFile = true;
@@ -518,6 +526,7 @@
 
     <script src="/theme.js"></script>
     <script>
+        // ... (JavaScript 保持不變) ...
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
         const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
@@ -546,7 +555,8 @@
             const cancelMoveBtn = document.getElementById('cancel-move-btn');
             const selectedDestinationPathDisplay = document.getElementById('selected-destination-path');
             const moveDestinationInput = document.getElementById('move-destination-input');
-            
+            let currentDirectoryTree = [];
+
             const toggleUploadActionsBtn = document.getElementById('toggleUploadActionsBtn');
             const uploadActionsContainer = document.getElementById('upload-actions-container');
             const uploadFilesBtn = document.getElementById('upload-files-btn');
@@ -571,14 +581,6 @@
             let multiSelectModeActive = false;
             let currentSingleSelectedItem = null;
 
-            function cleanupUploadUI() {
-                if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                if (fileListPreview) fileListPreview.innerHTML = '';
-                if (uploadButton) uploadButton.style.display = 'none';
-                if (userFilesInput) userFilesInput.value = null; 
-                if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName; 
-            }
-
             function clearSingleSelection() {
                 if (currentSingleSelectedItem && currentSingleSelectedItem.element) {
                     currentSingleSelectedItem.element.classList.remove('single-selected-item');
@@ -588,18 +590,20 @@
 
             function updateMultiSelectModeUI() {
                 if (!fileContainer || !toggleMultiSelectBtn) return;
+
                 if (multiSelectModeActive) {
                     clearSingleSelection(); 
                     fileContainer.classList.add('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '取消多選';
                     if (selectAllContainer && HAS_ITEMS_ON_PAGE) {
-                        selectAllContainer.classList.add('has-items'); // Ensure class is added if items exist
-                        // selectAllContainer.style.display = 'flex'; // This might be redundant if CSS handles it
+                        selectAllContainer.style.display = 'flex';
                     }
                 } else {
                     fileContainer.classList.remove('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '啟用多選';
-                    // if (selectAllContainer) selectAllContainer.style.display = 'none'; // CSS should handle this
+                    if (selectAllContainer) {
+                        selectAllContainer.style.display = 'none';
+                    }
                     document.querySelectorAll('.item-checkbox:checked').forEach(cb => cb.checked = false);
                     if (selectAllCheckbox) selectAllCheckbox.checked = false;
                 }
@@ -614,14 +618,17 @@
             }
 
             function getCheckboxSelectedItems() {
+                const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                 const selected = [];
-                document.querySelectorAll('#file-container .item-checkbox:checked').forEach((cb) => {
-                    selected.push({
-                        path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
-                        name: cb.dataset.name, encodedName: cb.dataset.encodedName,
-                        isDir: cb.dataset.isDir === 'true', rawName: cb.dataset.rawName,
-                        element: cb.closest('li')
-                    });
+                currentCheckboxes.forEach((cb) => {
+                    if (cb.checked) {
+                        selected.push({
+                            path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
+                            name: cb.dataset.name, encodedName: cb.dataset.encodedName,
+                            isDir: cb.dataset.isDir === 'true', rawName: cb.dataset.rawName,
+                            element: cb.closest('li')
+                        });
+                    }
                 });
                 return selected;
             }
@@ -632,8 +639,9 @@
                 let isSingleFileEditable = false;
 
                 if (multiSelectModeActive) {
-                    itemsForActions = getCheckboxSelectedItems();
-                    count = itemsForActions.length;
+                    const checkboxSelectedItems = getCheckboxSelectedItems();
+                    count = checkboxSelectedItems.length;
+                    itemsForActions = checkboxSelectedItems;
                     if (count === 1 && itemsForActions[0] && !itemsForActions[0].isDir) {
                         const fileName = itemsForActions[0].name;
                         const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
@@ -653,19 +661,21 @@
                     }
                 }
 
-                if (selectionActionBar) {
-                    selectionActionBar.style.display = count > 0 ? 'flex' : 'none';
-                    if (count > 0 && selectionCountDisplay) selectionCountDisplay.textContent = `已選擇 ${count} 項`;
+                if (count > 0) {
+                    selectionActionBar.style.display = 'flex';
+                    selectionCountDisplay.textContent = `已選擇 ${count} 項`;
+                } else {
+                    selectionActionBar.style.display = 'none';
                 }
                 
-                if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable);
-                if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
-                if(actionMoveBtn) actionMoveBtn.disabled = !(count > 0);
-                if(actionDownloadBtn) actionDownloadBtn.disabled = !(count > 0);
-                if(actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
+                actionEditBtn.disabled = !(count === 1 && isSingleFileEditable);
+                actionRenameBtn.disabled = !(count === 1);
+                actionMoveBtn.disabled = !(count > 0);
+                actionDownloadBtn.disabled = !(count > 0);
+                actionDeleteBtn.disabled = !(count > 0);
             }
 
-            document.querySelectorAll('#file-container .item-checkbox').forEach((checkbox) => {
+            document.querySelectorAll('.item-checkbox').forEach((checkbox) => {
                 checkbox.addEventListener('change', () => {
                     if (multiSelectModeActive) { 
                         clearSingleSelection(); 
@@ -680,65 +690,317 @@
                 selectAllCheckbox.addEventListener('change', (e) => {
                     if (!multiSelectModeActive) return; 
                     clearSingleSelection(); 
-                    document.querySelectorAll('#file-container .item-checkbox').forEach(cb => {
-                        if (cb.checked !== e.target.checked) cb.checked = e.target.checked;
+                    const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
+                    currentCheckboxes.forEach(cb => {
+                        if (cb.checked !== e.target.checked) { 
+                            cb.checked = e.target.checked;
+                        }
                     });
                     updateSelectionActions(); 
                 });
-                 // Ensure selectAllContainer visibility is correctly managed based on multi-select mode and items
-                if (HAS_ITEMS_ON_PAGE) {
-                    selectAllContainer.classList.add('has-items');
-                } else {
-                    selectAllContainer.classList.remove('has-items');
-                }
             }
 
+            fileContainer.querySelectorAll('ul > li .file-content-wrapper').forEach(contentWrapper => {
+                contentWrapper.addEventListener('click', (event) => {
+                    const listItem = contentWrapper.closest('li');
+                    const checkbox = listItem.querySelector('.item-checkbox');
 
-            if (fileContainer) {
-                fileContainer.querySelectorAll('ul > li .file-content-wrapper').forEach(contentWrapper => {
-                    contentWrapper.addEventListener('click', (event) => {
-                        const listItem = contentWrapper.closest('li');
-                        if (!listItem) return;
-                        const checkbox = listItem.querySelector('.item-checkbox');
-                        if (!checkbox) return;
+                    if (event.target.isSameNode(checkbox) || 
+                        event.target.tagName === 'A' || event.target.closest('a') ||
+                        event.target.closest('.rename-form')) {
+                        return;
+                    }
 
-                        if (event.target.isSameNode(checkbox) || event.target.tagName === 'A' || event.target.closest('a') || event.target.closest('.rename-form')) return;
+                    const itemData = {
+                        path: checkbox.dataset.path, encodedPath: checkbox.dataset.encodedPath,
+                        name: checkbox.dataset.name, encodedName: checkbox.dataset.encodedName,
+                        isDir: checkbox.dataset.isDir === 'true', rawName: checkbox.dataset.rawName,
+                        element: listItem 
+                    };
 
-                        const itemData = {
-                            path: checkbox.dataset.path, encodedPath: checkbox.dataset.encodedPath,
-                            name: checkbox.dataset.name, encodedName: checkbox.dataset.encodedName,
-                            isDir: checkbox.dataset.isDir === 'true', rawName: checkbox.dataset.rawName,
-                            element: listItem 
-                        };
-
-                        if (multiSelectModeActive) { 
-                            multiSelectModeActive = false; 
-                            updateMultiSelectModeUI(); 
-                        }
-                        
-                        if (currentSingleSelectedItem && currentSingleSelectedItem.element === listItem) {
-                            clearSingleSelection();
-                        } else {
-                            clearSingleSelection(); 
-                            currentSingleSelectedItem = itemData;
-                            listItem.classList.add('single-selected-item');
-                        }
-                        updateSelectionActions();
-                    });
+                    if (multiSelectModeActive) { 
+                        multiSelectModeActive = false; 
+                        updateMultiSelectModeUI(); 
+                    }
+                    
+                    if (currentSingleSelectedItem && currentSingleSelectedItem.element === listItem) {
+                        clearSingleSelection();
+                    } else {
+                        clearSingleSelection(); 
+                        currentSingleSelectedItem = itemData;
+                        listItem.classList.add('single-selected-item');
+                    }
+                    updateSelectionActions();
                 });
+            });
             
-                fileContainer.addEventListener('click', (event) => {
-                    if (event.target.isSameNode(fileContainer) || (event.target.tagName === 'UL' && event.target.parentNode.isSameNode(fileContainer))) {
-                        if (!multiSelectModeActive) { 
-                            clearSingleSelection();
-                            updateSelectionActions(); 
+            fileContainer.addEventListener('click', (event) => {
+                if (event.target.isSameNode(fileContainer) || (event.target.tagName === 'UL' && event.target.parentNode.isSameNode(fileContainer))) {
+                    if (!multiSelectModeActive) { 
+                        clearSingleSelection();
+                        updateSelectionActions(); 
+                    }
+                }
+            });
+            
+            // --- 操作按鈕的事件監聽器 ---
+             if (actionEditBtn) {
+                actionEditBtn.addEventListener('click', () => {
+                    if (actionEditBtn.disabled) return;
+                    let itemToEdit = null;
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemToEdit = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1) itemToEdit = selected[0];
+                    }
+
+                    if (itemToEdit) {
+                        let url = `/edit?path=${itemToEdit.encodedPath}`;
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                            url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
                         }
+                        window.location.href = url;
+                    }
+                });
+            }
+
+            if (actionRenameBtn) {
+                actionRenameBtn.addEventListener('click', () => {
+                    if (actionRenameBtn.disabled) return;
+                    let itemToRename = null;
+                     if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemToRename = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1) itemToRename = selected[0];
+                    }
+                    if (itemToRename) {
+                        showRenameForm(itemToRename.encodedName, itemToRename.name, itemToRename.isDir);
                     }
                 });
             }
             
-            // --- 操作按鈕的事件監聽器 (保持不變) ---
-            // ... (這部分代碼與您原始版本中功能正常的代碼相同) ...
+            if (actionDownloadBtn) {
+                actionDownloadBtn.addEventListener('click', () => {
+                    if (actionDownloadBtn.disabled) return;
+                    let itemsToDownload = [];
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemsToDownload.push(currentSingleSelectedItem);
+                    } else if (multiSelectModeActive) {
+                        itemsToDownload = getCheckboxSelectedItems();
+                    }
+
+                    if (itemsToDownload.length === 0) {
+                        alert("請選擇要下載的項目。"); return;
+                    }
+
+                    if (itemsToDownload.length === 1 && !itemsToDownload[0].isDir) {
+                        let url = `/download?path=${itemsToDownload[0].encodedPath}`;
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                            url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                        }
+                        const tempLink = document.createElement('a');
+                        tempLink.href = url;
+                        tempLink.setAttribute('download', itemsToDownload[0].name);
+                        tempLink.style.display = 'none';
+                        document.body.appendChild(tempLink);
+                        tempLink.click();
+                        document.body.removeChild(tempLink);
+                    } else {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '/download-archive';
+                        form.style.display = 'none';
+
+                        const itemsInput = document.createElement('input');
+                        itemsInput.type = 'hidden';
+                        itemsInput.name = 'items';
+                        const itemsForPayload = itemsToDownload.map(item => ({ 
+                            path: item.path, name: item.name, isDir: item.isDir 
+                        }));
+                        itemsInput.value = JSON.stringify(itemsForPayload);
+                        form.appendChild(itemsInput);
+
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                            const targetUserInput = document.createElement('input');
+                            targetUserInput.type = 'hidden';
+                            targetUserInput.name = 'targetUsername';
+                            targetUserInput.value = VIEW_TARGET_USERNAME;
+                            form.appendChild(targetUserInput);
+                        }
+                        if (CSRF_TOKEN) { 
+                            const csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = '_csrf'; 
+                            csrfInput.value = CSRF_TOKEN;
+                            form.appendChild(csrfInput);
+                        }
+                        document.body.appendChild(form);
+                        try { form.submit(); } catch (e) { console.error("表單提交錯誤:", e); alert("觸發下載時發生錯誤。"); }
+                        if (form.parentNode === document.body) { document.body.removeChild(form); }
+                    }
+                });
+            }
+
+            if (actionDeleteBtn) {
+                actionDeleteBtn.addEventListener('click', async () => {
+                    if (actionDeleteBtn.disabled) return;
+                    let itemsToDelete = [];
+                     if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemsToDelete.push(currentSingleSelectedItem);
+                    } else if (multiSelectModeActive) {
+                        itemsToDelete = getCheckboxSelectedItems();
+                    }
+
+                    if (itemsToDelete.length === 0) return;
+
+                    const itemNames = itemsToDelete.map(item => item.rawName).join(', ');
+                    if (confirm(`確定要刪除選中的 ${itemsToDelete.length} 個項目 (${itemNames}) 嗎？此操作不可恢復！`)) {
+                        let allSucceeded = true; let reloadPage = false;
+                        for (const item of itemsToDelete) {
+                            try {
+                                let deleteUrl = `/delete?path=${item.encodedPath}&isDir=${item.isDir}`;
+                                if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                                    deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                                }
+                                const response = await fetch(deleteUrl, { method: 'GET' });
+                                if (response.ok && response.redirected) reloadPage = true; 
+                                else if (!response.ok) { console.error('刪除失敗:', item.name, response.status); allSucceeded = false; }
+                            } catch (error) { console.error('刪除項目時出錯:', item.name, error); allSucceeded = false; }
+                        }
+                        if (reloadPage || !allSucceeded) { 
+                            alert(allSucceeded ? "選中項目已嘗試刪除。" : "部分項目刪除失敗。");
+                            window.location.reload();
+                        }
+                        clearSingleSelection(); 
+                        if(selectAllCheckbox) selectAllCheckbox.checked = false; 
+                        document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false); 
+                        updateSelectionActions();
+                    }
+                });
+            }
+            
+            if (actionMoveBtn) {
+                actionMoveBtn.addEventListener('click', async () => {
+                    if (actionMoveBtn.disabled) return;
+                    let itemsToMove = [];
+                     if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemsToMove.push(currentSingleSelectedItem);
+                    } else if (multiSelectModeActive) {
+                        itemsToMove = getCheckboxSelectedItems();
+                    }
+                    if (itemsToMove.length === 0) return;
+
+                    moveDestinationInput.value = ''; selectedDestinationPathDisplay.textContent = '無';
+                    confirmMoveBtn.disabled = true; directoryTreeContainer.innerHTML = '<p>正在加載目錄...</p>';
+                    moveModal.style.display = 'block';
+                    try {
+                        let fetchUrl = '/api/directories'; let queryParams = [];
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') queryParams.push(`targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`);
+                        const pathsToExclude = itemsToMove.filter(item => item.isDir).map(item => item.path);
+                        if (pathsToExclude.length > 0) queryParams.push(`excludePaths=${encodeURIComponent(pathsToExclude.join(','))}`);
+                        if (queryParams.length > 0) fetchUrl += `?${queryParams.join('&')}`;
+                        const response = await fetch(fetchUrl);
+                        if (!response.ok) throw new Error(`無法獲取目錄列表: ${response.statusText}`);
+                        currentDirectoryTree = await response.json();
+                        renderDirectoryTree(currentDirectoryTree, directoryTreeContainer, itemsToMove.map(i => i.path));
+                    } catch (error) {
+                        console.error('獲取目錄樹時出錯:', error);
+                        directoryTreeContainer.innerHTML = `<p style="color:red;">加載目錄失敗: ${error.message}</p>`;
+                    }
+                });
+            }
+            function renderDirectoryTree(nodes, container, itemsToMovePaths, currentLevelPath = '/') {
+                container.innerHTML = ''; const ul = document.createElement('ul');
+                const rootLi = document.createElement('li'); rootLi.textContent = '根目錄 (/)';
+                rootLi.dataset.path = '/'; rootLi.addEventListener('click', (e) => selectDestination(e.target, '/'));
+                ul.appendChild(rootLi);
+                function buildTree(items, parentUl, parentPath) {
+                    items.forEach(item => {
+                        if (itemsToMovePaths.some(sourcePath => item.path === sourcePath || (sourcePath.startsWith(item.path + '/') && item.path !=='/'))) return;
+                        if (itemsToMovePaths.some(sourcePath => item.path.startsWith(sourcePath + '/'))) return;
+                        const li = document.createElement('li'); li.textContent = item.name; li.dataset.path = item.path;
+                        li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, item.path); });
+                        parentUl.appendChild(li);
+                        if (item.children && item.children.length > 0) {
+                            const nestedUl = document.createElement('ul'); li.appendChild(nestedUl);
+                            buildTree(item.children, nestedUl, item.path);
+                        }
+                    });
+                }
+                buildTree(nodes, ul, '/'); container.appendChild(ul);
+            }
+            function selectDestination(targetElement, path) {
+                document.querySelectorAll('#directory-tree-container li.selected-dir').forEach(el => el.classList.remove('selected-dir'));
+                targetElement.classList.add('selected-dir');
+                selectedDestinationPathDisplay.textContent = path; moveDestinationInput.value = path;
+                confirmMoveBtn.disabled = false;
+            }
+            if (closeMoveModalBtn) closeMoveModalBtn.onclick = () => moveModal.style.display = 'none';
+            if (cancelMoveBtn) cancelMoveBtn.onclick = () => moveModal.style.display = 'none';
+            
+            if (confirmMoveBtn) {
+                confirmMoveBtn.addEventListener('click', async () => {
+                    let selectedToMove = [];
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        selectedToMove.push(currentSingleSelectedItem);
+                    } else if (multiSelectModeActive) {
+                        selectedToMove = getCheckboxSelectedItems();
+                    }
+
+                    const destinationPath = moveDestinationInput.value;
+                    if (selectedToMove.length === 0 || !destinationPath) { alert('請選擇要移動的項目和目標文件夾。'); return; }
+                    for (const item of selectedToMove) {
+                        if (item.isDir && (destinationPath === item.path || destinationPath.startsWith(item.path + '/'))) {
+                            alert(`不能將文件夾 "${item.name}" 移動到其自身或其子文件夾中。`); return;
+                        }
+                        if (!item.isDir && destinationPath === item.path) {
+                             alert(`目標路徑不能與源文件 "${item.name}" 相同。`); return;
+                        }
+                    }
+                    try {
+                        const payload = { sourcePaths: selectedToMove.map(item => item.path), destinationPath: destinationPath, };
+                        if (CSRF_TOKEN) payload._csrf = CSRF_TOKEN;
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') payload.targetUsername = VIEW_TARGET_USERNAME;
+                        const response = await fetch('/move-items', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json', },
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await response.json();
+                        if (response.ok && result.success) { alert('項目移動成功！'); window.location.reload(); }
+                        else alert(`移動失敗: ${result.message || '未知錯誤'}`);
+                    } catch (error) { console.error('移動項目時出錯:', error); alert(`移動項目時發生客戶端錯誤: ${error.message}`); }
+                    moveModal.style.display = 'none';
+                });
+            }
+
+            function showOverwriteConfirmationModal(itemName) {
+                return new Promise((resolve) => {
+                    if (!overwriteModal || !overwriteMessage || !overwriteConfirmBtn || !overwriteAbandonBtn || !closeOverwriteModalBtn) {
+                        console.error("Overwrite modal elements not found!");
+                        resolve('abandon'); 
+                        return;
+                    }
+                    overwriteMessage.textContent = `一個名為 "${itemName}" 的項目已存在於當前目錄。您要覆蓋它嗎？`;
+                    overwriteModal.style.display = 'block';
+
+                    const handleConfirm = () => { cleanupAndResolve('overwrite'); };
+                    const handleAbandon = () => { cleanupAndResolve('abandon'); };
+
+                    function cleanupAndResolve(decision) {
+                        overwriteModal.style.display = 'none';
+                        overwriteConfirmBtn.removeEventListener('click', handleConfirm);
+                        overwriteAbandonBtn.removeEventListener('click', handleAbandon);
+                        closeOverwriteModalBtn.removeEventListener('click', handleAbandon);
+                        resolve(decision);
+                    }
+
+                    overwriteConfirmBtn.addEventListener('click', handleConfirm);
+                    overwriteAbandonBtn.addEventListener('click', handleAbandon);
+                    closeOverwriteModalBtn.addEventListener('click', handleAbandon);
+                });
+            }
 
             if (toggleUploadActionsBtn && uploadActionsContainer && uploadSection) {
                 toggleUploadActionsBtn.addEventListener('click', () => {
@@ -750,35 +1012,35 @@
                     } else { 
                         toggleUploadActionsBtn.textContent = '取消上傳操作';
                     }
-                    cleanupUploadUI();
                 });
             }
 
-            if (uploadFilesBtn && userFilesInput && uploadSection && dropAreaText && toggleUploadActionsBtn) {
+            if (uploadFilesBtn && uploadSection && userFilesInput && dropAreaText && fileListPreview && uploadButton) {
                 uploadFilesBtn.addEventListener('click', () => {
-                    if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName; 
                     userFilesInput.removeAttribute('webkitdirectory');
                     userFilesInput.removeAttribute('directory');
                     userFilesInput.setAttribute('multiple', '');
-                    dropAreaText.textContent = '將文件拖拽到此處進行上傳。';
+                    if (dropAreaText) dropAreaText.textContent = '將文件拖拽到此處進行上傳。';
                     uploadSection.style.display = 'block';
-                    toggleUploadActionsBtn.textContent = '取消上傳操作';
-                    cleanupUploadUI();
-                    userFilesInput.click(); 
+                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
+                    userFilesInput.value = null; 
+                    fileListPreview.innerHTML = ''; 
+                    uploadButton.style.display = 'none'; 
+                    userFilesInput.click();
                 });
             }
 
-            if (uploadFolderBtn && userFilesInput && uploadSection && dropAreaText && toggleUploadActionsBtn) {
+            if (uploadFolderBtn && uploadSection && userFilesInput && dropAreaText && fileListPreview && uploadButton) {
                 uploadFolderBtn.addEventListener('click', () => {
-                    if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName; 
                     userFilesInput.setAttribute('webkitdirectory', '');
                     userFilesInput.setAttribute('directory', '');
-                    userFilesInput.removeAttribute('multiple');
-                    dropAreaText.textContent = '將文件夾拖拽到此處進行上傳。';
+                    userFilesInput.removeAttribute('multiple'); 
+                    if (dropAreaText) dropAreaText.textContent = '將文件夾拖拽到此處進行上傳。';
                     uploadSection.style.display = 'block';
-                    toggleUploadActionsBtn.textContent = '取消上傳操作';
-                    cleanupUploadUI();
-                    console.log("CLIENT: '上傳文件夾' 按鈕被點擊，input 屬性已設置。");
+                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
+                    userFilesInput.value = null; 
+                    fileListPreview.innerHTML = ''; 
+                    uploadButton.style.display = 'none';
                     userFilesInput.click();
                 });
             }
@@ -786,130 +1048,161 @@
             if (uploadForm && userFilesInput) {
                 uploadForm.addEventListener('submit', async function(event) { 
                     event.preventDefault(); 
-                    console.log("CLIENT: Upload form submitted.");
-                    
-                    const isAttemptingEmptyDroppedFolderUpload = !!uploadForm.dataset.emptyDroppedFolderName;
-                    const filesFromInput = Array.from(userFilesInput.files); // 確保這是最新的文件列表
-                    console.log("CLIENT: Files from input for submission:", filesFromInput.map(f => ({name: f.name, webkitRelativePath: f.webkitRelativePath, size: f.size })));
-                    
-                    if (!isAttemptingEmptyDroppedFolderUpload && filesFromInput.length === 0) {
+                    if (userFilesInput.files.length === 0) {
                         alert('請選擇要上傳的文件或文件夾。');
-                        cleanupUploadUI(); return;
+                        return;
                     }
 
-                    let filesToActuallyUpload = [];
-                    let folderNameToCreateIfEmpty = null;
-                    let proceedWithOperation = true;
+                    const originalFiles = Array.from(userFilesInput.files);
+                    const finalFilesToUpload = [];
 
-                    if (isAttemptingEmptyDroppedFolderUpload) {
-                        folderNameToCreateIfEmpty = uploadForm.dataset.emptyDroppedFolderName;
-                        if (EXISTING_ITEM_NAMES_ON_PAGE.includes(folderNameToCreateIfEmpty.toLowerCase())) {
-                            const userDecision = await showOverwriteConfirmationModal(folderNameToCreateIfEmpty);
-                            if (userDecision === 'abandon') {
-                                alert(`已放棄創建已存在的空文件夾 "${folderNameToCreateIfEmpty}"。`);
-                                proceedWithOperation = false;
+                    for (const file of originalFiles) {
+                        let nameToCheck = file.name;
+                        if (EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase())) {
+                            const userDecision = await showOverwriteConfirmationModal(nameToCheck);
+                            if (userDecision === 'overwrite') {
+                                finalFilesToUpload.push(file);
+                            } else {
+                                console.log(`Skipping ${nameToCheck} due to user choice.`);
                             }
-                        }
-                    } else { // 處理文件或非空文件夾
-                        const topLevelItems = new Map();
-                        // 使用 filesFromInput (直接來自 input.files)
-                        for (const file of filesFromInput) { 
-                            let topLevelName = file.name;
-                            // 檢查 webkitRelativePath 是否存在且包含路徑分隔符，以確定是否為文件夾內文件
-                            if (file.webkitRelativePath && file.webkitRelativePath.includes('/')) {
-                                topLevelName = file.webkitRelativePath.split('/')[0];
-                            }
-                            if (!topLevelItems.has(topLevelName)) {
-                                topLevelItems.set(topLevelName, { files: [], userDecision: 'upload' });
-                            }
-                            topLevelItems.get(topLevelName).files.push(file);
-                        }
-
-                        for (const [name, item] of topLevelItems) {
-                            if (EXISTING_ITEM_NAMES_ON_PAGE.includes(name.toLowerCase())) {
-                                const userDecision = await showOverwriteConfirmationModal(name);
-                                item.userDecision = userDecision;
-                                if (userDecision === 'abandon') console.log(`用戶放棄上傳/覆蓋 "${name}"。`);
-                            }
-                        }
-                        for (const item of topLevelItems.values()) {
-                            if (item.userDecision === 'upload' || item.userDecision === 'overwrite') {
-                                filesToActuallyUpload.push(...item.files);
-                            }
-                        }
-                        if (filesToActuallyUpload.length === 0 && filesFromInput.length > 0) {
-                             alert('沒有文件被選中上傳，或者所有衝突的文件都已被放棄。');
-                             proceedWithOperation = false;
-                        } else if (filesToActuallyUpload.length === 0 && filesFromInput.length === 0 && !isAttemptingEmptyDroppedFolderUpload){
-                            proceedWithOperation = false;
+                        } else {
+                            finalFilesToUpload.push(file);
                         }
                     }
 
-                    if (!proceedWithOperation) { cleanupUploadUI(); return; }
+                    if (finalFilesToUpload.length === 0) {
+                        alert('沒有文件被選中上傳，或者所有衝突的文件都已被放棄。');
+                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                        if (fileListPreview) fileListPreview.innerHTML = '';
+                        if (uploadButton) uploadButton.style.display = 'none';
+                        if (userFilesInput) userFilesInput.value = null; 
+                        return;
+                    }
+
+                    const formData = new FormData(); 
+                    const currentPathInput = uploadForm.querySelector('input[name="currentPath"]');
+                    if (currentPathInput) formData.append('currentPath', currentPathInput.value);
                     
-                    if (folderNameToCreateIfEmpty) {
-                        // ... (創建空文件夾的邏輯) ...
-                    } else if (filesToActuallyUpload.length > 0) {
-                        const formData = new FormData();
-                        // ... (添加 currentPath, targetUsername, _csrf) ...
-                        if (uploadForm.querySelector('input[name="currentPath"]')) formData.append('currentPath', uploadForm.querySelector('input[name="currentPath"]').value);
-                        const targetUsernameInput = uploadForm.querySelector('input[name="targetUsername"]');
-                        if (targetUsernameInput && targetUsernameInput.value) formData.append('targetUsername', targetUsernameInput.value);
-                        if (CSRF_TOKEN) formData.append('_csrf', CSRF_TOKEN);
+                    const targetUsernameInput = uploadForm.querySelector('input[name="targetUsername"]');
+                    if (targetUsernameInput) formData.append('targetUsername', targetUsernameInput.value);
 
+                    const csrfInput = uploadForm.querySelector('input[name="_csrf"]');
+                    if (csrfInput) formData.append('_csrf', csrfInput.value);
 
-                        console.log("CLIENT: Preparing to append files to FormData for XHR.");
-                        for (const file of filesToActuallyUpload) {
-                            const thirdArg = file.webkitRelativePath || file.name;
-                            console.log(`CLIENT: Appending to FormData: name="${file.name}", webkitRelativePath="${file.webkitRelativePath}", third_arg_to_append="${thirdArg}"`);
-                            formData.append('userFiles', file, thirdArg);
-                        }
-
-                        const xhr = new XMLHttpRequest();
-                        xhr.open('POST', uploadForm.action, true);
-                        // ... (XHR 事件監聽器) ...
-                        xhr.upload.onprogress = function(event) { /* ... */ };
-                        xhr.onload = function() { /* ... */ cleanupUploadUI(); };
-                        xhr.onerror = function(e) { /* ... */ cleanupUploadUI(); };
-                        xhr.openUrl = uploadForm.action; 
-                        console.log("CLIENT: Sending XHR with FormData.");
-                        xhr.send(formData);
+                    for (const file of finalFilesToUpload) {
+                        formData.append('userFiles', file, file.webkitRelativePath || file.name);
                     }
+
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', uploadForm.action, true);
+                    if (uploadProgressContainer && uploadProgressBar) {
+                        uploadProgressContainer.style.display = 'block';
+                        uploadProgressBar.style.width = '0%';
+                        uploadProgressBar.textContent = '0%';
+                    }
+                    xhr.upload.onprogress = function(event) {
+                        if (event.lengthComputable) {
+                            const percentComplete = Math.round((event.loaded / event.total) * 100);
+                            if (uploadProgressBar) {
+                                uploadProgressBar.style.width = percentComplete + '%';
+                                uploadProgressBar.textContent = percentComplete + '%';
+                            }
+                        }
+                    };
+                    xhr.onload = function() {
+                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                        if (xhr.status >= 200 && xhr.status < 400) { 
+                            if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) {
+                                window.location.href = xhr.responseURL; 
+                            } else {
+                                try {
+                                    const jsonResponse = JSON.parse(xhr.responseText);
+                                    if (jsonResponse.success || xhr.status === 200 || xhr.status === 201) { 
+                                        alert(jsonResponse.message || '上傳成功！頁面將刷新。');
+                                    } else {
+                                        alert(jsonResponse.message || '上傳可能已部分成功或伺服器返回了非預期的成功消息。');
+                                    }
+                                } catch (e) {
+                                    console.warn("Upload response was not JSON, or parsing failed. Assuming success by page behavior or redirect. Status:", xhr.status);
+                                    alert('上傳操作已發送，頁面將刷新以查看結果。');
+                                }
+                                window.location.reload(); 
+                            }
+                        } else {
+                            let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
+                            try {
+                                const responseJson = JSON.parse(xhr.responseText);
+                                if (responseJson && responseJson.message) {
+                                    errorMessage = responseJson.message;
+                                }
+                            } catch (e) {
+                                if(xhr.responseText) errorMessage = xhr.responseText.substring(0, 500); 
+                            }
+                            alert(errorMessage);
+                            console.error('Upload failed:', xhr.status, xhr.responseText);
+                        }
+                    };
+                    xhr.onerror = function(e) { 
+                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                        alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
+                        console.error('Upload network error:', e);
+                    };
+                    xhr.openUrl = uploadForm.action; 
+                    xhr.send(formData);
                 });
             }
 
             if (dropArea && userFilesInput && fileListPreview && uploadSection && dropAreaText && uploadActionsContainer && toggleUploadActionsBtn) { 
-                // ... (拖拽邏輯，確保日誌有效) ...
-                userFilesInput.addEventListener('change', () => {
-                     if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName;
-                     console.log("CLIENT: userFilesInput 'change' event fired. Files in input:", userFilesInput.files);
-                     if (userFilesInput.files && userFilesInput.files.length > 0) {
-                         for (let i = 0; i < userFilesInput.files.length; i++) {
-                             console.log(`CLIENT: File ${i} from 'change' event - name: ${userFilesInput.files[i].name}, webkitRelativePath: ${userFilesInput.files[i].webkitRelativePath}, size: ${userFilesInput.files[i].size}`);
-                         }
-                     }
-                     updateFileListPreviewOnDrop(); // 確保 updateFileListPreviewOnDrop 被調用
-                }); 
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false); 
+                });
+                function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
                 
-                function updateFileListPreviewOnDrop(emptyDroppedFolderName = null) { 
+                ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false));
+                ['dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false));
+                
+                dropArea.addEventListener('drop', (e) => {
+                    preventDefaults(e);
+                    dropArea.classList.remove('highlight');
+                    const items = e.dataTransfer.items;
+                    let isLikelyFolderDrop = false;
+                    if (items && items.length > 0) {
+                        for (let i = 0; i < items.length; i++) {
+                            const entry = items[i].webkitGetAsEntry ? items[i].webkitGetAsEntry() : null;
+                            if (entry && entry.isDirectory) { isLikelyFolderDrop = true; break; }
+                        }
+                    }
+                    if (isLikelyFolderDrop) {
+                        userFilesInput.setAttribute('webkitdirectory', '');
+                        userFilesInput.setAttribute('directory', '');
+                        userFilesInput.removeAttribute('multiple');
+                        if(dropAreaText) dropAreaText.textContent = '已拖入文件夾，準備上傳。';
+                    } else {
+                        userFilesInput.removeAttribute('webkitdirectory');
+                        userFilesInput.removeAttribute('directory');
+                        userFilesInput.setAttribute('multiple', '');
+                        if(dropAreaText) dropAreaText.textContent = '已拖入文件，準備上傳。';
+                    }
+                    userFilesInput.files = e.dataTransfer.files; 
+                    updateFileListPreviewOnDrop();
+                    uploadSection.style.display = 'block'; 
+                    uploadActionsContainer.style.display = 'flex'; 
+                    toggleUploadActionsBtn.textContent = '取消上傳操作';
+                }, false);
+                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop); 
+                function updateFileListPreviewOnDrop() { 
                     if (!fileListPreview || !userFilesInput || !uploadButton) return;
                     fileListPreview.innerHTML = '';
-                    const isDirectoryModeInput = userFilesInput.hasAttribute('webkitdirectory');
-                    console.log("CLIENT: updateFileListPreviewOnDrop - isDirectoryModeInput:", isDirectoryModeInput, "emptyDroppedFolderName:", emptyDroppedFolderName, "userFilesInput.files.length:", userFilesInput.files ? userFilesInput.files.length : 0);
-
-                    // 確保使用 userFilesInput.files 來判斷是否有文件
-                    if (userFilesInput.files && userFilesInput.files.length > 0) {
+                    if (userFilesInput.files.length > 0) {
                         const list = document.createElement('ul');
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
                         let isDirectoryUpload = false;
-                        
                         if (userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath && userFilesInput.files[0].webkitRelativePath.includes('/')) {
-                            isDirectoryUpload = true;
-                        } else if (isDirectoryModeInput && userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath) {
-                            isDirectoryUpload = true;
+                           isDirectoryUpload = true;
+                        } else if (userFilesInput.webkitdirectory || userFilesInput.directory) { 
+                            if(userFilesInput.files.length > 0 && userFilesInput.files[0].name === userFilesInput.files[0].webkitRelativePath.split('/')[0]) { }
                         }
-                        console.log("CLIENT: updateFileListPreviewOnDrop - Determined isDirectoryUpload:", isDirectoryUpload);
-
                         if (isDirectoryUpload) {
                             const folderName = userFilesInput.files[0].webkitRelativePath.split('/')[0];
                             const listItem = document.createElement('li');
@@ -926,24 +1219,12 @@
                         }
                         fileListPreview.appendChild(list);
                         uploadButton.style.display = 'inline-block';
-                    } else if (emptyDroppedFolderName) {
-                        const list = document.createElement('ul');
-                        list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
-                        const listItem = document.createElement('li');
-                        listItem.textContent = `文件夾: ${emptyDroppedFolderName} (空)`;
-                        listItem.style.fontSize = '0.9em'; listItem.style.fontWeight = 'bold';
-                        list.appendChild(listItem);
-                        fileListPreview.appendChild(list);
-                        uploadButton.style.display = 'inline-block'; 
-                    } else if (isDirectoryModeInput) { 
-                         fileListPreview.innerHTML = '<p style="font-size:0.9em; color: #dc3545;">提示：无法通过文件对话框直接上传选中的空文件夹。请使用“创建文件夹”功能，或将空文件夹拖拽到此区域进行上传。</p>';
-                         uploadButton.style.display = 'none';
-                    } else { 
+                    } else {
                         uploadButton.style.display = 'none';
                     }
-                    if (userFilesInput && uploadButton && userFilesInput.files && userFilesInput.files.length === 0 && !(uploadForm && uploadForm.dataset.emptyDroppedFolderName)) {
-                         uploadButton.style.display = 'none';
-                    }
+                }
+                if (userFilesInput && uploadButton && userFilesInput.files.length === 0) {
+                     uploadButton.style.display = 'none';
                 }
             }
 
@@ -954,13 +1235,13 @@
                     const isCurrentlyMultiSelect = fileContainer.classList.contains('multi-select-mode-active');
                     if (viewType === 'grid') {
                         fileContainer.className = 'grid-view'; 
-                        if(gridViewBtn) gridViewBtn.classList.add('active');
-                        if(listViewBtn) listViewBtn.classList.remove('active');
+                        gridViewBtn.classList.add('active');
+                        listViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'grid');
                     } else { 
                         fileContainer.className = 'list-view'; 
-                        if(listViewBtn) listViewBtn.classList.add('active');
-                        if(gridViewBtn) gridViewBtn.classList.remove('active');
+                        listViewBtn.classList.add('active');
+                        gridViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'list');
                     }
                     if (isCurrentlyMultiSelect) { 
@@ -969,19 +1250,96 @@
                 }
                 const preferredView = localStorage.getItem('fileView') || 'list'; 
                 toggleView(preferredView); 
-                if(listViewBtn) listViewBtn.addEventListener('click', () => toggleView('list'));
-                if(gridViewBtn) gridViewBtn.addEventListener('click', () => toggleView('grid'));
+                listViewBtn.addEventListener('click', () => toggleView('list'));
+                gridViewBtn.addEventListener('click', () => toggleView('grid'));
             }
 
             const createItemModal = document.getElementById('create-item-modal');
-            // ... (其他 modal 和按鈕的事件監聽器，確保 DOM 元素存在性檢查) ...
+            const closeCreateItemModalBtn = document.getElementById('close-create-item-modal-btn');
+            const cancelCreateItemBtn = document.getElementById('cancel-create-item-btn');
+            const createItemForm = document.getElementById('create-item-form');
+            const createItemModalTitle = document.getElementById('create-item-modal-title');
+            const createItemNameInput = document.getElementById('create-item-name-input');
+            const createItemNameLabel = document.getElementById('create-item-name-label');
+            const showCreateTextfileModalBtn = document.getElementById('show-create-textfile-modal-btn');
+            const showCreateFolderModalBtn = document.getElementById('show-create-folder-modal-btn');
+
+            function openCreateItemModal(type) {
+                if (!createItemModal || !createItemForm) return;
+                createItemForm.reset(); 
+                if (type === 'textfile') {
+                    createItemModalTitle.textContent = '新建文本文件';
+                    createItemNameLabel.textContent = '文件名 (例如: mydoc.txt):';
+                    createItemNameInput.name = 'newFileName';
+                    createItemNameInput.placeholder = '例如: notes.txt, script.js';
+                    createItemForm.action = '/create-text-file';
+                } else if (type === 'folder') {
+                    createItemModalTitle.textContent = '创建新文件夹';
+                    createItemNameLabel.textContent = '文件夹名称:';
+                    createItemNameInput.name = 'folderName';
+                    createItemNameInput.placeholder = '例如: 我的文档';
+                    createItemForm.action = '/create-folder';
+                }
+                const currentPathHiddenInput = createItemForm.querySelector('input[name="currentPath"]');
+                if (currentPathHiddenInput) currentPathHiddenInput.value = IS_SEARCH_RESULT_VIEW ? '/' : CURRENT_PATH_ON_LOAD;
+                
+                const targetUsernameHiddenInput = createItemForm.querySelector('input[name="targetUsername"]');
+                if (targetUsernameHiddenInput) { 
+                    if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                        targetUsernameHiddenInput.value = VIEW_TARGET_USERNAME;
+                    } else {
+                        targetUsernameHiddenInput.value = ''; 
+                    }
+                }
+                createItemModal.style.display = 'block';
+                createItemNameInput.focus();
+            }
+
+            if (showCreateTextfileModalBtn) showCreateTextfileModalBtn.addEventListener('click', () => openCreateItemModal('textfile'));
+            if (showCreateFolderModalBtn) showCreateFolderModalBtn.addEventListener('click', () => openCreateItemModal('folder'));
+            if (closeCreateItemModalBtn) closeCreateItemModalBtn.onclick = () => createItemModal.style.display = 'none';
+            if (cancelCreateItemBtn) cancelCreateItemBtn.onclick = () => createItemModal.style.display = 'none';
+            window.addEventListener('click', (event) => { 
+                if (event.target == createItemModal) createItemModal.style.display = 'none';
+                if (event.target == moveModal) moveModal.style.display = 'none'; 
+                if (event.target == overwriteModal) { 
+                    const abandonButton = overwriteModal.querySelector('#overwrite-abandon-btn');
+                    if (abandonButton) abandonButton.click(); 
+                }
+            });
 
             updateMultiSelectModeUI(); 
             updateSelectionActions(); 
+
         }); 
 
-        function showRenameForm(encodedName, currentName, isDir) { /* ... (保持不變) ... */ }
-        function hideRenameForm(encodedName) { /* ... (保持不變) ... */ }
+        function showRenameForm(encodedName, currentName, isDir) { 
+            document.querySelectorAll('.rename-form').forEach(form => {
+                if (form.id !== 'rename-form-' + encodedName) form.style.display = 'none';
+            });
+            const formContainer = document.getElementById('rename-form-' + encodedName);
+            if (formContainer) {
+                const isCurrentlyVisible = formContainer.style.display === 'block';
+                formContainer.style.display = isCurrentlyVisible ? 'none' : 'block';
+                if (!isCurrentlyVisible) { 
+                    const inputField = formContainer.querySelector('input[name="newName"]');
+                    if (inputField) {
+                        inputField.value = currentName; inputField.focus(); inputField.select();
+                    }
+                    const currentPathInput = formContainer.querySelector('input[name="currentPath"]');
+                    if (currentPathInput && IS_SEARCH_RESULT_VIEW) {
+                         const itemOriginalPath = formContainer.querySelector('input[name="oldPath"]').value;
+                         currentPathInput.value = itemOriginalPath.substring(0, itemOriginalPath.lastIndexOf('/')) || '/';
+                    } else if (currentPathInput) {
+                        currentPathInput.value = CURRENT_PATH_ON_LOAD;
+                    }
+                }
+            }
+        }
+        function hideRenameForm(encodedName) { 
+            const form = document.getElementById('rename-form-' + encodedName);
+            if (form) form.style.display = 'none';
+        }
     </script>
 </body>
 </html>
