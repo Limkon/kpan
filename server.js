@@ -566,7 +566,7 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
         console.error('創建壓縮文件時發生嚴重錯誤:', err);
         if (!res.headersSent) {
              if (!res.writableEnded) {
-                res.status(500).send('創建壓縮文件失敗。'); 
+                 res.status(500).send('創建壓縮文件失敗。'); 
             }
         } else if (!res.writableEnded) {
             res.end();
@@ -842,10 +842,15 @@ app.get('/admin', isAuthenticated, isAdmin, (req, res) => {
         });
     });
 });
+
+// MODIFIED: Admin can add other admin accounts
 app.post('/admin/add-user', isAuthenticated, isAdmin, (req, res) => {
-    const { newUsername, newPassword, confirmNewPassword } = req.body;
-    if (!newUsername || !newPassword || !confirmNewPassword) {
-        return res.redirect('/admin?message=所有新用戶欄位均為必填項。&messageType=error');
+    const { newUsername, newPassword, confirmNewPassword, role } = req.body; // Added role
+    if (!newUsername || !newPassword || !confirmNewPassword || !role) { // Added role check
+        return res.redirect('/admin?message=所有新用戶欄位（包括角色）均為必填項。&messageType=error');
+    }
+    if (role !== 'user' && role !== 'admin') { // Validate role
+        return res.redirect('/admin?message=無效的用戶角色。&messageType=error');
     }
     if (newPassword !== confirmNewPassword) {
         return res.redirect('/admin?message=新用戶的兩次密碼輸入不匹配。&messageType=error');
@@ -853,9 +858,10 @@ app.post('/admin/add-user', isAuthenticated, isAdmin, (req, res) => {
     if (newUsername.includes('/') || newUsername.includes('..') || newUsername.includes('\\') || newUsername.length > 50 || !/^[a-zA-Z0-9_.-]+$/.test(newUsername)) {
         return res.redirect('/admin?message=新用戶名包含無效字符、過長或格式不正確。&messageType=error');
     }
-    if (newUsername.toLowerCase() === 'admin') { 
-        return res.redirect('/admin?message=不能創建名為 "admin" 的用戶。&messageType=error');
-    }
+    // REMOVED: Restriction on creating user named 'admin'
+    // if (newUsername.toLowerCase() === 'admin') { 
+    //     return res.redirect('/admin?message=不能創建名為 "admin" 的用戶。&messageType=error');
+    // }
     db.get("SELECT * FROM users WHERE username = ?", [newUsername], (err, existingUser) => {
         if (err) {
             console.error("管理員添加用戶時檢查用戶名錯誤:", err);
@@ -866,18 +872,19 @@ app.post('/admin/add-user', isAuthenticated, isAdmin, (req, res) => {
         }
         const hashedPassword = bcrypt.hashSync(newPassword, 12);
         db.run("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", 
-            [newUsername, hashedPassword, 'user'], 
+            [newUsername, hashedPassword, role], // Use role from form
             function (err) {
                 if (err) {
                     console.error("管理員添加用戶時插入數據庫錯誤:", err);
                     return res.redirect('/admin?message=添加用戶失敗，請稍後再試。&messageType=error');
                 }
                 getUserUploadRoot(newUsername); 
-                res.redirect(`/admin?message=用戶 "${newUsername}" 已成功創建。&messageType=success`);
+                res.redirect(`/admin?message=用戶 "${newUsername}" (角色: ${role}) 已成功創建。&messageType=success`);
             }
         );
     });
 });
+
 app.post('/admin/reset-password/:userId', isAuthenticated, isAdmin, (req, res) => { 
     const userIdToReset = parseInt(req.params.userId, 10);
     const { newPassword } = req.body;
@@ -896,18 +903,23 @@ app.post('/admin/reset-password/:userId', isAuthenticated, isAdmin, (req, res) =
         });
     });
 });
+
+// MODIFIED: Admin can delete the built-in admin account (if not self)
 app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => { 
     const userIdToDelete = parseInt(req.params.userId, 10);
     if (isNaN(userIdToDelete)) { return res.redirect('/admin?message=無效的用戶ID。&messageType=error');}
-    if (req.session.user.id === userIdToDelete) { return res.redirect('/admin?message=不能刪除自己。&messageType=error');}
+    // This check correctly prevents self-deletion
+    if (req.session.user.id === userIdToDelete) { return res.redirect('/admin?message=不能刪除自己。&messageType=error');} 
+    
     db.get("SELECT username FROM users WHERE id = ?", [userIdToDelete], (err, user) => {
         if (err || !user) {
             if(err) console.error("管理員刪除用戶時查詢用戶錯誤:", err);
             return res.redirect('/admin?message=未找到用戶。&messageType=error');
         }
-        if (user.username.toLowerCase() === 'admin') {
-            return res.redirect('/admin?message=不能刪除主要的 "admin" 管理員帳戶。&messageType=error');
-        }
+        // REMOVED: Special protection for user named 'admin'. Self-delete protection is sufficient.
+        // if (user.username.toLowerCase() === 'admin') {
+        //     return res.redirect('/admin?message=不能刪除主要的 "admin" 管理員帳戶。&messageType=error');
+        // }
         const userDirToDelete = getUserUploadRoot(user.username);
         db.run("DELETE FROM users WHERE id = ?", [userIdToDelete], async function (err) {
             if (err) { console.error("管理員刪除用戶時數據庫錯誤:", err); return res.redirect('/admin?message=刪除用戶失敗。&messageType=error');}
