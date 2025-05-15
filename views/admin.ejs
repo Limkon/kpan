@@ -36,7 +36,8 @@
             font-weight: 500;
         }
         .add-user-form .form-group input[type="text"],
-        .add-user-form .form-group input[type="password"] {
+        .add-user-form .form-group input[type="password"],
+        .add-user-form .form-group select { /* Added select styling */
             width: 100%;
             max-width: 300px; /* 限制输入框最大宽度 */
             padding: 8px 10px;
@@ -96,9 +97,8 @@
                                             <input type="password" name="newPassword" placeholder="輸入新密碼" required>
                                             <button type="submit" class="action-link" style="background-color: #ffc107; color: #212529;" onclick="return confirm('確定要為用戶 <%= u.username.replace(/'/g, '\\\'') %> 重置密碼嗎？');">重置密碼</button>
                                         </form>
-                                        <% if (u.username !== 'admin') { %> <%# 防止删除初始管理员 %>
-                                            <a href="/admin/delete/<%= u.id %>" class="action-link delete-link" style="margin-left: 10px;" onclick="return confirm('確定要刪除用戶 <%= u.username.replace(/'/g, '\\\'') %> 嗎？其所有文件也將被刪除。');">刪除用戶</a>
-                                        <% } %>
+                                        <%# Admin can delete any other user, including other admins, but not themselves %>
+                                        <a href="/admin/delete/<%= u.id %>" class="action-link delete-link" style="margin-left: 10px;" onclick="return confirm('確定要刪除用戶 <%= u.username.replace(/'/g, '\\\'') %> 嗎？其所有文件也將被刪除。');">刪除用戶</a>
                                     <% } else { %>
                                         (當前用戶)
                                     <% } %>
@@ -113,9 +113,9 @@
         </div>
          <p class="note">注意：刪除用戶將同時刪除其所有上傳的文件。</p>
 
-        <%# 新增：添加新用户表单 %>
+        <%# 修改：添加新用户表单，包含角色选择 %>
         <div class="add-user-form">
-            <h3>添加新普通用戶</h3>
+            <h3>添加新用戶</h3>
             <form action="/admin/add-user" method="POST">
                 <% if (locals.csrfToken) { %>
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -131,6 +131,13 @@
                 <div class="form-group">
                     <label for="confirmNewPassword">確認密碼:</label>
                     <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="role">角色:</label>
+                    <select id="role" name="role" required>
+                        <option value="user" selected>普通用戶 (User)</option>
+                        <option value="admin">管理員 (Admin)</option>
+                    </select>
                 </div>
                 <button type="submit">創建用戶</button>
             </form>
