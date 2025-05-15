@@ -316,7 +316,7 @@
         </header>
 
         <% if (locals.message) { %>
-            <p class="message <%= (locals.messageType === 'error' || (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('沒有選擇文件') || message.includes('無效的') ))) ? 'error-message' : (locals.messageType === 'success' ? '' : (locals.messageType === 'warning' ? 'warning-message' : '') ) %>"><%= message %></p>
+            <p class="message <%= (locals.messageType === 'error' || (locals.message && (message.includes('失敗') || message.includes('錯誤') || message.includes('沒有選擇文件') || message.includes('無效的') ))) ? 'error-message' : (locals.messageType === 'success' ? '' : (locals.messageType === 'warning' ? 'warning-message' : '') ) %>"><%= message %></p>
         <% } %>
 
         <% if (!locals.isSearchResult) { %>
@@ -1164,6 +1164,20 @@
                         if (userFilesInput) userFilesInput.value = null;
                         return;
                     }
+
+                    // --- 新增診斷日誌 ---
+                    console.log("--- Frontend Upload Diagnosis ---");
+                    console.log(`Uploading ${finalFilesToUpload.length} files.`);
+                    finalFilesToUpload.forEach((file, index) => {
+                        console.log(`File ${index + 1}:`);
+                        console.log(`  Name: ${file.name}`);
+                        console.log(`  webkitRelativePath: ${file.webkitRelativePath}`);
+                        console.log(`  Size: ${file.size} bytes`);
+                        console.log(`  Type: ${file.type}`);
+                    });
+                    console.log("-------------------------------");
+                    // --- 診斷日誌結束 ---
+
 
                     // 創建 FormData 對象，用於通過 AJAX 發送文件
                     const formData = new FormData();
