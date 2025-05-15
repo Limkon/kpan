@@ -36,7 +36,8 @@
             font-weight: 500;
         }
         .add-user-form .form-group input[type="text"],
-        .add-user-form .form-group input[type="password"] {
+        .add-user-form .form-group input[type="password"],
+        .add-user-form .form-group select { /* MODIFIED: Added select styling */
             width: 100%;
             max-width: 300px; /* 限制输入框最大宽度 */
             padding: 8px 10px;
@@ -45,9 +46,10 @@
             border-radius: 4px;
             background-color: var(--input-bg-color, #fff);
             color: var(--input-text-color, #333);
+            height: 38px; /* Ensuring consistent height with inputs */
         }
         .add-user-form button[type="submit"] {
-            padding: 10px 15px;
+            padding: 10px 15px; /* Assuming .btn class will provide base styling */
         }
     </style>
 </head>
@@ -57,15 +59,15 @@
             <h1>管理員面板 - 用戶管理</h1>
             <div class="header-controls">
                 <nav>
-                    <a href="/files">我的文件</a>
-                    <a href="/logout">登出</a>
+                    <a href="/files" class="btn">我的文件</a> <%# Changed to class="btn" for consistency if desired %>
+                    <a href="/logout" class="btn btn-secondary">登出</a> <%# Changed to class="btn btn-secondary" for consistency if desired %>
                 </nav>
                 <%- include('partials/theme-switcher') %>
             </div>
         </header>
 
         <% if (locals.message) { %>
-             <p class="message <%= (locals.messageType === 'error' || (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('不能') || message.includes('無效的用戶ID') || message.includes('已存在') || message.includes('不匹配') ))) ? 'error-message' : (locals.messageType === 'success' ? '' : 'warning-message') %>"><%= message %></p>
+             <p class="message <%= (locals.messageType === 'error' || (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('不能') || message.includes('無效的用戶ID') || message.includes('已存在') || message.includes('不匹配') || message.includes('無效的用戶角色') ))) ? 'error-message' : (locals.messageType === 'success' ? '' : 'warning-message') %>"><%= message %></p>
         <% } %>
 
         <h2>用戶列表</h2>
@@ -88,16 +90,16 @@
                                 <td><%= u.role %></td>
                                 <td>
                                     <% if (currentUser.id !== u.id) { %>
-                                        <a href="/files?targetUsername=<%= encodeURIComponent(u.username) %>" class="action-link" style="background-color: #17a2b8; color: white;">查看文件</a>
-                                        <form action="/admin/reset-password/<%= u.id %>" method="POST" style="display: inline; margin-left: 10px;">
+                                        <a href="/files?targetUsername=<%= encodeURIComponent(u.username) %>" class="btn btn-info btn-sm">查看文件</a>
+                                        <form action="/admin/reset-password/<%= u.id %>" method="POST" style="display: inline; margin-left: 5px;">
                                             <% if (locals.csrfToken) { %>
                                                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                             <% } %>
-                                            <input type="password" name="newPassword" placeholder="輸入新密碼" required>
-                                            <button type="submit" class="action-link" style="background-color: #ffc107; color: #212529;" onclick="return confirm('確定要為用戶 <%= u.username.replace(/'/g, '\\\'') %> 重置密碼嗎？');">重置密碼</button>
+                                            <input type="password" name="newPassword" placeholder="輸入新密碼" required style="padding: 6px 8px; max-width: 120px; height: auto; font-size: 0.85em;">
+                                            <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('確定要為用戶 <%= u.username.replace(/'/g, '\\\'') %> 重置密碼嗎？');">重置密碼</button>
                                         </form>
-                                        <% if (u.username !== 'admin') { %> <%# 防止删除初始管理员 %>
-                                            <a href="/admin/delete/<%= u.id %>" class="action-link delete-link" style="margin-left: 10px;" onclick="return confirm('確定要刪除用戶 <%= u.username.replace(/'/g, '\\\'') %> 嗎？其所有文件也將被刪除。');">刪除用戶</a>
+                                        <% if (u.username.toLowerCase() !== 'admin' || u.id !== 1) { %> <%# More robust check for initial admin %>
+                                            <a href="/admin/delete/<%= u.id %>" class="btn btn-danger btn-sm" style="margin-left: 5px;" onclick="return confirm('確定要刪除用戶 <%= u.username.replace(/'/g, '\\\'') %> 嗎？其所有文件也將被刪除。');">刪除用戶</a>
                                         <% } %>
                                     <% } else { %>
                                         (當前用戶)
@@ -108,14 +110,14 @@
                     </tbody>
                 </table>
             <% } else { %>
-                <p>系統中沒有其他用戶。</p>
+                <p>系統中沒有其他用戶（除了您自己）。</p>
             <% } %>
         </div>
          <p class="note">注意：刪除用戶將同時刪除其所有上傳的文件。</p>
 
-        <%# 新增：添加新用户表单 %>
+        <%# MODIFIED: "添加新用戶" 表单 %>
         <div class="add-user-form">
-            <h3>添加新普通用戶</h3>
+            <h3>添加新用戶</h3> <%# MODIFIED: Title changed %>
             <form action="/admin/add-user" method="POST">
                 <% if (locals.csrfToken) { %>
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -132,7 +134,15 @@
                     <label for="confirmNewPassword">確認密碼:</label>
                     <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
                 </div>
-                <button type="submit">創建用戶</button>
+                <%# MODIFIED: Added role selection %>
+                <div class="form-group">
+                    <label for="newRole">用戶角色:</label>
+                    <select id="newRole" name="newRole" required>
+                        <option value="user" selected>普通用戶 (user)</option>
+                        <option value="admin">管理員 (admin)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">創建用戶</button> <%# Added btn classes %>
             </form>
         </div>
 
