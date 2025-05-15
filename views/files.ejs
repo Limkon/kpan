@@ -108,7 +108,6 @@
         }
         #select-all-container label { margin-left: 5px; font-weight: normal;}
 
-        /* 重命名對話框樣式調整 */
         .rename-form {
             display: none;
             position: absolute;
@@ -116,9 +115,9 @@
             right: 5px;
             top: calc(100% + 2px);
             background-color: var(--rename-form-bg, #ffffff);
-            padding: 8px; /* 減少內邊距 */
+            padding: 8px; 
             border: 1px solid var(--rename-form-border-color, #cccccc);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* 稍微調整陰影 */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
             z-index: 100;
             border-radius: 6px;
             max-width: 400px;
@@ -132,19 +131,19 @@
         }
         .rename-form form.inline-form {
             display: flex;
-            gap: 6px; /* 減少元素間距 */
-            align-items: center; /* 確保元素垂直居中對齊 */
+            gap: 6px; 
+            align-items: center; 
         }
         .rename-form input[type="text"] {
             flex-grow: 1;
-            padding: 6px 8px; /* 調整輸入框內邊距使其更緊湊 */
-            font-size: 0.9em; /* 略微縮小字體 */
-            height: auto; /* 避免被其他全局樣式固定高度 */
-            line-height: normal; /* 確保行高正常 */
+            padding: 5px 8px; /* 調整輸入框內邊距 */
+            font-size: 0.85em; /* 調整字體大小 */
+            height: auto; 
+            line-height: normal; 
         }
         .rename-form button {
-            padding: 6px 10px; /* 調整按鈕內邊距使其更緊湊 */
-            font-size: 0.9em; /* 略微縮小字體 */
+            padding: 5px 10px; /* 調整按鈕內邊距 */
+            font-size: 0.85em; /* 調整字體大小 */
             height: auto;
             line-height: normal;
         }
@@ -170,7 +169,12 @@
 
         .file-browser-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
         .file-browser-controls .actions-group-left { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
-        .file-browser-controls .actions-group-left button { padding: 8px 12px; font-size: 0.9em; margin: 0; }
+        .file-browser-controls .actions-group-left button,
+        #toggle-multi-select-btn { /* 將多選按鈕樣式與左側組按鈕統一 */
+            padding: 8px 12px; 
+            font-size: 0.9em; 
+            margin: 0;
+        }
         .file-browser-controls .search-form-right { display: flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
         .file-browser-controls .search-form-right input[type="search"] { width: 180px; padding: 8px 10px; font-size: 0.9em; border: 1px solid #ccc; border-radius: 4px; margin: 0; }
         .file-browser-controls .search-form-right button { padding: 8px 12px; font-size: 0.9em; margin: 0; }
@@ -241,7 +245,7 @@
                     <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button> 
                 </div>
             <% } %>
-            <button type="button" id="toggle-multi-select-btn" style="margin-left: 10px;">啟用多選</button>
+            <button type="button" id="toggle-multi-select-btn">啟用多選</button>
         
             <form action="/files" method="GET" class="control-form search-form-right">
                 <% if (locals.viewTargetUsername && user.role === 'admin') { %>
@@ -636,25 +640,8 @@
                     }
                 }
             });
-
-            // --- 操作按鈕的事件監聽器 (已更新以處理單選/多選) ---
-            // ... (actionEditBtn, actionRenameBtn, actionDownloadBtn, actionDeleteBtn, actionMoveBtn 的邏輯已在上一版本中更新，此處不再重複)
-
-            // --- 其他 JavaScript 函數 (showOverwriteConfirmationModal, 上傳邏輯, 視圖切換等) ---
-            // ... (此處省略了之前已有的其他 JS 功能，它們應保持不變或已適應新的選擇邏輯) ...
             
-            // 初始化 UI
-            updateMultiSelectModeUI(); 
-            updateSelectionActions(); 
-
-            // --- 複製粘贴所有之前的 JS 功能到這裡 ---
-            // (例如: actionEditBtn, actionRenameBtn, actionDownloadBtn, actionDeleteBtn, actionMoveBtn 的監聽器)
-            // (renderDirectoryTree, selectDestination, confirmMoveBtn listener)
-            // (showOverwriteConfirmationModal, 上傳表單和拖拽區域的邏輯)
-            // (視圖切換: listViewBtn, gridViewBtn)
-            // (創建文件/文件夾模態框的邏輯: openCreateItemModal 等)
-            // (showRenameForm, hideRenameForm)
-            // --- 確保所有功能都包含在內 ---
+            // --- 操作按鈕的事件監聽器 ---
              if (actionEditBtn) {
                 actionEditBtn.addEventListener('click', () => {
                     if (actionEditBtn.disabled) return;
