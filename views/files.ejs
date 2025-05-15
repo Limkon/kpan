@@ -174,9 +174,9 @@
         .rename-form input[type="text"],
         .rename-form button {
             box-sizing: border-box; 
-            font-size: 0.9em;     
+            font-size: 0.9em;      
             line-height: 1.4;    
-            padding-top: 6px;     
+            padding-top: 6px;      
             padding-bottom: 6px;   
             border-radius: 4px;    
             margin: 0;             
@@ -1043,6 +1043,7 @@
                     uploadSection.style.display = 'block';
                     if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
                     cleanupUploadUI(); // 清理之前的選擇
+                    console.log("CLIENT: '上傳文件夾' 按鈕被點擊，input 屬性已設置。");
                     userFilesInput.click(); // 觸發文件夾選擇對話框
                 });
             }
@@ -1051,9 +1052,11 @@
             if (uploadForm && userFilesInput) {
                 uploadForm.addEventListener('submit', async function(event) { 
                     event.preventDefault(); 
+                    console.log("CLIENT: Upload form submitted."); // 新增日誌
                     
                     const isAttemptingEmptyDroppedFolderUpload = !!uploadForm.dataset.emptyDroppedFolderName;
                     const filesFromInput = Array.from(userFilesInput.files);
+                    console.log("CLIENT: Files from input for submission:", filesFromInput); // 新增日誌
                     
                     if (!isAttemptingEmptyDroppedFolderUpload && filesFromInput.length === 0) {
                         alert('請選擇要上傳的文件或文件夾。');
@@ -1080,8 +1083,6 @@
                         for (const file of filesFromInput) {
                             let topLevelName = file.name;
                             let isPartOfFolder = false;
-                            // file.webkitRelativePath 包含了文件相對於所選文件夾的路径
-                            // 例如："FolderName/subfolder/file.txt"
                             if (file.webkitRelativePath && file.webkitRelativePath.includes('/')) {
                                 topLevelName = file.webkitRelativePath.split('/')[0];
                                 isPartOfFolder = true;
@@ -1147,10 +1148,13 @@
                         const csrfInput = uploadForm.querySelector('input[name="_csrf"]');
                         if (csrfInput) formData.append('_csrf', csrfInput.value);
 
+                        console.log("CLIENT: Preparing to append files to FormData for XHR."); // 新增日誌
                         for (const file of filesToActuallyUpload) {
                             // 關鍵：使用 file.webkitRelativePath (如果存在) 作為 FormData 中文件的名稱。
                             // 這會將如 "folderName/subFolderName/fileName.txt" 這樣的路徑發送給服務器。
                             // 服務器端需要解析這個路徑來重建目錄結構。
+                            // ***** DEBUG LOGGING ADDED HERE *****
+                            console.log(`CLIENT: Appending to FormData: name="${file.name}", webkitRelativePath="${file.webkitRelativePath}", third_arg_to_append="${file.webkitRelativePath || file.name}"`);
                             formData.append('userFiles', file, file.webkitRelativePath || file.name);
                         }
 
@@ -1187,9 +1191,9 @@
                             cleanupUploadUI();
                         };
                         xhr.openUrl = uploadForm.action; 
+                        console.log("CLIENT: Sending XHR with FormData."); // 新增日誌
                         xhr.send(formData);
                     }
-                    // cleanupUploadUI(); // 確保在所有分支後都清理 (或者在每個分支的末尾清理)
                 });
             }
 
@@ -1209,11 +1213,12 @@
                     dropArea.classList.remove('highlight');
                     
                     const dt = e.dataTransfer;
-                    const files = dt.files; // 當拖拽的是文件夾時，files 列表中的 File 對象會包含 webkitRelativePath
+                    const files = dt.files; 
                     const items = dt.items; 
                     let droppedEmptyFolderName = null;
 
                     if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName;
+                    console.log("CLIENT: Drop event. dt.files:", files, "dt.items:", items); // 新增日誌
 
                     function finishDropProcessing(emptyFolderName = null) {
                         updateFileListPreviewOnDrop(emptyFolderName);
@@ -1222,48 +1227,46 @@
                         if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
                     }
 
-                    // 使用 DataTransferItem.webkitGetAsEntry() 來判斷是否為文件夾以及是否為空
                     if (items && items.length > 0 && items[0].webkitGetAsEntry) {
                         const entry = items[0].webkitGetAsEntry();
+                        console.log("CLIENT: Dropped entry:", entry); // 新增日誌
                         if (entry.isDirectory) {
-                            // 如果是文件夾，讀取其內容以判斷是否為空
+                            console.log("CLIENT: Dropped entry is a directory."); // 新增日誌
                             const dirReader = entry.createReader();
                             dirReader.readEntries(
                                 (dirEntries) => { 
+                                    console.log("CLIENT: Directory entries:", dirEntries); // 新增日誌
                                     if (dirEntries.length === 0) { // 文件夾為空
                                         droppedEmptyFolderName = entry.name;
                                         if (uploadForm) uploadForm.dataset.emptyDroppedFolderName = entry.name;
-                                        // 對於空文件夾，我們不將任何文件放入 userFilesInput
                                         const emptyDt = new DataTransfer(); 
                                         userFilesInput.files = emptyDt.files;
+                                        console.log("CLIENT: Dropped empty folder:", entry.name); // 新增日誌
                                     } else { // 文件夾非空
                                         if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName;
-                                        // 關鍵：對於拖拽的非空文件夾，瀏覽器會自動填充 files 列表，
-                                        // 並且每個文件會有 webkitRelativePath。
-                                        // 我們需要確保 input file 的 webkitdirectory 屬性被設置，以便 files 列表被正確處理
                                         userFilesInput.setAttribute('webkitdirectory', ''); 
                                         userFilesInput.setAttribute('directory', '');
                                         userFilesInput.files = files; 
+                                        console.log("CLIENT: Dropped non-empty folder. userFilesInput.files set from dt.files."); // 新增日誌
                                     }
                                     finishDropProcessing(droppedEmptyFolderName); 
                                 },
                                 (error) => { 
-                                    console.error("讀取文件夾內容錯誤:", error);
-                                    // 出錯時，按普通文件處理
+                                    console.error("CLIENT: 讀取文件夾內容錯誤:", error);
                                     if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName;
                                     userFilesInput.files = files; 
                                     finishDropProcessing();
                                 }
                             );
-                            return; // 等待 readEntries 回調
+                            return; 
                         } else { 
-                            // 如果拖拽的是單個文件
+                            console.log("CLIENT: Dropped entry is a file."); // 新增日誌
                             userFilesInput.removeAttribute('webkitdirectory');
                             userFilesInput.removeAttribute('directory');
                             userFilesInput.files = files;
                         }
                     } else { 
-                        // 備用方案，如果 webkitGetAsEntry 不可用，則直接使用 files
+                        console.log("CLIENT: webkitGetAsEntry not available or no items. Treating as file drop."); // 新增日誌
                         userFilesInput.files = files;
                     }
                     finishDropProcessing();
@@ -1271,6 +1274,13 @@
                 
                 userFilesInput.addEventListener('change', () => {
                      if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName;
+                     // ***** DEBUG LOGGING ADDED HERE *****
+                     console.log("CLIENT: userFilesInput 'change' event fired. Files in input:", userFilesInput.files);
+                     if (userFilesInput.files && userFilesInput.files.length > 0) {
+                         for (let i = 0; i < userFilesInput.files.length; i++) {
+                             console.log(`CLIENT: File ${i} from 'change' event - name: ${userFilesInput.files[i].name}, webkitRelativePath: ${userFilesInput.files[i].webkitRelativePath}, size: ${userFilesInput.files[i].size}`);
+                         }
+                     }
                      updateFileListPreviewOnDrop();
                 }); 
                 
@@ -1278,28 +1288,28 @@
                     if (!fileListPreview || !userFilesInput || !uploadButton) return;
                     fileListPreview.innerHTML = '';
                     
-                    // 檢查 input 是否處於文件夾選擇模式 (通过按钮点击设置的)
                     const isDirectoryModeInput = userFilesInput.hasAttribute('webkitdirectory');
+                    console.log("CLIENT: updateFileListPreviewOnDrop - isDirectoryModeInput:", isDirectoryModeInput, "emptyDroppedFolderName:", emptyDroppedFolderName, "userFilesInput.files.length:", userFilesInput.files ? userFilesInput.files.length : 0); // 新增日誌
 
-                    if (userFilesInput.files.length > 0) {
+
+                    if (userFilesInput.files && userFilesInput.files.length > 0) {
                         const list = document.createElement('ul');
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
                         let isDirectoryUpload = false;
-                        // 優先檢查 webkitRelativePath 來判斷是否為文件夾上傳 (通常由拖拽或 input[webkitdirectory] 產生)
+                        
+                        // 檢查第一個文件是否有 webkitRelativePath 並且包含 '/'，這通常表示文件夾上傳
                         if (userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath && userFilesInput.files[0].webkitRelativePath.includes('/')) {
-                           isDirectoryUpload = true;
-                        } else if (isDirectoryModeInput && userFilesInput.files.length > 0 && userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath) {
-                            // 如果是通過按鈕選擇的文件夾，且 files[0].webkitRelativePath 存在 (即使不含'/')，也認為是文件夾
-                            // (例如，只選了一個文件夾，裡面只有一個文件，webkitRelativePath 可能就是文件名)
-                            // 更精確的判斷是 webkitRelativePath 的第一個segment是否為文件夾名
-                            const firstSegment = userFilesInput.files[0].webkitRelativePath.split('/')[0];
-                            // 這裡假設如果 input 是 directory mode，且有 webkitRelativePath，則 top level name 就是文件夾名
-                            isDirectoryUpload = true; // 簡化處理，認為是文件夾
+                            isDirectoryUpload = true;
+                        } else if (isDirectoryModeInput && userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath) {
+                            // 如果是通過 "上傳文件夾" 按鈕觸發的，並且 files[0].webkitRelativePath 存在 (即使不含'/')
+                            // 這種情況通常是選擇了一個文件夾，而該文件夾內只有一個文件，或文件夾本身。
+                            // 瀏覽器對此的處理可能不同，但有 webkitRelativePath 通常意味著是文件夾選擇操作的結果。
+                            isDirectoryUpload = true;
                         }
+                        console.log("CLIENT: updateFileListPreviewOnDrop - Determined isDirectoryUpload:", isDirectoryUpload); // 新增日誌
 
 
                         if (isDirectoryUpload) {
-                            // 從第一個文件的 webkitRelativePath 獲取頂層文件夾名稱
                             const folderName = userFilesInput.files[0].webkitRelativePath.split('/')[0];
                             const listItem = document.createElement('li');
                             listItem.textContent = `文件夾: ${folderName} (${userFilesInput.files.length} 個文件)`;
@@ -1331,13 +1341,11 @@
                      else { 
                         uploadButton.style.display = 'none';
                     }
-                    // 再次檢查，如果最終沒有文件且不是有效的空文件夾拖拽，則隱藏上傳按鈕
-                    if (userFilesInput && uploadButton && userFilesInput.files.length === 0 && !(uploadForm && uploadForm.dataset.emptyDroppedFolderName)) {
+                    if (userFilesInput && uploadButton && userFilesInput.files && userFilesInput.files.length === 0 && !(uploadForm && uploadForm.dataset.emptyDroppedFolderName)) {
                          uploadButton.style.display = 'none';
                     }
                 }
-                // 確保在 input change 或 drop 後，如果沒有文件（且不是空文件夾拖拽），則隱藏上傳按鈕
-                if (userFilesInput && uploadButton && userFilesInput.files.length === 0 && !(uploadForm && uploadForm.dataset.emptyDroppedFolderName)) {
+                if (userFilesInput && uploadButton && userFilesInput.files && userFilesInput.files.length === 0 && !(uploadForm && uploadForm.dataset.emptyDroppedFolderName)) {
                      uploadButton.style.display = 'none';
                 }
             }
