@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* ... (之前的樣式保持不變) ... */
+        /* ... (保留之前的樣式) ... */
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         #selection-action-bar button { margin: 0; }
         
@@ -23,23 +23,21 @@
             display: inline-block; 
         }
 
-        .file-entry-selectable { display: flex; align-items: center; width: 100%; padding: 5px 0; /* 增加一些內邊距方便點擊 */ }
+        .file-entry-selectable { display: flex; align-items: center; width: 100%; padding: 5px 0; }
         .file-content-wrapper { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .list-view li { position: relative; }
         .list-view .file-content-wrapper > .file-entry { flex-grow: 1; }
         .list-view .file-actions-placeholder { min-width: 150px; text-align: right; font-size: 0.9em; color: #666; }
         
-        /* 單選高亮樣式 */
         .list-view li.single-selected-item > .file-entry-selectable,
         .grid-view li.single-selected-item { 
-            background-color: #e9e9e9; /* 淺灰色高亮 */
+            background-color: #e9e9e9; 
             border-radius: 4px;
         }
         .dark-theme .list-view li.single-selected-item > .file-entry-selectable,
         .dark-theme .grid-view li.single-selected-item {
-            background-color: #404040; /* 暗色主題的高亮 */
+            background-color: #404040; 
         }
-
 
         #move-modal, #create-item-modal, #overwrite-confirm-modal {
             display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
@@ -110,11 +108,50 @@
         }
         #select-all-container label { margin-left: 5px; font-weight: normal;}
 
-        .rename-form { display: none; position: absolute; left: 25px; right: 5px; top: calc(100% + 2px); background-color: var(--rename-form-bg, #ffffff); padding: 12px; border: 1px solid var(--rename-form-border-color, #cccccc); box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 100; border-radius: 6px; max-width: 400px; box-sizing: border-box; }
-        .grid-view li .rename-form { left: 50%; transform: translateX(-50%) translateY(5px); width: calc(100% - 10px); max-width: 300px; }
-        .rename-form form.inline-form { display: flex; gap: 8px; }
-        .rename-form input[type="text"] { flex-grow: 1; }
-        .dark-theme .rename-form { --rename-form-bg: #3a3a3a; --rename-form-border-color: #555; }
+        /* 重命名對話框樣式調整 */
+        .rename-form {
+            display: none;
+            position: absolute;
+            left: 25px;
+            right: 5px;
+            top: calc(100% + 2px);
+            background-color: var(--rename-form-bg, #ffffff);
+            padding: 8px; /* 減少內邊距 */
+            border: 1px solid var(--rename-form-border-color, #cccccc);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* 稍微調整陰影 */
+            z-index: 100;
+            border-radius: 6px;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+        .grid-view li .rename-form {
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            width: calc(100% - 10px);
+            max-width: 300px;
+        }
+        .rename-form form.inline-form {
+            display: flex;
+            gap: 6px; /* 減少元素間距 */
+            align-items: center; /* 確保元素垂直居中對齊 */
+        }
+        .rename-form input[type="text"] {
+            flex-grow: 1;
+            padding: 6px 8px; /* 調整輸入框內邊距使其更緊湊 */
+            font-size: 0.9em; /* 略微縮小字體 */
+            height: auto; /* 避免被其他全局樣式固定高度 */
+            line-height: normal; /* 確保行高正常 */
+        }
+        .rename-form button {
+            padding: 6px 10px; /* 調整按鈕內邊距使其更緊湊 */
+            font-size: 0.9em; /* 略微縮小字體 */
+            height: auto;
+            line-height: normal;
+        }
+        .dark-theme .rename-form {
+            --rename-form-bg: #3a3a3a;
+            --rename-form-border-color: #555;
+        }
         
         #upload-actions-container { display: none; padding: 10px 0; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
         #upload-actions-container button { margin: 0; }
@@ -261,11 +298,13 @@
                 <label for="select-all-checkbox">全選/取消全選</label>
             </div>
         <% } %>
-        <div id="file-container" class="list-view"> <% if (items.length > 0) { %>
+        <div id="file-container" class="list-view">
+            <% if (items.length > 0) { %>
                 <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
                 <ul>
                     <% items.forEach(item => { %>
-                        <li data-item-path="<%= item.path %>"> <div class="file-entry-selectable">
+                        <li data-item-path="<%= item.path %>">
+                            <div class="file-entry-selectable">
                                 <input type="checkbox" class="item-checkbox"
                                        data-path="<%= item.path %>"
                                        data-encoded-path="<%= item.encodedPath %>"
@@ -273,7 +312,8 @@
                                        data-encoded-name="<%= item.encodedName %>"
                                        data-is-dir="<%= item.isDir %>"
                                        data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>">
-                                <div class="file-content-wrapper"> <% if (item.isDir) { %>
+                                <div class="file-content-wrapper">
+                                    <% if (item.isDir) { %>
                                         <div class="file-entry">
                                             <span class="file-icon-large folder-icon">📁</span>
                                             <a href="/files?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name"><%= item.name %></a>
@@ -297,11 +337,13 @@
                                             <% if (isViewableTextFile) { %>
                                                 <a href="/view?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name" title="點擊查看"><%= item.name %></a>
                                             <% } else { %>
-                                                <span class="file-name"><%= item.name %></span> <% } %>
+                                                <span class="file-name"><%= item.name %></span>
+                                            <% } %>
                                             <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
                                         </div>
                                     <% } %>
-                                    <span class="file-actions-placeholder"></span> </div>
+                                    <span class="file-actions-placeholder"></span>
+                                </div>
                             </div>
                              <div class="rename-form" id="rename-form-<%= item.encodedName %>">
                                 <form action="/rename" method="POST" class="control-form inline-form">
@@ -377,6 +419,7 @@
 
     <script src="/theme.js"></script>
     <script>
+        // ... (JavaScript 變量定義保持不變) ...
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
         const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
@@ -386,8 +429,8 @@
         const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify(items.map(item => item.name.toLowerCase())) %>;
         const HAS_ITEMS_ON_PAGE = <%= items.length > 0 %>;
 
-
         document.addEventListener('DOMContentLoaded', () => {
+            // ... (DOM 元素獲取保持不變) ...
             const fileContainer = document.getElementById('file-container');
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const selectAllContainer = document.getElementById('select-all-container');
@@ -399,7 +442,6 @@
             const actionDownloadBtn = document.getElementById('action-download-btn');
             const actionDeleteBtn = document.getElementById('action-delete-btn');
             
-            // ... (其他元素獲取，如 modals, upload 相關等)
             const moveModal = document.getElementById('move-modal');
             const closeMoveModalBtn = document.getElementById('close-move-modal-btn');
             const directoryTreeContainer = document.getElementById('directory-tree-container');
@@ -429,11 +471,9 @@
             const overwriteAbandonBtn = document.getElementById('overwrite-abandon-btn');
             const closeOverwriteModalBtn = document.getElementById('close-overwrite-modal-btn');
 
-
-            // 狀態變量
             const toggleMultiSelectBtn = document.getElementById('toggle-multi-select-btn');
             let multiSelectModeActive = false;
-            let currentSingleSelectedItem = null; // { path, name, isDir, element }
+            let currentSingleSelectedItem = null;
 
             function clearSingleSelection() {
                 if (currentSingleSelectedItem && currentSingleSelectedItem.element) {
@@ -446,7 +486,7 @@
                 if (!fileContainer || !toggleMultiSelectBtn) return;
 
                 if (multiSelectModeActive) {
-                    clearSingleSelection(); // 進入多選模式時清除單選
+                    clearSingleSelection(); 
                     fileContainer.classList.add('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '取消多選';
                     if (selectAllContainer && HAS_ITEMS_ON_PAGE) {
@@ -460,7 +500,6 @@
                     }
                     document.querySelectorAll('.item-checkbox:checked').forEach(cb => cb.checked = false);
                     if (selectAllCheckbox) selectAllCheckbox.checked = false;
-                    // 注意：退出多選模式時，不應自動清除單選，除非有其他操作觸發
                 }
                 updateSelectionActions();
             }
@@ -472,7 +511,7 @@
                 });
             }
 
-            function getCheckboxSelectedItems() { // 重命名以區分
+            function getCheckboxSelectedItems() {
                 const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                 const selected = [];
                 currentCheckboxes.forEach((cb) => {
@@ -481,7 +520,7 @@
                             path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
                             name: cb.dataset.name, encodedName: cb.dataset.encodedName,
                             isDir: cb.dataset.isDir === 'true', rawName: cb.dataset.rawName,
-                            element: cb.closest('li') // 獲取父級 li
+                            element: cb.closest('li')
                         });
                     }
                 });
@@ -490,7 +529,7 @@
 
             function updateSelectionActions() {
                 let count = 0;
-                let itemsForActions = []; // 用於決定按鈕狀態的項目列表
+                let itemsForActions = []; 
                 let isSingleFileEditable = false;
 
                 if (multiSelectModeActive) {
@@ -506,7 +545,7 @@
                     }
                 } else if (currentSingleSelectedItem) {
                     count = 1;
-                    itemsForActions.push(currentSingleSelectedItem); // 將單選項放入數組以便統一處理
+                    itemsForActions.push(currentSingleSelectedItem);
                     if (!currentSingleSelectedItem.isDir) {
                         const fileName = currentSingleSelectedItem.name;
                         const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
@@ -530,25 +569,21 @@
                 actionDeleteBtn.disabled = !(count > 0);
             }
 
-            // 項目複選框的事件監聽
             document.querySelectorAll('.item-checkbox').forEach((checkbox) => {
                 checkbox.addEventListener('change', () => {
-                    if (multiSelectModeActive) { // 只有在多選模式下，複選框的改變才影響選擇
-                        clearSingleSelection(); // 點擊複選框時，清除單選狀態
+                    if (multiSelectModeActive) { 
+                        clearSingleSelection(); 
                         updateSelectionActions(); 
                     } else {
-                        // 如果不在多選模式，理論上複選框不應可見或可操作
-                        // 但為保險起見，如果意外觸發，則取消其選中
                         checkbox.checked = false;
                     }
                 });
             });
             
-            // 全選複選框
             if (selectAllCheckbox && selectAllContainer) {
                 selectAllCheckbox.addEventListener('change', (e) => {
                     if (!multiSelectModeActive) return; 
-                    clearSingleSelection(); // 全選操作時清除單選
+                    clearSingleSelection(); 
                     const currentCheckboxes = document.querySelectorAll('.item-checkbox'); 
                     currentCheckboxes.forEach(cb => {
                         if (cb.checked !== e.target.checked) { 
@@ -559,13 +594,11 @@
                 });
             }
 
-            // 給每個文件/文件夾條目添加單擊事件監聽器 (在 .file-content-wrapper 上)
             fileContainer.querySelectorAll('ul > li .file-content-wrapper').forEach(contentWrapper => {
                 contentWrapper.addEventListener('click', (event) => {
                     const listItem = contentWrapper.closest('li');
                     const checkbox = listItem.querySelector('.item-checkbox');
 
-                    // 如果點擊的是複選框本身、鏈接或重命名表單內的元素，則不觸發單選邏輯
                     if (event.target.isSameNode(checkbox) || 
                         event.target.tagName === 'A' || event.target.closest('a') ||
                         event.target.closest('.rename-form')) {
@@ -579,16 +612,15 @@
                         element: listItem 
                     };
 
-                    if (multiSelectModeActive) { // 如果在多選模式下點擊了項目內容區域
-                        multiSelectModeActive = false; // 退出多選模式
-                        updateMultiSelectModeUI(); // 這會隱藏複選框並清空多選項
+                    if (multiSelectModeActive) { 
+                        multiSelectModeActive = false; 
+                        updateMultiSelectModeUI(); 
                     }
                     
                     if (currentSingleSelectedItem && currentSingleSelectedItem.element === listItem) {
-                        // 如果再次點擊同一個已單選的項目，則取消單選
                         clearSingleSelection();
                     } else {
-                        clearSingleSelection(); // 清除上一個單選
+                        clearSingleSelection(); 
                         currentSingleSelectedItem = itemData;
                         listItem.classList.add('single-selected-item');
                     }
@@ -596,7 +628,6 @@
                 });
             });
             
-            // 點擊文件容器背景時取消單選
             fileContainer.addEventListener('click', (event) => {
                 if (event.target.isSameNode(fileContainer) || (event.target.tagName === 'UL' && event.target.parentNode.isSameNode(fileContainer))) {
                     if (!multiSelectModeActive) { 
@@ -606,10 +637,25 @@
                 }
             });
 
+            // --- 操作按鈕的事件監聽器 (已更新以處理單選/多選) ---
+            // ... (actionEditBtn, actionRenameBtn, actionDownloadBtn, actionDeleteBtn, actionMoveBtn 的邏輯已在上一版本中更新，此處不再重複)
 
-            // --- 操作按鈕的事件監聽器 ---
-            // 需要根據是單選還是多選來獲取正確的項目數據
-            if (actionEditBtn) {
+            // --- 其他 JavaScript 函數 (showOverwriteConfirmationModal, 上傳邏輯, 視圖切換等) ---
+            // ... (此處省略了之前已有的其他 JS 功能，它們應保持不變或已適應新的選擇邏輯) ...
+            
+            // 初始化 UI
+            updateMultiSelectModeUI(); 
+            updateSelectionActions(); 
+
+            // --- 複製粘贴所有之前的 JS 功能到這裡 ---
+            // (例如: actionEditBtn, actionRenameBtn, actionDownloadBtn, actionDeleteBtn, actionMoveBtn 的監聽器)
+            // (renderDirectoryTree, selectDestination, confirmMoveBtn listener)
+            // (showOverwriteConfirmationModal, 上傳表單和拖拽區域的邏輯)
+            // (視圖切換: listViewBtn, gridViewBtn)
+            // (創建文件/文件夾模態框的邏輯: openCreateItemModal 等)
+            // (showRenameForm, hideRenameForm)
+            // --- 確保所有功能都包含在內 ---
+             if (actionEditBtn) {
                 actionEditBtn.addEventListener('click', () => {
                     if (actionEditBtn.disabled) return;
                     let itemToEdit = null;
@@ -661,7 +707,6 @@
                     }
 
                     if (itemsToDownload.length === 1 && !itemsToDownload[0].isDir) {
-                        // 單個文件下載
                         let url = `/download?path=${itemsToDownload[0].encodedPath}`;
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
@@ -674,7 +719,6 @@
                         tempLink.click();
                         document.body.removeChild(tempLink);
                     } else {
-                        // 多個項目或單個文件夾打包下載
                         const form = document.createElement('form');
                         form.method = 'POST';
                         form.action = '/download-archive';
@@ -740,8 +784,8 @@
                             alert(allSucceeded ? "選中項目已嘗試刪除。" : "部分項目刪除失敗。");
                             window.location.reload();
                         }
-                        clearSingleSelection(); // 清除單選
-                        if(selectAllCheckbox) selectAllCheckbox.checked = false; // 清除多選
+                        clearSingleSelection(); 
+                        if(selectAllCheckbox) selectAllCheckbox.checked = false; 
                         document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false); 
                         updateSelectionActions();
                     }
@@ -778,7 +822,6 @@
                     }
                 });
             }
-            // --- renderDirectoryTree, selectDestination, confirmMoveBtn listener (基本不變，使用 itemsToMove) ---
             function renderDirectoryTree(nodes, container, itemsToMovePaths, currentLevelPath = '/') {
                 container.innerHTML = ''; const ul = document.createElement('ul');
                 const rootLi = document.createElement('li'); rootLi.textContent = '根目錄 (/)';
@@ -843,10 +886,6 @@
                 });
             }
 
-
-            // --- 上傳、創建、視圖切換等其他功能的 JS (大部分保持不變) ---
-            // (showOverwriteConfirmationModal, upload form submit, drop area, view toggle, create item modal logic)
-            // ... (此處省略了之前已有的上傳、創建、視圖切換等功能的 JS 代碼，它們應保持不變) ...
             function showOverwriteConfirmationModal(itemName) {
                 return new Promise((resolve) => {
                     if (!overwriteModal || !overwriteMessage || !overwriteConfirmBtn || !overwriteAbandonBtn || !closeOverwriteModalBtn) {
@@ -1106,21 +1145,21 @@
                 function toggleView(viewType) {
                     const isCurrentlyMultiSelect = fileContainer.classList.contains('multi-select-mode-active');
                     if (viewType === 'grid') {
-                        fileContainer.className = 'grid-view'; // This will remove other classes
+                        fileContainer.className = 'grid-view'; 
                         gridViewBtn.classList.add('active');
                         listViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'grid');
                     } else { 
-                        fileContainer.className = 'list-view'; // This will remove other classes
+                        fileContainer.className = 'list-view'; 
                         listViewBtn.classList.add('active');
                         gridViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'list');
                     }
-                    if (isCurrentlyMultiSelect) { // Re-apply multi-select class if it was active
+                    if (isCurrentlyMultiSelect) { 
                         fileContainer.classList.add('multi-select-mode-active');
                     }
                 }
-                const preferredView = localStorage.getItem('fileView') || 'list'; // Default to list
+                const preferredView = localStorage.getItem('fileView') || 'list'; 
                 toggleView(preferredView); 
                 listViewBtn.addEventListener('click', () => toggleView('list'));
                 gridViewBtn.addEventListener('click', () => toggleView('grid'));
@@ -1180,11 +1219,10 @@
                 }
             });
 
-            // 初始化 UI
             updateMultiSelectModeUI(); 
-            updateSelectionActions(); // 初始加載時也更新一次操作欄狀態
+            updateSelectionActions(); 
 
-        }); // End of DOMContentLoaded
+        }); 
 
         function showRenameForm(encodedName, currentName, isDir) { 
             document.querySelectorAll('.rename-form').forEach(form => {
