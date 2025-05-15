@@ -18,7 +18,7 @@
         .list-view .file-content-wrapper > .file-entry { flex-grow: 1; }
         .list-view .file-actions-placeholder { min-width: 150px; text-align: right; font-size: 0.9em; color: #666; }
         
-        #move-modal, #create-item-modal { 
+        #move-modal, #create-item-modal, #overwrite-confirm-modal { /* Added #overwrite-confirm-modal */
             display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
             overflow: auto; background-color: rgba(0,0,0,0.5); 
         }
@@ -448,6 +448,18 @@
         </div>
     </div>
 
+    <div id="overwrite-confirm-modal" class="modal" style="display:none; z-index: 1002;"> <div class="modal-content">
+            <span class="close-modal-btn" id="close-overwrite-modal-btn">&times;</span>
+            <h3>確認操作</h3>
+            <p id="overwrite-message">一個同名項目已存在。您要覆蓋它嗎？</p>
+            <div class="modal-actions">
+                <button type="button" class="secondary" id="overwrite-abandon-btn">放棄</button>
+                <button type="button" id="overwrite-confirm-btn">覆蓋</button>
+            </div>
+        </div>
+    </div>
+
+
     <script src="/theme.js"></script>
     <script>
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
@@ -456,6 +468,9 @@
         const CURRENT_USER_ROLE = "<%= user.role %>";
         const CURRENT_PATH_ON_LOAD = "<%= currentPath %>";
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
+        // Get existing item names from the EJS context
+        const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify(items.map(item => item.name.toLowerCase())) %>;
+
 
         document.addEventListener('DOMContentLoaded', () => {
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
@@ -490,6 +505,13 @@
             const fileListPreview = document.getElementById('file-list-preview');
             const uploadButton = document.getElementById('upload-button'); // The actual submit button for the form
             const dropArea = document.getElementById('drop-area');
+
+            // --- Overwrite Confirmation Modal Elements ---
+            const overwriteModal = document.getElementById('overwrite-confirm-modal');
+            const overwriteMessage = document.getElementById('overwrite-message');
+            const overwriteConfirmBtn = document.getElementById('overwrite-confirm-btn');
+            const overwriteAbandonBtn = document.getElementById('overwrite-abandon-btn');
+            const closeOverwriteModalBtn = document.getElementById('close-overwrite-modal-btn');
 
 
             function getSelectedItems() {
@@ -754,7 +776,40 @@
                 });
             }
 
-            // --- New Upload Logic ---
+            // --- Overwrite Confirmation Modal Logic ---
+            function showOverwriteConfirmationModal(itemName) {
+                return new Promise((resolve) => {
+                    if (!overwriteModal || !overwriteMessage || !overwriteConfirmBtn || !overwriteAbandonBtn || !closeOverwriteModalBtn) {
+                        console.error("Overwrite modal elements not found!");
+                        resolve('abandon'); // Default to abandon if modal is broken
+                        return;
+                    }
+                    overwriteMessage.textContent = `一個名為 "${itemName}" 的項目已存在於當前目錄。您要覆蓋它嗎？`;
+                    overwriteModal.style.display = 'block';
+
+                    const handleConfirm = () => {
+                        cleanupAndResolve('overwrite');
+                    };
+                    const handleAbandon = () => {
+                        cleanupAndResolve('abandon');
+                    };
+
+                    function cleanupAndResolve(decision) {
+                        overwriteModal.style.display = 'none';
+                        overwriteConfirmBtn.removeEventListener('click', handleConfirm);
+                        overwriteAbandonBtn.removeEventListener('click', handleAbandon);
+                        closeOverwriteModalBtn.removeEventListener('click', handleAbandon);
+                        resolve(decision);
+                    }
+
+                    overwriteConfirmBtn.addEventListener('click', handleConfirm);
+                    overwriteAbandonBtn.addEventListener('click', handleAbandon);
+                    closeOverwriteModalBtn.addEventListener('click', handleAbandon);
+                });
+            }
+
+
+            // --- New Upload Logic with Overwrite Check ---
             if (toggleUploadActionsBtn && uploadActionsContainer && uploadSection) {
                 toggleUploadActionsBtn.addEventListener('click', () => {
                     const isActionsHidden = uploadActionsContainer.style.display === 'none' || uploadActionsContainer.style.display === '';
@@ -799,13 +854,66 @@
             }
             
             if (uploadForm && userFilesInput) {
-                uploadForm.addEventListener('submit', function(event) {
+                uploadForm.addEventListener('submit', async function(event) { // Made async
                     event.preventDefault(); 
                     if (userFilesInput.files.length === 0) {
                         alert('請選擇要上傳的文件或文件夾。');
                         return;
                     }
-                    const formData = new FormData(uploadForm); 
+
+                    const originalFiles = Array.from(userFilesInput.files);
+                    const finalFilesToUpload = [];
+
+                    for (const file of originalFiles) {
+                        // For folder uploads, webkitRelativePath provides the full path including the folder.
+                        // We only care about the top-level file/folder name for collision in the *current* directory.
+                        let nameToCheck = file.name;
+                        if (file.webkitRelativePath) {
+                           // If it's a file within a dropped folder, its name is file.name.
+                           // If it's the folder itself, webkitRelativePath might be just "folderName/" or "folderName/fileName.txt"
+                           // The check should be against the first segment of webkitRelativePath if it's a folder drop.
+                           // However, multer handles directory creation. The conflict check is for items directly in currentPath.
+                           // So, file.name is usually correct for the first level of items.
+                        }
+
+                        if (EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase())) {
+                            const userDecision = await showOverwriteConfirmationModal(nameToCheck);
+                            if (userDecision === 'overwrite') {
+                                finalFilesToUpload.push(file);
+                            } else {
+                                console.log(`Skipping ${nameToCheck} due to user choice.`);
+                            }
+                        } else {
+                            finalFilesToUpload.push(file);
+                        }
+                    }
+
+                    if (finalFilesToUpload.length === 0) {
+                        alert('沒有文件被選中上傳，或者所有衝突的文件都已被放棄。');
+                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                        if (fileListPreview) fileListPreview.innerHTML = '';
+                        if (uploadButton) uploadButton.style.display = 'none';
+                        if (userFilesInput) userFilesInput.value = null; // Clear the selection
+                        return;
+                    }
+
+                    const formData = new FormData(); 
+                    // Append other hidden fields from the original form
+                    const currentPathInput = uploadForm.querySelector('input[name="currentPath"]');
+                    if (currentPathInput) formData.append('currentPath', currentPathInput.value);
+                    
+                    const targetUsernameInput = uploadForm.querySelector('input[name="targetUsername"]');
+                    if (targetUsernameInput) formData.append('targetUsername', targetUsernameInput.value);
+
+                    const csrfInput = uploadForm.querySelector('input[name="_csrf"]');
+                    if (csrfInput) formData.append('_csrf', csrfInput.value);
+
+                    // Append the filtered files
+                    for (const file of finalFilesToUpload) {
+                        formData.append('userFiles', file, file.webkitRelativePath || file.name);
+                    }
+
+
                     const xhr = new XMLHttpRequest();
                     xhr.open('POST', uploadForm.action, true);
                     if (uploadProgressContainer && uploadProgressBar) {
@@ -824,25 +932,22 @@
                     };
                     xhr.onload = function() {
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        if (xhr.status >= 200 && xhr.status < 400) { // Broader success range for redirects etc.
-                            // Check if response is JSON or if it's a redirect
+                        if (xhr.status >= 200 && xhr.status < 400) { 
                             if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) {
-                                window.location.href = xhr.responseURL; // Follow redirect
+                                window.location.href = xhr.responseURL; 
                             } else {
                                 try {
                                     const jsonResponse = JSON.parse(xhr.responseText);
-                                    if (jsonResponse.success || xhr.status === 200 || xhr.status === 201) { // Check for success property or general success status
+                                    if (jsonResponse.success || xhr.status === 200 || xhr.status === 201) { 
                                         alert(jsonResponse.message || '上傳成功！頁面將刷新。');
                                     } else {
                                         alert(jsonResponse.message || '上傳可能已部分成功或伺服器返回了非預期的成功消息。');
                                     }
                                 } catch (e) {
-                                     // If not JSON, but still a success status, assume success and reload.
-                                     // This handles cases where server redirects with a success message in flash but not JSON.
                                     console.warn("Upload response was not JSON, or parsing failed. Assuming success by page behavior or redirect. Status:", xhr.status);
                                     alert('上傳操作已發送，頁面將刷新以查看結果。');
                                 }
-                                window.location.reload(); // Reload to see changes
+                                window.location.reload(); 
                             }
                         } else {
                             let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
@@ -907,7 +1012,7 @@
                     }
 
                     userFilesInput.files = e.dataTransfer.files; 
-                    updateFileListPreviewOnDrop();
+                    updateFileListPreviewOnDrop(); // This will also show the upload button
                     
                     uploadSection.style.display = 'block'; 
                     uploadActionsContainer.style.display = 'flex'; 
@@ -1037,6 +1142,12 @@
             window.addEventListener('click', (event) => { 
                 if (event.target == createItemModal) createItemModal.style.display = 'none';
                 if (event.target == moveModal) moveModal.style.display = 'none'; 
+                if (event.target == overwriteModal) { // Close overwrite modal on outside click
+                    // To prevent accidental abandon, you might want to make this explicit via button only
+                    // For now, let's assume clicking outside is like abandoning.
+                    const abandonButton = overwriteModal.querySelector('#overwrite-abandon-btn');
+                    if (abandonButton) abandonButton.click(); // Programmatically click abandon
+                }
             });
         });
         function showRenameForm(encodedName, currentName, isDir) { 
