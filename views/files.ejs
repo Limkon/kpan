@@ -572,6 +572,16 @@
             let multiSelectModeActive = false;
             let currentSingleSelectedItem = null;
 
+            // 清理上傳UI的輔助函數
+            function cleanupUploadUI() {
+                if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                if (fileListPreview) fileListPreview.innerHTML = '';
+                if (uploadButton) uploadButton.style.display = 'none';
+                if (userFilesInput) userFilesInput.value = null; // 非常重要，清空選擇的文件
+                if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName; // 清除空文件夾標記
+            }
+
+
             function clearSingleSelection() {
                 if (currentSingleSelectedItem && currentSingleSelectedItem.element) {
                     currentSingleSelectedItem.element.classList.remove('single-selected-item');
@@ -1003,10 +1013,11 @@
                     } else { 
                         toggleUploadActionsBtn.textContent = '取消上傳操作';
                     }
+                    cleanupUploadUI(); // 切換時也清理一下上傳狀態
                 });
             }
 
-            if (uploadFilesBtn && uploadSection && userFilesInput && dropAreaText && fileListPreview && uploadButton) {
+            if (uploadFilesBtn && uploadSection && userFilesInput) {
                 uploadFilesBtn.addEventListener('click', () => {
                     if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName; 
                     userFilesInput.removeAttribute('webkitdirectory');
@@ -1015,14 +1026,12 @@
                     if (dropAreaText) dropAreaText.textContent = '將文件拖拽到此處進行上傳。';
                     uploadSection.style.display = 'block';
                     if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
-                    userFilesInput.value = null; 
-                    fileListPreview.innerHTML = ''; 
-                    uploadButton.style.display = 'none'; 
+                    cleanupUploadUI(); // 清理之前的選擇
                     userFilesInput.click(); 
                 });
             }
 
-            if (uploadFolderBtn && uploadSection && userFilesInput && dropAreaText && fileListPreview && uploadButton) {
+            if (uploadFolderBtn && uploadSection && userFilesInput) {
                 uploadFolderBtn.addEventListener('click', () => {
                     if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName; 
                     userFilesInput.setAttribute('webkitdirectory', '');
@@ -1031,9 +1040,7 @@
                     if (dropAreaText) dropAreaText.textContent = '將文件夾拖拽到此處進行上傳。';
                     uploadSection.style.display = 'block';
                     if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
-                    userFilesInput.value = null; 
-                    fileListPreview.innerHTML = ''; 
-                    uploadButton.style.display = 'none';
+                    cleanupUploadUI(); // 清理之前的選擇
                     userFilesInput.click(); 
                 });
             }
@@ -1042,45 +1049,44 @@
                 uploadForm.addEventListener('submit', async function(event) { 
                     event.preventDefault(); 
                     
-                    const isAttemptingEmptyFolderUpload = !!uploadForm.dataset.emptyDroppedFolderName;
+                    const isAttemptingEmptyDroppedFolderUpload = !!uploadForm.dataset.emptyDroppedFolderName;
+                    const filesFromInput = Array.from(userFilesInput.files);
                     
-                    if (!isAttemptingEmptyFolderUpload && userFilesInput.files.length === 0) {
+                    if (!isAttemptingEmptyDroppedFolderUpload && filesFromInput.length === 0) {
                         alert('請選擇要上傳的文件或文件夾。');
+                        cleanupUploadUI();
                         return;
                     }
 
-                    let finalFilesToUpload = [];
-                    let folderNameToCreate = null; 
-                    let proceedWithUpload = true; // 用於標記是否繼續上傳流程
+                    let filesToActuallyUpload = [];
+                    let folderNameToCreateIfEmpty = null;
+                    let proceedWithOperation = true;
 
-                    if (isAttemptingEmptyFolderUpload) {
-                        folderNameToCreate = uploadForm.dataset.emptyDroppedFolderName;
-                        if (EXISTING_ITEM_NAMES_ON_PAGE.includes(folderNameToCreate.toLowerCase())) {
-                            const userDecision = await showOverwriteConfirmationModal(folderNameToCreate);
+                    if (isAttemptingEmptyDroppedFolderUpload) {
+                        folderNameToCreateIfEmpty = uploadForm.dataset.emptyDroppedFolderName;
+                        if (EXISTING_ITEM_NAMES_ON_PAGE.includes(folderNameToCreateIfEmpty.toLowerCase())) {
+                            const userDecision = await showOverwriteConfirmationModal(folderNameToCreateIfEmpty);
                             if (userDecision === 'abandon') {
-                                alert(`已放棄創建已存在的空文件夾 "${folderNameToCreate}"。`);
-                                proceedWithUpload = false;
+                                alert(`已放棄創建已存在的空文件夾 "${folderNameToCreateIfEmpty}"。`);
+                                proceedWithOperation = false;
                             }
-                            // 如果選擇覆蓋，對於空文件夾，我們仍然嘗試創建
+                            // 如果選擇 'overwrite'，對於空文件夾，我們仍然是去創建它
                         }
-                    } else { // 正常文件/文件夾選擇或拖拽（非空）
-                        const originalFiles = Array.from(userFilesInput.files);
-                        const topLevelItems = new Map(); // 用於存儲頂層項目及其包含的文件
-
-                        // 1. 收集頂層項目並處理文件夾結構
-                        for (const file of originalFiles) {
+                    } else { // 處理文件或非空文件夾
+                        const topLevelItems = new Map();
+                        for (const file of filesFromInput) {
+                            let topLevelName = file.name;
+                            let isPartOfFolder = false;
                             if (file.webkitRelativePath && file.webkitRelativePath.includes('/')) {
-                                const topLevelName = file.webkitRelativePath.split('/')[0];
-                                if (!topLevelItems.has(topLevelName)) {
-                                    topLevelItems.set(topLevelName, { isFolder: true, files: [], userDecision: null });
-                                }
-                                topLevelItems.get(topLevelName).files.push(file);
-                            } else { // 單個文件
-                                topLevelItems.set(file.name, { isFolder: false, files: [file], userDecision: null });
+                                topLevelName = file.webkitRelativePath.split('/')[0];
+                                isPartOfFolder = true;
                             }
+                            if (!topLevelItems.has(topLevelName)) {
+                                topLevelItems.set(topLevelName, { isFolder: isPartOfFolder, files: [], userDecision: 'upload' });
+                            }
+                            topLevelItems.get(topLevelName).files.push(file);
                         }
 
-                        // 2. 對頂層項目進行衝突檢查和用戶確認
                         for (const [name, item] of topLevelItems) {
                             if (EXISTING_ITEM_NAMES_ON_PAGE.includes(name.toLowerCase())) {
                                 const userDecision = await showOverwriteConfirmationModal(name);
@@ -1088,37 +1094,29 @@
                                 if (userDecision === 'abandon') {
                                     console.log(`用戶放棄上傳/覆蓋 "${name}"。`);
                                 }
-                            } else {
-                                item.userDecision = 'upload'; // 沒有衝突，直接上傳
                             }
                         }
-
-                        // 3. 構建 finalFilesToUpload
                         for (const item of topLevelItems.values()) {
                             if (item.userDecision === 'upload' || item.userDecision === 'overwrite') {
-                                finalFilesToUpload.push(...item.files);
+                                filesToActuallyUpload.push(...item.files);
                             }
                         }
-                        
-                        if (finalFilesToUpload.length === 0) {
+                        if (filesToActuallyUpload.length === 0) {
                              alert('沒有文件被選中上傳，或者所有衝突的文件都已被放棄。');
-                             proceedWithUpload = false;
+                             proceedWithOperation = false;
                         }
                     }
 
-                    if (!proceedWithUpload) {
-                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        if (fileListPreview) fileListPreview.innerHTML = '';
-                        if (uploadButton) uploadButton.style.display = 'none';
-                        if (userFilesInput) userFilesInput.value = null;
-                        delete uploadForm.dataset.emptyDroppedFolderName;
+                    if (!proceedWithOperation) {
+                        cleanupUploadUI();
                         return;
                     }
                     
-                    // 執行上傳或創建空文件夾
-                    if (folderNameToCreate) { // 創建拖拽的空文件夾
+                    // 執行操作
+                    if (folderNameToCreateIfEmpty) {
+                        // 創建空文件夾
                         const createFolderData = new FormData();
-                        createFolderData.append('folderName', folderNameToCreate);
+                        createFolderData.append('folderName', folderNameToCreateIfEmpty);
                         createFolderData.append('currentPath', uploadForm.querySelector('input[name="currentPath"]').value);
                         if (CSRF_TOKEN) createFolderData.append('_csrf', CSRF_TOKEN);
                         const targetUsernameInputVal = uploadForm.querySelector('input[name="targetUsername"]');
@@ -1126,42 +1124,25 @@
                             createFolderData.append('targetUsername', targetUsernameInputVal.value);
                         }
                         try {
-                            const response = await fetch('/create-folder', {
-                                method: 'POST',
-                                body: createFolderData
-                            });
-                            if (response.ok && response.redirected) {
-                                window.location.href = response.url;
-                            } else {
-                                let errorMsg = `創建空文件夾 "${folderNameToCreate}" 失敗。`;
-                                try {
-                                    const errorResult = await response.json();
-                                    if (errorResult && errorResult.message) errorMsg = errorResult.message;
-                                    else if (response.statusText) errorMsg += ` (${response.statusText})`;
-                                } catch (e) { if (response.statusText) errorMsg += ` (${response.statusText})`;}
-
-                                if (response.url && response.url.includes('message=')) {
-                                     window.location.href = response.url;
-                                } else {
-                                    alert(errorMsg);
-                                }
+                            const response = await fetch('/create-folder', { method: 'POST', body: createFolderData });
+                            if (response.ok && response.redirected) { window.location.href = response.url; }
+                            else {
+                                let errorMsg = `創建空文件夾 "${folderNameToCreateIfEmpty}" 失敗。`;
+                                try { const errorResult = await response.json(); if (errorResult && errorResult.message) errorMsg = errorResult.message; else if(response.statusText) errorMsg += ` (${response.statusText})`;} catch (e) { if(response.statusText) errorMsg += ` (${response.statusText})`;}
+                                if (response.url && response.url.includes('message=')) { window.location.href = response.url; } else { alert(errorMsg); }
                             }
-                        } catch (err) {
-                            console.error('創建空文件夾時出錯:', err);
-                            alert(`創建空文件夾 "${folderNameToCreate}" 時發生網絡錯誤。`);
-                        }
-                    } else if (finalFilesToUpload.length > 0) { // 上傳文件/非空文件夾
+                        } catch (err) { console.error('創建空文件夾時出錯:', err); alert(`創建空文件夾 "${folderNameToCreateIfEmpty}" 時發生網絡錯誤。`);}
+                    } else if (filesToActuallyUpload.length > 0) {
+                        // 上傳文件/非空文件夾
                         const formData = new FormData();
                         const currentPathInput = uploadForm.querySelector('input[name="currentPath"]');
                         if (currentPathInput) formData.append('currentPath', currentPathInput.value);
-                        
                         const targetUsernameInput = uploadForm.querySelector('input[name="targetUsername"]');
                         if (targetUsernameInput && targetUsernameInput.value) formData.append('targetUsername', targetUsernameInput.value);
-
                         const csrfInput = uploadForm.querySelector('input[name="_csrf"]');
                         if (csrfInput) formData.append('_csrf', csrfInput.value);
 
-                        for (const file of finalFilesToUpload) {
+                        for (const file of filesToActuallyUpload) {
                             formData.append('userFiles', file, file.webkitRelativePath || file.name);
                         }
 
@@ -1182,36 +1163,25 @@
                             }
                         };
                         xhr.onload = function() {
-                            if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                            if (xhr.status >= 200 && xhr.status < 400) { 
+                            if (xhr.status >= 200 && xhr.status < 400) {
                                 if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) {
                                     window.location.href = xhr.responseURL; 
-                                } else {
-                                    window.location.reload(); 
-                                }
+                                } else { window.location.reload(); }
                             } else {
                                 let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
-                                try {
-                                    const responseJson = JSON.parse(xhr.responseText);
-                                    if (responseJson && responseJson.message) {
-                                        errorMessage = responseJson.message;
-                                    }
-                                } catch (e) {
-                                    if(xhr.responseText) errorMessage = xhr.responseText.substring(0, 500); 
-                                }
-                                alert(errorMessage);
-                                console.error('Upload failed:', xhr.status, xhr.responseText);
+                                try { const responseJson = JSON.parse(xhr.responseText); if (responseJson && responseJson.message) errorMessage = responseJson.message; } catch (e) { if(xhr.responseText) errorMessage = xhr.responseText.substring(0, 200); }
+                                alert(errorMessage); console.error('Upload failed:', xhr.status, xhr.responseText);
                             }
+                            cleanupUploadUI();
                         };
                         xhr.onerror = function(e) { 
-                            if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                            alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
-                            console.error('Upload network error:', e);
+                            alert('上傳過程中發生網絡錯誤。'); console.error('Upload network error:', e);
+                            cleanupUploadUI();
                         };
                         xhr.openUrl = uploadForm.action; 
                         xhr.send(formData);
                     }
-                    delete uploadForm.dataset.emptyDroppedFolderName;
+                    // cleanupUploadUI(); // 確保在所有分支後都清理 (或者在每個分支的末尾清理)
                 });
             }
 
@@ -1236,32 +1206,40 @@
 
                     if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName;
 
+                    function finishDropProcessing(emptyFolderName = null) {
+                        updateFileListPreviewOnDrop(emptyFolderName);
+                        uploadSection.style.display = 'block'; 
+                        uploadActionsContainer.style.display = 'flex'; 
+                        if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
+                    }
+
                     if (items && items.length > 0 && items[0].webkitGetAsEntry) {
                         const entry = items[0].webkitGetAsEntry();
                         if (entry.isDirectory) {
-                            // 檢查是否為空文件夾，需要異步讀取
                             const dirReader = entry.createReader();
-                            dirReader.readEntries(function(entries) {
-                                if (entries.length === 0) {
-                                    droppedEmptyFolderName = entry.name;
-                                    if (uploadForm) uploadForm.dataset.emptyDroppedFolderName = entry.name;
-                                    userFilesInput.removeAttribute('webkitdirectory');
-                                    userFilesInput.removeAttribute('directory');
-                                    // userFilesInput.files = new FileList(); // 不能直接這樣創建空的 FileList
-                                    const emptyFileList = new DataTransfer(); // 使用 DataTransfer 創建空的 FileList
-                                    userFilesInput.files = emptyFileList.files;
-                                } else { 
-                                    userFilesInput.setAttribute('webkitdirectory', '');
-                                    userFilesInput.setAttribute('directory', '');
-                                    userFilesInput.files = files;
+                            dirReader.readEntries(
+                                (dirEntries) => { 
+                                    if (dirEntries.length === 0) { 
+                                        droppedEmptyFolderName = entry.name;
+                                        if (uploadForm) uploadForm.dataset.emptyDroppedFolderName = entry.name;
+                                        const emptyDt = new DataTransfer(); 
+                                        userFilesInput.files = emptyDt.files;
+                                    } else { 
+                                        if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName;
+                                        userFilesInput.setAttribute('webkitdirectory', ''); 
+                                        userFilesInput.setAttribute('directory', '');
+                                        userFilesInput.files = files; 
+                                    }
+                                    finishDropProcessing(droppedEmptyFolderName); 
+                                },
+                                (error) => { 
+                                    console.error("讀取文件夾內容錯誤:", error);
+                                    if (uploadForm) delete uploadForm.dataset.emptyDroppedFolderName;
+                                    userFilesInput.files = files; 
+                                    finishDropProcessing();
                                 }
-                                finishDropProcessing(droppedEmptyFolderName);
-                            }, function(error) {
-                                console.error("讀取文件夾內容錯誤:", error);
-                                userFilesInput.files = files; // 出錯則按原樣處理
-                                finishDropProcessing();
-                            });
-                            return; // 異步操作，提前返回
+                            );
+                            return; 
                         } else { 
                             userFilesInput.removeAttribute('webkitdirectory');
                             userFilesInput.removeAttribute('directory');
@@ -1271,13 +1249,6 @@
                         userFilesInput.files = files;
                     }
                     finishDropProcessing();
-
-                    function finishDropProcessing(emptyFolderName = null) {
-                        updateFileListPreviewOnDrop(emptyFolderName);
-                        uploadSection.style.display = 'block'; 
-                        uploadActionsContainer.style.display = 'flex'; 
-                        toggleUploadActionsBtn.textContent = '取消上傳操作';
-                    }
                 }, false);
                 
                 userFilesInput.addEventListener('change', () => {
@@ -1295,12 +1266,24 @@
                         const list = document.createElement('ul');
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
                         let isDirectoryUpload = false;
+                        // 優先檢查 webkitRelativePath 來判斷是否為文件夾上傳
                         if (userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath && userFilesInput.files[0].webkitRelativePath.includes('/')) {
                            isDirectoryUpload = true;
                         } else if (isDirectoryModeInput && userFilesInput.files.length > 0) { 
-                            // 這裡的判斷對於通過對話框選擇的單文件文件夾可能不夠準確
-                            // 但主要還是依賴 webkitRelativePath
+                           // 如果是文件夾選擇模式，即使只有一個文件，也可能代表一個文件夾
+                           // 但更安全的判斷還是依賴 webkitRelativePath
+                           // 如果 files[0].webkitRelativePath 不存在或不包含'/'，但 isDirectoryModeInput 為 true，
+                           // 這通常意味著用戶選擇了一個文件夾，但裡面只有一個文件，或者瀏覽器沒有完全提供路徑。
+                           // 在這種情況下，我們可能需要假設它是文件夾上傳，並使用 files[0].name 作為頂層文件夾名（如果沒有更好的）
+                           // 但這部分邏輯在衝突檢查時更為重要。預覽時，如果 webkitRelativePath 可用，則用它。
+                           if (userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath) {
+                               // 保持之前的邏輯
+                           } else {
+                               // 可能是一個單文件文件夾，或者瀏覽器沒有提供完整路徑
+                               // isDirectoryUpload 可能需要更複雜的判斷，或依賴衝突檢查時的邏輯
+                           }
                         }
+
 
                         if (isDirectoryUpload) {
                             const folderName = userFilesInput.files[0].webkitRelativePath.split('/')[0];
@@ -1328,14 +1311,14 @@
                         fileListPreview.appendChild(list);
                         uploadButton.style.display = 'inline-block'; 
                     } else if (isDirectoryModeInput) { 
-                         fileListPreview.innerHTML = '<p style="font-size:0.9em; color: #dc3545;">提示：通过文件对话框选择的空文件夹无法直接上传。请使用“创建文件夹”功能，或将空文件夹拖拽到此区域进行上传。</p>';
+                         fileListPreview.innerHTML = '<p style="font-size:0.9em; color: #dc3545;">提示：无法通过文件对话框直接上传选中的空文件夹。请使用“创建文件夹”功能，或将空文件夹拖拽到此区域进行上传。</p>';
                          uploadButton.style.display = 'none';
                     }
                      else { 
                         uploadButton.style.display = 'none';
                     }
                 }
-                if (userFilesInput && uploadButton && userFilesInput.files.length === 0 && !uploadForm.dataset.emptyDroppedFolderName) {
+                if (userFilesInput && uploadButton && userFilesInput.files.length === 0 && !(uploadForm && uploadForm.dataset.emptyDroppedFolderName)) {
                      uploadButton.style.display = 'none';
                 }
             }
