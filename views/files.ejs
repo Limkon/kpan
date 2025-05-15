@@ -9,6 +9,31 @@
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
         /* ... (保留之前的樣式) ... */
+        :root {
+            --button-primary-bg-color: #007bff;
+            --button-primary-text-color: #ffffff;
+            --button-primary-border-color: #007bff;
+            --button-secondary-bg-color: #6c757d;
+            --button-secondary-text-color: #ffffff;
+            --button-secondary-border-color: #6c757d;
+            --button-light-secondary-bg-color: #f8f9fa;
+            --button-light-secondary-text-color: #343a40;
+            --button-light-secondary-border-color: #ced4da;
+        }
+
+        .dark-theme {
+            --button-primary-bg-color: #0056b3;
+            --button-primary-text-color: #ffffff;
+            --button-primary-border-color: #0056b3;
+            --button-secondary-bg-color: #5a6268;
+            --button-secondary-text-color: #ffffff;
+            --button-secondary-border-color: #545b62;
+            --button-light-secondary-bg-color: #3a3a3a;
+            --button-light-secondary-text-color: #e0e0e0;
+            --button-light-secondary-border-color: #555;
+        }
+
+
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         #selection-action-bar button { margin: 0; }
         
@@ -108,7 +133,6 @@
         }
         #select-all-container label { margin-left: 5px; font-weight: normal;}
 
-        /* 重命名對話框樣式調整 */
         .rename-form {
             display: none;
             position: absolute;
@@ -116,7 +140,7 @@
             right: 5px;
             top: calc(100% + 2px);
             background-color: var(--rename-form-bg, #ffffff);
-            padding: 10px; /* 調整容器內邊距 */
+            padding: 10px;
             border: 1px solid var(--rename-form-border-color, #cccccc);
             box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
             z-index: 100;
@@ -133,7 +157,7 @@
         .rename-form form.inline-form {
             display: flex;
             gap: 8px; 
-            align-items: center; 
+            align-items: stretch; /* 改為 stretch 使子元素高度一致 */
         }
 
         .rename-form input[type="text"],
@@ -141,36 +165,60 @@
             box-sizing: border-box; 
             font-size: 0.9em;      
             line-height: 1.4;    
-            padding-top: 4px;      
-            padding-bottom: 4px;   
-            border: 1px solid var(--rename-form-border-color, #cccccc); 
+            padding-top: 6px;      /* 增加垂直內邊距以匹配按鈕 */
+            padding-bottom: 6px;   
+            border: 1px solid var(--input-border-color, #ccc); /* 使用通用的 input border color */
             border-radius: 4px;    
             margin: 0;             
-            height: auto;          /* 允許高度由內容、內邊距和邊框決定 */
+            /* height: auto; 移除，讓 align-items:stretch 生效 */
         }
+        .dark-theme .rename-form input[type="text"],
+        .dark-theme .rename-form button {
+             border-color: var(--input-dark-border-color, #555); /* 暗色主題的邊框 */
+        }
+
 
         .rename-form input[type="text"] {
             flex-grow: 1;
             padding-left: 8px;
             padding-right: 8px;
+            background-color: var(--input-bg-color, #fff);
+            color: var(--input-text-color, #333);
         }
+        .dark-theme .rename-form input[type="text"] {
+            background-color: var(--input-dark-bg-color, #2c2c2c);
+            color: var(--input-dark-text-color, #e0e0e0);
+        }
+
 
         .rename-form button {
             padding-left: 12px;  
             padding-right: 12px;
             cursor: pointer;
-            background-color: var(--button-bg-color, #f0f0f0); 
-            color: var(--button-text-color, #333);
             white-space: nowrap; 
+            border-width: 1px; /* 確保邊框寬度一致 */
+            border-style: solid;
         }
-        .dark-theme .rename-form {
-            --rename-form-bg: #3a3a3a;
-            --rename-form-border-color: #555;
+        
+        .rename-form button[type="submit"] {
+            background-color: var(--button-primary-bg-color);
+            color: var(--button-primary-text-color);
+            border-color: var(--button-primary-border-color);
         }
-        .dark-theme .rename-form button { /* 暗色主題下按鈕顏色 */
-            background-color: var(--button-dark-bg-color, #555);
-            color: var(--button-dark-text-color, #f0f0f0);
-            border-color: var(--rename-form-dark-border-color, #666); /* 可選，如果按鈕邊框顏色也需不同 */
+        .rename-form button.secondary {
+            background-color: var(--button-light-secondary-bg-color);
+            color: var(--button-light-secondary-text-color);
+            border-color: var(--button-light-secondary-border-color);
+        }
+        .dark-theme .rename-form button[type="submit"] {
+            background-color: var(--button-primary-bg-color); /* 變量已在 .dark-theme 中定義 */
+            color: var(--button-primary-text-color);
+            border-color: var(--button-primary-border-color);
+        }
+        .dark-theme .rename-form button.secondary {
+            background-color: var(--button-light-secondary-bg-color); /* 變量已在 .dark-theme 中定義 */
+            color: var(--button-light-secondary-text-color);
+            border-color: var(--button-light-secondary-border-color);
         }
         
         #upload-actions-container { display: none; padding: 10px 0; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
@@ -191,13 +239,28 @@
         .file-browser-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
         .file-browser-controls .actions-group-left { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
         
-        /* 將 #toggle-multi-select-btn 的樣式與左側組按鈕統一 */
         .file-browser-controls .actions-group-left button,
         #toggle-multi-select-btn { 
             padding: 8px 12px; 
             font-size: 0.9em; 
-            margin: 0; /* 如果父級 .file-browser-controls 已有 gap，這裡的 margin 可能不需要 */
+            margin: 0;
+            /* 確保這些按鈕使用標準按鈕樣式 */
+            background-color: var(--button-primary-bg-color);
+            color: var(--button-primary-text-color);
+            border: 1px solid var(--button-primary-border-color);
+            border-radius: 4px;
+            cursor: pointer;
         }
+        .file-browser-controls .actions-group-left button:hover,
+        #toggle-multi-select-btn:hover {
+            opacity: 0.9;
+        }
+        /* 如果需要，可以為特定按鈕（如 toggleUploadActionsBtn）覆蓋顏色 */
+        #toggleUploadActionsBtn.upload-button-main { /* 假設這個按鈕需要不同的主色調 */
+             /* background-color: #28a745; */
+             /* border-color: #28a745; */
+        }
+
 
         .file-browser-controls .search-form-right { display: flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
         .file-browser-controls .search-form-right input[type="search"] { width: 180px; padding: 8px 10px; font-size: 0.9em; border: 1px solid #ccc; border-radius: 4px; margin: 0; }
