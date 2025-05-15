@@ -940,7 +940,7 @@
                      if (!multiSelectModeActive && currentSingleSelectedItem) {
                         itemsToMove.push(currentSingleSelectedItem);
                     } else if (multiSelectModeActive) {
-                        itemsToMove = getCheckboxSelectedItems();
+                        selectedToMove = getCheckboxSelectedItems();
                     }
                     if (itemsToMove.length === 0) return;
 
@@ -1139,7 +1139,10 @@
                     // 處理文件名衝突和覆蓋確認
                     for (const file of originalFiles) {
                         // 對於文件夾上傳，需要檢查 webkitRelativePath 中的文件名部分
-                        let nameToCheck = file.webkitRelativePath ? path.basename(file.webkitRelativePath) : file.name;
+                        // 使用 JavaScript 方法提取文件名，而不是 Node.js 的 path 模塊
+                        const lastSlashIndex = file.webkitRelativePath ? Math.max(file.webkitRelativePath.lastIndexOf('/'), file.webkitRelativePath.lastIndexOf('\\')) : -1;
+                        const nameToCheck = lastSlashIndex !== -1 ? file.webkitRelativePath.substring(lastSlashIndex + 1) : file.name;
+
                         if (EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase())) {
                             const userDecision = await showOverwriteConfirmationModal(nameToCheck);
                             if (userDecision === 'overwrite') {
@@ -1456,7 +1459,9 @@
                     if (currentPathInput && IS_SEARCH_RESULT_VIEW) {
                          // 如果在搜索結果頁面，當前路徑是項目所在的父目錄
                          const itemOriginalPath = formContainer.querySelector('input[name="oldPath"]').value;
-                         currentPathInput.value = itemOriginalPath.substring(0, itemOriginalPath.lastIndexOf('/')) || '/';
+                         // 使用 JavaScript 方法獲取父目錄
+                         const lastSlashIndex = itemOriginalPath.lastIndexOf('/');
+                         currentPathInput.value = lastSlashIndex !== -1 ? itemOriginalPath.substring(0, lastSlashIndex) : '/';
                     } else if (currentPathInput) {
                         // 否則使用頁面加載時的當前路徑
                         currentPathInput.value = CURRENT_PATH_ON_LOAD;
