@@ -219,7 +219,13 @@ async function getDirectoryTreeRecursive(directoryToScan, userUploadRoot, curren
 // 配置 Multer 的文件儲存方式
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
+        // --- 新增診斷日誌 ---
+        console.log(`[Multer Destination] Inside destination function.`);
+        console.log(`[Multer Destination] req.body:`, req.body); // Log req.body inside Multer
+        console.log(`[Multer Destination] req.files:`, req.files); // Log req.files inside Multer
         console.log(`[Multer Destination] Received file: ${file.originalname}, webkitRelativePath: ${file.webkitRelativePath}`);
+        // --- 診斷日誌結束 ---
+
         const actingUsername = req.session.user.username;
         // 如果是管理員且指定了目標用戶名，則以上傳到目標用戶的文件夾
         const targetUsername = (req.session.user.role === 'admin' && req.body.targetUsername) ? req.body.targetUsername : actingUsername;
@@ -461,7 +467,6 @@ app.get('/files', isAuthenticated, async (req, res) => {
             currentPath: currentDisplayPath, // 當前顯示的路徑
             searchQuery: searchQuery, // 當前搜索關鍵字
             isSearchResult: isSearchResultView, // 是否為搜索結果頁面
-            pageTitle: pageTitle, // 頁面標題
             ALLOWED_TEXT_EXTENSIONS: ALLOWED_TEXT_EXTENSIONS, // 允許預覽和編輯的擴展名
             csrfToken: res.locals.csrfToken, // CSRF Token
             message: req.query.message, messageType: req.query.messageType // 消息和消息類型
