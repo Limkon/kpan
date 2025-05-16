@@ -10,7 +10,7 @@ const sqlite3 = require('sqlite3').verbose();
 const yazl = require('yazl'); // 引入 yazl
 
 const app = express();
-const port = process.env.PORT || 8100;
+const port = process.env.PORT || 3000;
 
 // --- 常量定義 ---
 const DATA_DIR = path.join(__dirname, 'data');
