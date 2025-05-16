@@ -133,17 +133,49 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
         for (const entry of entries) {
             const entryAbsolutePath = path.join(directoryToSearch, entry.name);
             const entryRelativePath = path.posix.join(currentRelativePath, entry.name);
+            let stats;
+
             if (entry.isFile()) {
                 if (entry.name.toLowerCase().includes(lowerCaseKeyword)) {
+                    try {
+                        stats = await fsp.stat(entryAbsolutePath);
+                    } catch (statErr) {
+                        console.error(`[Search Stat Error] for file ${entryAbsolutePath}:`, statErr.message);
+                        stats = { size: null, mtime: null }; // Default on error
+                    }
                     foundItems.push({
-                        name: entry.name, isDir: false, path: entryRelativePath,
-                        encodedName: encodeURIComponent(entry.name), encodedPath: encodeURIComponent(entryRelativePath)
+                        name: entry.name,
+                        isDir: false,
+                        path: entryRelativePath,
+                        encodedName: encodeURIComponent(entry.name),
+                        encodedPath: encodeURIComponent(entryRelativePath),
+                        size: stats.size,
+                        lastModified: stats.mtime
                     });
                 }
             } else if (entry.isDirectory()) {
                 if (entry.name.startsWith('.') || entry.name === 'node_modules') {
                     continue;
                 }
+                // If the directory name itself matches the search query, add it to results
+                if (entry.name.toLowerCase().includes(lowerCaseKeyword)) {
+                    try {
+                        stats = await fsp.stat(entryAbsolutePath);
+                    } catch (statErr) {
+                        console.error(`[Search Stat Error] for directory ${entryAbsolutePath}:`, statErr.message);
+                        stats = { size: null, mtime: null }; // Default on error
+                    }
+                    foundItems.push({
+                        name: entry.name,
+                        isDir: true,
+                        path: entryRelativePath,
+                        encodedName: encodeURIComponent(entry.name),
+                        encodedPath: encodeURIComponent(entryRelativePath),
+                        size: null, // Directories typically don't have a size displayed like files
+                        lastModified: stats.mtime
+                    });
+                }
+                // Recurse into the directory
                 const subDirectoryItems = await searchFilesRecursively(entryAbsolutePath, keyword, entryRelativePath, userUploadRoot);
                 foundItems = foundItems.concat(subDirectoryItems);
             }
@@ -151,6 +183,7 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
     } catch (err) { console.error(`[Search] 讀取目錄 ${directoryToSearch} 時發生錯誤:`, err.message); }
     return foundItems;
 }
+
 
 async function getDirectoryTreeRecursive(directoryToScan, userUploadRoot, currentRelativePath = '/', pathsToExclude = []) {
     let tree = [];
@@ -344,23 +377,50 @@ app.get('/files', isAuthenticated, async (req, res) => {
         if (searchQuery) {
             isSearchResultView = true;
             items = await searchFilesRecursively(userUploadRootPath, searchQuery, '/', userUploadRootPath);
-            currentDisplayPath = '/';
+            currentDisplayPath = '/'; // Search results are from root conceptually
             pageTitle = `有關 "${searchQuery}" 的搜尋結果 (在 ${viewAsAdminContext ? targetUsernameForView : actingUser.username} 的文件中)`;
-            items.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN-u-co-pinyin'));
         } else {
             const currentFullPath = resolvePathForUser(targetUsernameForView, relativeQueryPath);
             const dirEntries = await fsp.readdir(currentFullPath, { withFileTypes: true });
-            items = dirEntries.map(entry => {
+            
+            items = await Promise.all(dirEntries.map(async entry => {
                 const itemPath = path.posix.join(relativeQueryPath, entry.name);
+                const fullEntryPath = path.join(currentFullPath, entry.name);
+                let stats;
+                try {
+                    stats = await fsp.stat(fullEntryPath);
+                } catch (statErr) {
+                    console.error(`[Stat Error] for ${fullEntryPath}:`, statErr.message);
+                    // Fallback if stat fails
+                    return {
+                        name: entry.name,
+                        isDir: entry.isDirectory(), // Use readdir info if stat fails
+                        path: itemPath,
+                        encodedName: encodeURIComponent(entry.name),
+                        encodedPath: encodeURIComponent(itemPath),
+                        size: null,
+                        lastModified: null
+                    };
+                }
                 return {
-                    name: entry.name, isDir: entry.isDirectory(), path: itemPath,
-                    encodedName: encodeURIComponent(entry.name), encodedPath: encodeURIComponent(itemPath)
+                    name: entry.name,
+                    isDir: entry.isDirectory(),
+                    path: itemPath,
+                    encodedName: encodeURIComponent(entry.name),
+                    encodedPath: encodeURIComponent(itemPath),
+                    size: entry.isFile() ? stats.size : null, // Only files have size
+                    lastModified: stats.mtime // mtime is the last modified time
                 };
-            }).sort((a, b) => {
-                if (a.isDir && !b.isDir) return -1; if (!a.isDir && b.isDir) return 1;
-                return a.name.localeCompare(b.name, 'zh-CN-u-co-pinyin');
-            });
+            }));
         }
+
+        // Sort items: folders first, then by name
+        items.sort((a, b) => {
+            if (a.isDir && !b.isDir) return -1;
+            if (!a.isDir && b.isDir) return 1;
+            return a.name.localeCompare(b.name, 'zh-CN-u-co-pinyin');
+        });
+
         res.render('files', {
             user: actingUser, viewTargetUsername: viewAsAdminContext ? targetUsernameForView : null,
             items: items, currentPath: currentDisplayPath, searchQuery: searchQuery,
@@ -658,7 +718,7 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
             res.status(500).send(`創建壓縮文件時發生內部錯誤: ${error.message}`);
 
         } else if (!res.writableEnded) {
-             // 如果已經開始 pipe，嘗試結束流
+           // 如果已經開始 pipe，嘗試結束流
             console.log("錯誤發生，但響應已開始，嘗試結束流。");
             zipfile.outputStream.unpipe(res); // 解除 pipe
             res.end(); // 結束響應
