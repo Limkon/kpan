@@ -68,6 +68,14 @@
         }
 
         .file-entry-selectable { display: flex; align-items: center; width: 100%; padding: 5px 0; }
+        #file-container.list-view .file-entry-selectable { /* List view specific padding */
+             padding: 5px 0;
+        }
+        #file-container.grid-view .file-entry-selectable { /* Grid view specific padding reset if needed, or keep it */
+            padding: 0; /* Reset padding here as li will handle it for grid */
+        }
+
+
         .file-content-wrapper { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         
         .list-view li { position: relative; }
@@ -134,8 +142,8 @@
         /* --- Grid View Specific Styles --- */
         #file-container.grid-view ul {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* 最小寬度120px，自動填充 */
-            gap: 16px; /* 項目之間的間距 */
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* 調整網格項最小寬度 */
+            gap: 10px; /* 稍微減小項目之間的間距 */
             list-style-type: none;
             padding: 0;
             margin: 0;
@@ -144,22 +152,22 @@
         #file-container.grid-view li {
             display: flex;
             flex-direction: column;
-            align-items: center; /* 水平居中 li 內的 .file-entry-selectable */
-            justify-content: center; /* 垂直居中 li 內的 .file-entry-selectable */
-            padding: 12px; /* 項目內部填充 */
-            border-radius: 8px;
-            /* background-color: #f8f9fa; */ /* 可選：項目背景色 */
-            /* border: 1px solid #e0e0e0; */ /* 可選：項目邊框 */
+            align-items: center; 
+            justify-content: center; 
+            padding: 8px; /* 減小內部填充 */
+            border-radius: 6px; /* 稍微減小圓角 */
             position: relative;
-            min-height: 140px; /* 給定一個最小高度以保持視覺一致性 */
+            min-height: 100px; /* 顯著減小最小高度 */
+            /* background-color: #f8f9fa; */ 
+            /* border: 1px solid #e0e0e0; */ 
         }
         /* .dark-theme #file-container.grid-view li { background-color: #3a3a3a; border-color: #444; } */
 
         #file-container.grid-view li .file-entry-selectable {
             display: flex;
             flex-direction: column;
-            align-items: center; /* 水平居中 checkbox 和 .file-content-wrapper */
-            justify-content: center; /* 垂直居中 checkbox 和 .file-content-wrapper */
+            align-items: center; 
+            justify-content: center; 
             width: 100%;
             flex-grow: 1;
         }
@@ -167,49 +175,49 @@
         #file-container.grid-view li .file-content-wrapper {
             display: flex;
             flex-direction: column;
-            align-items: center;    /* 水平居中 .file-entry */
-            justify-content: center;/* 垂直居中 .file-entry */
+            align-items: center;    
+            justify-content: center;
             width: 100%;
             flex-grow: 1;
             text-decoration: none;
             color: inherit;
-            padding: 5px 0; /* 在圖標/名稱塊周圍添加一些垂直填充 */
+            padding: 0; /* 移除此處的垂直填充，由 li 控制 */
         }
 
-        .grid-view .file-entry { /* 包含圖標和名稱的塊 */
+        .grid-view .file-entry { 
             display: flex;
             flex-direction: column;
-            justify-content: center; /* 垂直居中圖標和名稱組 */
-            align-items: center;     /* 水平居中圖標和名稱各自的容器 */
-            text-align: center;      /* 使文件名文本在其容器內居中 */
-            gap: 6px;                /* 圖標和名稱之間的間距 */
-            width: 100%;             /* 確保使用父容器的全部寬度 */
+            justify-content: center; 
+            align-items: center;     
+            text-align: center;      
+            gap: 6px; /* 圖標和名稱之間的間距保持 */
+            width: 100%;             
         }
 
-        .grid-view .file-icon-large { /* 圖標的容器 */
-            font-size: 3.5em;        /* 調整圖標大小 */
-            line-height: 1;          /* 對於文本類圖標（如Emoji）的垂直居中很重要 */
-            display: flex;           /* 使用flex來居中圖標字符本身 */
-            justify-content: center; /* 水平居中圖標字符 */
-            align-items: center;     /* 垂直居中圖標字符 */
-            min-height: 48px;        /* 給圖標區域一個最小高度 */
-            margin-bottom: 4px;      /* 圖標下方的空間 */
+        .grid-view .file-icon-large { 
+            font-size: 3.5em;        /* 圖標大小保持不變 */
+            line-height: 1;          
+            display: flex;           
+            justify-content: center; 
+            align-items: center;     
+            min-height: 48px;        /* 與之前一致 */
+            margin-bottom: 4px;      /* 與之前一致 */
         }
 
-        .grid-view .file-name { /* 文件名樣式 */
-            font-size: 0.8em;
+        .grid-view .file-name { 
+            font-size: 0.8em; /* 文件名大小保持 */
             line-height: 1.3;
-            word-break: break-word; /* 允許長單詞換行 */
+            word-break: break-word; 
             display: -webkit-box;
-            -webkit-line-clamp: 2; /* 限制最多顯示兩行 */
+            -webkit-line-clamp: 1; /* 修改：強制文件名只顯示一行 */
             -webkit-box-orient: vertical;
             overflow: hidden;
-            text-overflow: ellipsis; /* 超出部分顯示省略號 */
-            max-width: 100%;         /* 確保不超出容器寬度 */
+            text-overflow: ellipsis; 
+            max-width: 100%;         
         }
         
         #file-container.grid-view.multi-select-mode-active .item-checkbox {
-            margin-bottom: 8px; /* 多選模式下，複選框與下方內容的間距 */
+            margin-bottom: 6px; /* 稍微調整間距 */
         }
         /* --- End of Grid View Specific Styles --- */
         
@@ -229,28 +237,27 @@
         .rename-form {
             display: none;
             position: absolute;
-            left: 25px; /* For list view */
-            right: 5px; /* For list view */
-            top: calc(100% + 2px); /* For list view */
+            left: 25px; 
+            right: 5px; 
+            top: calc(100% + 2px); 
             background-color: var(--rename-form-bg);
             padding: 10px;
             border: 1px solid var(--rename-form-border-color);
             box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
             z-index: 100;
             border-radius: 6px;
-            max-width: 400px; /* For list view */
+            max-width: 400px; 
             box-sizing: border-box;
         }
         
-        /* Adjust rename form for grid view to be centered below the item */
         #file-container.grid-view li .rename-form {
             left: 50%;
             transform: translateX(-50%);
-            top: 100%; /* Position below the li */
-            margin-top: 5px; /* Space between item and form */
-            width: calc(100% - 10px); /* Slightly less than item width */
-            max-width: 220px; /* Max width for rename form in grid */
-            right: auto; /* Override list view style */
+            top: 100%; 
+            margin-top: 5px; 
+            width: calc(100% - 10px); 
+            max-width: 180px; /* 配合更小的網格項調整重命名框寬度 */
+            right: auto; 
         }
 
         .rename-form form.inline-form {
@@ -293,7 +300,7 @@
             color: var(--button-primary-text-color);
             border-color: var(--button-primary-border-color);
         }
-        .rename-form button.secondary { /* 取消按鈕使用次要按鈕顏色 */
+        .rename-form button.secondary { 
             background-color: var(--button-secondary-bg-color);
             color: var(--button-secondary-text-color);
             border-color: var(--button-secondary-border-color);
@@ -1004,12 +1011,8 @@
                         let fetchUrl = '/api/directories'; let queryParams = [];
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') queryParams.push(`targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`);
                         
-                        // Exclude the paths of the items being moved and their children if they are directories
                         const pathsToExclude = itemsToMove.flatMap(item => {
                             if (item.isDir) {
-                                // In a real scenario, you might want to fetch all children of item.path to exclude them too.
-                                // For simplicity here, we just exclude the item.path itself.
-                                // A more robust solution would involve the backend filtering out subdirectories of moved items.
                                 return [item.path];
                             }
                             return [];
@@ -1034,39 +1037,31 @@
                 rootLi.textContent = '根目錄 (/)';
                 rootLi.dataset.path = '/'; 
                 
-                // Check if root is a valid destination
-                let isRootInvalid = itemsBeingMoved.some(item => item.path.substring(0, item.path.lastIndexOf('/')) === '' && item.path !== '/'); // item is in root
-                if (isRootInvalid) {
-                    // If any item being moved is already in the root, root is not a valid new destination for that item
-                    // However, other items might still be movable to root. This logic is complex for mixed selections.
-                    // For simplicity, if an item's parent is root, we don't disable root, but the backend should prevent moving to same parent.
-                }
+                let isRootInvalid = itemsBeingMoved.some(item => item.path.substring(0, item.path.lastIndexOf('/')) === '' && item.path !== '/'); 
 
                 rootLi.addEventListener('click', (e) => selectDestination(e.target, '/'));
                 ul.appendChild(rootLi);
 
                 function buildTree(dirItems, parentUl, currentParentPath) {
                     dirItems.forEach(dirNode => {
-                        // An item cannot be moved into itself or one of its own subdirectories.
                         const isMovingThisDirOrChild = itemsBeingMoved.some(movedItem => 
                             movedItem.isDir && (dirNode.path === movedItem.path || dirNode.path.startsWith(movedItem.path + '/'))
                         );
-                        // An item cannot be moved to its current parent directory.
                         const isCurrentParent = itemsBeingMoved.every(movedItem => {
                             const movedItemParentPath = movedItem.path.substring(0, movedItem.path.lastIndexOf('/')) || '/';
                             return movedItemParentPath === dirNode.path;
                         });
 
                         if (isMovingThisDirOrChild) {
-                            return; // Skip rendering this directory as a destination
+                            return; 
                         }
 
                         const li = document.createElement('li'); 
                         li.textContent = dirNode.name; 
                         li.dataset.path = dirNode.path;
                         if (isCurrentParent) {
-                            li.style.opacity = "0.5"; // Visually indicate it's the current parent
-                            li.style.pointerEvents = "none"; // Disable selection
+                            li.style.opacity = "0.5"; 
+                            li.style.pointerEvents = "none"; 
                         } else {
                            li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, dirNode.path); });
                         }
@@ -1100,7 +1095,7 @@
                     }
 
                     const destinationPath = moveDestinationInput.value;
-                    if (selectedToMove.length === 0 || !destinationPath && destinationPath !== "") { // Allow moving to root which is "" or "/"
+                    if (selectedToMove.length === 0 || !destinationPath && destinationPath !== "") { 
                         alert('請選擇要移動的項目和目標文件夾。'); return; 
                     }
 
@@ -1116,20 +1111,20 @@
                     }
                     try {
                         const payload = { 
-                            sourceItems: selectedToMove.map(item => ({path: item.path, isDir: item.isDir, name: item.name })), // Send more info if needed by backend
+                            sourceItems: selectedToMove.map(item => ({path: item.path, isDir: item.isDir, name: item.name })), 
                             destinationPath: destinationPath, 
                         };
                         if (CSRF_TOKEN) payload._csrf = CSRF_TOKEN;
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') payload.targetUsername = VIEW_TARGET_USERNAME;
                         
-                        const response = await fetch('/move-items', { // Ensure this route exists and handles the payload
+                        const response = await fetch('/move-items', { 
                             method: 'POST', headers: { 'Content-Type': 'application/json', },
                             body: JSON.stringify(payload)
                         });
-                        const result = await response.json(); // Expect JSON response
+                        const result = await response.json(); 
                         if (response.ok && result.success) { 
                             alert(result.message || '項目移動成功！'); 
-                            window.location.href = result.redirectUrl || window.location.pathname + window.location.search; // Use redirectUrl from server or reload current
+                            window.location.href = result.redirectUrl || window.location.pathname + window.location.search; 
                         } else {
                              alert(`移動失敗: ${result.message || '伺服器發生未知錯誤。'}`);
                         }
@@ -1175,7 +1170,6 @@
                     if (!isActionsHidden) { 
                         uploadSection.style.display = 'none'; 
                         toggleUploadActionsBtn.textContent = '上傳';
-                        // Clear file input and preview when hiding upload section
                         if(userFilesInput) userFilesInput.value = null;
                         if(fileListPreview) fileListPreview.innerHTML = '';
                         if(uploadButton) uploadButton.style.display = 'none';
@@ -1201,7 +1195,7 @@
                     userFilesInput.value = null; 
                     fileListPreview.innerHTML = ''; 
                     uploadButton.style.display = 'none'; 
-                    userFilesInput.click(); // Trigger file selection dialog
+                    userFilesInput.click(); 
                 });
             }
 
@@ -1219,7 +1213,7 @@
                     userFilesInput.value = null; 
                     fileListPreview.innerHTML = ''; 
                     uploadButton.style.display = 'none';
-                    userFilesInput.click(); // Trigger folder selection dialog
+                    userFilesInput.click(); 
                 });
             }
             
@@ -1232,64 +1226,48 @@
                     }
 
                     const originalFiles = Array.from(userFilesInput.files);
-                    const finalFilesToUpload = [];
-                    let hasConflicts = false;
+                    let finalFilesToUpload = []; // Initialize as empty
+                    let processedTopLevelItems = new Set(); // To track top-level items for conflict checking
 
                     for (const file of originalFiles) {
-                        // For folder uploads, webkitRelativePath gives "folderName/fileName.txt"
-                        // We only care about conflicts for top-level items in the current directory.
                         let nameToCheck = file.name;
+                        let isTopLevelItem = true;
                         if (file.webkitRelativePath) {
                             const pathParts = file.webkitRelativePath.split('/');
-                            if (pathParts.length > 1) { // It's a file within a subfolder of the dropped folder
-                                nameToCheck = pathParts[0]; // Check conflict for the top-level folder itself
-                            }
+                            nameToCheck = pathParts[0]; // Conflict is based on the top-level folder/file name
+                            if (pathParts.length > 1) isTopLevelItem = false;
                         }
-                        
-                        // Only check for conflict once per unique top-level item name
-                        if (EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase()) && !finalFilesToUpload.some(f => (f.webkitRelativePath || f.name).startsWith(nameToCheck + '/')) && !finalFilesToUpload.some(f => f.name === nameToCheck) ) {
-                            hasConflicts = true;
+
+                        if (EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase()) && !processedTopLevelItems.has(nameToCheck.toLowerCase())) {
+                            processedTopLevelItems.add(nameToCheck.toLowerCase());
                             const userDecision = await showOverwriteConfirmationModal(nameToCheck);
                             if (userDecision === 'overwrite') {
-                                // If overwriting a folder, all original files from that folder path should be included
-                                originalFiles.forEach(origFile => {
-                                    if ((origFile.webkitRelativePath && origFile.webkitRelativePath.startsWith(nameToCheck+'/')) || origFile.name === nameToCheck) {
-                                        if (!finalFilesToUpload.includes(origFile)) finalFilesToUpload.push(origFile);
-                                    } else if (!origFile.webkitRelativePath && !EXISTING_ITEM_NAMES_ON_PAGE.includes(origFile.name.toLowerCase())) {
-                                        // if it's a mixed selection of files and a conflicting folder, add non-conflicting files
-                                         if (!finalFilesToUpload.includes(origFile)) finalFilesToUpload.push(origFile);
+                                // Add this file and any other files belonging to the same top-level item if it's a folder
+                                originalFiles.forEach(f => {
+                                    if ((f.webkitRelativePath && f.webkitRelativePath.startsWith(nameToCheck + '/')) || f.name === nameToCheck) {
+                                        if (!finalFilesToUpload.includes(f)) finalFilesToUpload.push(f);
                                     }
                                 });
                             } else {
                                 console.log(`Skipping ${nameToCheck} and its contents due to user choice.`);
-                                // Remove all files related to this skipped folder/file from originalFiles to prevent them from being added later
-                                for (let i = originalFiles.length - 1; i >= 0; i--) {
-                                    if ((originalFiles[i].webkitRelativePath && originalFiles[i].webkitRelativePath.startsWith(nameToCheck + '/')) || originalFiles[i].name === nameToCheck) {
-                                        // originalFiles.splice(i, 1); // This modifies the array being iterated, better to build a new list
-                                    }
-                                }
                             }
-                        } else if (!EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase()) || finalFilesToUpload.some(f => (f.webkitRelativePath || f.name).startsWith(nameToCheck + '/')) || finalFilesToUpload.some(f => f.name === nameToCheck) ) {
-                            // Add if no conflict, or if it's part of an already approved folder overwrite, or if it's a file already added
+                        } else if (!EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase())) {
+                            // If no conflict for this top-level item, add it (and its contents if it's a folder being processed)
+                            if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
+                             if(isTopLevelItem) processedTopLevelItems.add(nameToCheck.toLowerCase()); // Mark as processed
+                        } else if (processedTopLevelItems.has(nameToCheck.toLowerCase()) && finalFilesToUpload.some(f => (f.webkitRelativePath || f.name).startsWith(nameToCheck))) {
+                             // If this top-level item was already processed (e.g. approved for overwrite), add this specific file
                             if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
                         }
-                    }
-                     // If there were conflicts but no files ended up in finalFilesToUpload (e.g., all abandoned)
-                    if (hasConflicts && finalFilesToUpload.length === 0) {
-                         alert('沒有文件被選中上傳，所有衝突的文件都已被放棄。');
-                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                         return;
-                    }
-                    // If no conflicts, finalFilesToUpload should be same as originalFiles
-                    if (!hasConflicts) {
-                        finalFilesToUpload.length = 0; // Clear and repopulate
-                        originalFiles.forEach(f => finalFilesToUpload.push(f));
                     }
 
 
                     if (finalFilesToUpload.length === 0) {
-                        alert('沒有文件準備上傳。');
+                        alert('沒有文件準備上傳（可能所有衝突的文件都已被放棄）。');
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                        if (uploadButton) uploadButton.style.display = 'none';
+                        if (fileListPreview) fileListPreview.innerHTML = '';
+                        if (userFilesInput) userFilesInput.value = null;
                         return;
                     }
 
@@ -1325,19 +1303,19 @@
                     };
                     xhr.onload = function() {
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        if (xhr.status >= 200 && xhr.status < 300) { // Typically 200 OK, 201 Created, or 202 Accepted
+                        if (xhr.status >= 200 && xhr.status < 300) { 
                             let responseData = null;
-                            try { responseData = JSON.parse(xhr.responseText); } catch (e) { /* Ignore parsing error if not JSON */ }
+                            try { responseData = JSON.parse(xhr.responseText); } catch (e) { /* Ignore */ }
 
                             if (responseData && responseData.redirectUrl) {
                                 window.location.href = responseData.redirectUrl;
-                            } else if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) { // Check for server-side redirect
+                            } else if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) { 
                                 window.location.href = xhr.responseURL; 
                             } else {
                                 alert( (responseData && responseData.message) || '上傳成功！頁面將刷新。');
                                 window.location.reload(); 
                             }
-                        } else { // Handle errors
+                        } else { 
                             let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
                             try {
                                 const responseJson = JSON.parse(xhr.responseText);
@@ -1356,7 +1334,7 @@
                         alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
                         console.error('Upload network error:', e);
                     };
-                    xhr.openUrl = uploadForm.action; // Store the original URL for comparison in case of redirect
+                    xhr.openUrl = uploadForm.action; 
                     xhr.send(formData);
                 });
             }
@@ -1364,42 +1342,38 @@
             if (dropArea && userFilesInput && fileListPreview && uploadSection && dropAreaText && uploadActionsContainer && toggleUploadActionsBtn) { 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropArea.addEventListener(eventName, preventDefaults, false);
-                    // Prevent body dragover to stop browser from opening file
                     document.body.addEventListener(eventName, preventDefaults, false); 
                 });
                 function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
                 
                 dropArea.addEventListener('dragenter', () => dropArea.classList.add('highlight'), false);
-                dropArea.addEventListener('dragover', () => dropArea.classList.add('highlight'), false); // Need this for drop to work
+                dropArea.addEventListener('dragover', () => dropArea.classList.add('highlight'), false); 
                 dropArea.addEventListener('dragleave', (e) => {
-                    // Only remove highlight if leaving the dropArea for real, not an internal child
                     if (e.relatedTarget === null || !dropArea.contains(e.relatedTarget)) {
                         dropArea.classList.remove('highlight');
                     }
                 }, false);
                 
                 dropArea.addEventListener('drop', (e) => {
-                    preventDefaults(e); // Already called, but good practice
+                    preventDefaults(e); 
                     dropArea.classList.remove('highlight');
                     const dt = e.dataTransfer;
                     const files = dt.files;
                     
-                    // Heuristic to check if it's likely a folder drop
                     let isLikelyFolderDrop = false;
-                    if (dt.items && dt.items.length > 0 && dt.items[0].webkitGetAsEntry) {
+                    if (dt.items && dt.items.length > 0 && typeof dt.items[0].webkitGetAsEntry === 'function') {
                         const entry = dt.items[0].webkitGetAsEntry();
                         if (entry && entry.isDirectory) {
                             isLikelyFolderDrop = true;
                         }
-                    } else if (files.length > 1 && files[0].webkitRelativePath) { 
-                        // If multiple files and they have relative paths, it's a folder
-                        isLikelyFolderDrop = true;
-                    } else if (files.length === 1 && files[0].webkitRelativePath && files[0].webkitRelativePath !== files[0].name) {
-                        // Single file from a folder (e.g. dragging one file out of a folder into the drop zone)
-                        // This is tricky, as it could be a single file OR a folder with one file.
-                        // Let's assume if webkitRelativePath exists and is different from name, it's part of a folder structure.
-                        // The input type (directory vs multiple files) will ultimately be set by button click or this heuristic.
-                         isLikelyFolderDrop = true; // Tentatively
+                    } else if (files.length > 0 && files[0].webkitRelativePath) { 
+                        const firstFileRelativePath = files[0].webkitRelativePath;
+                        if (firstFileRelativePath && firstFileRelativePath.includes('/')) {
+                             isLikelyFolderDrop = true;
+                        } else if (files.length > 1 && Array.from(files).every(f => f.webkitRelativePath.startsWith(firstFileRelativePath.split('/')[0]))) {
+                            // If all files share the same top-level directory in their relative path.
+                            isLikelyFolderDrop = true;
+                        }
                     }
 
 
@@ -1416,7 +1390,7 @@
                     }
 
                     userFilesInput.files = files; 
-                    updateFileListPreviewOnDrop(); // Call the function to update UI
+                    updateFileListPreviewOnDrop(); 
                     uploadSection.style.display = 'block'; 
                     if (uploadActionsContainer.style.display === 'none') {
                          uploadActionsContainer.style.display = 'flex'; 
@@ -1428,25 +1402,15 @@
 
                 function updateFileListPreviewOnDrop() { 
                     if (!fileListPreview || !userFilesInput || !uploadButton) return;
-                    fileListPreview.innerHTML = ''; // Clear previous preview
+                    fileListPreview.innerHTML = ''; 
                     const files = userFilesInput.files;
                     if (files.length > 0) {
                         const list = document.createElement('ul');
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
                         
                         let isDirectoryUpload = false;
-                        // Check if webkitdirectory attribute is present, or if files have webkitRelativePath
-                        if (userFilesInput.hasAttribute('webkitdirectory') || (files[0] && files[0].webkitRelativePath)) {
-                             // More robust check for actual folder structure
-                            if (files[0].webkitRelativePath && files[0].webkitRelativePath.includes('/')) {
-                                isDirectoryUpload = true;
-                            } else if (files.length > 1 && Array.from(files).every(f => f.webkitRelativePath.startsWith(files[0].webkitRelativePath.split('/')[0] + '/'))) {
-                                // Multiple files, all starting with the same top-level folder path
-                                isDirectoryUpload = true;
-                            } else if (files.length ===1 && files[0].webkitRelativePath && files[0].webkitRelativePath !== files[0].name){
-                                // A single file that is part of a folder structure
-                                isDirectoryUpload = true;
-                            }
+                        if (userFilesInput.hasAttribute('webkitdirectory') || (files[0] && files[0].webkitRelativePath && files[0].webkitRelativePath.includes('/'))) {
+                            isDirectoryUpload = true;
                         }
 
 
@@ -1470,7 +1434,6 @@
                         uploadButton.style.display = 'none';
                     }
                 }
-                // Initial check in case files are pre-selected (e.g. after a page reload with form data)
                 if (userFilesInput && uploadButton && userFilesInput.files.length === 0) {
                      uploadButton.style.display = 'none';
                 }
@@ -1481,7 +1444,6 @@
             if (fileContainer && listViewBtn && gridViewBtn) { 
                 function toggleView(viewType) {
                     const isCurrentlyMultiSelect = fileContainer.classList.contains('multi-select-mode-active');
-                    // Remove existing view classes first
                     fileContainer.classList.remove('list-view', 'grid-view');
 
                     if (viewType === 'grid') {
@@ -1489,19 +1451,17 @@
                         gridViewBtn.classList.add('active');
                         listViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'grid');
-                    } else { // Default to list
+                    } else { 
                         fileContainer.classList.add('list-view'); 
                         listViewBtn.classList.add('active');
                         gridViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'list');
                     }
-                    // Re-apply multi-select mode if it was active
                     if (isCurrentlyMultiSelect) { 
                         fileContainer.classList.add('multi-select-mode-active');
                     }
-                    // After view toggle, selection might need re-evaluation or clearing
-                    clearSingleSelection(); // Clear single selection when view changes
-                    updateSelectionActions(); // Update action buttons based on new view (and potentially cleared selection)
+                    clearSingleSelection(); 
+                    updateSelectionActions(); 
                 }
                 const preferredView = localStorage.getItem('fileView') || 'list'; 
                 toggleView(preferredView); 
@@ -1547,10 +1507,7 @@
                     if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                         targetUsernameHiddenInput.value = VIEW_TARGET_USERNAME;
                     } else {
-                        // Ensure it's removed or cleared if not applicable
                         targetUsernameHiddenInput.value = ''; 
-                        // Or even remove the input if it's not needed for non-admin/non-target views
-                        // if (targetUsernameHiddenInput.parentNode) targetUsernameHiddenInput.parentNode.removeChild(targetUsernameHiddenInput);
                     }
                 }
                 createItemModal.style.display = 'block';
@@ -1567,14 +1524,13 @@
                 if (event.target == moveModal) moveModal.style.display = 'none'; 
                 if (event.target == overwriteModal) { 
                     const abandonButton = overwriteModal.querySelector('#overwrite-abandon-btn');
-                    if (abandonButton) abandonButton.click(); // Trigger the abandon logic
+                    if (abandonButton) abandonButton.click(); 
                 }
             });
 
-            // Initial UI setup
             updateMultiSelectModeUI(); 
             updateSelectionActions(); 
-            if (selectAllContainer && !HAS_ITEMS_ON_PAGE) { // Hide select-all if no items
+            if (selectAllContainer && !HAS_ITEMS_ON_PAGE) { 
                 selectAllContainer.classList.remove('has-items');
             } else if (selectAllContainer && HAS_ITEMS_ON_PAGE) {
                 selectAllContainer.classList.add('has-items');
@@ -1584,7 +1540,6 @@
         }); 
 
         function showRenameForm(encodedName, currentName, isDir) { 
-            // Hide all other rename forms first
             document.querySelectorAll('.rename-form').forEach(form => {
                 if (form.id !== 'rename-form-' + encodedName) {
                     form.style.display = 'none';
@@ -1601,7 +1556,6 @@
                     if (inputField) {
                         inputField.value = currentName; 
                         inputField.focus(); 
-                        // Select text based on whether it's a file or folder (extension handling)
                         if (!isDir && currentName.includes('.')) {
                             const dotIndex = currentName.lastIndexOf('.');
                             inputField.setSelectionRange(0, dotIndex);
@@ -1609,13 +1563,12 @@
                             inputField.select();
                         }
                     }
-                    // Update currentPath in rename form if in search results view
                     const currentPathInput = formContainer.querySelector('input[name="currentPath"]');
                     const oldPathInput = formContainer.querySelector('input[name="oldPath"]');
                     if (currentPathInput && oldPathInput && IS_SEARCH_RESULT_VIEW) {
                          const itemOriginalPath = oldPathInput.value;
                          currentPathInput.value = itemOriginalPath.substring(0, itemOriginalPath.lastIndexOf('/')) || '/';
-                    } else if (currentPathInput) { // For normal view
+                    } else if (currentPathInput) { 
                         currentPathInput.value = CURRENT_PATH_ON_LOAD;
                     }
                 }
