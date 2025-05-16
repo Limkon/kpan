@@ -67,12 +67,12 @@
             display: inline-block; 
         }
 
-        .file-entry-selectable { display: flex; align-items: center; width: 100%; padding: 5px 0; }
-        #file-container.list-view .file-entry-selectable { /* List view specific padding */
+        .file-entry-selectable { display: flex; align-items: center; width: 100%; }
+        #file-container.list-view .file-entry-selectable {
              padding: 5px 0;
         }
-        #file-container.grid-view .file-entry-selectable { /* Grid view specific padding reset if needed, or keep it */
-            padding: 0; /* Reset padding here as li will handle it for grid */
+        #file-container.grid-view .file-entry-selectable {
+            padding: 0; 
         }
 
 
@@ -142,8 +142,8 @@
         /* --- Grid View Specific Styles --- */
         #file-container.grid-view ul {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* 調整網格項最小寬度 */
-            gap: 10px; /* 稍微減小項目之間的間距 */
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+            gap: 10px; 
             list-style-type: none;
             padding: 0;
             margin: 0;
@@ -154,15 +154,12 @@
             flex-direction: column;
             align-items: center; 
             justify-content: center; 
-            padding: 8px; /* 減小內部填充 */
-            border-radius: 6px; /* 稍微減小圓角 */
+            padding: 8px; 
+            border-radius: 6px; 
             position: relative;
-            min-height: 100px; /* 顯著減小最小高度 */
-            /* background-color: #f8f9fa; */ 
-            /* border: 1px solid #e0e0e0; */ 
+            min-height: 100px; 
         }
-        /* .dark-theme #file-container.grid-view li { background-color: #3a3a3a; border-color: #444; } */
-
+       
         #file-container.grid-view li .file-entry-selectable {
             display: flex;
             flex-direction: column;
@@ -181,7 +178,7 @@
             flex-grow: 1;
             text-decoration: none;
             color: inherit;
-            padding: 0; /* 移除此處的垂直填充，由 li 控制 */
+            padding: 0; 
         }
 
         .grid-view .file-entry { 
@@ -190,26 +187,26 @@
             justify-content: center; 
             align-items: center;     
             text-align: center;      
-            gap: 6px; /* 圖標和名稱之間的間距保持 */
+            gap: 6px; 
             width: 100%;             
         }
 
         .grid-view .file-icon-large { 
-            font-size: 3.5em;        /* 圖標大小保持不變 */
+            font-size: 3.5em;        
             line-height: 1;          
             display: flex;           
             justify-content: center; 
             align-items: center;     
-            min-height: 48px;        /* 與之前一致 */
-            margin-bottom: 4px;      /* 與之前一致 */
+            min-height: 48px;        
+            margin-bottom: 4px;      
         }
 
         .grid-view .file-name { 
-            font-size: 0.8em; /* 文件名大小保持 */
+            font-size: 0.8em; 
             line-height: 1.3;
             word-break: break-word; 
             display: -webkit-box;
-            -webkit-line-clamp: 1; /* 修改：強制文件名只顯示一行 */
+            -webkit-line-clamp: 1; 
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis; 
@@ -217,21 +214,24 @@
         }
         
         #file-container.grid-view.multi-select-mode-active .item-checkbox {
-            margin-bottom: 6px; /* 稍微調整間距 */
+            margin-bottom: 6px; 
         }
         /* --- End of Grid View Specific Styles --- */
         
         #select-all-container { 
-            display: none; 
+            display: none; /* 默認隱藏 */
             align-items: center; 
             padding: 5px 10px; 
             background-color: #f9f9f9; 
             border-bottom: 1px solid #eee; 
         }
         .dark-theme #select-all-container { background-color: #2e2e2e; border-bottom-color: #444; }
-        #file-container.multi-select-mode-active #select-all-container.has-items {
-             display: flex;
+        
+        /* 新增：用於通過 JS 控制 #select-all-container 的可見性 */
+        #select-all-container.visible-in-multiselect {
+            display: flex;
         }
+
         #select-all-container label { margin-left: 5px; font-weight: normal;}
 
         .rename-form {
@@ -256,7 +256,7 @@
             top: 100%; 
             margin-top: 5px; 
             width: calc(100% - 10px); 
-            max-width: 180px; /* 配合更小的網格項調整重命名框寬度 */
+            max-width: 180px; 
             right: auto; 
         }
 
@@ -487,12 +487,12 @@
 
         <h2><%= locals.isSearchResult ? '搜索結果' : '文件列表' %></h2>
         <% if (items.length > 0) { %>
-            <div id="select-all-container">
-                <input type="checkbox" id="select-all-checkbox">
+            <div id="select-all-container"> <input type="checkbox" id="select-all-checkbox">
                 <label for="select-all-checkbox">全選/取消全選</label>
             </div>
         <% } %>
-        <div id="file-container" class="list-view"> <% if (items.length > 0) { %>
+        <div id="file-container" class="list-view"> 
+            <% if (items.length > 0) { %>
                 <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
                 <ul>
                     <% items.forEach(item => { %>
@@ -535,7 +535,8 @@
                                             <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
                                         </div>
                                     <% } %>
-                                    <span class="file-actions-placeholder"></span> </div>
+                                    <span class="file-actions-placeholder"></span> 
+                                </div>
                             </div>
                              <div class="rename-form" id="rename-form-<%= item.encodedName %>">
                                 <form action="/rename" method="POST" class="control-form inline-form">
@@ -623,7 +624,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const fileContainer = document.getElementById('file-container');
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
-            const selectAllContainer = document.getElementById('select-all-container');
+            const selectAllContainer = document.getElementById('select-all-container'); // 定義 selectAllContainer
             const selectionActionBar = document.getElementById('selection-action-bar');
             const selectionCountDisplay = document.getElementById('selection-count');
             const actionEditBtn = document.getElementById('action-edit-btn');
@@ -676,19 +677,17 @@
                 if (!fileContainer || !toggleMultiSelectBtn) return;
 
                 if (multiSelectModeActive) {
-                    clearSingleSelection(); 
+                    clearSingleSelection();
                     fileContainer.classList.add('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '取消多選';
-                    if (selectAllContainer && HAS_ITEMS_ON_PAGE) {
-                        // selectAllContainer.style.display = 'flex'; // Handled by CSS class now
-                        selectAllContainer.classList.add('has-items'); // Ensure class for CSS rule is present
+                    if (selectAllContainer && HAS_ITEMS_ON_PAGE) { // 確保 selectAllContainer 存在且頁面有項目
+                        selectAllContainer.classList.add('visible-in-multiselect'); 
                     }
                 } else {
                     fileContainer.classList.remove('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '啟用多選';
-                    if (selectAllContainer) {
-                        // selectAllContainer.style.display = 'none'; // Handled by CSS class now
-                        selectAllContainer.classList.remove('has-items');
+                    if (selectAllContainer) { // 確保 selectAllContainer 存在
+                        selectAllContainer.classList.remove('visible-in-multiselect'); 
                     }
                     document.querySelectorAll('.item-checkbox:checked').forEach(cb => cb.checked = false);
                     if (selectAllCheckbox) selectAllCheckbox.checked = false;
@@ -767,7 +766,6 @@
                         clearSingleSelection(); 
                         updateSelectionActions(); 
                     } else {
-                        // If not in multi-select mode, a checkbox change implies it was likely an error or programmatic change we want to revert for single-select logic
                         checkbox.checked = false; 
                     }
                 });
@@ -795,7 +793,6 @@
                         const checkbox = listItem.querySelector('.item-checkbox');
                         if (!checkbox) return;
 
-                        // Prevent selection if clicking on a link, the checkbox itself, or the rename form
                         if (event.target.tagName === 'A' || event.target.closest('a') || 
                             event.target.classList.contains('item-checkbox') || 
                             event.target.closest('.rename-form')) {
@@ -810,17 +807,12 @@
                         };
 
                         if (multiSelectModeActive) { 
-                            // In multi-select mode, clicking the item toggles its checkbox
                             checkbox.checked = !checkbox.checked;
-                             // No single selection highlight in multi-select mode
                             clearSingleSelection();
                         } else {
-                            // Single selection mode
                             if (currentSingleSelectedItem && currentSingleSelectedItem.element === listItem) {
-                                // Clicked the same item again, deselect it
                                 clearSingleSelection();
                             } else {
-                                // Clicked a new item
                                 clearSingleSelection(); 
                                 currentSingleSelectedItem = itemData;
                                 listItem.classList.add('single-selected-item');
@@ -831,7 +823,6 @@
                 });
             
                 fileContainer.addEventListener('click', (event) => {
-                    // If clicked on the empty area of the file container (not on an item or its children)
                     if (event.target.closest('li') === null && (event.target.isSameNode(fileContainer) || event.target.tagName === 'UL')) {
                         if (!multiSelectModeActive) { 
                             clearSingleSelection();
@@ -841,7 +832,6 @@
                 });
             }
             
-            // --- 操作按鈕的事件監聽器 ---
              if (actionEditBtn) {
                 actionEditBtn.addEventListener('click', () => {
                     if (actionEditBtn.disabled) return;
@@ -853,7 +843,7 @@
                         if (selected.length === 1) itemToEdit = selected[0];
                     }
 
-                    if (itemToEdit && !itemToEdit.isDir) { // Ensure it's a file
+                    if (itemToEdit && !itemToEdit.isDir) { 
                         let url = `/edit?path=${itemToEdit.encodedPath}`;
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
@@ -905,7 +895,7 @@
                         document.body.appendChild(tempLink);
                         tempLink.click();
                         document.body.removeChild(tempLink);
-                    } else { // Multiple items or a single directory
+                    } else { 
                         const form = document.createElement('form');
                         form.method = 'POST';
                         form.action = '/download-archive';
@@ -936,7 +926,6 @@
                         }
                         document.body.appendChild(form);
                         try { form.submit(); } catch (e) { console.error("表單提交錯誤:", e); alert("觸發下載時發生錯誤。"); }
-                        // Delay removal slightly to ensure submission in all browsers
                         setTimeout(() => {
                            if (form.parentNode === document.body) { document.body.removeChild(form); }
                         }, 100);
@@ -958,7 +947,6 @@
 
                     const itemNames = itemsToDelete.map(item => item.rawName).join(', ');
                     if (confirm(`確定要刪除選中的 ${itemsToDelete.length} 個項目 (${itemNames}) 嗎？此操作不可恢復！`)) {
-                        // Use a single POST request for deleting multiple items
                         const payload = {
                             items: itemsToDelete.map(item => ({ path: item.path, isDir: item.isDir })),
                         };
@@ -968,7 +956,7 @@
                         }
 
                         try {
-                            const response = await fetch('/delete-items', { // Assuming a new route /delete-items for batch deletion
+                            const response = await fetch('/delete-items', { 
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify(payload)
@@ -979,7 +967,7 @@
                                 window.location.reload();
                             } else {
                                 alert(result.message || "部分或全部項目刪除失敗。");
-                                if(result.shouldReload) window.location.reload(); // Reload if server indicates partial success/failure
+                                if(result.shouldReload) window.location.reload(); 
                             }
                         } catch (error) {
                             console.error('刪除項目時出錯:', error);
@@ -1226,15 +1214,15 @@
                     }
 
                     const originalFiles = Array.from(userFilesInput.files);
-                    let finalFilesToUpload = []; // Initialize as empty
-                    let processedTopLevelItems = new Set(); // To track top-level items for conflict checking
+                    let finalFilesToUpload = []; 
+                    let processedTopLevelItems = new Set(); 
 
                     for (const file of originalFiles) {
                         let nameToCheck = file.name;
                         let isTopLevelItem = true;
                         if (file.webkitRelativePath) {
                             const pathParts = file.webkitRelativePath.split('/');
-                            nameToCheck = pathParts[0]; // Conflict is based on the top-level folder/file name
+                            nameToCheck = pathParts[0]; 
                             if (pathParts.length > 1) isTopLevelItem = false;
                         }
 
@@ -1242,7 +1230,6 @@
                             processedTopLevelItems.add(nameToCheck.toLowerCase());
                             const userDecision = await showOverwriteConfirmationModal(nameToCheck);
                             if (userDecision === 'overwrite') {
-                                // Add this file and any other files belonging to the same top-level item if it's a folder
                                 originalFiles.forEach(f => {
                                     if ((f.webkitRelativePath && f.webkitRelativePath.startsWith(nameToCheck + '/')) || f.name === nameToCheck) {
                                         if (!finalFilesToUpload.includes(f)) finalFilesToUpload.push(f);
@@ -1252,11 +1239,9 @@
                                 console.log(`Skipping ${nameToCheck} and its contents due to user choice.`);
                             }
                         } else if (!EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase())) {
-                            // If no conflict for this top-level item, add it (and its contents if it's a folder being processed)
                             if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
-                             if(isTopLevelItem) processedTopLevelItems.add(nameToCheck.toLowerCase()); // Mark as processed
+                             if(isTopLevelItem) processedTopLevelItems.add(nameToCheck.toLowerCase()); 
                         } else if (processedTopLevelItems.has(nameToCheck.toLowerCase()) && finalFilesToUpload.some(f => (f.webkitRelativePath || f.name).startsWith(nameToCheck))) {
-                             // If this top-level item was already processed (e.g. approved for overwrite), add this specific file
                             if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
                         }
                     }
@@ -1371,7 +1356,6 @@
                         if (firstFileRelativePath && firstFileRelativePath.includes('/')) {
                              isLikelyFolderDrop = true;
                         } else if (files.length > 1 && Array.from(files).every(f => f.webkitRelativePath.startsWith(firstFileRelativePath.split('/')[0]))) {
-                            // If all files share the same top-level directory in their relative path.
                             isLikelyFolderDrop = true;
                         }
                     }
@@ -1530,12 +1514,8 @@
 
             updateMultiSelectModeUI(); 
             updateSelectionActions(); 
-            if (selectAllContainer && !HAS_ITEMS_ON_PAGE) { 
-                selectAllContainer.classList.remove('has-items');
-            } else if (selectAllContainer && HAS_ITEMS_ON_PAGE) {
-                selectAllContainer.classList.add('has-items');
-            }
-
+            // Initial check for selectAllContainer visibility based on items.length is handled by EJS templating.
+            // The JS updateMultiSelectModeUI will then toggle visibility based on multi-select mode.
 
         }); 
 
