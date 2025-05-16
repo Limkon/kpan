@@ -219,7 +219,7 @@
         /* --- End of Grid View Specific Styles --- */
         
         #select-all-container { 
-            display: none; /* 默認隱藏 */
+            display: none; 
             align-items: center; 
             padding: 5px 10px; 
             background-color: #f9f9f9; 
@@ -227,7 +227,6 @@
         }
         .dark-theme #select-all-container { background-color: #2e2e2e; border-bottom-color: #444; }
         
-        /* 新增：用於通過 JS 控制 #select-all-container 的可見性 */
         #select-all-container.visible-in-multiselect {
             display: flex;
         }
@@ -487,7 +486,8 @@
 
         <h2><%= locals.isSearchResult ? '搜索結果' : '文件列表' %></h2>
         <% if (items.length > 0) { %>
-            <div id="select-all-container"> <input type="checkbox" id="select-all-checkbox">
+            <div id="select-all-container"> 
+                <input type="checkbox" id="select-all-checkbox">
                 <label for="select-all-checkbox">全選/取消全選</label>
             </div>
         <% } %>
@@ -624,7 +624,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const fileContainer = document.getElementById('file-container');
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
-            const selectAllContainer = document.getElementById('select-all-container'); // 定義 selectAllContainer
+            const selectAllContainer = document.getElementById('select-all-container'); 
             const selectionActionBar = document.getElementById('selection-action-bar');
             const selectionCountDisplay = document.getElementById('selection-count');
             const actionEditBtn = document.getElementById('action-edit-btn');
@@ -680,13 +680,13 @@
                     clearSingleSelection();
                     fileContainer.classList.add('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '取消多選';
-                    if (selectAllContainer && HAS_ITEMS_ON_PAGE) { // 確保 selectAllContainer 存在且頁面有項目
+                    if (selectAllContainer && HAS_ITEMS_ON_PAGE) { 
                         selectAllContainer.classList.add('visible-in-multiselect'); 
                     }
                 } else {
                     fileContainer.classList.remove('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '啟用多選';
-                    if (selectAllContainer) { // 確保 selectAllContainer 存在
+                    if (selectAllContainer) { 
                         selectAllContainer.classList.remove('visible-in-multiselect'); 
                     }
                     document.querySelectorAll('.item-checkbox:checked').forEach(cb => cb.checked = false);
@@ -947,36 +947,76 @@
 
                     const itemNames = itemsToDelete.map(item => item.rawName).join(', ');
                     if (confirm(`確定要刪除選中的 ${itemsToDelete.length} 個項目 (${itemNames}) 嗎？此操作不可恢復！`)) {
-                        const payload = {
-                            items: itemsToDelete.map(item => ({ path: item.path, isDir: item.isDir })),
-                        };
-                        if (CSRF_TOKEN) payload._csrf = CSRF_TOKEN;
-                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                            payload.targetUsername = VIEW_TARGET_USERNAME;
+                        // MODIFICATION: Reverted to individual GET requests for delete
+                        let allSucceeded = true;
+                        let reloadPage = false;
+                        let errors = [];
+
+                        for (const item of itemsToDelete) {
+                            try {
+                                let deleteUrl = `/delete?path=${item.encodedPath}&isDir=${item.isDir}`;
+                                if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                                    deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                                }
+                                // Adding CSRF token to GET request query parameter if your server expects it for GET deletes
+                                // However, CSRF for GET is less common. If not needed, this can be removed.
+                                // if (CSRF_TOKEN) {
+                                //    deleteUrl += `&_csrf=${encodeURIComponent(CSRF_TOKEN)}`;
+                                // }
+
+                                const response = await fetch(deleteUrl, { 
+                                    method: 'GET', // Or 'POST' if your /delete endpoint expects POST with CSRF in body
+                                    // If using POST for /delete, you'd need to construct a form or send JSON with CSRF
+                                });
+
+                                if (response.ok) {
+                                    // Check if the server redirected (often indicates success and new page state)
+                                    if (response.redirected || (response.headers.get("Content-Type") && response.headers.get("Content-Type").includes("application/json"))) {
+                                        try {
+                                            const result = await response.json(); // Try to parse JSON if server sends it
+                                            if (result.success) {
+                                                reloadPage = true;
+                                            } else {
+                                                allSucceeded = false;
+                                                errors.push(result.message || `刪除 ${item.name} 失敗`);
+                                            }
+                                        } catch (e) { // If not JSON, but still OK status, assume success or rely on redirect
+                                            reloadPage = true; // Or handle based on status code
+                                        }
+                                    } else { // No redirect, no JSON, but OK status
+                                        reloadPage = true; // Assume success, page will refresh
+                                    }
+                                } else {
+                                    allSucceeded = false;
+                                    let errorMsg = `刪除 ${item.name} 失敗 (狀態: ${response.status})`;
+                                    try {
+                                        const errResult = await response.json();
+                                        if(errResult.message) errorMsg = errResult.message;
+                                    } catch(e) { /* ignore if not json */ }
+                                    errors.push(errorMsg);
+                                    console.error('刪除失敗:', item.name, response.status, await response.text());
+                                }
+                            } catch (error) {
+                                allSucceeded = false;
+                                errors.push(`刪除 ${item.name} 時發生客戶端錯誤`);
+                                console.error('刪除項目時出錯:', item.name, error);
+                            }
                         }
 
-                        try {
-                            const response = await fetch('/delete-items', { 
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(payload)
-                            });
-                            const result = await response.json();
-                            if (response.ok && result.success) {
-                                alert(result.message || "選中項目已成功刪除。");
-                                window.location.reload();
-                            } else {
-                                alert(result.message || "部分或全部項目刪除失敗。");
-                                if(result.shouldReload) window.location.reload(); 
-                            }
-                        } catch (error) {
-                            console.error('刪除項目時出錯:', error);
-                            alert(`刪除項目時發生客戶端錯誤: ${error.message}`);
+                        if (errors.length > 0) {
+                            alert("部分或全部項目刪除失敗：\n" + errors.join("\n"));
+                        } else if (allSucceeded) {
+                            alert("選中項目已成功刪除。");
                         }
-                        clearSingleSelection(); 
-                        if(selectAllCheckbox) selectAllCheckbox.checked = false; 
-                        document.querySelectorAll('#file-container .item-checkbox').forEach(cb => cb.checked = false); 
-                        updateSelectionActions();
+                        
+                        if (reloadPage || !allSucceeded) { // Reload if any success or any failure to reflect changes
+                            window.location.reload();
+                        } else { // If no reload was triggered but operations finished
+                             clearSingleSelection(); 
+                            if(selectAllCheckbox) selectAllCheckbox.checked = false; 
+                            document.querySelectorAll('#file-container .item-checkbox').forEach(cb => cb.checked = false); 
+                            updateSelectionActions();
+                        }
                     }
                 });
             }
@@ -1035,7 +1075,7 @@
                         const isMovingThisDirOrChild = itemsBeingMoved.some(movedItem => 
                             movedItem.isDir && (dirNode.path === movedItem.path || dirNode.path.startsWith(movedItem.path + '/'))
                         );
-                        const isCurrentParent = itemsBeingMoved.every(movedItem => {
+                        const isCurrentParent = itemsBeingMoved.every(movedItem => { // Check if dirNode is the current parent of ALL items being moved
                             const movedItemParentPath = movedItem.path.substring(0, movedItem.path.lastIndexOf('/')) || '/';
                             return movedItemParentPath === dirNode.path;
                         });
@@ -1047,7 +1087,7 @@
                         const li = document.createElement('li'); 
                         li.textContent = dirNode.name; 
                         li.dataset.path = dirNode.path;
-                        if (isCurrentParent) {
+                        if (isCurrentParent && itemsBeingMoved.length === 1) { // Only disable if it's the exact parent of a single item move
                             li.style.opacity = "0.5"; 
                             li.style.pointerEvents = "none"; 
                         } else {
@@ -1083,7 +1123,7 @@
                     }
 
                     const destinationPath = moveDestinationInput.value;
-                    if (selectedToMove.length === 0 || !destinationPath && destinationPath !== "") { 
+                    if (selectedToMove.length === 0 || (destinationPath === null || destinationPath === undefined) ) { 
                         alert('請選擇要移動的項目和目標文件夾。'); return; 
                     }
 
@@ -1098,8 +1138,9 @@
                         }
                     }
                     try {
+                        // MODIFICATION: Changed payload to send sourcePaths as an array of strings
                         const payload = { 
-                            sourceItems: selectedToMove.map(item => ({path: item.path, isDir: item.isDir, name: item.name })), 
+                            sourcePaths: selectedToMove.map(item => item.path), 
                             destinationPath: destinationPath, 
                         };
                         if (CSRF_TOKEN) payload._csrf = CSRF_TOKEN;
@@ -1118,7 +1159,13 @@
                         }
                     } catch (error) { 
                         console.error('移動項目時出錯:', error); 
-                        alert(`移動項目時發生客戶端錯誤: ${error.message}`); 
+                        let errorMsg = `移動項目時發生客戶端錯誤。`;
+                        if (error instanceof SyntaxError) { // Potentially non-JSON response from server
+                            errorMsg += " 伺服器可能返回了非預期的回應格式。";
+                        } else if (error.message) {
+                            errorMsg += ` ${error.message}`;
+                        }
+                        alert(errorMsg); 
                     }
                     moveModal.style.display = 'none';
                 });
@@ -1514,8 +1561,6 @@
 
             updateMultiSelectModeUI(); 
             updateSelectionActions(); 
-            // Initial check for selectAllContainer visibility based on items.length is handled by EJS templating.
-            // The JS updateMultiSelectModeUI will then toggle visibility based on multi-select mode.
 
         }); 
 
