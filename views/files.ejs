@@ -18,10 +18,6 @@
             --button-secondary-text-color: #ffffff;
             --button-secondary-border-color: #6c757d;
 
-            /* --button-light-secondary-bg-color: #f8f9fa; -- 之前取消按鈕用的，太白 */
-            /* --button-light-secondary-text-color: #343a40; */
-            /* --button-light-secondary-border-color: #ced4da; */
-
             --input-border-color: #ccc;
             --input-bg-color: #fff;
             --input-text-color: #333;
@@ -43,10 +39,6 @@
             --button-secondary-text-color: #ffffff;
             --button-secondary-border-color: #545b62;
             
-            /* --button-light-secondary-bg-color: #3a3a3a; */
-            /* --button-light-secondary-text-color: #e0e0e0; */
-            /* --button-light-secondary-border-color: #555; */
-
             --input-border-color: #555; /* 暗色主題的輸入框邊框 */
             --input-bg-color: #2c2c2c;   /* 暗色主題的輸入框背景 */
             --input-text-color: #e0e0e0; /* 暗色主題的輸入框文字 */
@@ -137,7 +129,13 @@
 
         .file-entry { display: flex; align-items: center; gap: 8px; }
         .list-view .file-entry .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .grid-view .file-entry { flex-direction: column; justify-content: center; text-align: center; }
+        
+        .grid-view .file-entry {
+            flex-direction: column;  /* 子元素垂直排列 */
+            justify-content: center; /* 使子元素作为一个整体在垂直方向上居中 */
+            align-items: center;     /* 新增：使每个子元素在水平方向上居中 */
+            text-align: center;      /* 确保子元素（如 span 或 a 标签）内部的文本内容在其自身容器内水平居中 */
+        }
         
         #select-all-container { 
             display: none; 
@@ -182,12 +180,12 @@
         .rename-form input[type="text"],
         .rename-form button {
             box-sizing: border-box; 
-            font-size: 0.9em;      
+            font-size: 0.9em;     
             line-height: 1.4;    
-            padding-top: 6px;      
-            padding-bottom: 6px;   
+            padding-top: 6px;     
+            padding-bottom: 6px;  
             border-radius: 4px;    
-            margin: 0;             
+            margin: 0;            
         }
 
         .rename-form input[type="text"] {
@@ -430,11 +428,11 @@
                                         <div class="file-entry">
                                             <%
                                                 const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
-                                                let largeIcon = '📄';
+                                                let largeIcon = '📄'; 
                                                 let isViewableTextFile = false;
                                                 if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
                                                     isViewableTextFile = true;
-                                                    largeIcon = '📝';
+                                                    largeIcon = '📝'; 
                                                 }
                                                 else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
                                                 else if (['pdf'].includes(ext)) { largeIcon = '📕';}
@@ -526,7 +524,6 @@
 
     <script src="/theme.js"></script>
     <script>
-        // ... (JavaScript 保持不變) ...
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
         const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
@@ -1199,9 +1196,9 @@
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
                         let isDirectoryUpload = false;
                         if (userFilesInput.files[0] && userFilesInput.files[0].webkitRelativePath && userFilesInput.files[0].webkitRelativePath.includes('/')) {
-                           isDirectoryUpload = true;
+                            isDirectoryUpload = true;
                         } else if (userFilesInput.webkitdirectory || userFilesInput.directory) { 
-                            if(userFilesInput.files.length > 0 && userFilesInput.files[0].name === userFilesInput.files[0].webkitRelativePath.split('/')[0]) { }
+                            if(userFilesInput.files.length > 0 && userFilesInput.files[0].name === userFilesInput.files[0].webkitRelativePath.split('/')[0]) { /* Heuristic for directory */ }
                         }
                         if (isDirectoryUpload) {
                             const folderName = userFilesInput.files[0].webkitRelativePath.split('/')[0];
