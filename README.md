@@ -131,7 +131,7 @@ node-net-disk-sqlite/
 |   +-- login.ejs
 |   +-- register.ejs
 |   L-- view-file.ejs
-+-- .env.example              # (建議加入) 環境變數範例檔案
++-- .env.example              # 環境變數範例檔案
 +-- package-lock.json
 +-- package.json              # 專案依賴與腳本設定
 +-- server.js                 # 主要的後端應用程式邏輯
