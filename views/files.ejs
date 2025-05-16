@@ -99,7 +99,7 @@
             flex-shrink: 1; /* Allow name to shrink if needed */
         }
 
-        /* NEW STYLES for file details in list view */
+        /* Styles for file details in list view */
         .list-view .file-details {
             display: flex;
             align-items: center;
@@ -119,7 +119,11 @@
             min-width: 80px; /* Adjust as needed */
             text-align: right;
         }
-        /* END NEW STYLES for file details */
+        /* MODIFICATION: Hide file-details div entirely in grid view */
+        #file-container.grid-view .file-details {
+            display: none;
+        }
+        /* END Styles for file details */
 
         .list-view .file-actions-placeholder { 
             min-width: 40px; /* Reduced, as it's now mainly for rename/context actions */
@@ -182,8 +186,6 @@
         .dark-theme #directory-tree-container li.selected-dir { background-color: #0056b3; }
 
         .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
-
-        /* Removed specific file-entry for list-view here as it's handled above */
         
         /* --- Grid View Specific Styles --- */
         #file-container.grid-view ul {
@@ -555,7 +557,7 @@
                 <%
                     // Helper function for formatting size (assuming item.size is in bytes)
                     const formatFileSize = (bytes) => {
-                        if (bytes === undefined || bytes === null || isNaN(bytes)) return '--';
+                        if (bytes === undefined || bytes === null || isNaN(bytes)) return '--'; // Returns "--" for null/undefined size
                         if (bytes === 0) return '0 B';
                         const k = 1024;
                         const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -565,12 +567,10 @@
 
                     // Helper function for formatting date (assuming item.lastModified is a timestamp or parsable date string)
                     const formatDate = (dateString) => {
-                        if (!dateString) return '--';
+                        if (!dateString) return '--'; // Returns "--" for null/undefined date
                         try {
-                            // Using 'zh-CN' for a common Chinese locale format, adjust if needed
                             return new Date(dateString).toLocaleDateString('zh-CN', {
                                 year: 'numeric', month: '2-digit', day: '2-digit'
-                                // hour: '2-digit', minute: '2-digit' // Optionally add time
                             });
                         } catch (e) {
                             console.warn("Could not format date:", dateString, e);
@@ -597,10 +597,10 @@
                                             <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
                                         </div>
                                         <div class="file-details">
-                                            <span class="file-size">--</span>
-                                            <span class="file-modified">--</span>
+                                            <span class="file-size"></span>  <%# Empty for folders %>
+                                            <span class="file-modified"></span> <%# Empty for folders %>
                                         </div>
-                                    <% } else { %>
+                                    <% } else { // It's a file %>
                                         <div class="file-entry">
                                             <%
                                                 const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
@@ -612,7 +612,6 @@
                                                 }
                                                 else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
                                                 else if (['pdf'].includes(ext)) { largeIcon = '📕';}
-                                                // ... 其他圖標邏輯 ...
                                             %>
                                             <span class="file-icon-large"><%= largeIcon %></span>
                                             <% if (isViewableTextFile) { %>
@@ -1039,7 +1038,6 @@
 
                     const itemNames = itemsToDelete.map(item => item.rawName).join(', ');
                     if (confirm(`確定要刪除選中的 ${itemsToDelete.length} 個項目 (${itemNames}) 嗎？此操作不可恢復！`)) {
-                        // MODIFICATION: Reverted to individual GET requests for delete
                         let allSucceeded = true;
                         let reloadPage = false;
                         let errors = [];
@@ -1050,33 +1048,25 @@
                                 if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                                     deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
                                 }
-                                // Adding CSRF token to GET request query parameter if your server expects it for GET deletes
-                                // However, CSRF for GET is less common. If not needed, this can be removed.
-                                // if (CSRF_TOKEN) {
-                                //    deleteUrl += `&_csrf=${encodeURIComponent(CSRF_TOKEN)}`;
-                                // }
-
                                 const response = await fetch(deleteUrl, { 
-                                    method: 'GET', // Or 'POST' if your /delete endpoint expects POST with CSRF in body
-                                    // If using POST for /delete, you'd need to construct a form or send JSON with CSRF
+                                    method: 'GET',
                                 });
 
                                 if (response.ok) {
-                                    // Check if the server redirected (often indicates success and new page state)
                                     if (response.redirected || (response.headers.get("Content-Type") && response.headers.get("Content-Type").includes("application/json"))) {
                                         try {
-                                            const result = await response.json(); // Try to parse JSON if server sends it
+                                            const result = await response.json(); 
                                             if (result.success) {
                                                 reloadPage = true;
                                             } else {
                                                 allSucceeded = false;
                                                 errors.push(result.message || `刪除 ${item.name} 失敗`);
                                             }
-                                        } catch (e) { // If not JSON, but still OK status, assume success or rely on redirect
-                                            reloadPage = true; // Or handle based on status code
+                                        } catch (e) { 
+                                            reloadPage = true; 
                                         }
-                                    } else { // No redirect, no JSON, but OK status
-                                        reloadPage = true; // Assume success, page will refresh
+                                    } else { 
+                                        reloadPage = true; 
                                     }
                                 } else {
                                     allSucceeded = false;
@@ -1101,9 +1091,9 @@
                             alert("選中項目已成功刪除。");
                         }
                         
-                        if (reloadPage || !allSucceeded) { // Reload if any success or any failure to reflect changes
+                        if (reloadPage || !allSucceeded) { 
                             window.location.reload();
-                        } else { // If no reload was triggered but operations finished
+                        } else { 
                              clearSingleSelection(); 
                             if(selectAllCheckbox) selectAllCheckbox.checked = false; 
                             document.querySelectorAll('#file-container .item-checkbox').forEach(cb => cb.checked = false); 
@@ -1167,7 +1157,7 @@
                         const isMovingThisDirOrChild = itemsBeingMoved.some(movedItem => 
                             movedItem.isDir && (dirNode.path === movedItem.path || dirNode.path.startsWith(movedItem.path + '/'))
                         );
-                        const isCurrentParent = itemsBeingMoved.every(movedItem => { // Check if dirNode is the current parent of ALL items being moved
+                        const isCurrentParent = itemsBeingMoved.every(movedItem => { 
                             const movedItemParentPath = movedItem.path.substring(0, movedItem.path.lastIndexOf('/')) || '/';
                             return movedItemParentPath === dirNode.path;
                         });
@@ -1179,7 +1169,7 @@
                         const li = document.createElement('li'); 
                         li.textContent = dirNode.name; 
                         li.dataset.path = dirNode.path;
-                        if (isCurrentParent && itemsBeingMoved.length === 1) { // Only disable if it's the exact parent of a single item move
+                        if (isCurrentParent && itemsBeingMoved.length === 1) { 
                             li.style.opacity = "0.5"; 
                             li.style.pointerEvents = "none"; 
                         } else {
@@ -1230,7 +1220,6 @@
                         }
                     }
                     try {
-                        // MODIFICATION: Changed payload to send sourcePaths as an array of strings
                         const payload = { 
                             sourcePaths: selectedToMove.map(item => item.path), 
                             destinationPath: destinationPath, 
@@ -1252,7 +1241,7 @@
                     } catch (error) { 
                         console.error('移動項目時出錯:', error); 
                         let errorMsg = `移動項目時發生客戶端錯誤。`;
-                        if (error instanceof SyntaxError) { // Potentially non-JSON response from server
+                        if (error instanceof SyntaxError) { 
                             errorMsg += " 伺服器可能返回了非預期的回應格式。";
                         } else if (error.message) {
                             errorMsg += ` ${error.message}`;
