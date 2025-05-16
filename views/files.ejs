@@ -69,18 +69,65 @@
 
         .file-entry-selectable { display: flex; align-items: center; width: 100%; }
         #file-container.list-view .file-entry-selectable {
-             padding: 5px 0;
+            padding: 5px 0; /* Existing padding */
         }
         #file-container.grid-view .file-entry-selectable {
             padding: 0; 
         }
 
-
-        .file-content-wrapper { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .file-content-wrapper { 
+            flex-grow: 1; 
+            display: flex; /* Made flex to align items */
+            justify-content: space-between; /* Keep space-between for overall structure */
+            align-items: center; 
+            cursor: pointer; 
+            overflow: hidden; /* Prevents long names from breaking layout before ellipsis */
+        }
         
         .list-view li { position: relative; }
-        .list-view .file-content-wrapper > .file-entry { flex-grow: 1; }
-        .list-view .file-actions-placeholder { min-width: 150px; text-align: right; font-size: 0.9em; color: #666; }
+        .list-view .file-entry { /* Modified for flex */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-grow: 1; /* Allow file entry to grow */
+            min-width: 0; /* Crucial for text-overflow to work in flex child */
+        }
+        .list-view .file-entry .file-name { 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            white-space: nowrap; 
+            flex-shrink: 1; /* Allow name to shrink if needed */
+        }
+
+        /* NEW STYLES for file details in list view */
+        .list-view .file-details {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Space between size and date */
+            font-size: 0.85em;
+            color: #555;
+            margin-left: auto; /* Push details to the right, before placeholder */
+            padding-left: 10px; /* Space from file name if it's long */
+            white-space: nowrap; /* Prevent details from wrapping */
+            flex-shrink: 0; /* Prevent details from shrinking */
+        }
+        .dark-theme .list-view .file-details { 
+            color: #bbb; 
+        }
+        .list-view .file-details .file-size,
+        .list-view .file-details .file-modified {
+            min-width: 80px; /* Adjust as needed */
+            text-align: right;
+        }
+        /* END NEW STYLES for file details */
+
+        .list-view .file-actions-placeholder { 
+            min-width: 40px; /* Reduced, as it's now mainly for rename/context actions */
+            text-align: right; 
+            font-size: 0.9em; 
+            color: #666;
+            flex-shrink: 0; /* Prevent placeholder from shrinking */
+        }
         .dark-theme .list-view .file-actions-placeholder { color: #aaa; }
         
         .list-view li.single-selected-item > .file-entry-selectable,
@@ -136,8 +183,7 @@
 
         .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
 
-        .file-entry { display: flex; align-items: center; gap: 8px; }
-        .list-view .file-entry .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* Removed specific file-entry for list-view here as it's handled above */
         
         /* --- Grid View Specific Styles --- */
         #file-container.grid-view ul {
@@ -159,7 +205,7 @@
             position: relative;
             min-height: 100px; 
         }
-       
+        
         #file-container.grid-view li .file-entry-selectable {
             display: flex;
             flex-direction: column;
@@ -185,19 +231,19 @@
             display: flex;
             flex-direction: column;
             justify-content: center; 
-            align-items: center;     
-            text-align: center;      
+            align-items: center;    
+            text-align: center;       
             gap: 6px; 
-            width: 100%;             
+            width: 100%;            
         }
 
         .grid-view .file-icon-large { 
-            font-size: 3.5em;        
-            line-height: 1;          
-            display: flex;           
+            font-size: 3.5em;         
+            line-height: 1;           
+            display: flex;            
             justify-content: center; 
-            align-items: center;     
-            min-height: 48px;        
+            align-items: center;    
+            min-height: 48px;         
             margin-bottom: 4px;      
         }
 
@@ -210,7 +256,7 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis; 
-            max-width: 100%;         
+            max-width: 100%;       
         }
         
         #file-container.grid-view.multi-select-mode-active .item-checkbox {
@@ -272,7 +318,7 @@
             line-height: 1.4;    
             padding-top: 6px;     
             padding-bottom: 6px;  
-            border-radius: 4px;    
+            border-radius: 4px;   
             margin: 0;            
         }
 
@@ -377,6 +423,18 @@
         .dark-theme .progress-bar-container { background-color: #495057; }
         .progress-bar { display: block; width: 0%; height: 20px; background-color: #007bff; border: 1px solid #0056b3; border-radius: 2px; text-align: center; line-height: 18px; color: white; font-size: 0.8em; font-weight: bold; transition: width 0.1s ease-in-out; box-sizing: border-box; overflow: hidden; }
         .dark-theme .progress-bar { background-color: #0056b3; border-color: #003d80; }
+
+        /* Styles for scrollable file list */
+        #file-container {
+            /* Adjust the 320px based on the total height of elements above the list
+               (header, path, controls, selection bar, title, select-all) */
+            max-height: calc(100vh - 320px); 
+            overflow-y: auto;
+             /* Add a little padding on the right if scrollbar is too close to content */
+            padding-right: 5px; 
+            box-sizing: border-box; /* Ensure padding doesn't add to height for calc */
+        }
+
     </style>
 </head>
 <body>
@@ -494,6 +552,32 @@
         <div id="file-container" class="list-view"> 
             <% if (items.length > 0) { %>
                 <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
+                <%
+                    // Helper function for formatting size (assuming item.size is in bytes)
+                    const formatFileSize = (bytes) => {
+                        if (bytes === undefined || bytes === null || isNaN(bytes)) return '--';
+                        if (bytes === 0) return '0 B';
+                        const k = 1024;
+                        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+                        const i = Math.floor(Math.log(bytes) / Math.log(k));
+                        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+                    };
+
+                    // Helper function for formatting date (assuming item.lastModified is a timestamp or parsable date string)
+                    const formatDate = (dateString) => {
+                        if (!dateString) return '--';
+                        try {
+                            // Using 'zh-CN' for a common Chinese locale format, adjust if needed
+                            return new Date(dateString).toLocaleDateString('zh-CN', {
+                                year: 'numeric', month: '2-digit', day: '2-digit'
+                                // hour: '2-digit', minute: '2-digit' // Optionally add time
+                            });
+                        } catch (e) {
+                            console.warn("Could not format date:", dateString, e);
+                            return '--';
+                        }
+                    };
+                %>
                 <ul>
                     <% items.forEach(item => { %>
                         <li data-item-path="<%= item.path %>">
@@ -511,6 +595,10 @@
                                             <span class="file-icon-large folder-icon">📁</span>
                                             <a href="/files?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name"><%= item.name %></a>
                                             <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
+                                        </div>
+                                        <div class="file-details">
+                                            <span class="file-size">--</span>
+                                            <span class="file-modified">--</span>
                                         </div>
                                     <% } else { %>
                                         <div class="file-entry">
@@ -533,6 +621,10 @@
                                                 <span class="file-name"><%= item.name %></span>
                                             <% } %>
                                             <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
+                                        </div>
+                                        <div class="file-details">
+                                            <span class="file-size" title="<%= item.size %> bytes"><%= formatFileSize(item.size) %></span>
+                                            <span class="file-modified"><%= formatDate(item.lastModified) %></span>
                                         </div>
                                     <% } %>
                                     <span class="file-actions-placeholder"></span> 
