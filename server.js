@@ -18,7 +18,7 @@ const UPLOAD_DIR_BASE = path.join(__dirname, 'uploads');
 const DB_FILE = path.join(DATA_DIR, 'netdisk.sqlite');
 const ALLOWED_TEXT_EXTENSIONS = ['.txt', '.md', '.json', '.js', '.css', '.html', '.xml', '.log', '.csv', '.py', '.java', '.c', '.cpp', '.go', '.rb'];
 // 新增: 允許播放的視頻文件後綴名
-const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov']; // 您可以根據需要添加更多格式
+const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm','.mp3','.ogg', '.mov']; // 您可以根據需要添加更多格式
 const SESSION_SECRET = process.env.SESSION_SECRET || 'a_very_very_strong_and_unique_secret_CHANGE_THIS_NOW'; // !!! 強烈建議從環境變數讀取並更改 !!!
 
 // --- 目錄初始化 ---
