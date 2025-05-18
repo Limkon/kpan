@@ -17,6 +17,8 @@ const DATA_DIR = path.join(__dirname, 'data');
 const UPLOAD_DIR_BASE = path.join(__dirname, 'uploads');
 const DB_FILE = path.join(DATA_DIR, 'netdisk.sqlite');
 const ALLOWED_TEXT_EXTENSIONS = ['.txt', '.md', '.json', '.js', '.css', '.html', '.xml', '.log', '.csv', '.py', '.java', '.c', '.cpp', '.go', '.rb'];
+// 新增: 允許播放的視頻文件後綴名
+const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov']; // 您可以根據需要添加更多格式
 const SESSION_SECRET = process.env.SESSION_SECRET || 'a_very_very_strong_and_unique_secret_CHANGE_THIS_NOW'; // !!! 強烈建議從環境變數讀取並更改 !!!
 
 // --- 目錄初始化 ---
@@ -121,6 +123,20 @@ function resolvePathForUser(usernameForPath, relativePath = '/') {
     return requestedPath;
 }
 
+// 新增: 獲取視頻 MIME 類型的輔助函數
+function getVideoMimeType(filePath) {
+    const ext = path.extname(filePath).toLowerCase();
+    switch (ext) {
+        case '.mp4': return 'video/mp4';
+        case '.webm': return 'video/webm';
+        case '.ogg': return 'video/ogg';
+        case '.mov': return 'video/quicktime';
+        // 可以根據需要添加更多
+        default: return 'application/octet-stream'; // 未知類型默認值
+    }
+}
+
+
 async function searchFilesRecursively(directoryToSearch, keyword, currentRelativePath = '/', userUploadRoot) {
     let foundItems = [];
     const lowerCaseKeyword = keyword.toLowerCase();
@@ -134,6 +150,7 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
             const entryAbsolutePath = path.join(directoryToSearch, entry.name);
             const entryRelativePath = path.posix.join(currentRelativePath, entry.name);
             let stats;
+            const fileExt = path.extname(entry.name).toLowerCase(); // 获取文件后缀
 
             if (entry.isFile()) {
                 if (entry.name.toLowerCase().includes(lowerCaseKeyword)) {
@@ -143,6 +160,7 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
                         console.error(`[Search Stat Error] for file ${entryAbsolutePath}:`, statErr.message);
                         stats = { size: null, mtime: null }; // Default on error
                     }
+                    const isPlayableVideo = ALLOWED_VIDEO_EXTENSIONS.includes(fileExt);
                     foundItems.push({
                         name: entry.name,
                         isDir: false,
@@ -150,20 +168,21 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
                         encodedName: encodeURIComponent(entry.name),
                         encodedPath: encodeURIComponent(entryRelativePath),
                         size: stats.size,
-                        lastModified: stats.mtime
+                        lastModified: stats.mtime,
+                        isPlayableVideo: isPlayableVideo, // 新增
+                        videoType: isPlayableVideo ? getVideoMimeType(entry.name) : null // 新增
                     });
                 }
             } else if (entry.isDirectory()) {
                 if (entry.name.startsWith('.') || entry.name === 'node_modules') {
                     continue;
                 }
-                // If the directory name itself matches the search query, add it to results
                 if (entry.name.toLowerCase().includes(lowerCaseKeyword)) {
                     try {
                         stats = await fsp.stat(entryAbsolutePath);
                     } catch (statErr) {
                         console.error(`[Search Stat Error] for directory ${entryAbsolutePath}:`, statErr.message);
-                        stats = { size: null, mtime: null }; // Default on error
+                        stats = { size: null, mtime: null };
                     }
                     foundItems.push({
                         name: entry.name,
@@ -171,11 +190,11 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
                         path: entryRelativePath,
                         encodedName: encodeURIComponent(entry.name),
                         encodedPath: encodeURIComponent(entryRelativePath),
-                        size: null, // Directories typically don't have a size displayed like files
-                        lastModified: stats.mtime
+                        size: null,
+                        lastModified: stats.mtime,
+                        isPlayableVideo: false // 文件夾不能播放
                     });
                 }
-                // Recurse into the directory
                 const subDirectoryItems = await searchFilesRecursively(entryAbsolutePath, keyword, entryRelativePath, userUploadRoot);
                 foundItems = foundItems.concat(subDirectoryItems);
             }
@@ -259,7 +278,7 @@ const upload = multer({ storage: storage,
         }
         cb(null, true);
     },
-    limits: { fileSize: 100 * 1024 * 1024 }
+    limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
 });
 
 // --- 認證中間件 ---
@@ -377,7 +396,7 @@ app.get('/files', isAuthenticated, async (req, res) => {
         if (searchQuery) {
             isSearchResultView = true;
             items = await searchFilesRecursively(userUploadRootPath, searchQuery, '/', userUploadRootPath);
-            currentDisplayPath = '/'; // Search results are from root conceptually
+            currentDisplayPath = '/'; 
             pageTitle = `有關 "${searchQuery}" 的搜尋結果 (在 ${viewAsAdminContext ? targetUsernameForView : actingUser.username} 的文件中)`;
         } else {
             const currentFullPath = resolvePathForUser(targetUsernameForView, relativeQueryPath);
@@ -386,35 +405,39 @@ app.get('/files', isAuthenticated, async (req, res) => {
             items = await Promise.all(dirEntries.map(async entry => {
                 const itemPath = path.posix.join(relativeQueryPath, entry.name);
                 const fullEntryPath = path.join(currentFullPath, entry.name);
+                const fileExt = path.extname(entry.name).toLowerCase(); // 获取文件后缀
                 let stats;
                 try {
                     stats = await fsp.stat(fullEntryPath);
                 } catch (statErr) {
                     console.error(`[Stat Error] for ${fullEntryPath}:`, statErr.message);
-                    // Fallback if stat fails
                     return {
                         name: entry.name,
-                        isDir: entry.isDirectory(), // Use readdir info if stat fails
+                        isDir: entry.isDirectory(),
                         path: itemPath,
                         encodedName: encodeURIComponent(entry.name),
                         encodedPath: encodeURIComponent(itemPath),
                         size: null,
-                        lastModified: null
+                        lastModified: null,
+                        isPlayableVideo: entry.isFile() && ALLOWED_VIDEO_EXTENSIONS.includes(fileExt), // 新增
+                        videoType: entry.isFile() && ALLOWED_VIDEO_EXTENSIONS.includes(fileExt) ? getVideoMimeType(entry.name) : null // 新增
                     };
                 }
+                const isPlayableVideo = entry.isFile() && ALLOWED_VIDEO_EXTENSIONS.includes(fileExt);
                 return {
                     name: entry.name,
                     isDir: entry.isDirectory(),
                     path: itemPath,
                     encodedName: encodeURIComponent(entry.name),
                     encodedPath: encodeURIComponent(itemPath),
-                    size: entry.isFile() ? stats.size : null, // Only files have size
-                    lastModified: stats.mtime // mtime is the last modified time
+                    size: entry.isFile() ? stats.size : null,
+                    lastModified: stats.mtime,
+                    isPlayableVideo: isPlayableVideo, // 新增
+                    videoType: isPlayableVideo ? getVideoMimeType(entry.name) : null // 新增
                 };
             }));
         }
 
-        // Sort items: folders first, then by name
         items.sort((a, b) => {
             if (a.isDir && !b.isDir) return -1;
             if (!a.isDir && b.isDir) return 1;
@@ -426,6 +449,7 @@ app.get('/files', isAuthenticated, async (req, res) => {
             items: items, currentPath: currentDisplayPath, searchQuery: searchQuery,
             isSearchResult: isSearchResultView, pageTitle: pageTitle,
             ALLOWED_TEXT_EXTENSIONS: ALLOWED_TEXT_EXTENSIONS,
+            ALLOWED_VIDEO_EXTENSIONS: ALLOWED_VIDEO_EXTENSIONS, // 新增: 传递给模板
             csrfToken: res.locals.csrfToken,
             message: req.query.message, messageType: req.query.messageType
         });
@@ -562,19 +586,15 @@ async function addDirectoryToZip(zipfile, dirPathOnServer, pathInZipBase) {
     const entries = await fsp.readdir(dirPathOnServer, { withFileTypes: true });
     for (const entry of entries) {
         const entryPathOnServer = path.join(dirPathOnServer, entry.name);
-        // 重要：確保 pathInZipBase 在 join 之前不是 '/'，或者 entry.name 不以 '/' 開頭，以避免雙斜線
         let entryPathInZip = path.posix.join(pathInZipBase, entry.name);
         if (pathInZipBase === '/' && entryPathInZip.startsWith('//')) {
             entryPathInZip = entryPathInZip.substring(1);
         }
 
-
         if (entry.isFile()) {
             zipfile.addFile(entryPathOnServer, entryPathInZip);
         } else if (entry.isDirectory()) {
-            // 對於 yazl，如果需要明確的目錄條目，可以先添加空目錄
-            // zipfile.addEmptyDirectory(entryPathInZip); // 可選，取決於是否需要在 ZIP 中有明確的目錄條目
-            await addDirectoryToZip(zipfile, entryPathOnServer, entryPathInZip); // 遞歸調用
+            await addDirectoryToZip(zipfile, entryPathOnServer, entryPathInZip);
         }
     }
 }
@@ -586,7 +606,6 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
     const itemsToArchiveString = req.body.items;
     let itemsToArchive;
 
-    // --- 解析請求中的 itemsToArchive ---
     if (itemsToArchiveString && typeof itemsToArchiveString === 'string') {
         try {
             itemsToArchive = JSON.parse(itemsToArchiveString);
@@ -606,7 +625,6 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
         return res.redirect(redirectUrl);
     }
 
-    // --- 確定目標用戶 ---
     let targetUsername = actingUser.username;
     if (actingUser.role === 'admin' && req.body.targetUsername) {
         const targetUserExists = await new Promise((resolve, reject) => {
@@ -631,99 +649,66 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
         return res.redirect(redirectUrl);
     }
 
-    // --- 使用 yazl 創建 ZIP ---
     const archiveName = `archive-${targetUsername}-${Date.now()}.zip`;
     const zipfile = new yazl.ZipFile();
 
-    // 設置 HTTP 響應頭，以便瀏覽器下載文件
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(archiveName)}"`);
     res.setHeader('Content-Type', 'application/zip');
-
-    // 將 yazl 的輸出流 pipe 到 HTTP 響應
     zipfile.outputStream.pipe(res);
 
-    // 監聽錯誤事件
     zipfile.outputStream.on('error', (err) => {
         console.error('Yazl outputStream error:', err);
         if (!res.headersSent) {
-            // 嘗試發送錯誤狀態碼，如果還沒有發送頭部
             res.status(500).send('創建壓縮文件時發生錯誤。');
         } else if (!res.writableEnded) {
-            // 如果頭部已發送，但流還沒有結束，嘗試結束它
             res.end();
         }
     });
     res.on('error', (err) => {
         console.error('Response stream error during zip download:', err);
-        // 客戶端可能已經斷開連接
     });
-     res.on('close', function() { // 當響應流關閉時 (無論成功或失敗)
+     res.on('close', function() {
         console.log(`響應流已關閉，壓縮文件: ${archiveName}`);
-        // 此處不需要手動結束 zipfile.outputStream，因為它應該由 res 的 close 事件觸發
-        // 或者由 zipfile.end() 觸發的 'end' 事件來處理
     });
-
 
     try {
         for (const item of itemsToArchive) {
             if (!item || typeof item.path !== 'string' || typeof item.name !== 'string') {
                 console.warn(`[/download-archive] Invalid item structure in archive list:`, item);
-                // 可以選擇添加一個錯誤日誌文件到 ZIP 中
                 zipfile.addBuffer(Buffer.from(`錯誤：一個無效的項目結構被傳遞。\nItem: ${JSON.stringify(item)}\n`), "打包錯誤日誌.txt");
                 continue;
             }
-
             const fullPathOnServer = resolvePathForUser(targetUsername, item.path);
-            // item.path 是期望在 ZIP 檔案中的路徑 (例如 "folder/file.txt" 或 "file.txt")
-            // 如果 item.path 以 '/' 開頭，yazl 可能會創建一個名為 "" 的頂層文件夾，所以最好移除它
             const pathInZip = item.path.startsWith('/') ? item.path.substring(1) : item.path;
-
 
             if (!fs.existsSync(fullPathOnServer)) {
                 console.warn(`打包下載：項目 ${item.path} (伺服器路徑: ${fullPathOnServer}) 不存在，已跳過。`);
                 zipfile.addBuffer(Buffer.from(`錯誤：項目 ${item.name} (位於 ${item.path}) 未找到或無法訪問。\n`), `打包錯誤日誌/${item.name}-未找到.txt`);
                 continue;
             }
-
             const stat = await fsp.stat(fullPathOnServer);
             if (stat.isFile()) {
                 zipfile.addFile(fullPathOnServer, pathInZip);
             } else if (stat.isDirectory()) {
-                // 對於 yazl，通常我們會遞歸地添加目錄內容
-                // addDirectoryToZip 會將 dirPathOnServer 的內容添加到 zip 中，以 pathInZip 作為其在 zip 內的根
                 await addDirectoryToZip(zipfile, fullPathOnServer, pathInZip);
             }
         }
-
-        // 所有文件/文件夾添加完畢後，結束 yazl 實例
         zipfile.end();
         console.log(`[/download-archive] 所有項目已添加到 yazl，正在完成壓縮: ${archiveName}`);
-
     } catch (error) {
         console.error('添加文件到壓縮包時出錯:', error);
-        // 嘗試向 ZIP 中添加一個錯誤日誌
         try {
             zipfile.addBuffer(Buffer.from(`內部錯誤：處理某些文件時發生問題。\n${error.message}\n`), "內部伺服器錯誤日誌.txt");
         } catch (zipError) {
             console.error("向 zip 添加錯誤日誌時也發生錯誤:", zipError);
         }
-
         if (!res.headersSent) {
-            // 如果還沒有發送頭部，重定向或發送錯誤
-            let redirectUrl = req.headers.referer || '/files';
-            const errorParams = new URLSearchParams({ message: `打包下載失敗：${error.message}`, messageType: 'error' }).toString();
-            redirectUrl = redirectUrl.includes('?') ? `${redirectUrl.split('?')[0]}?${errorParams}` : `${redirectUrl}?${errorParams}`;
-            // 不能在這裡重定向，因為可能已經開始 pipe
-            // res.redirect(redirectUrl);
             res.status(500).send(`創建壓縮文件時發生內部錯誤: ${error.message}`);
-
         } else if (!res.writableEnded) {
-           // 如果已經開始 pipe，嘗試結束流
             console.log("錯誤發生，但響應已開始，嘗試結束流。");
-            zipfile.outputStream.unpipe(res); // 解除 pipe
-            res.end(); // 結束響應
+            zipfile.outputStream.unpipe(res);
+            res.end();
         }
-         // 確保 yazl 也結束，以釋放資源
         if (zipfile && typeof zipfile.end === 'function' && !zipfile.ended) {
             zipfile.end();
         }
@@ -855,7 +840,7 @@ app.post('/create-text-file', isAuthenticated, async (req, res) => {
     let finalFileName = newFileName.trim();
     const fileExt = path.extname(finalFileName).toLowerCase();
     if (!ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
-        finalFileName += '.txt';
+        finalFileName += '.txt'; // Default to .txt if no recognized text extension
         if (!ALLOWED_TEXT_EXTENSIONS.includes('.txt')) {
              console.warn(".txt extension is not in ALLOWED_TEXT_EXTENSIONS, but used as default for new text files.");
         }
@@ -958,6 +943,74 @@ app.post('/move-items', isAuthenticated, async (req, res) => {
     }
 });
 
+
+// --- 新增: 視頻流路由 ---
+app.get('/stream/:encodedPath(*)', isAuthenticated, async (req, res) => {
+    const actingUser = req.session.user;
+    const relativeFilePath = decodeURIComponent(req.params.encodedPath);
+    // 從查詢參數中獲取 targetUsername (如果存在且用戶是管理員)
+    const targetUsernameFromQuery = (actingUser.role === 'admin' && req.query.targetUsername) ? req.query.targetUsername : actingUser.username;
+
+    if (!relativeFilePath) {
+        return res.status(400).send('未指定文件路徑。');
+    }
+
+    try {
+        const fullFilePath = resolvePathForUser(targetUsernameFromQuery, relativeFilePath);
+        const stat = await fsp.stat(fullFilePath);
+        const fileSize = stat.size;
+        const range = req.headers.range;
+
+        if (!stat.isFile()) {
+            return res.status(404).send('請求的資源不是文件。');
+        }
+
+        const mimeType = getVideoMimeType(fullFilePath);
+
+        if (range) {
+            const parts = range.replace(/bytes=/, "").split("-");
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+            if (start >= fileSize) {
+                res.status(416).send('請求範圍不滿足 (Requested range not satisfiable)\n' + start + ' >= ' + fileSize);
+                return;
+            }
+
+            const chunksize = (end - start) + 1;
+            const file = fs.createReadStream(fullFilePath, { start, end });
+            const head = {
+                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunksize,
+                'Content-Type': mimeType,
+            };
+            res.writeHead(206, head); // 206 Partial Content
+            file.pipe(res);
+        } else {
+            const head = {
+                'Content-Length': fileSize,
+                'Content-Type': mimeType,
+                'Accept-Ranges': 'bytes' // 即使是完整請求，也表明支持範圍請求
+            };
+            res.writeHead(200, head); // 200 OK
+            fs.createReadStream(fullFilePath).pipe(res);
+        }
+    } catch (err) {
+        console.error(`[${actingUser.username}] 視頻流錯誤 for ${targetUsernameFromQuery}/${relativeFilePath}:`, err.message);
+        if (err.code === 'ENOENT') {
+            res.status(404).send('找不到文件。');
+        } else if (err.message.includes('無效的目標用戶名') || err.message.includes('試圖訪問無效路徑')) {
+            res.status(403).send('禁止訪問。');
+        }
+        else {
+            res.status(500).send('伺服器內部錯誤。');
+        }
+    }
+});
+
+
+// --- 管理員路由 ---
 app.get('/admin', isAuthenticated, isAdmin, (req, res) => {
     db.all("SELECT id, username, role FROM users", [], (err, users) => {
         if (err) { console.error("獲取用戶列表錯誤:", err); return res.status(500).render('error', { user: req.session.user, message: '無法獲取用戶列表。', csrfToken: res.locals.csrfToken });}
@@ -1050,6 +1103,8 @@ app.get('/admin/delete/:userId', isAuthenticated, isAdmin, (req, res) => {
     });
 });
 
+
+// --- 錯誤處理 ---
 app.use((req, res, next) => {
     res.status(404).render('error', { user: req.session.user, message: '找不到頁面 (404)。', csrfToken: res.locals.csrfToken });
 });
