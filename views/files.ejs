@@ -28,6 +28,13 @@
 
             --rename-form-bg: #ffffff;
             --rename-form-border-color: #cccccc;
+
+            /* 新增: 視頻播放器模態框的變量 */
+            --video-modal-bg: #1c1c1c;
+            --video-modal-text-color: #f1f1f1;
+            --video-modal-border-color: #333;
+            --video-modal-close-btn-color: #aaa;
+            --video-modal-close-btn-hover-color: #fff;
         }
 
         .dark-theme {
@@ -39,9 +46,9 @@
             --button-secondary-text-color: #ffffff;
             --button-secondary-border-color: #545b62;
             
-            --input-border-color: #555; /* 暗色主題的輸入框邊框 */
-            --input-bg-color: #2c2c2c;   /* 暗色主題的輸入框背景 */
-            --input-text-color: #e0e0e0; /* 暗色主題的輸入框文字 */
+            --input-border-color: #555;
+            --input-bg-color: #2c2c2c; 
+            --input-text-color: #e0e0e0;
             
             --modal-bg: #2c2c2c;
             --modal-text-color: #e0e0e0;
@@ -49,6 +56,13 @@
 
             --rename-form-bg: #3a3a3a;
             --rename-form-border-color: #555;
+
+            /* 新增: 暗色主題下的視頻播放器模態框變量 */
+            --video-modal-bg: #2a2a2a;
+            --video-modal-text-color: #e0e0e0;
+            --video-modal-border-color: #444;
+            --video-modal-close-btn-color: #bbb;
+            --video-modal-close-btn-hover-color: #fff;
         }
 
         /* 其他通用樣式 */
@@ -69,7 +83,7 @@
 
         .file-entry-selectable { display: flex; align-items: center; width: 100%; }
         #file-container.list-view .file-entry-selectable {
-            padding: 5px 0; /* Existing padding */
+            padding: 5px 0;
         }
         #file-container.grid-view .file-entry-selectable {
             padding: 0; 
@@ -77,60 +91,57 @@
 
         .file-content-wrapper { 
             flex-grow: 1; 
-            display: flex; /* Made flex to align items */
-            justify-content: space-between; /* Keep space-between for overall structure */
+            display: flex;
+            justify-content: space-between;
             align-items: center; 
             cursor: pointer; 
-            overflow: hidden; /* Prevents long names from breaking layout before ellipsis */
+            overflow: hidden;
         }
         
         .list-view li { position: relative; }
-        .list-view .file-entry { /* Modified for flex */
+        .list-view .file-entry {
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-grow: 1; /* Allow file entry to grow */
-            min-width: 0; /* Crucial for text-overflow to work in flex child */
+            flex-grow: 1;
+            min-width: 0;
         }
         .list-view .file-entry .file-name { 
             overflow: hidden; 
             text-overflow: ellipsis; 
             white-space: nowrap; 
-            flex-shrink: 1; /* Allow name to shrink if needed */
+            flex-shrink: 1;
         }
 
-        /* Styles for file details in list view */
         .list-view .file-details {
             display: flex;
             align-items: center;
-            gap: 15px; /* Space between size and date */
+            gap: 15px;
             font-size: 0.85em;
             color: #555;
-            margin-left: auto; /* Push details to the right, before placeholder */
-            padding-left: 10px; /* Space from file name if it's long */
-            white-space: nowrap; /* Prevent details from wrapping */
-            flex-shrink: 0; /* Prevent details from shrinking */
+            margin-left: auto;
+            padding-left: 10px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         .dark-theme .list-view .file-details { 
             color: #bbb; 
         }
         .list-view .file-details .file-size,
         .list-view .file-details .file-modified {
-            min-width: 80px; /* Adjust as needed */
+            min-width: 80px;
             text-align: right;
         }
-        /* MODIFICATION: Hide file-details div entirely in grid view */
         #file-container.grid-view .file-details {
             display: none;
         }
-        /* END Styles for file details */
 
         .list-view .file-actions-placeholder { 
-            min-width: 40px; /* Reduced, as it's now mainly for rename/context actions */
+            min-width: 40px;
             text-align: right; 
             font-size: 0.9em; 
             color: #666;
-            flex-shrink: 0; /* Prevent placeholder from shrinking */
+            flex-shrink: 0;
         }
         .dark-theme .list-view .file-actions-placeholder { color: #aaa; }
         
@@ -144,7 +155,7 @@
             background-color: #404040; 
         }
 
-        #move-modal, #create-item-modal, #overwrite-confirm-modal {
+        #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal { /* 新增 #video-player-modal */
             display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
             overflow: auto; background-color: rgba(0,0,0,0.5); 
         }
@@ -168,6 +179,37 @@
             background-color: var(--input-bg-color); color: var(--input-text-color);
         }
         .modal-actions { text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
+
+        /* 新增: 視頻播放器模態框特定樣式 */
+        #video-player-modal .modal-content {
+            background-color: var(--video-modal-bg) !important;
+            color: var(--video-modal-text-color);
+            border-color: var(--video-modal-border-color);
+            max-width: 900px; /* 可以更大一些以容納視頻 */
+            margin: 5% auto; /* 調整垂直邊距 */
+        }
+        #video-player-modal #video-modal-title {
+            color: var(--video-modal-text-color);
+            margin-bottom: 15px;
+        }
+        #video-player-modal .close-modal-btn {
+            color: var(--video-modal-close-btn-color);
+        }
+        #video-player-modal .close-modal-btn:hover,
+        #video-player-modal .close-modal-btn:focus {
+            color: var(--video-modal-close-btn-hover-color);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #html5-video-player {
+            width: 100%;
+            max-height: 75vh; /* 限制最大高度 */
+            display: block;
+            margin-top: 10px;
+            background-color: #000; /* 視頻背景通常為黑色 */
+            border-radius: 4px;
+        }
+
 
         #directory-tree-container { 
             max-height: 250px; 
@@ -220,7 +262,7 @@
         #file-container.grid-view li .file-content-wrapper {
             display: flex;
             flex-direction: column;
-            align-items: center;    
+            align-items: center;   
             justify-content: center;
             width: 100%;
             flex-grow: 1;
@@ -233,20 +275,20 @@
             display: flex;
             flex-direction: column;
             justify-content: center; 
-            align-items: center;    
+            align-items: center;   
             text-align: center;       
             gap: 6px; 
-            width: 100%;            
+            width: 100%;           
         }
 
         .grid-view .file-icon-large { 
             font-size: 3.5em;         
             line-height: 1;           
-            display: flex;            
+            display: flex;           
             justify-content: center; 
-            align-items: center;    
+            align-items: center;   
             min-height: 48px;         
-            margin-bottom: 4px;      
+            margin-bottom: 4px;     
         }
 
         .grid-view .file-name { 
@@ -258,7 +300,7 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis; 
-            max-width: 100%;       
+            max-width: 100%;     
         }
         
         #file-container.grid-view.multi-select-mode-active .item-checkbox {
@@ -317,11 +359,11 @@
         .rename-form button {
             box-sizing: border-box; 
             font-size: 0.9em;     
-            line-height: 1.4;    
+            line-height: 1.4;   
             padding-top: 6px;     
             padding-bottom: 6px;  
             border-radius: 4px;   
-            margin: 0;            
+            margin: 0;           
         }
 
         .rename-form input[type="text"] {
@@ -426,17 +468,12 @@
         .progress-bar { display: block; width: 0%; height: 20px; background-color: #007bff; border: 1px solid #0056b3; border-radius: 2px; text-align: center; line-height: 18px; color: white; font-size: 0.8em; font-weight: bold; transition: width 0.1s ease-in-out; box-sizing: border-box; overflow: hidden; }
         .dark-theme .progress-bar { background-color: #0056b3; border-color: #003d80; }
 
-        /* Styles for scrollable file list */
         #file-container {
-            /* Adjust the 320px based on the total height of elements above the list
-               (header, path, controls, selection bar, title, select-all) */
             max-height: calc(100vh - 320px); 
             overflow-y: auto;
-             /* Add a little padding on the right if scrollbar is too close to content */
             padding-right: 5px; 
-            box-sizing: border-box; /* Ensure padding doesn't add to height for calc */
+            box-sizing: border-box;
         }
-
     </style>
 </head>
 <body>
@@ -537,7 +574,7 @@
 
         <div id="selection-action-bar">
             <span id="selection-count" style="margin-right: 15px;">已選擇 0 項</span>
-            <button id="action-edit-btn" disabled>編輯</button>
+            <button id="action-play-btn" disabled>播放</button> <button id="action-edit-btn" disabled>編輯</button>
             <button id="action-rename-btn" disabled>重命名</button>
             <button id="action-move-btn" disabled>移動</button>
             <button id="action-download-btn" disabled>下載選中項</button>
@@ -555,19 +592,16 @@
             <% if (items.length > 0) { %>
                 <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
                 <%
-                    // Helper function for formatting size (assuming item.size is in bytes)
                     const formatFileSize = (bytes) => {
-                        if (bytes === undefined || bytes === null || isNaN(bytes)) return '--'; // Returns "--" for null/undefined size
+                        if (bytes === undefined || bytes === null || isNaN(bytes)) return '--';
                         if (bytes === 0) return '0 B';
                         const k = 1024;
                         const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
                         const i = Math.floor(Math.log(bytes) / Math.log(k));
                         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
                     };
-
-                    // Helper function for formatting date (assuming item.lastModified is a timestamp or parsable date string)
                     const formatDate = (dateString) => {
-                        if (!dateString) return '--'; // Returns "--" for null/undefined date
+                        if (!dateString) return '--';
                         try {
                             return new Date(dateString).toLocaleDateString('zh-CN', {
                                 year: 'numeric', month: '2-digit', day: '2-digit'
@@ -588,7 +622,7 @@
                                        data-name="<%= item.name %>"
                                        data-encoded-name="<%= item.encodedName %>"
                                        data-is-dir="<%= item.isDir %>"
-                                       data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>">
+                                       data-is-playable-video="<%= item.isPlayableVideo || false %>" data-video-type="<%= item.videoType || '' %>" data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>">
                                 <div class="file-content-wrapper">
                                     <% if (item.isDir) { %>
                                         <div class="file-entry">
@@ -597,8 +631,8 @@
                                             <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
                                         </div>
                                         <div class="file-details">
-                                            <span class="file-size"></span>  <%# Empty for folders %>
-                                            <span class="file-modified"></span> <%# Empty for folders %>
+                                            <span class="file-size"></span> 
+                                            <span class="file-modified"></span>
                                         </div>
                                     <% } else { // It's a file %>
                                         <div class="file-entry">
@@ -609,12 +643,20 @@
                                                 if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
                                                     isViewableTextFile = true;
                                                     largeIcon = '📝'; 
+                                                } else if (item.isPlayableVideo) { // 使用 server 端傳來的 isPlayableVideo
+                                                    largeIcon = '🎥';
                                                 }
                                                 else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
                                                 else if (['pdf'].includes(ext)) { largeIcon = '📕';}
                                             %>
                                             <span class="file-icon-large"><%= largeIcon %></span>
-                                            <% if (isViewableTextFile) { %>
+                                            <% if (item.isPlayableVideo) { %>
+                                                <a href="#" class="file-name video-link" 
+                                                   data-path="<%= item.encodedPath %>" 
+                                                   data-name="<%= item.name %>" 
+                                                   data-type="<%= item.videoType %>"
+                                                   title="點擊播放 <%= item.name %>"><%= item.name %></a>
+                                            <% } else if (isViewableTextFile) { %>
                                                 <a href="/view?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name" title="點擊查看"><%= item.name %></a>
                                             <% } else { %>
                                                 <span class="file-name"><%= item.name %></span>
@@ -700,10 +742,22 @@
         </div>
     </div>
 
+    <div id="video-player-modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="close-video-modal-btn">&times;</span>
+            <h3 id="video-modal-title" style="margin-bottom: 15px;">播放視頻</h3>
+            <video id="html5-video-player" controls controlsList="nodownload" width="100%" style="max-height: 75vh; display: block; background-color: #000;">
+                <source id="video-source" src="" type="">
+                您的瀏覽器不支持 HTML5 video 標籤。
+            </video>
+        </div>
+    </div>
+
 
     <script src="/theme.js"></script>
     <script>
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
+        const ALLOWED_VIDEO_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_VIDEO_EXTENSIONS || []) %>; // 從 server 獲取
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
         const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
         const CURRENT_USER_ROLE = "<%= user.role %>";
@@ -718,6 +772,7 @@
             const selectAllContainer = document.getElementById('select-all-container'); 
             const selectionActionBar = document.getElementById('selection-action-bar');
             const selectionCountDisplay = document.getElementById('selection-count');
+            const actionPlayBtn = document.getElementById('action-play-btn'); // 新增
             const actionEditBtn = document.getElementById('action-edit-btn');
             const actionRenameBtn = document.getElementById('action-rename-btn');
             const actionMoveBtn = document.getElementById('action-move-btn');
@@ -756,6 +811,14 @@
             const toggleMultiSelectBtn = document.getElementById('toggle-multi-select-btn');
             let multiSelectModeActive = false;
             let currentSingleSelectedItem = null;
+
+            // 新增: 視頻播放器相關元素
+            const videoPlayerModal = document.getElementById('video-player-modal');
+            const html5VideoPlayer = document.getElementById('html5-video-player');
+            const videoSourceElement = document.getElementById('video-source');
+            const videoModalTitle = document.getElementById('video-modal-title');
+            const closeVideoModalBtn = document.getElementById('close-video-modal-btn');
+
 
             function clearSingleSelection() {
                 if (currentSingleSelectedItem && currentSingleSelectedItem.element) {
@@ -802,6 +865,8 @@
                             path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
                             name: cb.dataset.name, encodedName: cb.dataset.encodedName,
                             isDir: cb.dataset.isDir === 'true', rawName: cb.dataset.rawName,
+                            isPlayableVideo: cb.dataset.isPlayableVideo === 'true', // 新增
+                            videoType: cb.dataset.videoType, // 新增
                             element: cb.closest('li')
                         });
                     }
@@ -813,16 +878,22 @@
                 let count = 0;
                 let itemsForActions = []; 
                 let isSingleFileEditable = false;
+                let isSingleFilePlayableVideo = false; // 新增
 
                 if (multiSelectModeActive) {
                     const checkboxSelectedItems = getCheckboxSelectedItems();
                     count = checkboxSelectedItems.length;
                     itemsForActions = checkboxSelectedItems;
-                    if (count === 1 && itemsForActions[0] && !itemsForActions[0].isDir) {
-                        const fileName = itemsForActions[0].name;
-                        const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
-                        if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
-                            isSingleFileEditable = true;
+                    if (count === 1 && itemsForActions[0]) {
+                        if (!itemsForActions[0].isDir) {
+                             const fileName = itemsForActions[0].name;
+                             const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
+                             if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
+                                 isSingleFileEditable = true;
+                             }
+                             if (itemsForActions[0].isPlayableVideo) { // 新增
+                                isSingleFilePlayableVideo = true;
+                             }
                         }
                     }
                 } else if (currentSingleSelectedItem) {
@@ -834,6 +905,9 @@
                          if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
                             isSingleFileEditable = true;
                         }
+                        if (currentSingleSelectedItem.isPlayableVideo) { // 新增
+                            isSingleFilePlayableVideo = true;
+                        }
                     }
                 }
 
@@ -844,6 +918,7 @@
                     selectionActionBar.style.display = 'none';
                 }
                 
+                if(actionPlayBtn) actionPlayBtn.disabled = !(count === 1 && isSingleFilePlayableVideo); // 新增
                 if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable);
                 if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
                 if(actionMoveBtn) actionMoveBtn.disabled = !(count > 0);
@@ -884,6 +959,10 @@
                         const checkbox = listItem.querySelector('.item-checkbox');
                         if (!checkbox) return;
 
+                        // 如果點擊的是播放鏈接，則由其自身的事件處理器處理
+                        if (event.target.classList.contains('video-link') || event.target.closest('.video-link')) {
+                            return;
+                        }
                         if (event.target.tagName === 'A' || event.target.closest('a') || 
                             event.target.classList.contains('item-checkbox') || 
                             event.target.closest('.rename-form')) {
@@ -894,6 +973,8 @@
                             path: checkbox.dataset.path, encodedPath: checkbox.dataset.encodedPath,
                             name: checkbox.dataset.name, encodedName: checkbox.dataset.encodedName,
                             isDir: checkbox.dataset.isDir === 'true', rawName: checkbox.dataset.rawName,
+                            isPlayableVideo: checkbox.dataset.isPlayableVideo === 'true', // 新增
+                            videoType: checkbox.dataset.videoType, // 新增
                             element: listItem 
                         };
 
@@ -923,6 +1004,37 @@
                 });
             }
             
+            // 新增: 處理視頻播放鏈接點擊
+            document.querySelectorAll('.video-link').forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const encodedPath = this.dataset.path;
+                    const videoName = this.dataset.name;
+                    const videoType = this.dataset.type;
+                    openVideoPlayer(encodedPath, videoName, videoType);
+                });
+            });
+            
+            // 新增: 處理選擇操作欄中的播放按鈕
+            if (actionPlayBtn) {
+                actionPlayBtn.addEventListener('click', () => {
+                    if (actionPlayBtn.disabled) return;
+                    let itemToPlay = null;
+                    if (!multiSelectModeActive && currentSingleSelectedItem && currentSingleSelectedItem.isPlayableVideo) {
+                        itemToPlay = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1 && selected[0].isPlayableVideo) {
+                            itemToPlay = selected[0];
+                        }
+                    }
+                    if (itemToPlay) {
+                        openVideoPlayer(itemToPlay.encodedPath, itemToPlay.name, itemToPlay.videoType);
+                    }
+                });
+            }
+
+
              if (actionEditBtn) {
                 actionEditBtn.addEventListener('click', () => {
                     if (actionEditBtn.disabled) return;
@@ -1049,7 +1161,7 @@
                                     deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
                                 }
                                 const response = await fetch(deleteUrl, { 
-                                    method: 'GET',
+                                    method: 'GET', // 假設 DELETE 也是 GET 請求，根據您的 server.js
                                 });
 
                                 if (response.ok) {
@@ -1631,12 +1743,52 @@
             if (closeCreateItemModalBtn) closeCreateItemModalBtn.onclick = () => createItemModal.style.display = 'none';
             if (cancelCreateItemBtn) cancelCreateItemBtn.onclick = () => createItemModal.style.display = 'none';
             
+            // 新增: 視頻播放器模態框的打開和關閉邏輯
+            function openVideoPlayer(encodedPath, videoName, videoType) {
+                if (!videoPlayerModal || !html5VideoPlayer || !videoSourceElement || !videoModalTitle) return;
+                
+                let videoSrc = `/stream/${encodedPath}`;
+                // 如果是管理員查看其他用戶的文件，添加 targetUsername 參數
+                if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                    videoSrc += `?targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                }
+
+                videoModalTitle.textContent = videoName || '播放視頻';
+                videoSourceElement.setAttribute('src', videoSrc);
+                if (videoType) {
+                    videoSourceElement.setAttribute('type', videoType);
+                } else {
+                    videoSourceElement.removeAttribute('type'); // 如果沒有類型信息，移除 type 讓瀏覽器猜測
+                }
+                html5VideoPlayer.load(); // 重新加載視頻源
+                // html5VideoPlayer.play(); // 可選: 自動播放
+                videoPlayerModal.style.display = 'block';
+            }
+
+            if (closeVideoModalBtn) {
+                closeVideoModalBtn.onclick = () => {
+                    if (videoPlayerModal) videoPlayerModal.style.display = 'none';
+                    if (html5VideoPlayer) {
+                        html5VideoPlayer.pause(); // 暫停播放
+                        videoSourceElement.setAttribute('src', ''); // 清空 src 以停止加載
+                    }
+                };
+            }
+
+
             window.addEventListener('click', (event) => { 
                 if (event.target == createItemModal) createItemModal.style.display = 'none';
                 if (event.target == moveModal) moveModal.style.display = 'none'; 
                 if (event.target == overwriteModal) { 
                     const abandonButton = overwriteModal.querySelector('#overwrite-abandon-btn');
                     if (abandonButton) abandonButton.click(); 
+                }
+                if (event.target == videoPlayerModal) { // 新增: 點擊模態框外部關閉視頻播放器
+                     if (videoPlayerModal) videoPlayerModal.style.display = 'none';
+                    if (html5VideoPlayer) {
+                        html5VideoPlayer.pause();
+                        videoSourceElement.setAttribute('src', '');
+                    }
                 }
             });
 
