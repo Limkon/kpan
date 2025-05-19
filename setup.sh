@@ -85,8 +85,8 @@ echo "🔧 检查系统 Node.js 和 npm 环境..."
 # 1. 检查 Node.js 是否安装
 if ! command -v node &> /dev/null; then
     echo "❌ 错误: Node.js 未安装。请先安装 Node.js (推荐 v18 或更高版本) 然后重试。"
-    echo "   例如，在 Ubuntu/Debian 上: sudo apt update && sudo apt install nodejs npm"
-    echo "   或从 NodeSource: curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - && sudo apt-get install -y nodejs"
+    echo "    例如，在 Ubuntu/Debian 上: sudo apt update && sudo apt install nodejs npm"
+    echo "    或从 NodeSource: curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - && sudo apt-get install -y nodejs"
     exit 1
 fi
 
@@ -103,7 +103,7 @@ DESIRED_MAJOR_VERSION="18"
 
 if [ "$NODE_MAJOR_VERSION" -lt "$DESIRED_MAJOR_VERSION" ]; then
     echo "❌ 错误: Node.js 版本过低。需要 v$DESIRED_MAJOR_VERSION 或更高版本, 当前版本: $NODE_VERSION_OUTPUT"
-    echo "   请升级您的 Node.js 版本。"
+    echo "    请升级您的 Node.js 版本。"
     exit 1
 else
     echo "✅ Node.js 版本检查通过: $NODE_VERSION_OUTPUT (主版本: $NODE_MAJOR_VERSION)"
@@ -177,10 +177,10 @@ EOF
 
 echo "✅ 项目安装完成！"
 echo "👍 开机启动项已创建于: $AUTOSTART_FILE"
-echo "   (可能需要重新登录或重启系统以使开机启动生效)"
-echo "   服务启动日志将记录在: $PROJECT_DIR/startup.log"
+echo "    (可能需要重新登录或重启系统以使开机启动生效)"
+echo "    服务启动日志将记录在: $PROJECT_DIR/startup.log"
 echo "👉 您可以检查该文件的内容，并根据需要进行调整。"
 echo "🚀 手动启动服务器: cd \"$PROJECT_DIR\" && npm start"
-echo "   (如果 package.json 中没有 'start' 脚本, 请使用: cd \"$PROJECT_DIR\" && node server.js)"
+echo "    (如果 package.json 中没有 'start' 脚本, 请使用: cd \"$PROJECT_DIR\" && node server.js)"
 
 exit 0
