@@ -11,11 +11,9 @@ BRANCH="master"
 echo "👤 GitHub 用户名: $GITHUB_USER"
 echo "📦 仓库名: $REPO_NAME"
 echo "🌿 分支: $BRANCH"
-
 # 下载链接
 TAR_URL="https://github.com/$GITHUB_USER/$REPO_NAME/archive/refs/heads/$BRANCH.tar.gz"
 echo "📦 下载链接: $TAR_URL"
-
 # 验证下载链接是否可访问
 if ! curl -fsSL --head "$TAR_URL" >/dev/null 2>&1; then
     echo "❌ 错误：无法访问 $TAR_URL，可能是网络问题或链接无效"
