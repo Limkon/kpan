@@ -1,4 +1,5 @@
-// server.js (SQLite 版本 - 使用 yazl)
+﻿// server.js (SQLite 版本 - 使用 yazl)
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
