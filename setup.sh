@@ -22,6 +22,7 @@ if ! curl -fsSL --head "$TAR_URL" >/dev/null 2>&1; then
     exit 1
 fi
 
+# 获取当前脚本执行的目录作为项目目录的基准
 PROJECT_DIR=$(pwd)
 echo "📁 项目将安装到目录: $PROJECT_DIR"
 
@@ -43,7 +44,7 @@ if [ -d "$TEMP_DIR/.github" ]; then
     rm -rf "$TEMP_DIR/.github"
 fi
 
-# 复制文件到目标目录
+# 将临时目录中的所有内容复制到项目目录
 echo "⏳ 正在复制文件到 $PROJECT_DIR ..."
 cd "$TEMP_DIR"
 if find . -maxdepth 1 -mindepth 1 -exec cp -rft "$PROJECT_DIR" '{}' +; then
@@ -55,6 +56,7 @@ else
     exit 1
 fi
 
+# 清理临时目录
 echo "🗑️ 清理临时目录 $TEMP_DIR ..."
 rm -rf "$TEMP_DIR"
 cd "$PROJECT_DIR"
@@ -74,7 +76,7 @@ if ! command -v npm &> /dev/null; then
 fi
 
 NODE_VERSION_OUTPUT=$(node -v)
-NODE_MAJOR_VERSION=$(echo "$NODE_VERSION_OUTPUT" | sed -E 's/v([0-9]+)\..*/\1/')
+NODE_MAJOR_VERSION=$(echo "$NODE_VERSION_OUTPUT" | sed -E 's/v([0-9]+)\..*//')
 DESIRED_MAJOR_VERSION="18"
 
 if [ "$NODE_MAJOR_VERSION" -lt "$DESIRED_MAJOR_VERSION" ]; then
@@ -90,12 +92,12 @@ echo "🧩 当前使用 npm: $(which npm) (版本: $(npm -v))"
 
 if [ ! -f "$PROJECT_DIR/package.json" ]; then
     echo "⚠️  警告: $PROJECT_DIR/package.json 未找到。将创建一个空的 package.json。"
-    echo "{ \"name\": \"$REPO_NAME\", \"version\": \"1.0.0\", \"description\": \"Downloaded from GitHub\", \"main\": \"server.js\", \"scripts\": { \"start\": \"node server.js\" } }" > "$PROJECT_DIR/package.json"
+    echo "{ "name": "$REPO_NAME", "version": "1.0.0", "description": "Downloaded from GitHub", "main": "server.js", "scripts": { "start": "node server.js" } }" > "$PROJECT_DIR/package.json"
 else
     echo "👍 $PROJECT_DIR/package.json 已存在。"
 fi
 
-echo "📦 正在安装依赖..."
+echo "📦 正在安装依赖 ..."
 if npm install; then
     echo "✅ 依赖安装成功。"
 else
@@ -134,5 +136,5 @@ chmod +x "$AUTOSTART_FILE"
 echo "✅ 项目安装完成！"
 echo "👍 开机启动项已创建于: $AUTOSTART_FILE"
 echo "    (可能需要重新登录或重启系统以使开机启动生效)"
-echo "🚀 手动启动服务器: cd \"$PROJECT_DIR\" && npm start"
-echo "    (如果 package.json 中没有 'start' 脚本, 请使用: cd \"$PROJECT_DIR\" && node server.js)"
+echo "🚀 手动启动服务器: cd "$PROJECT_DIR" && npm start"
+echo "    (如果 package.json 中没有 'start' 脚本, 请使用: cd "$PROJECT_DIR" && node server.js)"
