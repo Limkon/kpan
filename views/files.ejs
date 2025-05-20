@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= locals.pageTitle || ( (locals.viewTargetUsername ? viewTargetUsername : user.username) + ' 的文件') %> - 網路硬碟</title>
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/style.css"> {/* This will now use your complete_style_css_v2 content */}
     <link id="theme-stylesheet" rel="stylesheet" href="">
-    <%# 已移除內嵌樣式，所有樣式依賴 /style.css 和主題CSS %>
+    <%# Removed inline <style> block %>
 </head>
 <body>
     <div class="container">
@@ -23,7 +23,6 @@
             </h1>
             <div class="header-controls">
                 <nav>
-                    <%# 修改以下連結的 class，移除 'secondary'，使其套用主要按鈕樣式 %>
                     <% if (user.role === 'admin') { %><a href="/admin" class="button-link">管理面板</a><% } %>
                     <a href="/change-password" class="button-link">修改密碼</a>
                     <a href="/logout" class="button-link">登出</a>
@@ -58,17 +57,14 @@
         <% } %>
 
         <div class="file-browser-controls">
-            <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
-                <div class="actions-group-left">
+            <div class="actions-group-left">
+                <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
                     <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
                     <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
                     <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button>
-                    <button type="button" id="toggle-multi-select-btn">啟用多選</button> <%# MODIFIED: Moved this button inside actions-group-left %>
-                </div>
-            <% } %>
-            <%# If it's a search result or not in a valid file browsing path, the above actions-group-left (including "啟用多選") will not be shown. %>
-            <%# If "啟用多選" needs to be visible in those other cases, it would need to be placed outside the conditional block above, %>
-            <%# or the conditional logic would need to be adjusted. This change specifically targets matching the provided image. %>
+                <% } %>
+                <button type="button" id="toggle-multi-select-btn">啟用多選</button>
+            </div>
 
             <form action="/files" method="GET" class="control-form search-form-right">
                 <% if (locals.viewTargetUsername && user.role === 'admin') { %>
@@ -309,7 +305,7 @@
             const selectAllContainer = document.getElementById('select-all-container');
             const selectionActionBar = document.getElementById('selection-action-bar');
             const selectionCountDisplay = document.getElementById('selection-count');
-            const actionPlayBtn = document.getElementById('action-play-btn'); // 新增
+            const actionPlayBtn = document.getElementById('action-play-btn');
             const actionEditBtn = document.getElementById('action-edit-btn');
             const actionRenameBtn = document.getElementById('action-rename-btn');
             const actionMoveBtn = document.getElementById('action-move-btn');
@@ -349,7 +345,6 @@
             let multiSelectModeActive = false;
             let currentSingleSelectedItem = null;
 
-            // 新增: 視頻播放器相關元素
             const videoPlayerModal = document.getElementById('video-player-modal');
             const html5VideoPlayer = document.getElementById('html5-video-player');
             const videoSourceElement = document.getElementById('video-source');
@@ -402,8 +397,8 @@
                             path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
                             name: cb.dataset.name, encodedName: cb.dataset.encodedName,
                             isDir: cb.dataset.isDir === 'true', rawName: cb.dataset.rawName,
-                            isPlayableVideo: cb.dataset.isPlayableVideo === 'true', // 新增
-                            videoType: cb.dataset.videoType, // 新增
+                            isPlayableVideo: cb.dataset.isPlayableVideo === 'true',
+                            videoType: cb.dataset.videoType,
                             element: cb.closest('li')
                         });
                     }
@@ -415,7 +410,7 @@
                 let count = 0;
                 let itemsForActions = [];
                 let isSingleFileEditable = false;
-                let isSingleFilePlayableVideo = false; // 新增
+                let isSingleFilePlayableVideo = false;
 
                 if (multiSelectModeActive) {
                     const checkboxSelectedItems = getCheckboxSelectedItems();
@@ -428,7 +423,7 @@
                              if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
                                  isSingleFileEditable = true;
                              }
-                             if (itemsForActions[0].isPlayableVideo) { // 新增
+                             if (itemsForActions[0].isPlayableVideo) {
                                  isSingleFilePlayableVideo = true;
                              }
                         }
@@ -442,7 +437,7 @@
                          if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
                              isSingleFileEditable = true;
                         }
-                        if (currentSingleSelectedItem.isPlayableVideo) { // 新增
+                        if (currentSingleSelectedItem.isPlayableVideo) {
                             isSingleFilePlayableVideo = true;
                         }
                     }
@@ -455,7 +450,7 @@
                     selectionActionBar.style.display = 'none';
                 }
 
-                if(actionPlayBtn) actionPlayBtn.disabled = !(count === 1 && isSingleFilePlayableVideo); // 新增
+                if(actionPlayBtn) actionPlayBtn.disabled = !(count === 1 && isSingleFilePlayableVideo);
                 if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable);
                 if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
                 if(actionMoveBtn) actionMoveBtn.disabled = !(count > 0);
@@ -496,7 +491,6 @@
                         const checkbox = listItem.querySelector('.item-checkbox');
                         if (!checkbox) return;
 
-                        // 如果點擊的是播放鏈接，則由其自身的事件處理器處理
                         if (event.target.classList.contains('video-link') || event.target.closest('.video-link')) {
                             return;
                         }
@@ -510,8 +504,8 @@
                             path: checkbox.dataset.path, encodedPath: checkbox.dataset.encodedPath,
                             name: checkbox.dataset.name, encodedName: checkbox.dataset.encodedName,
                             isDir: checkbox.dataset.isDir === 'true', rawName: checkbox.dataset.rawName,
-                            isPlayableVideo: checkbox.dataset.isPlayableVideo === 'true', // 新增
-                            videoType: checkbox.dataset.videoType, // 新增
+                            isPlayableVideo: checkbox.dataset.isPlayableVideo === 'true',
+                            videoType: checkbox.dataset.videoType,
                             element: listItem
                         };
 
@@ -541,7 +535,6 @@
                 });
             }
 
-            // 新增: 處理視頻播放鏈接點擊
             document.querySelectorAll('.video-link').forEach(link => {
                 link.addEventListener('click', function(event) {
                     event.preventDefault();
@@ -552,7 +545,6 @@
                 });
             });
 
-            // 新增: 處理選擇操作欄中的播放按鈕
             if (actionPlayBtn) {
                 actionPlayBtn.addEventListener('click', () => {
                     if (actionPlayBtn.disabled) return;
@@ -698,7 +690,7 @@
                                     deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
                                 }
                                 const response = await fetch(deleteUrl, {
-                                    method: 'GET', // 假設 DELETE 也是 GET 請求，根據您的 server.js
+                                    method: 'GET',
                                 });
 
                                 if (response.ok) {
@@ -1280,12 +1272,10 @@
             if (closeCreateItemModalBtn) closeCreateItemModalBtn.onclick = () => createItemModal.style.display = 'none';
             if (cancelCreateItemBtn) cancelCreateItemBtn.onclick = () => createItemModal.style.display = 'none';
 
-            // 新增: 視頻播放器模態框的打開和關閉邏輯
             function openVideoPlayer(encodedPath, videoName, videoType) {
                 if (!videoPlayerModal || !html5VideoPlayer || !videoSourceElement || !videoModalTitle) return;
 
                 let videoSrc = `/stream/${encodedPath}`;
-                // 如果是管理員查看其他用戶的文件，添加 targetUsername 參數
                 if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                     videoSrc += `?targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
                 }
@@ -1295,10 +1285,9 @@
                 if (videoType) {
                     videoSourceElement.setAttribute('type', videoType);
                 } else {
-                    videoSourceElement.removeAttribute('type'); // 如果沒有類型信息，移除 type 讓瀏覽器猜測
+                    videoSourceElement.removeAttribute('type');
                 }
-                html5VideoPlayer.load(); // 重新加載視頻源
-                // html5VideoPlayer.play(); // 可選: 自動播放
+                html5VideoPlayer.load();
                 videoPlayerModal.style.display = 'block';
             }
 
@@ -1306,8 +1295,8 @@
                 closeVideoModalBtn.onclick = () => {
                     if (videoPlayerModal) videoPlayerModal.style.display = 'none';
                     if (html5VideoPlayer) {
-                        html5VideoPlayer.pause(); // 暫停播放
-                        videoSourceElement.setAttribute('src', ''); // 清空 src 以停止加載
+                        html5VideoPlayer.pause();
+                        videoSourceElement.setAttribute('src', '');
                     }
                 };
             }
@@ -1320,7 +1309,7 @@
                     const abandonButton = overwriteModal.querySelector('#overwrite-abandon-btn');
                     if (abandonButton) abandonButton.click();
                 }
-                if (event.target == videoPlayerModal) { // 新增: 點擊模態框外部關閉視頻播放器
+                if (event.target == videoPlayerModal) {
                      if (videoPlayerModal) videoPlayerModal.style.display = 'none';
                     if (html5VideoPlayer) {
                         html5VideoPlayer.pause();
