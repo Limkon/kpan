@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : '網路硬碟' %></title>
+    <link rel="stylesheet" href="/style.css">
+    <link id="theme-stylesheet" rel="stylesheet" href=""> </head>
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+    <div class="page-header-container">
+        <% if (typeof user !== 'undefined' && user) { %>
+            <div class="theme-switcher-container">
+                <label for="theme-select" class="theme-label">主題:</label>
+                <select id="theme-select">
+                    <option value="default">默認</option>
+                    <option value="dark">暗色</option>
+                    <option value="blue">藍色</option>
+                    <option value="green">綠色</option>
+                    <option value="purple">紫色</option>
+                </select>
+            </div>
+        <% } %>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1><a href="/" style="text-decoration: none; color: inherit;"><%= typeof headerTitle !== 'undefined' ? headerTitle : (typeof pageTitle !== 'undefined' ? pageTitle : '網路硬碟') %></a></h1>
+            <div class="header-controls">
+                <nav>
+                    <% if (typeof user !== 'undefined' && user) { %>
+                        <a href="/files" class="button-link">文件列表</a>
+                        <a href="/change-password" class="button-link">修改密碼</a>
+                        <% if (user.role === 'admin') { %>
+                            <a href="/admin" class="button-link">管理面板</a>
+                        <% } %>
+                        <a href="/logout" class="button-link secondary">登出</a>
+                    <% } else { %>
+                        <% if (currentPath !== '/login' && currentPath !== '/register') { %>
+                            <a href="/login" class="button-link">登入</a>
+                            <a href="/register" class="button-link">註冊</a>
+                        <% } %>
+                    <% } %>
+                </nav>
+            </div>
+        </header>
+        <main>
