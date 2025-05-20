@@ -124,10 +124,10 @@ button, button[type="submit"], .button-link {
     text-decoration: none; 
     text-align: center;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    padding: 10px 15px; /* 標準內邊距 */
+    padding: 10px 15px; 
     border-radius: 5px;
-    font-size: 0.95em; /* 標準字體大小 */
-    margin: 5px; /* 標準外邊距，可被特定規則覆蓋為0 */
+    font-size: 0.95em; 
+    margin: 5px; 
     vertical-align: middle;
     transition: opacity 0.2s ease-in-out, background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
@@ -401,7 +401,7 @@ textarea:focus {
 /* --- admin.ejs "新增用戶" 表單特定佈局 --- */
 form.control-form { 
     margin-top: 20px;
-    max-width: 500px; /* 限制表單最大寬度 */
+    max-width: 500px; 
 }
 form.control-form .form-group {
     flex-direction: row; 
@@ -409,7 +409,7 @@ form.control-form .form-group {
     gap: 10px; 
 }
 form.control-form .form-group label {
-    flex-basis: 120px; /* 調整標籤寬度 */
+    flex-basis: 120px; 
     flex-shrink: 0; 
     text-align: right; 
     margin-bottom: 0; 
@@ -418,11 +418,11 @@ form.control-form .form-group input[type="text"],
 form.control-form .form-group input[type="password"],
 form.control-form .form-group select {
     flex-grow: 1; 
-    max-width: calc(100% - 130px); /* 限制輸入框最大寬度 (120px label + 10px gap) */
+    max-width: calc(100% - 130px); 
 }
 form.control-form button[type="submit"] {
     margin-top: 10px; 
-    margin-left: 130px; /* (120px label + 10px gap) 使按鈕與輸入框左側對齊 */
+    margin-left: 130px; 
     background-color: var(--button-primary-bg-color);
     color: var(--button-primary-text-color) !important;
     border-color: var(--button-primary-border-color);
@@ -962,23 +962,35 @@ table th {
     font-weight: 600; 
 }
 .dark-theme table th { background-color: #3a3a3a; }
-table td .action-link, table td button.action-link { font-size: 0.85em; padding: 4px 6px; margin: 2px; }
-table td form { 
+
+/* 表格內的操作區域 */
+table td.actions {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 重置密碼表單和刪除按鈕之間的間距 */
+    flex-wrap: wrap; /* 允許在空間不足時換行 */
+}
+table td.actions form,
+table td.actions .button-link {
+    margin: 0; /* 移除內部元素的外邊距，由父容器的 gap 控制 */
+}
+table td.actions form { 
     display: flex; 
     gap: 5px; 
     align-items: center; 
     flex-wrap: nowrap; 
 }
-table td form input[type="password"] { 
+table td.actions form input[type="password"] { 
     width: 150px; 
-    max-width: 200px; 
-    padding: 5px; 
+    max-width: 180px; /* 限制最大寬度 */
+    padding: 5px 8px; /* 調整內邊距使其更緊湊 */
     font-size: 0.85em; 
     margin:0; 
-    flex-grow: 0; 
+    flex-grow: 0; /* 防止過度伸展 */
     flex-shrink: 1; 
 }
-table td form button { 
+table td.actions form button,
+table td.actions .button-link.secondary { /* 針對刪除按鈕也應用類似尺寸 */
     margin:0; 
     padding: 5px 10px; 
     font-size: 0.85em; 
@@ -1032,13 +1044,13 @@ textarea#fileContent {
     .file-browser-controls .search-form-right input[type="search"] { width: 250px; } 
     form.control-form .form-group label { flex-basis: 120px; } 
     form.control-form button[type="submit"] { margin-left: 130px; } 
-    table td form input[type="password"] { width: 180px; } 
+    table td.actions form input[type="password"] { width: 180px; } 
 }
 @media (min-width: 576px) { 
     .file-browser-controls .search-form-right input[type="search"] { width: 200px; }
     #file-container.grid-view ul { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
     form.control-form { max-width: 600px; } 
-    table td form input[type="password"] { width: 150px; }
+    table td.actions form input[type="password"] { width: 150px; }
 }
 @media (min-width: 992px) {
      #file-container.grid-view ul { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
