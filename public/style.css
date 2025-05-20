@@ -432,45 +432,54 @@ form.control-form button[type="submit"] {
 /* --- 文件瀏覽器控制按鈕 --- */
 .file-browser-controls { 
     display: flex; 
-    flex-wrap: wrap; 
+    flex-wrap: wrap; /* 允許換行 */
     align-items: center; 
     gap: 10px; 
     margin-bottom: 20px; 
+    justify-content: space-between; /* 在空間充足時，將元素分散對齊 */
 }
 .file-browser-controls > * { 
-    flex-shrink: 0; 
+    flex-shrink: 1; /* 允許所有直接子元素在空間不足時收縮 */
+    flex-grow: 0;   /* 預設不伸展 */
+    margin: 0; /* 移除按鈕組的默認外邊距，完全由 gap 控制 */
 }
 .file-browser-controls .actions-group-left { 
     display: flex; 
     gap: 10px; 
     align-items: center; 
+    flex-shrink: 0; /* 左側按鈕組不輕易縮小 */
 }
 .file-browser-controls .actions-group-left button,
-#toggle-multi-select-btn,
-.file-browser-controls .search-form-right button,
-.file-browser-controls .view-toggle button { 
+#toggle-multi-select-btn { 
     margin: 0; 
+    flex-shrink: 0; /* 這些按鈕也不輕易縮小 */
 }
 .file-browser-controls .search-form-right { 
     display: flex; 
     align-items: center; 
     gap: 5px; 
-    margin-left: auto; 
-    flex-grow: 1; 
-    min-width: 200px; 
+    /* margin-left: auto;  移除，讓 justify-content: space-between; 控制 */
+    flex-grow: 1; /* 允許搜索表單填滿可用空間 */
+    min-width: 200px; /* 搜索表單的最小寬度 */
+    max-width: 400px; /* 搜索表單的最大寬度 */
 }
 .file-browser-controls .search-form-right input[type="search"] { 
-    width: 100%; 
-    max-width: 250px; 
+    width: 100%; /* 讓輸入框填滿 .search-form-right 的寬度 */
+    /* max-width: 250px; 移除，讓父容器控制 */
     padding: 8px 10px; 
     font-size: 0.9em; 
     margin: 0; 
     flex-grow: 1; 
 }
+.file-browser-controls .search-form-right button {
+    flex-shrink: 0; /* 搜索按鈕不縮小 */
+}
 .file-browser-controls .view-toggle {
     display: flex;
     gap: 8px;
     align-items: center;
+    flex-shrink: 0; /* 視圖切換按鈕不輕易縮小 */
+    /* margin-left: auto; 移除，讓 justify-content: space-between; 控制 */
 }
 .file-browser-controls .view-toggle button.active {
     background-color: var(--button-primary-bg-color); 
@@ -478,11 +487,13 @@ form.control-form button[type="submit"] {
     border-color: var(--button-primary-border-color);
     opacity: 1; 
 }
+/* 當沒有左側按鈕組時，搜索表單和視圖切換按鈕的處理 */
 .file-browser-controls:not(:has(.actions-group-left)) .search-form-right { 
     margin-left: 0; 
+    /* flex-grow: 1; 已設定 */
 }
 .file-browser-controls:not(:has(.actions-group-left)) .view-toggle { 
-    margin-left: auto; 
+    margin-left: auto; /* 這種情況下，視圖切換按鈕還是推到最右 */
 }
 
 
