@@ -1,21 +1,22 @@
-<%# views/files.ejs (部分替換用於測試) %>
+<%# views/files.ejs (部分替換用於測試並添加內聯樣式) %>
 
-<div class="file-browser-controls">
-    <div class="actions-group-left">
+<div class="file-browser-controls" style="display: flex !important; flex-wrap: wrap !important; align-items: center !important; gap: 10px !important; border: 2px solid limegreen !important; padding: 5px !important;">
+    <%# 上述 style 為臨時調試用途 %>
+    <div class="actions-group-left" style="border: 1px dotted blue; padding: 2px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
         <%# 假設這些按鈕是可見的 %>
-        <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
-        <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
-        <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button>
-        <button type="button" id="toggle-multi-select-btn">啟用多選</button>
+        <button type="button" id="show-create-textfile-modal-btn" style="margin:0;">新建文本文件</button>
+        <button type="button" id="show-create-folder-modal-btn" style="margin:0;">創建文件夾</button>
+        <button type="button" id="toggleUploadActionsBtn" class="upload-button-main" style="margin:0;">上傳</button>
+        <button type="button" id="toggle-multi-select-btn" style="margin:0;">啟用多選</button>
     </div>
 
-    <form action="/files" method="GET" class="search-form-right control-form"> <%# 注意這裡同時有 search-form-right 和 control-form %>
-        <input type="search" name="q" placeholder="搜索..." value="<%= locals.searchQuery || '' %>">
-        <button type="submit">搜索</button>
+    <form action="/files" method="GET" class="search-form-right control-form" style="border: 1px dotted blue; padding: 2px; display: flex; align-items: center; gap: 5px; flex-grow: 1; flex-shrink: 1; min-width: auto;"> <%# 注意這裡同時有 search-form-right 和 control-form %>
+        <input type="search" name="q" placeholder="搜索..." value="<%= locals.searchQuery || '' %>" style="margin:0; padding: 8px 10px; font-size: 0.9em; /* 移除 flex-grow 以免推開按鈕 */">
+        <button type="submit" style="margin:0; padding: 8px 12px; font-size: 0.9em;">搜索</button>
     </form>
 
-    <div class="view-toggle">
-        <button id="listViewBtn">列表</button>
-        <button id="gridViewBtn" class="active">網格</button> <%# 假設網格是激活狀態用於測試 %>
+    <div class="view-toggle" style="border: 1px dotted blue; padding: 2px; display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0;">
+        <button id="listViewBtn" style="margin:0;">列表</button>
+        <button id="gridViewBtn" class="active" style="margin:0;">網格</button> <%# 假設網格是激活狀態用於測試 %>
     </div>
 </div>
