@@ -89,11 +89,11 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.dark-theme body { /* 如果 .dark-theme 加在 html 標籤上 */
+.dark-theme body { 
     background-color: #1a1a1a;
     color: #e0e0e0;
 }
-body.dark-theme { /* 如果 .dark-theme 加在 body 標籤上 */
+body.dark-theme { 
     background-color: #1a1a1a;
     color: #e0e0e0;
 }
@@ -231,7 +231,6 @@ header {
     border-bottom: 1px solid var(--og-border-color); 
     width: 100%; 
 }
-.dark-theme header { border-bottom-color: #444; }
 header h1 { 
     margin: 0 0 10px 0; 
     font-size: 1.6em; 
@@ -251,10 +250,10 @@ header nav {
     gap: 10px; 
     align-items: center;
 }
-header nav .button-link.secondary {
+header nav .button-link { /* 頁首按鈕使用基礎 button-link 樣式 */
     margin: 0; 
-    padding: 8px 12px; 
-    font-size: 0.9em;  
+    padding: 8px 12px; /* 可以為頁首按鈕設定稍小的內距 */
+    font-size: 0.9em;  /* 可以為頁首按鈕設定稍小的字體 */
 }
 
 
@@ -321,7 +320,7 @@ input[type="text"], input[type="password"],
 input[type="search"], 
 select, textarea {
     display: inline-block;
-    width: auto;
+    width: auto; /* 改為 auto，具體寬度由父容器或特定規則控制 */
     padding: 10px 15px;
     border: 1px solid var(--input-border-color);
     border-radius: 5px;
@@ -329,7 +328,7 @@ select, textarea {
     font-size: 0.95em;
     line-height: 1.5;
     vertical-align: middle;
-    margin: 5px;
+    margin: 0; /* 移除默認 margin，由 .form-group 或其他容器控制 */
     background-color: var(--input-bg-color);
     color: var(--input-text-color);
     transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
@@ -341,7 +340,7 @@ input[type="file"] {
     background-color: var(--input-bg-color);
     color: var(--input-text-color);
 }
-textarea { min-height: 100px; } 
+textarea { min-height: 100px; width: 100%;} /* Textarea 通常需要佔滿寬度 */
 input[type="text"]:focus:not(.auth-form-container input),
 input[type="password"]:focus:not(.auth-form-container input),
 input[type="search"]:focus,
@@ -382,6 +381,52 @@ textarea:focus {
 .current-path a { font-weight: 500; color: var(--button-primary-bg-color); }
 .dark-theme .current-path a { color: #6cb2eb; }
 
+/* --- 通用表單組樣式 (用於 admin.ejs 和彈出視窗) --- */
+.form-group {
+    display: flex;
+    flex-direction: column; /* 標籤在輸入框上方 */
+    margin-bottom: 15px;
+}
+.form-group label {
+    margin-bottom: 5px; 
+    font-weight: 500; 
+}
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group select,
+.form-group textarea {
+    width: 100%; /* 輸入框佔滿父容器寬度 */
+}
+
+/* --- admin.ejs "新增用戶" 表單特定佈局 --- */
+form.control-form { /* admin.ejs 中的 "新增用戶" 表單 */
+    margin-top: 20px;
+}
+form.control-form .form-group {
+    flex-direction: row; /* 標籤和輸入框在同一行 */
+    align-items: center; /* 垂直居中對齊 */
+    gap: 10px; /* 標籤和輸入框之間的間距 */
+}
+form.control-form .form-group label {
+    flex-basis: 100px; /* 標籤的固定寬度 */
+    flex-shrink: 0; /* 防止標籤縮小 */
+    text-align: right; /* 標籤文字右對齊 */
+    margin-bottom: 0; /* 同一行時不需要底部外邊距 */
+}
+form.control-form .form-group input[type="text"],
+form.control-form .form-group input[type="password"],
+form.control-form .form-group select {
+    flex-grow: 1; /* 輸入框佔據剩餘空間 */
+}
+form.control-form button[type="submit"] {
+    margin-top: 10px; /* 按鈕與上方元素的間距 */
+    margin-left: 110px; /* (100px label + 10px gap) 使按鈕與輸入框左側對齊 */
+    /* 確保套用主要按鈕樣式 (雖然基礎樣式已處理) */
+    background-color: var(--button-primary-bg-color);
+    color: var(--button-primary-text-color) !important;
+    border-color: var(--button-primary-border-color);
+}
+
 
 /* --- 文件瀏覽器控制按鈕 --- */
 .file-browser-controls { 
@@ -402,9 +447,6 @@ textarea:focus {
 .file-browser-controls .search-form-right button,
 .file-browser-controls .view-toggle button { 
     margin: 0; 
-    /* padding 和 font-size 將從基礎 button 樣式繼承 */
-    /* 如果需要更小的按鈕，可以在此處覆蓋 padding 和 font-size */
-    /* 例如: padding: 8px 12px; font-size: 0.9em; */
 }
 .file-browser-controls .search-form-right { 
     display: flex; 
@@ -474,7 +516,6 @@ textarea:focus {
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    /* padding, margin-bottom, border, background-color from original public/style.css */
     padding: 10px; 
     margin-bottom: -1px;
     border: 1px solid var(--og-border-color);
@@ -564,8 +605,8 @@ textarea:focus {
     box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
 }
 .modal-content h3 { margin-top: 0; }
-.modal-content .form-group { margin-bottom: 15px; }
-.modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+/* .modal-content .form-group 已由通用的 .form-group 處理 */
+.modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; } /* 確保 modal 內 form-group 的 label 樣式 */
 .modal-content .form-group input[type="text"] {
     width: 100%; padding: 10px; box-sizing: border-box;
     border: 1px solid var(--input-border-color); 
@@ -581,8 +622,6 @@ textarea:focus {
     justify-content: flex-end; 
 }
 .modal-actions button { margin: 0; } 
-
-/* 視頻播放器彈出視窗 */
 #video-player-modal .modal-content {
     background-color: var(--video-modal-bg) !important;
     color: var(--video-modal-text-color);
@@ -609,8 +648,6 @@ textarea:focus {
     background-color: #000; 
     border-radius: 4px;
 }
-
-/* 目錄樹 */
 #directory-tree-container { 
     max-height: 250px; 
     overflow-y: auto; 
@@ -791,7 +828,7 @@ textarea:focus {
     color: var(--input-text-color);
     border: 1px solid var(--input-border-color);
 }
-.rename-form button { /* 顏色由基礎按鈕樣式提供 */
+.rename-form button { 
     white-space: nowrap; 
     border-width: 1px; 
     border-style: solid;
@@ -916,6 +953,7 @@ table th, table td {
     padding: 8px 10px; 
     text-align: left; 
     color: var(--og-text-color);
+    vertical-align: middle; /* 確保單元格內容垂直居中 */
 }
 .dark-theme table th, .dark-theme table td { border-color: #555; color: #e0e0e0;}
 table th { 
@@ -925,9 +963,25 @@ table th {
 }
 .dark-theme table th { background-color: #3a3a3a; }
 table td .action-link, table td button.action-link { font-size: 0.85em; padding: 4px 6px; margin: 2px; }
-table td form { display: inline-flex !important; gap: 5px !important; align-items: center !important; flex-wrap: wrap; }
-table td form input[type="password"] { width: 120px !important; padding: 5px !important; font-size: 0.85em !important; margin:0; }
-table td form button { margin:0; } 
+table td form { 
+    display: flex; 
+    gap: 5px; 
+    align-items: center; 
+    flex-wrap: nowrap; 
+}
+table td form input[type="password"] { 
+    width: 120px; 
+    padding: 5px; 
+    font-size: 0.85em; 
+    margin:0; 
+    flex-grow: 1; 
+}
+table td form button { 
+    margin:0; 
+    padding: 5px 10px; 
+    font-size: 0.85em; 
+    flex-shrink: 0; 
+} 
 
 /* 編輯器樣式 */
 textarea#fileContent { 
@@ -974,6 +1028,8 @@ textarea#fileContent {
     .container { padding: 20px 25px; }
     .auth-form-container { padding: 30px 40px; }
     .file-browser-controls .search-form-right input[type="search"] { width: 250px; } 
+    form.control-form .form-group label { flex-basis: 120px; } 
+    form.control-form button[type="submit"] { margin-left: 130px; } 
 }
 @media (min-width: 576px) { 
     .file-browser-controls .search-form-right input[type="search"] { width: 200px; }
