@@ -75,15 +75,15 @@
             padding: 8px 12px;
             border-radius: 4px;
             text-decoration: none;
-            margin-left: 8px; /* Adjusted margin for better spacing */
+            margin-left: 8px; 
             display: inline-block;
-            font-size: 0.9em; /* Consistent font size */
-            line-height: 1.4; /* Consistent line height */
-            transition: opacity 0.15s ease-in-out; /* Smooth hover effect */
+            font-size: 0.9em; 
+            line-height: 1.4; 
+            transition: opacity 0.15s ease-in-out; 
         }
 
         .header-controls nav a:hover {
-            opacity: 0.85; /* Slightly more pronounced hover */
+            opacity: 0.85; 
         }
 
         /* 其他通用樣式 */
@@ -98,9 +98,9 @@
             cursor: pointer;
             border-width: 1px;
             border-style: solid;
-            background-color: var(--button-primary-bg-color);
-            color: var(--button-primary-text-color);
-            border-color: var(--button-primary-border-color);
+            background-color: var(--button-primary-bg-color); /* Unified style */
+            color: var(--button-primary-text-color); /* Unified style */
+            border-color: var(--button-primary-border-color); /* Unified style */
             transition: opacity 0.15s ease-in-out;
         }
         #selection-action-bar button:hover:not(:disabled) {
@@ -222,7 +222,7 @@
         .modal-actions { text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
         /* Unified style for buttons in modal actions */
         .modal-actions button {
-            padding: 8px 15px;
+            padding: 8px 15px; /* Adjusted padding for better appearance */
             font-size: 0.9em;
             border-radius: 4px;
             cursor: pointer;
@@ -236,7 +236,8 @@
         .modal-actions button:hover {
             opacity: 0.85;
         }
-        /* The .secondary class on modal buttons will now also render as primary due to variable changes and the above rule */
+        /* Note: The .secondary class on modal buttons will now also render as primary due to variable changes and the above specific rule */
+
 
         /* 新增: 視頻播放器模態框特定樣式 */
         #video-player-modal .modal-content {
@@ -440,10 +441,10 @@
             white-space: nowrap; 
             border-width: 1px; 
             border-style: solid;
-            transition: opacity 0.15s ease-in-out;
+            transition: opacity 0.15s ease-in-out; /* Added hover transition */
         }
         .rename-form button:hover {
-            opacity: 0.85;
+            opacity: 0.85; /* Added hover effect */
         }
         
         .rename-form button[type="submit"] {
@@ -458,7 +459,22 @@
         }
         
         #upload-actions-container { display: none; padding: 10px 0; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
-        #upload-actions-container button { margin: 0; } /* Will inherit unified button styles if they become more generic or specific styles are added */
+        /* Ensure buttons within upload-actions-container also get unified styling */
+        #upload-actions-container button { 
+            margin: 0; 
+            padding: 8px 12px;
+            font-size: 0.9em;
+            background-color: var(--button-primary-bg-color);
+            color: var(--button-primary-text-color);
+            border: 1px solid var(--button-primary-border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.15s ease-in-out;
+        }
+        #upload-actions-container button:hover {
+            opacity: 0.85;
+        }
+
         #upload-section { display: none; padding: 20px; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 0; background-color: #f8f9fa; }
         .dark-theme #upload-section { background-color: #3a3a3a; border-color: #444; }
         #drop-area { border: 2px dashed #007bff; padding: 20px; text-align: center; border-radius: 5px; background-color: #fff; }
@@ -467,7 +483,24 @@
         .dark-theme #drop-area.highlight { background-color: #333; }
         #drop-area p { margin-bottom: 15px; font-size: 1.1em; color: #6c757d; }
         .dark-theme #drop-area p { color: #adb5bd; }
-        #upload-button { display: none; margin-top: 15px; } /* This button will also adopt unified styles */
+
+        /* Ensure the main upload button gets unified styling */
+        #upload-button { 
+            display: none; 
+            margin-top: 15px; 
+            padding: 8px 12px; /* Consistent padding */
+            font-size: 0.9em; /* Consistent font size */
+            background-color: var(--button-primary-bg-color);
+            color: var(--button-primary-text-color);
+            border: 1px solid var(--button-primary-border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.15s ease-in-out;
+        }
+        #upload-button:hover {
+            opacity: 0.85;
+        }
+
 
         .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
         .dark-theme .search-results-info { background-color: #3a3a3a; }
@@ -478,10 +511,7 @@
         .file-browser-controls .actions-group-left { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
         
         .file-browser-controls .actions-group-left button,
-        #toggle-multi-select-btn,
-        #upload-actions-container button, /* Ensure these buttons are also styled consistently */
-        #upload-button /* Ensure the main upload button is styled consistently */
-         { 
+        #toggle-multi-select-btn { 
             padding: 8px 12px; 
             font-size: 0.9em; 
             margin: 0;
@@ -493,9 +523,7 @@
             transition: opacity 0.15s ease-in-out;
         }
         .file-browser-controls .actions-group-left button:hover,
-        #toggle-multi-select-btn:hover,
-        #upload-actions-container button:hover,
-        #upload-button:hover {
+        #toggle-multi-select-btn:hover {
             opacity: 0.85;
         }
 
@@ -533,10 +561,10 @@
             opacity: 0.85;
         }
         .file-browser-controls .view-toggle button.active {
-            background-color: var(--button-primary-bg-color); /* Already primary, distinct if needed via other properties or slightly different color */
+            background-color: var(--button-primary-bg-color); 
             border-color: var(--button-primary-border-color);
-            color: var(--button-primary-text-color); /* Ensure text color is also primary for active */
-            opacity: 1; /* Ensure active is fully opaque */
+            color: var(--button-primary-text-color); 
+            opacity: 1; /* Ensure active is fully opaque and distinct */
         }
 
         .file-browser-controls:not(:has(.actions-group-left)) .search-form-right { margin-left: 0; flex-grow: 1; }
@@ -658,7 +686,7 @@
             <button id="action-rename-btn" disabled>重命名</button>
             <button id="action-move-btn" disabled>移動</button>
             <button id="action-download-btn" disabled>下載選中項</button>
-                        <button id="action-delete-btn" class="secondary" disabled>删除</button>
+            <button id="action-delete-btn" class="secondary" disabled>删除</button>
         </div>
 
         <h2><%= locals.isSearchResult ? '搜索結果' : '文件列表' %></h2>
@@ -1657,4 +1685,111 @@
                     if (e.relatedTarget === null || !dropArea.contains(e.relatedTarget)) {
                         dropArea.classList.remove('highlight');
                     }
-                }, fals
+                }, false);
+                
+                dropArea.addEventListener('drop', (e) => {
+                    preventDefaults(e); 
+                    dropArea.classList.remove('highlight');
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    
+                    let isLikelyFolderDrop = false;
+                    if (dt.items && dt.items.length > 0 && typeof dt.items[0].webkitGetAsEntry === 'function') {
+                        const entry = dt.items[0].webkitGetAsEntry();
+                        if (entry && entry.isDirectory) {
+                            isLikelyFolderDrop = true;
+                        }
+                    } else if (files.length > 0 && files[0].webkitRelativePath) { 
+                        const firstFileRelativePath = files[0].webkitRelativePath;
+                        if (firstFileRelativePath && firstFileRelativePath.includes('/')) {
+                             isLikelyFolderDrop = true;
+                        } else if (files.length > 1 && Array.from(files).every(f => f.webkitRelativePath.startsWith(firstFileRelativePath.split('/')[0]))) {
+                            isLikelyFolderDrop = true;
+                        }
+                    }
+
+
+                    if (isLikelyFolderDrop) {
+                        userFilesInput.setAttribute('webkitdirectory', '');
+                        userFilesInput.setAttribute('directory', '');
+                        userFilesInput.removeAttribute('multiple');
+                        if(dropAreaText) dropAreaText.textContent = '已拖入文件夾，準備上傳。';
+                    } else {
+                        userFilesInput.removeAttribute('webkitdirectory');
+                        userFilesInput.removeAttribute('directory');
+                        userFilesInput.setAttribute('multiple', '');
+                        if(dropAreaText) dropAreaText.textContent = '已拖入文件，準備上傳。';
+                    }
+
+                    userFilesInput.files = files; 
+                    updateFileListPreviewOnDrop(); 
+                    uploadSection.style.display = 'block'; 
+                    if (uploadActionsContainer.style.display === 'none') {
+                         uploadActionsContainer.style.display = 'flex'; 
+                    }
+                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
+                }, false);
+
+                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop); 
+
+                function updateFileListPreviewOnDrop() { 
+                    if (!fileListPreview || !userFilesInput || !uploadButton) return;
+                    fileListPreview.innerHTML = ''; 
+                    const files = userFilesInput.files;
+                    if (files.length > 0) {
+                        const list = document.createElement('ul');
+                        list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
+                        
+                        let isDirectoryUpload = false;
+                        if (userFilesInput.hasAttribute('webkitdirectory') || (files[0] && files[0].webkitRelativePath && files[0].webkitRelativePath.includes('/'))) {
+                            isDirectoryUpload = true;
+                        }
+
+
+                        if (isDirectoryUpload) {
+                            const folderName = files[0].webkitRelativePath.split('/')[0];
+                            const listItem = document.createElement('li');
+                            listItem.textContent = `文件夾: ${folderName} (${files.length} 個文件)`;
+                            listItem.style.fontSize = '0.9em'; listItem.style.fontWeight = 'bold';
+                            list.appendChild(listItem);
+                        } else { 
+                            for (let i = 0; i < files.length; i++) {
+                                const listItem = document.createElement('li');
+                                listItem.textContent = files[i].name + (files[i].size ? ` (${(files[i].size / 1024).toFixed(1)} KB)` : '');
+                                listItem.style.fontSize = '0.9em';
+                                list.appendChild(listItem);
+                            }
+                        }
+                        fileListPreview.appendChild(list);
+                        uploadButton.style.display = 'inline-block';
+                    } else {
+                        uploadButton.style.display = 'none';
+                    }
+                }
+                if (userFilesInput && uploadButton && userFilesInput.files.length === 0) {
+                     uploadButton.style.display = 'none';
+                }
+            }
+
+            const listViewBtn = document.getElementById('listViewBtn');
+            const gridViewBtn = document.getElementById('gridViewBtn');
+            if (fileContainer && listViewBtn && gridViewBtn) { 
+                function toggleView(viewType) {
+                    const isCurrentlyMultiSelect = fileContainer.classList.contains('multi-select-mode-active');
+                    fileContainer.classList.remove('list-view', 'grid-view');
+
+                    if (viewType === 'grid') {
+                        fileContainer.classList.add('grid-view'); 
+                        gridViewBtn.classList.add('active');
+                        listViewBtn.classList.remove('active');
+                        localStorage.setItem('fileView', 'grid');
+                    } else { 
+                        fileContainer.classList.add('list-view'); 
+                        listViewBtn.classList.add('active');
+                        gridViewBtn.classList.remove('active');
+                        localStorage.setItem('fileView', 'list');
+                    }
+                    if (isCurrentlyMultiSelect) { 
+                        fileContainer.classList.add('multi-select-mode-active');
+                    }
+                    clearSingleSelection();
