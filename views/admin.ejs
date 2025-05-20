@@ -1,148 +1,92 @@
+<%# views/admin.ejs %>
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理員面板 - 網路硬碟</title>
+    <title>管理面板 - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
-    <style>
-        .add-user-form {
-            margin-top: 30px;
-            padding: 20px;
-            border: 1px solid #ddd; /* Themeable */
-            border-radius: 6px;
-            background-color: #f9f9f9; /* Themeable */
-        }
-        .dark-theme .add-user-form { /* Dark theme specific */
-            border-color: #444;
-            background-color: #2e2e2e;
-        }
-        .add-user-form h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #eee; /* Themeable */
-            padding-bottom: 10px;
-        }
-        .dark-theme .add-user-form h3 {
-            border-bottom-color: #444;
-        }
-        .add-user-form .form-group {
-            margin-bottom: 15px;
-        }
-        .add-user-form .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        .add-user-form .form-group input[type="text"],
-        .add-user-form .form-group input[type="password"],
-        .add-user-form .form-group select { /* Added select styling */
-            width: 100%;
-            max-width: 300px; /* 限制输入框最大宽度 */
-            padding: 8px 10px;
-            box-sizing: border-box;
-            border: 1px solid var(--input-border-color, #ccc);
-            border-radius: 4px;
-            background-color: var(--input-bg-color, #fff);
-            color: var(--input-text-color, #333);
-        }
-        .add-user-form button[type="submit"] {
-            padding: 10px 15px;
-        }
-    </style>
+    <%# 已移除內嵌 <style> 區塊，樣式由 /style.css 和主題CSS控制 %>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>管理員面板 - 用戶管理</h1>
+            <h1>管理面板</h1>
             <div class="header-controls">
                 <nav>
-                    <a href="/files">我的文件</a>
-                    <a href="/logout">登出</a>
+                    <%# 將頁首導覽連結修改為按鈕樣式 %>
+                    <a href="/files" class="button-link">我的文件</a>
+                    <a href="/change-password" class="button-link">修改密碼</a>
+                    <a href="/logout" class="button-link">登出</a>
                 </nav>
                 <%- include('partials/theme-switcher') %>
             </div>
         </header>
 
         <% if (locals.message) { %>
-             <p class="message <%= (locals.messageType === 'error' || (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('不能') || message.includes('無效的用戶ID') || message.includes('已存在') || message.includes('不匹配') ))) ? 'error-message' : (locals.messageType === 'success' ? '' : 'warning-message') %>"><%= message %></p>
+            <p class="message <%= locals.messageType === 'error' ? 'error-message' : (locals.messageType === 'success' ? '' : 'warning-message') %>"><%= message %></p>
         <% } %>
 
-        <h2>用戶列表</h2>
+        <h2>用戶管理</h2>
         <div class="admin-table-container">
-            <% if (users.length > 0) { %>
-                <table>
-                    <thead>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用戶名</th>
+                        <th>角色</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% users.forEach(user => { %>
                         <tr>
-                            <th>ID</th>
-                            <th>用戶名</th>
-                            <th>角色</th>
-                            <th>操作</th>
+                            <td><%= user.id %></td>
+                            <td><a href="/files?targetUsername=<%= encodeURIComponent(user.username) %>" title="查看 <%= user.username %> 的文件"><%= user.username %></a></td>
+                            <td><%= user.role %></td>
+                            <td class="actions">
+                                <% if (currentUser.id !== user.id) { %>
+                                    <form action="/admin/reset-password/<%= user.id %>" method="POST" onsubmit="return confirm('確定要重置用戶 <%= user.username %> 的密碼嗎？');">
+                                        <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
+                                        <input type="password" name="newPassword" placeholder="新密碼" required>
+                                        <button type="submit">重置密碼</button> <%# 此按鈕將套用 public/style.css 中的 button 和 table td form button 樣式 %>
+                                    </form>
+                                    <a href="/admin/delete/<%= user.id %>" class="button-link secondary" onclick="return confirm('確定要刪除用戶 <%= user.username %> 及其所有文件嗎？此操作不可恢復！');">刪除用戶</a>
+                                <% } else { %>
+                                    (當前用戶)
+                                <% } %>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <% users.forEach(u => { %>
-                            <tr>
-                                <td><%= u.id %></td>
-                                <td><%= u.username %></td>
-                                <td><%= u.role %></td>
-                                <td>
-                                    <% if (currentUser.id !== u.id) { %>
-                                        <a href="/files?targetUsername=<%= encodeURIComponent(u.username) %>" class="action-link" style="background-color: #17a2b8; color: white;">查看文件</a>
-                                        <form action="/admin/reset-password/<%= u.id %>" method="POST" style="display: inline; margin-left: 10px;">
-                                            <% if (locals.csrfToken) { %>
-                                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                            <% } %>
-                                            <input type="password" name="newPassword" placeholder="輸入新密碼" required>
-                                            <button type="submit" class="action-link" style="background-color: #ffc107; color: #212529;" onclick="return confirm('確定要為用戶 <%= u.username.replace(/'/g, '\\\'') %> 重置密碼嗎？');">重置密碼</button>
-                                        </form>
-                                        <%# Admin can delete any other user, including other admins, but not themselves %>
-                                        <a href="/admin/delete/<%= u.id %>" class="action-link delete-link" style="margin-left: 10px;" onclick="return confirm('確定要刪除用戶 <%= u.username.replace(/'/g, '\\\'') %> 嗎？其所有文件也將被刪除。');">刪除用戶</a>
-                                    <% } else { %>
-                                        (當前用戶)
-                                    <% } %>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-            <% } else { %>
-                <p>系統中沒有其他用戶。</p>
-            <% } %>
-        </div>
-         <p class="note">注意：刪除用戶將同時刪除其所有上傳的文件。</p>
-
-        <%# 修改：添加新用户表单，包含角色选择 %>
-        <div class="add-user-form">
-            <h3>添加新用戶</h3>
-            <form action="/admin/add-user" method="POST">
-                <% if (locals.csrfToken) { %>
-                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <% } %>
-                <div class="form-group">
-                    <label for="newUsername">新用戶名:</label>
-                    <input type="text" id="newUsername" name="newUsername" required>
-                </div>
-                <div class="form-group">
-                    <label for="newPassword">密碼:</label>
-                    <input type="password" id="newPassword" name="newPassword" required>
-                </div>
-                <div class="form-group">
-                    <label for="confirmNewPassword">確認密碼:</label>
-                    <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
-                </div>
-                <div class="form-group">
-                    <label for="role">角色:</label>
-                    <select id="role" name="role" required>
-                        <option value="user" selected>普通用戶 (User)</option>
-                        <option value="admin">管理員 (Admin)</option>
-                    </select>
-                </div>
-                <button type="submit">創建用戶</button>
-            </form>
+                    <% }); %>
+                </tbody>
+            </table>
         </div>
 
+        <h2>新增用戶</h2>
+        <form action="/admin/add-user" method="POST" class="control-form"> <%# 可以考慮添加 control-form 類以統一表單佈局 %>
+            <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
+            <div class="form-group">
+                <label for="newUsername">新用戶名:</label>
+                <input type="text" id="newUsername" name="newUsername" required>
+            </div>
+            <div class="form-group">
+                <label for="newPassword">新密碼:</label>
+                <input type="password" id="newPassword" name="newPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmNewPassword">確認新密碼:</label>
+                <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="role">角色:</label>
+                <select id="role" name="role">
+                    <option value="user" selected>User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <button type="submit">新增用戶</button> <%# 此按鈕將套用 public/style.css 中的 button 樣式 %>
+        </form>
     </div>
     <script src="/theme.js"></script>
 </body>
