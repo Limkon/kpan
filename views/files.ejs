@@ -62,11 +62,14 @@
                 <div class="actions-group-left">
                     <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
                     <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
-                    <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button> 
+                    <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button>
+                    <button type="button" id="toggle-multi-select-btn">啟用多選</button> <%# MODIFIED: Moved this button inside actions-group-left %>
                 </div>
             <% } %>
-            <button type="button" id="toggle-multi-select-btn">啟用多選</button>
-        
+            <%# If it's a search result or not in a valid file browsing path, the above actions-group-left (including "啟用多選") will not be shown. %>
+            <%# If "啟用多選" needs to be visible in those other cases, it would need to be placed outside the conditional block above, %>
+            <%# or the conditional logic would need to be adjusted. This change specifically targets matching the provided image. %>
+
             <form action="/files" method="GET" class="control-form search-form-right">
                 <% if (locals.viewTargetUsername && user.role === 'admin') { %>
                     <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
@@ -74,13 +77,13 @@
                 <input type="search" name="q" placeholder="搜索..." value="<%= locals.searchQuery || '' %>">
                 <button type="submit">搜索</button>
             </form>
-        
+
             <div class="view-toggle">
                 <button id="listViewBtn">列表</button>
                 <button id="gridViewBtn">網格</button>
             </div>
         </div>
-        
+
         <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
             <div id="upload-actions-container" style="justify-content: flex-start;">
                 <button type="button" id="upload-files-btn">上傳文件</button>
@@ -94,7 +97,7 @@
                         <input type="hidden" name="currentPath" value="<%= currentPath %>">
                         <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
                         <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                        <input type="file" id="userFiles" name="userFiles" multiple style="display: none;"> 
+                        <input type="file" id="userFiles" name="userFiles" multiple style="display: none;">
                         <p id="drop-area-text">將文件或文件夾拖拽到此處，或點擊上方按鈕選擇</p>
                         <button type="submit" id="upload-button">上傳已選項目</button>
                     </form>
@@ -117,12 +120,12 @@
 
         <h2><%= locals.isSearchResult ? '搜索結果' : '文件列表' %></h2>
         <% if (items.length > 0) { %>
-            <div id="select-all-container"> 
+            <div id="select-all-container">
                 <input type="checkbox" id="select-all-checkbox">
                 <label for="select-all-checkbox">全選/取消全選</label>
             </div>
         <% } %>
-        <div id="file-container" class="list-view"> 
+        <div id="file-container" class="list-view">
             <% if (items.length > 0) { %>
                 <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
                 <%
@@ -165,18 +168,18 @@
                                             <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
                                         </div>
                                         <div class="file-details">
-                                            <span class="file-size"></span> 
+                                            <span class="file-size"></span>
                                             <span class="file-modified"></span>
                                         </div>
                                     <% } else { // It's a file %>
                                         <div class="file-entry">
                                             <%
                                                 const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
-                                                let largeIcon = '📄'; 
+                                                let largeIcon = '📄';
                                                 let isViewableTextFile = false;
                                                 if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
                                                     isViewableTextFile = true;
-                                                    largeIcon = '📝'; 
+                                                    largeIcon = '📝';
                                                 } else if (item.isPlayableVideo) { // 使用 server 端傳來的 isPlayableVideo
                                                     largeIcon = '🎥';
                                                 }
@@ -185,9 +188,9 @@
                                             %>
                                             <span class="file-icon-large"><%= largeIcon %></span>
                                             <% if (item.isPlayableVideo) { %>
-                                                <a href="#" class="file-name video-link" 
-                                                   data-path="<%= item.encodedPath %>" 
-                                                   data-name="<%= item.name %>" 
+                                                <a href="#" class="file-name video-link"
+                                                   data-path="<%= item.encodedPath %>"
+                                                   data-name="<%= item.name %>"
                                                    data-type="<%= item.videoType %>"
                                                    title="點擊播放 <%= item.name %>"><%= item.name %></a>
                                             <% } else if (isViewableTextFile) { %>
@@ -202,7 +205,7 @@
                                             <span class="file-modified"><%= formatDate(item.lastModified) %></span>
                                         </div>
                                     <% } %>
-                                    <span class="file-actions-placeholder"></span> 
+                                    <span class="file-actions-placeholder"></span>
                                 </div>
                             </div>
                              <div class="rename-form" id="rename-form-<%= item.encodedName %>">
@@ -230,7 +233,7 @@
         <div class="modal-content">
             <span class="close-modal-btn" id="close-create-item-modal-btn">&times;</span>
             <h3 id="create-item-modal-title">创建新项目</h3>
-            <form id="create-item-form" method="POST"> 
+            <form id="create-item-form" method="POST">
                 <input type="hidden" name="currentPath" value="<%= currentPath %>">
                 <% if (locals.viewTargetUsername && user.role === 'admin') { %>
                     <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
@@ -240,7 +243,7 @@
                 <% } %>
                 <div class="form-group">
                     <label for="create-item-name-input" id="create-item-name-label">名称:</label>
-                    <input type="text" id="create-item-name-input" name="" required> 
+                    <input type="text" id="create-item-name-input" name="" required>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="secondary" id="cancel-create-item-btn">取消</button>
@@ -303,7 +306,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const fileContainer = document.getElementById('file-container');
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
-            const selectAllContainer = document.getElementById('select-all-container'); 
+            const selectAllContainer = document.getElementById('select-all-container');
             const selectionActionBar = document.getElementById('selection-action-bar');
             const selectionCountDisplay = document.getElementById('selection-count');
             const actionPlayBtn = document.getElementById('action-play-btn'); // 新增
@@ -312,7 +315,7 @@
             const actionMoveBtn = document.getElementById('action-move-btn');
             const actionDownloadBtn = document.getElementById('action-download-btn');
             const actionDeleteBtn = document.getElementById('action-delete-btn');
-            
+
             const moveModal = document.getElementById('move-modal');
             const closeMoveModalBtn = document.getElementById('close-move-modal-btn');
             const directoryTreeContainer = document.getElementById('directory-tree-container');
@@ -333,7 +336,7 @@
             const uploadProgressContainer = document.getElementById('upload-progress-container');
             const uploadProgressBar = document.getElementById('upload-progress-bar');
             const fileListPreview = document.getElementById('file-list-preview');
-            const uploadButton = document.getElementById('upload-button'); 
+            const uploadButton = document.getElementById('upload-button');
             const dropArea = document.getElementById('drop-area');
 
             const overwriteModal = document.getElementById('overwrite-confirm-modal');
@@ -368,21 +371,21 @@
                     clearSingleSelection();
                     fileContainer.classList.add('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '取消多選';
-                    if (selectAllContainer && HAS_ITEMS_ON_PAGE) { 
-                        selectAllContainer.classList.add('visible-in-multiselect'); 
+                    if (selectAllContainer && HAS_ITEMS_ON_PAGE) {
+                        selectAllContainer.classList.add('visible-in-multiselect');
                     }
                 } else {
                     fileContainer.classList.remove('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '啟用多選';
-                    if (selectAllContainer) { 
-                        selectAllContainer.classList.remove('visible-in-multiselect'); 
+                    if (selectAllContainer) {
+                        selectAllContainer.classList.remove('visible-in-multiselect');
                     }
                     document.querySelectorAll('.item-checkbox:checked').forEach(cb => cb.checked = false);
                     if (selectAllCheckbox) selectAllCheckbox.checked = false;
                 }
                 updateSelectionActions();
             }
-            
+
             if (toggleMultiSelectBtn) {
                 toggleMultiSelectBtn.addEventListener('click', () => {
                     multiSelectModeActive = !multiSelectModeActive;
@@ -391,7 +394,7 @@
             }
 
             function getCheckboxSelectedItems() {
-                const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox'); 
+                const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox');
                 const selected = [];
                 currentCheckboxes.forEach((cb) => {
                     if (cb.checked) {
@@ -410,7 +413,7 @@
 
             function updateSelectionActions() {
                 let count = 0;
-                let itemsForActions = []; 
+                let itemsForActions = [];
                 let isSingleFileEditable = false;
                 let isSingleFilePlayableVideo = false; // 新增
 
@@ -451,7 +454,7 @@
                 } else {
                     selectionActionBar.style.display = 'none';
                 }
-                
+
                 if(actionPlayBtn) actionPlayBtn.disabled = !(count === 1 && isSingleFilePlayableVideo); // 新增
                 if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable);
                 if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
@@ -462,26 +465,26 @@
 
             document.querySelectorAll('#file-container .item-checkbox').forEach((checkbox) => {
                 checkbox.addEventListener('change', () => {
-                    if (multiSelectModeActive) { 
-                        clearSingleSelection(); 
-                        updateSelectionActions(); 
+                    if (multiSelectModeActive) {
+                        clearSingleSelection();
+                        updateSelectionActions();
                     } else {
-                        checkbox.checked = false; 
+                        checkbox.checked = false;
                     }
                 });
             });
-            
+
             if (selectAllCheckbox && selectAllContainer) {
                 selectAllCheckbox.addEventListener('change', (e) => {
-                    if (!multiSelectModeActive) return; 
-                    clearSingleSelection(); 
-                    const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox'); 
+                    if (!multiSelectModeActive) return;
+                    clearSingleSelection();
+                    const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox');
                     currentCheckboxes.forEach(cb => {
-                        if (cb.checked !== e.target.checked) { 
+                        if (cb.checked !== e.target.checked) {
                             cb.checked = e.target.checked;
                         }
                     });
-                    updateSelectionActions(); 
+                    updateSelectionActions();
                 });
             }
 
@@ -497,8 +500,8 @@
                         if (event.target.classList.contains('video-link') || event.target.closest('.video-link')) {
                             return;
                         }
-                        if (event.target.tagName === 'A' || event.target.closest('a') || 
-                            event.target.classList.contains('item-checkbox') || 
+                        if (event.target.tagName === 'A' || event.target.closest('a') ||
+                            event.target.classList.contains('item-checkbox') ||
                             event.target.closest('.rename-form')) {
                             return;
                         }
@@ -509,17 +512,17 @@
                             isDir: checkbox.dataset.isDir === 'true', rawName: checkbox.dataset.rawName,
                             isPlayableVideo: checkbox.dataset.isPlayableVideo === 'true', // 新增
                             videoType: checkbox.dataset.videoType, // 新增
-                            element: listItem 
+                            element: listItem
                         };
 
-                        if (multiSelectModeActive) { 
+                        if (multiSelectModeActive) {
                             checkbox.checked = !checkbox.checked;
                             clearSingleSelection();
                         } else {
                             if (currentSingleSelectedItem && currentSingleSelectedItem.element === listItem) {
                                 clearSingleSelection();
                             } else {
-                                clearSingleSelection(); 
+                                clearSingleSelection();
                                 currentSingleSelectedItem = itemData;
                                 listItem.classList.add('single-selected-item');
                             }
@@ -527,17 +530,17 @@
                         updateSelectionActions();
                     });
                 });
-            
+
                 fileContainer.addEventListener('click', (event) => {
                     if (event.target.closest('li') === null && (event.target.isSameNode(fileContainer) || event.target.tagName === 'UL')) {
-                        if (!multiSelectModeActive) { 
+                        if (!multiSelectModeActive) {
                             clearSingleSelection();
-                            updateSelectionActions(); 
+                            updateSelectionActions();
                         }
                     }
                 });
             }
-            
+
             // 新增: 處理視頻播放鏈接點擊
             document.querySelectorAll('.video-link').forEach(link => {
                 link.addEventListener('click', function(event) {
@@ -548,7 +551,7 @@
                     openVideoPlayer(encodedPath, videoName, videoType);
                 });
             });
-            
+
             // 新增: 處理選擇操作欄中的播放按鈕
             if (actionPlayBtn) {
                 actionPlayBtn.addEventListener('click', () => {
@@ -580,7 +583,7 @@
                         if (selected.length === 1) itemToEdit = selected[0];
                     }
 
-                    if (itemToEdit && !itemToEdit.isDir) { 
+                    if (itemToEdit && !itemToEdit.isDir) {
                         let url = `/edit?path=${itemToEdit.encodedPath}`;
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                             url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
@@ -605,7 +608,7 @@
                     }
                 });
             }
-            
+
             if (actionDownloadBtn) {
                 actionDownloadBtn.addEventListener('click', () => {
                     if (actionDownloadBtn.disabled) return;
@@ -632,7 +635,7 @@
                         document.body.appendChild(tempLink);
                         tempLink.click();
                         document.body.removeChild(tempLink);
-                    } else { 
+                    } else {
                         const form = document.createElement('form');
                         form.method = 'POST';
                         form.action = '/download-archive';
@@ -641,8 +644,8 @@
                         const itemsInput = document.createElement('input');
                         itemsInput.type = 'hidden';
                         itemsInput.name = 'items';
-                        const itemsForPayload = itemsToDownload.map(item => ({ 
-                            path: item.path, name: item.name, isDir: item.isDir 
+                        const itemsForPayload = itemsToDownload.map(item => ({
+                            path: item.path, name: item.name, isDir: item.isDir
                         }));
                         itemsInput.value = JSON.stringify(itemsForPayload);
                         form.appendChild(itemsInput);
@@ -654,10 +657,10 @@
                             targetUserInput.value = VIEW_TARGET_USERNAME;
                             form.appendChild(targetUserInput);
                         }
-                        if (CSRF_TOKEN) { 
+                        if (CSRF_TOKEN) {
                             const csrfInput = document.createElement('input');
                             csrfInput.type = 'hidden';
-                            csrfInput.name = '_csrf'; 
+                            csrfInput.name = '_csrf';
                             csrfInput.value = CSRF_TOKEN;
                             form.appendChild(csrfInput);
                         }
@@ -694,25 +697,25 @@
                                 if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                                     deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
                                 }
-                                const response = await fetch(deleteUrl, { 
+                                const response = await fetch(deleteUrl, {
                                     method: 'GET', // 假設 DELETE 也是 GET 請求，根據您的 server.js
                                 });
 
                                 if (response.ok) {
                                     if (response.redirected || (response.headers.get("Content-Type") && response.headers.get("Content-Type").includes("application/json"))) {
                                         try {
-                                            const result = await response.json(); 
+                                            const result = await response.json();
                                             if (result.success) {
                                                 reloadPage = true;
                                             } else {
                                                 allSucceeded = false;
                                                 errors.push(result.message || `刪除 ${item.name} 失敗`);
                                             }
-                                        } catch (e) { 
-                                            reloadPage = true; 
+                                        } catch (e) {
+                                            reloadPage = true;
                                         }
-                                    } else { 
-                                        reloadPage = true; 
+                                    } else {
+                                        reloadPage = true;
                                     }
                                 } else {
                                     allSucceeded = false;
@@ -736,19 +739,19 @@
                         } else if (allSucceeded) {
                             alert("選中項目已成功刪除。");
                         }
-                        
-                        if (reloadPage || !allSucceeded) { 
+
+                        if (reloadPage || !allSucceeded) {
                             window.location.reload();
-                        } else { 
-                             clearSingleSelection(); 
-                            if(selectAllCheckbox) selectAllCheckbox.checked = false; 
-                            document.querySelectorAll('#file-container .item-checkbox').forEach(cb => cb.checked = false); 
-                            updateSelectionActions();
+                        } else {
+                             clearSingleSelection();
+                             if(selectAllCheckbox) selectAllCheckbox.checked = false;
+                             document.querySelectorAll('#file-container .item-checkbox').forEach(cb => cb.checked = false);
+                             updateSelectionActions();
                         }
                     }
                 });
             }
-            
+
             if (actionMoveBtn) {
                 actionMoveBtn.addEventListener('click', async () => {
                     if (actionMoveBtn.disabled) return;
@@ -766,7 +769,7 @@
                     try {
                         let fetchUrl = '/api/directories'; let queryParams = [];
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') queryParams.push(`targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`);
-                        
+
                         const pathsToExclude = itemsToMove.flatMap(item => {
                             if (item.isDir) {
                                 return [item.path];
@@ -774,9 +777,9 @@
                             return [];
                         });
                         if (pathsToExclude.length > 0) queryParams.push(`excludePaths=${encodeURIComponent(pathsToExclude.join(','))}`);
-                        
+
                         if (queryParams.length > 0) fetchUrl += `?${queryParams.join('&')}`;
-                        
+
                         const response = await fetch(fetchUrl);
                         if (!response.ok) throw new Error(`無法獲取目錄列表: ${response.statusText}`);
                         currentDirectoryTree = await response.json();
@@ -789,47 +792,47 @@
             }
             function renderDirectoryTree(nodes, container, itemsBeingMoved) {
                 container.innerHTML = ''; const ul = document.createElement('ul');
-                const rootLi = document.createElement('li'); 
+                const rootLi = document.createElement('li');
                 rootLi.textContent = '根目錄 (/)';
-                rootLi.dataset.path = '/'; 
-                
-                let isRootInvalid = itemsBeingMoved.some(item => item.path.substring(0, item.path.lastIndexOf('/')) === '' && item.path !== '/'); 
+                rootLi.dataset.path = '/';
+
+                let isRootInvalid = itemsBeingMoved.some(item => item.path.substring(0, item.path.lastIndexOf('/')) === '' && item.path !== '/');
 
                 rootLi.addEventListener('click', (e) => selectDestination(e.target, '/'));
                 ul.appendChild(rootLi);
 
                 function buildTree(dirItems, parentUl, currentParentPath) {
                     dirItems.forEach(dirNode => {
-                        const isMovingThisDirOrChild = itemsBeingMoved.some(movedItem => 
+                        const isMovingThisDirOrChild = itemsBeingMoved.some(movedItem =>
                             movedItem.isDir && (dirNode.path === movedItem.path || dirNode.path.startsWith(movedItem.path + '/'))
                         );
-                        const isCurrentParent = itemsBeingMoved.every(movedItem => { 
+                        const isCurrentParent = itemsBeingMoved.every(movedItem => {
                             const movedItemParentPath = movedItem.path.substring(0, movedItem.path.lastIndexOf('/')) || '/';
                             return movedItemParentPath === dirNode.path;
                         });
 
                         if (isMovingThisDirOrChild) {
-                            return; 
+                            return;
                         }
 
-                        const li = document.createElement('li'); 
-                        li.textContent = dirNode.name; 
+                        const li = document.createElement('li');
+                        li.textContent = dirNode.name;
                         li.dataset.path = dirNode.path;
-                        if (isCurrentParent && itemsBeingMoved.length === 1) { 
-                            li.style.opacity = "0.5"; 
-                            li.style.pointerEvents = "none"; 
+                        if (isCurrentParent && itemsBeingMoved.length === 1) {
+                            li.style.opacity = "0.5";
+                            li.style.pointerEvents = "none";
                         } else {
                            li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, dirNode.path); });
                         }
                         parentUl.appendChild(li);
                         if (dirNode.children && dirNode.children.length > 0) {
-                            const nestedUl = document.createElement('ul'); 
+                            const nestedUl = document.createElement('ul');
                             li.appendChild(nestedUl);
                             buildTree(dirNode.children, nestedUl, dirNode.path);
                         }
                     });
                 }
-                buildTree(nodes, ul, '/'); 
+                buildTree(nodes, ul, '/');
                 container.appendChild(ul);
             }
             function selectDestination(targetElement, path) {
@@ -840,7 +843,7 @@
             }
             if (closeMoveModalBtn) closeMoveModalBtn.onclick = () => moveModal.style.display = 'none';
             if (cancelMoveBtn) cancelMoveBtn.onclick = () => moveModal.style.display = 'none';
-            
+
             if (confirmMoveBtn) {
                 confirmMoveBtn.addEventListener('click', async () => {
                     let selectedToMove = [];
@@ -851,8 +854,8 @@
                     }
 
                     const destinationPath = moveDestinationInput.value;
-                    if (selectedToMove.length === 0 || (destinationPath === null || destinationPath === undefined) ) { 
-                        alert('請選擇要移動的項目和目標文件夾。'); return; 
+                    if (selectedToMove.length === 0 || (destinationPath === null || destinationPath === undefined) ) {
+                        alert('請選擇要移動的項目和目標文件夾。'); return;
                     }
 
                     for (const item of selectedToMove) {
@@ -866,33 +869,33 @@
                         }
                     }
                     try {
-                        const payload = { 
-                            sourcePaths: selectedToMove.map(item => item.path), 
-                            destinationPath: destinationPath, 
+                        const payload = {
+                            sourcePaths: selectedToMove.map(item => item.path),
+                            destinationPath: destinationPath,
                         };
                         if (CSRF_TOKEN) payload._csrf = CSRF_TOKEN;
                         if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') payload.targetUsername = VIEW_TARGET_USERNAME;
-                        
-                        const response = await fetch('/move-items', { 
+
+                        const response = await fetch('/move-items', {
                             method: 'POST', headers: { 'Content-Type': 'application/json', },
                             body: JSON.stringify(payload)
                         });
-                        const result = await response.json(); 
-                        if (response.ok && result.success) { 
-                            alert(result.message || '項目移動成功！'); 
-                            window.location.href = result.redirectUrl || window.location.pathname + window.location.search; 
+                        const result = await response.json();
+                        if (response.ok && result.success) {
+                            alert(result.message || '項目移動成功！');
+                            window.location.href = result.redirectUrl || window.location.pathname + window.location.search;
                         } else {
                              alert(`移動失敗: ${result.message || '伺服器發生未知錯誤。'}`);
                         }
-                    } catch (error) { 
-                        console.error('移動項目時出錯:', error); 
+                    } catch (error) {
+                        console.error('移動項目時出錯:', error);
                         let errorMsg = `移動項目時發生客戶端錯誤。`;
-                        if (error instanceof SyntaxError) { 
+                        if (error instanceof SyntaxError) {
                             errorMsg += " 伺服器可能返回了非預期的回應格式。";
                         } else if (error.message) {
                             errorMsg += ` ${error.message}`;
                         }
-                        alert(errorMsg); 
+                        alert(errorMsg);
                     }
                     moveModal.style.display = 'none';
                 });
@@ -902,7 +905,7 @@
                 return new Promise((resolve) => {
                     if (!overwriteModal || !overwriteMessage || !overwriteConfirmBtn || !overwriteAbandonBtn || !closeOverwriteModalBtn) {
                         console.error("Overwrite modal elements not found!");
-                        resolve('abandon'); 
+                        resolve('abandon');
                         return;
                     }
                     overwriteMessage.textContent = `一個名為 "${itemName}" 的項目已存在於當前目錄。您要覆蓋它嗎？`;
@@ -929,15 +932,15 @@
                 toggleUploadActionsBtn.addEventListener('click', () => {
                     const isActionsHidden = uploadActionsContainer.style.display === 'none' || uploadActionsContainer.style.display === '';
                     uploadActionsContainer.style.display = isActionsHidden ? 'flex' : 'none';
-                    if (!isActionsHidden) { 
-                        uploadSection.style.display = 'none'; 
+                    if (!isActionsHidden) {
+                        uploadSection.style.display = 'none';
                         toggleUploadActionsBtn.textContent = '上傳';
                         if(userFilesInput) userFilesInput.value = null;
                         if(fileListPreview) fileListPreview.innerHTML = '';
                         if(uploadButton) uploadButton.style.display = 'none';
                         if(uploadProgressContainer) uploadProgressContainer.style.display = 'none';
 
-                    } else { 
+                    } else {
                         toggleUploadActionsBtn.textContent = '取消上傳操作';
                     }
                 });
@@ -954,10 +957,10 @@
                     if (!uploadActionsContainer || uploadActionsContainer.style.display === 'none') {
                         if(uploadActionsContainer) uploadActionsContainer.style.display = 'flex';
                     }
-                    userFilesInput.value = null; 
-                    fileListPreview.innerHTML = ''; 
-                    uploadButton.style.display = 'none'; 
-                    userFilesInput.click(); 
+                    userFilesInput.value = null;
+                    fileListPreview.innerHTML = '';
+                    uploadButton.style.display = 'none';
+                    userFilesInput.click();
                 });
             }
 
@@ -965,38 +968,38 @@
                 uploadFolderBtn.addEventListener('click', () => {
                     userFilesInput.setAttribute('webkitdirectory', '');
                     userFilesInput.setAttribute('directory', '');
-                    userFilesInput.removeAttribute('multiple'); 
+                    userFilesInput.removeAttribute('multiple');
                     if (dropAreaText) dropAreaText.textContent = '將文件夾拖拽到此處進行上傳，或點擊選擇文件夾。';
                     uploadSection.style.display = 'block';
                     if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
                      if (!uploadActionsContainer || uploadActionsContainer.style.display === 'none') {
                         if(uploadActionsContainer) uploadActionsContainer.style.display = 'flex';
                     }
-                    userFilesInput.value = null; 
-                    fileListPreview.innerHTML = ''; 
+                    userFilesInput.value = null;
+                    fileListPreview.innerHTML = '';
                     uploadButton.style.display = 'none';
-                    userFilesInput.click(); 
+                    userFilesInput.click();
                 });
             }
-            
+
             if (uploadForm && userFilesInput) {
-                uploadForm.addEventListener('submit', async function(event) { 
-                    event.preventDefault(); 
+                uploadForm.addEventListener('submit', async function(event) {
+                    event.preventDefault();
                     if (userFilesInput.files.length === 0) {
                         alert('請選擇要上傳的文件或文件夾。');
                         return;
                     }
 
                     const originalFiles = Array.from(userFilesInput.files);
-                    let finalFilesToUpload = []; 
-                    let processedTopLevelItems = new Set(); 
+                    let finalFilesToUpload = [];
+                    let processedTopLevelItems = new Set();
 
                     for (const file of originalFiles) {
                         let nameToCheck = file.name;
                         let isTopLevelItem = true;
                         if (file.webkitRelativePath) {
                             const pathParts = file.webkitRelativePath.split('/');
-                            nameToCheck = pathParts[0]; 
+                            nameToCheck = pathParts[0];
                             if (pathParts.length > 1) isTopLevelItem = false;
                         }
 
@@ -1014,7 +1017,7 @@
                             }
                         } else if (!EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase())) {
                             if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
-                             if(isTopLevelItem) processedTopLevelItems.add(nameToCheck.toLowerCase()); 
+                             if(isTopLevelItem) processedTopLevelItems.add(nameToCheck.toLowerCase());
                         } else if (processedTopLevelItems.has(nameToCheck.toLowerCase()) && finalFilesToUpload.some(f => (f.webkitRelativePath || f.name).startsWith(nameToCheck))) {
                             if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
                         }
@@ -1030,10 +1033,10 @@
                         return;
                     }
 
-                    const formData = new FormData(); 
+                    const formData = new FormData();
                     const currentPathInput = uploadForm.querySelector('input[name="currentPath"]');
                     if (currentPathInput) formData.append('currentPath', currentPathInput.value);
-                    
+
                     const targetUsernameInput = uploadForm.querySelector('input[name="targetUsername"]');
                     if (targetUsernameInput && targetUsernameInput.value) formData.append('targetUsername', targetUsernameInput.value);
 
@@ -1062,19 +1065,19 @@
                     };
                     xhr.onload = function() {
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        if (xhr.status >= 200 && xhr.status < 300) { 
+                        if (xhr.status >= 200 && xhr.status < 300) {
                             let responseData = null;
                             try { responseData = JSON.parse(xhr.responseText); } catch (e) { /* Ignore */ }
 
                             if (responseData && responseData.redirectUrl) {
                                 window.location.href = responseData.redirectUrl;
-                            } else if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) { 
-                                window.location.href = xhr.responseURL; 
+                            } else if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) {
+                                window.location.href = xhr.responseURL;
                             } else {
                                 alert( (responseData && responseData.message) || '上傳成功！頁面將刷新。');
-                                window.location.reload(); 
+                                window.location.reload();
                             }
-                        } else { 
+                        } else {
                             let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
                             try {
                                 const responseJson = JSON.parse(xhr.responseText);
@@ -1082,50 +1085,50 @@
                                     errorMessage = responseJson.message;
                                 }
                             } catch (e) {
-                                if(xhr.responseText && xhr.responseText.length < 500) errorMessage = xhr.responseText; 
+                                if(xhr.responseText && xhr.responseText.length < 500) errorMessage = xhr.responseText;
                             }
                             alert(errorMessage);
                             console.error('Upload failed:', xhr.status, xhr.responseText);
                         }
                     };
-                    xhr.onerror = function(e) { 
+                    xhr.onerror = function(e) {
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
                         alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
                         console.error('Upload network error:', e);
                     };
-                    xhr.openUrl = uploadForm.action; 
+                    xhr.openUrl = uploadForm.action;
                     xhr.send(formData);
                 });
             }
 
-            if (dropArea && userFilesInput && fileListPreview && uploadSection && dropAreaText && uploadActionsContainer && toggleUploadActionsBtn) { 
+            if (dropArea && userFilesInput && fileListPreview && uploadSection && dropAreaText && uploadActionsContainer && toggleUploadActionsBtn) {
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropArea.addEventListener(eventName, preventDefaults, false);
-                    document.body.addEventListener(eventName, preventDefaults, false); 
+                    document.body.addEventListener(eventName, preventDefaults, false);
                 });
                 function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-                
+
                 dropArea.addEventListener('dragenter', () => dropArea.classList.add('highlight'), false);
-                dropArea.addEventListener('dragover', () => dropArea.classList.add('highlight'), false); 
+                dropArea.addEventListener('dragover', () => dropArea.classList.add('highlight'), false);
                 dropArea.addEventListener('dragleave', (e) => {
                     if (e.relatedTarget === null || !dropArea.contains(e.relatedTarget)) {
                         dropArea.classList.remove('highlight');
                     }
                 }, false);
-                
+
                 dropArea.addEventListener('drop', (e) => {
-                    preventDefaults(e); 
+                    preventDefaults(e);
                     dropArea.classList.remove('highlight');
                     const dt = e.dataTransfer;
                     const files = dt.files;
-                    
+
                     let isLikelyFolderDrop = false;
                     if (dt.items && dt.items.length > 0 && typeof dt.items[0].webkitGetAsEntry === 'function') {
                         const entry = dt.items[0].webkitGetAsEntry();
                         if (entry && entry.isDirectory) {
                             isLikelyFolderDrop = true;
                         }
-                    } else if (files.length > 0 && files[0].webkitRelativePath) { 
+                    } else if (files.length > 0 && files[0].webkitRelativePath) {
                         const firstFileRelativePath = files[0].webkitRelativePath;
                         if (firstFileRelativePath && firstFileRelativePath.includes('/')) {
                              isLikelyFolderDrop = true;
@@ -1147,25 +1150,25 @@
                         if(dropAreaText) dropAreaText.textContent = '已拖入文件，準備上傳。';
                     }
 
-                    userFilesInput.files = files; 
-                    updateFileListPreviewOnDrop(); 
-                    uploadSection.style.display = 'block'; 
+                    userFilesInput.files = files;
+                    updateFileListPreviewOnDrop();
+                    uploadSection.style.display = 'block';
                     if (uploadActionsContainer.style.display === 'none') {
-                         uploadActionsContainer.style.display = 'flex'; 
+                         uploadActionsContainer.style.display = 'flex';
                     }
                     if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
                 }, false);
 
-                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop); 
+                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop);
 
-                function updateFileListPreviewOnDrop() { 
+                function updateFileListPreviewOnDrop() {
                     if (!fileListPreview || !userFilesInput || !uploadButton) return;
-                    fileListPreview.innerHTML = ''; 
+                    fileListPreview.innerHTML = '';
                     const files = userFilesInput.files;
                     if (files.length > 0) {
                         const list = document.createElement('ul');
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
-                        
+
                         let isDirectoryUpload = false;
                         if (userFilesInput.hasAttribute('webkitdirectory') || (files[0] && files[0].webkitRelativePath && files[0].webkitRelativePath.includes('/'))) {
                             isDirectoryUpload = true;
@@ -1178,7 +1181,7 @@
                             listItem.textContent = `文件夾: ${folderName} (${files.length} 個文件)`;
                             listItem.style.fontSize = '0.9em'; listItem.style.fontWeight = 'bold';
                             list.appendChild(listItem);
-                        } else { 
+                        } else {
                             for (let i = 0; i < files.length; i++) {
                                 const listItem = document.createElement('li');
                                 listItem.textContent = files[i].name + (files[i].size ? ` (${(files[i].size / 1024).toFixed(1)} KB)` : '');
@@ -1199,30 +1202,30 @@
 
             const listViewBtn = document.getElementById('listViewBtn');
             const gridViewBtn = document.getElementById('gridViewBtn');
-            if (fileContainer && listViewBtn && gridViewBtn) { 
+            if (fileContainer && listViewBtn && gridViewBtn) {
                 function toggleView(viewType) {
                     const isCurrentlyMultiSelect = fileContainer.classList.contains('multi-select-mode-active');
                     fileContainer.classList.remove('list-view', 'grid-view');
 
                     if (viewType === 'grid') {
-                        fileContainer.classList.add('grid-view'); 
+                        fileContainer.classList.add('grid-view');
                         gridViewBtn.classList.add('active');
                         listViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'grid');
-                    } else { 
-                        fileContainer.classList.add('list-view'); 
+                    } else {
+                        fileContainer.classList.add('list-view');
                         listViewBtn.classList.add('active');
                         gridViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'list');
                     }
-                    if (isCurrentlyMultiSelect) { 
+                    if (isCurrentlyMultiSelect) {
                         fileContainer.classList.add('multi-select-mode-active');
                     }
-                    clearSingleSelection(); 
-                    updateSelectionActions(); 
+                    clearSingleSelection();
+                    updateSelectionActions();
                 }
-                const preferredView = localStorage.getItem('fileView') || 'list'; 
-                toggleView(preferredView); 
+                const preferredView = localStorage.getItem('fileView') || 'list';
+                toggleView(preferredView);
                 listViewBtn.addEventListener('click', () => toggleView('list'));
                 gridViewBtn.addEventListener('click', () => toggleView('grid'));
             }
@@ -1239,8 +1242,8 @@
 
             function openCreateItemModal(type) {
                 if (!createItemModal || !createItemForm || !createItemModalTitle || !createItemNameLabel || !createItemNameInput) return;
-                createItemForm.reset(); 
-                
+                createItemForm.reset();
+
                 const currentPathForCreation = IS_SEARCH_RESULT_VIEW ? '/' : CURRENT_PATH_ON_LOAD;
                 const currentPathInputInForm = createItemForm.querySelector('input[name="currentPath"]');
                 if (currentPathInputInForm) currentPathInputInForm.value = currentPathForCreation;
@@ -1259,13 +1262,13 @@
                     createItemNameInput.placeholder = '例如: 我的文档';
                     createItemForm.action = '/create-folder';
                 }
-                
+
                 const targetUsernameHiddenInput = createItemForm.querySelector('input[name="targetUsername"]');
-                if (targetUsernameHiddenInput) { 
+                if (targetUsernameHiddenInput) {
                     if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
                         targetUsernameHiddenInput.value = VIEW_TARGET_USERNAME;
                     } else {
-                        targetUsernameHiddenInput.value = ''; 
+                        targetUsernameHiddenInput.value = '';
                     }
                 }
                 createItemModal.style.display = 'block';
@@ -1276,11 +1279,11 @@
             if (showCreateFolderModalBtn) showCreateFolderModalBtn.addEventListener('click', () => openCreateItemModal('folder'));
             if (closeCreateItemModalBtn) closeCreateItemModalBtn.onclick = () => createItemModal.style.display = 'none';
             if (cancelCreateItemBtn) cancelCreateItemBtn.onclick = () => createItemModal.style.display = 'none';
-            
+
             // 新增: 視頻播放器模態框的打開和關閉邏輯
             function openVideoPlayer(encodedPath, videoName, videoType) {
                 if (!videoPlayerModal || !html5VideoPlayer || !videoSourceElement || !videoModalTitle) return;
-                
+
                 let videoSrc = `/stream/${encodedPath}`;
                 // 如果是管理員查看其他用戶的文件，添加 targetUsername 參數
                 if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
@@ -1310,12 +1313,12 @@
             }
 
 
-            window.addEventListener('click', (event) => { 
+            window.addEventListener('click', (event) => {
                 if (event.target == createItemModal) createItemModal.style.display = 'none';
-                if (event.target == moveModal) moveModal.style.display = 'none'; 
-                if (event.target == overwriteModal) { 
+                if (event.target == moveModal) moveModal.style.display = 'none';
+                if (event.target == overwriteModal) {
                     const abandonButton = overwriteModal.querySelector('#overwrite-abandon-btn');
-                    if (abandonButton) abandonButton.click(); 
+                    if (abandonButton) abandonButton.click();
                 }
                 if (event.target == videoPlayerModal) { // 新增: 點擊模態框外部關閉視頻播放器
                      if (videoPlayerModal) videoPlayerModal.style.display = 'none';
@@ -1326,12 +1329,12 @@
                 }
             });
 
-            updateMultiSelectModeUI(); 
-            updateSelectionActions(); 
+            updateMultiSelectModeUI();
+            updateSelectionActions();
 
-        }); 
+        });
 
-        function showRenameForm(encodedName, currentName, isDir) { 
+        function showRenameForm(encodedName, currentName, isDir) {
             document.querySelectorAll('.rename-form').forEach(form => {
                 if (form.id !== 'rename-form-' + encodedName) {
                     form.style.display = 'none';
@@ -1342,12 +1345,12 @@
             if (formContainer) {
                 const isCurrentlyVisible = formContainer.style.display === 'block';
                 formContainer.style.display = isCurrentlyVisible ? 'none' : 'block';
-                
-                if (!isCurrentlyVisible) { 
+
+                if (!isCurrentlyVisible) {
                     const inputField = formContainer.querySelector('input[name="newName"]');
                     if (inputField) {
-                        inputField.value = currentName; 
-                        inputField.focus(); 
+                        inputField.value = currentName;
+                        inputField.focus();
                         if (!isDir && currentName.includes('.')) {
                             const dotIndex = currentName.lastIndexOf('.');
                             inputField.setSelectionRange(0, dotIndex);
@@ -1360,13 +1363,13 @@
                     if (currentPathInput && oldPathInput && IS_SEARCH_RESULT_VIEW) {
                          const itemOriginalPath = oldPathInput.value;
                          currentPathInput.value = itemOriginalPath.substring(0, itemOriginalPath.lastIndexOf('/')) || '/';
-                    } else if (currentPathInput) { 
+                    } else if (currentPathInput) {
                         currentPathInput.value = CURRENT_PATH_ON_LOAD;
                     }
                 }
             }
         }
-        function hideRenameForm(encodedName) { 
+        function hideRenameForm(encodedName) {
             const form = document.getElementById('rename-form-' + encodedName);
             if (form) form.style.display = 'none';
         }
