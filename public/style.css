@@ -1,83 +1,8 @@
 /* public/style.css */
-
-/* CSS 變量定義 */
-:root {
-    --button-primary-bg-color: #007bff;
-    --button-primary-text-color: #ffffff;
-    --button-primary-border-color: #007bff;
-
-    --button-secondary-bg-color: #6c757d;
-    --button-secondary-text-color: #ffffff;
-    --button-secondary-border-color: #6c757d;
-
-    --input-border-color: #ccc;
-    --input-bg-color: #fff;
-    --input-text-color: #333;
-
-    --modal-bg: #ffffff;
-    --modal-text-color: #333;
-    --modal-border-color: #888;
-
-    --rename-form-bg: #ffffff;
-    --rename-form-border-color: #cccccc;
-
-    --video-modal-bg: #1c1c1c;
-    --video-modal-text-color: #f1f1f1;
-    --video-modal-border-color: #333;
-    --video-modal-close-btn-color: #aaa;
-    --video-modal-close-btn-hover-color: #fff;
-
-    --og-text-color: #212529;
-    --og-input-border-color: #ced4da;
-    --og-input-bg-color: #fff;
-    --og-input-text-color: #495057;
-    --og-container-bg: #ffffff;
-    --og-border-color: #dee2e6;
-    --hover-bg: #f0f0f0;
-}
-
-/* 暗色主題變量覆蓋 */
-body.dark-theme, .dark-theme {
-    --button-primary-bg-color: #0056b3;
-    --button-primary-border-color: #0056b3;
-
-    --button-secondary-bg-color: #5a6268;
-    --button-secondary-border-color: #545b62;
-
-    --input-border-color: #555;
-    --input-bg-color: #2c2c2c;
-    --input-text-color: #e0e0e0;
-
-    --modal-bg: #2c2c2c;
-    --modal-text-color: #e0e0e0;
-    --modal-border-color: #555;
-
-    --rename-form-bg: #3a3a3a;
-    --rename-form-border-color: #555;
-
-    --video-modal-bg: #2a2a2a;
-    --video-modal-text-color: #e0e0e0;
-    --video-modal-border-color: #444;
-    --video-modal-close-btn-color: #bbb;
-    --video-modal-close-btn-hover-color: #fff;
-
-    --og-text-color: #e0e0e0;
-    --og-input-border-color: #555;
-    --og-input-bg-color: #333;
-    --og-input-text-color: #e0e0e0;
-    --og-container-bg: #2c2c2c;
-    --og-border-color: #444;
-    --hover-bg: #4a4a4a;
-
-    background-color: #1a1a1a;
-    color: var(--og-text-color);
-}
-
-/* 基礎頁面樣式 */
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     background-color: #f8f9fa;
-    color: var(--og-text-color);
+    color: #212529;
     line-height: 1.6;
     margin: 0;
     padding: 10px;
@@ -89,17 +14,8 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.dark-theme body {
-    background-color: #1a1a1a;
-    color: #e0e0e0;
-}
-body.dark-theme {
-    background-color: #1a1a1a;
-    color: #e0e0e0;
-}
-
 .container {
-    background-color: var(--og-container-bg);
+    background-color: #ffffff;
     padding: 15px;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -109,102 +25,54 @@ body.dark-theme {
     margin-bottom: 15px;
     box-sizing: border-box;
 }
-.dark-theme .container {
-    background-color: #2c2c2c;
-    border: 1px solid #444;
-}
 
-/* --- 統一按鈕基礎樣式 --- */
-button, button[type="submit"], .button-link {
-    background-color: var(--button-primary-bg-color);
-    color: var(--button-primary-text-color) !important;
-    border: 1px solid var(--button-primary-border-color);
-    cursor: pointer;
-    font-weight: 500;
-    text-decoration: none;
-    text-align: center;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    padding: 10px 15px;
-    border-radius: 5px;
-    font-size: 0.95em;
-    margin: 5px;
-    vertical-align: middle;
-    transition: opacity 0.2s ease-in-out, background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-}
-button:hover, button[type="submit"]:hover, .button-link:hover {
-    opacity: 0.85;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-button.secondary, .button-link.secondary {
-    background-color: var(--button-secondary-bg-color);
-    border-color: var(--button-secondary-border-color);
-    color: var(--button-secondary-text-color) !important;
-}
-button.secondary:hover, .button-link.secondary:hover { opacity: 0.85; }
-
-
-/* --- 認證頁面特定樣式 --- */
+/* --- Authentication Page Specific Styles --- */
 .auth-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     width: 100%;
-    min-height: 80vh;
+    min-height: 80vh; 
     padding: 20px;
-    flex-grow: 1;
+    flex-grow: 1; /* Allow auth container to take available space */
 }
 .auth-form-container {
-    background-color: var(--og-container-bg);
-    padding: 25px 30px;
+    background-color: #fff;
+    padding: 25px 30px; 
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 400px;
-    text-align: center;
-}
-.dark-theme .auth-form-container {
-    background-color: #2c2c2c;
-    border: 1px solid #444;
+    max-width: 400px; 
+    text-align: center; 
 }
 .auth-form-container h1 {
-    font-size: 1.8em;
+    font-size: 1.8em; 
     margin-bottom: 25px;
     color: #343a40;
 }
-.dark-theme .auth-form-container h1 { color: #f5f5f5; }
 .auth-form-container .form-group {
     margin-bottom: 20px;
-    text-align: left;
+    text-align: left; 
 }
 .auth-form-container label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 8px; 
     font-weight: 600;
     color: #495057;
 }
-.dark-theme .auth-form-container label { color: #e0e0e0; }
 .auth-form-container input[type="text"],
 .auth-form-container input[type="password"] {
     width: 100%;
-    padding: 12px 15px;
+    padding: 12px 15px; 
     font-size: 1em;
-    margin-bottom: 0;
-    background-color: var(--og-input-bg-color);
-    color: var(--og-input-text-color);
-    border: 1px solid var(--og-input-border-color);
-}
-.dark-theme .auth-form-container input[type="text"],
-.dark-theme .auth-form-container input[type="password"] {
-    background-color: #333;
-    color: #e0e0e0;
-    border-color: #555;
+    margin-bottom: 0; 
 }
 .auth-form-container .full-width-button {
     width: 100%;
-    padding: 12px 15px;
+    padding: 12px 15px; 
     font-size: 1.05em;
-    margin-top: 10px;
+    margin-top: 10px; 
     margin-bottom: 0;
 }
 .auth-form-container .auth-switch {
@@ -212,881 +80,313 @@ button.secondary:hover, .button-link.secondary:hover { opacity: 0.85; }
     font-size: 0.9em;
     color: #6c757d;
 }
-.dark-theme .auth-form-container .auth-switch { color: #bbb; }
 .auth-form-container .auth-switch a {
-    color: var(--button-primary-bg-color);
+    color: #007bff;
     font-weight: 500;
 }
-.dark-theme .auth-form-container .auth-switch a { color: #6cb2eb; }
 
-
-/* --- 頁首樣式 --- */
+/* --- Header Styling --- */
 header {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: space-between;
+    flex-direction: column; 
+    align-items: flex-start; 
+    justify-content: space-between; 
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 1px solid var(--og-border-color);
-    width: 100%;
+    border-bottom: 1px solid #dee2e6;
+    width: 100%; 
 }
-header h1 {
-    margin: 0 0 10px 0;
-    font-size: 1.6em;
-    color: var(--og-text-color);
-    flex-shrink: 0;
+header h1 { 
+    margin: 0 0 10px 0; 
+    font-size: 1.6em; 
+    color: #343a40;
+    flex-shrink: 0; 
 }
-.dark-theme header h1 { color: #f5f5f5; }
-.header-controls {
+.header-controls { 
     display: flex;
     align-items: center;
-    gap: 15px;
-    width: 100%;
+    gap: 20px; 
+    width: 100%; 
 }
-header nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+header nav { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 15px; 
     align-items: center;
 }
-header nav .button-link {
-    margin: 0;
-    padding: 8px 12px;
-    font-size: 0.9em;
+header nav a { 
+    text-decoration: none; 
+    color: #007bff; 
+    font-weight: 500; 
+    padding: 5px 0; 
 }
 
-
-/* --- 主題切換器樣式 --- */
+/* --- Theme Switcher Styling (In Header or Page Top) --- */
 .theme-switcher-container {
-    display: flex;
+    display: flex; 
     align-items: center;
-    gap: 8px;
-    padding: 5px;
-    background-color: transparent;
+    gap: 8px; 
+    padding: 5px; 
+    background-color: transparent; 
     border-radius: 6px;
-    margin-left: auto;
+    margin-left: auto; /* Pushes to the right in .header-controls */
 }
-.dark-theme .theme-switcher-container .theme-label { color: #e0e0e0; }
-.theme-switcher-container .theme-label {
-    margin-right: 0;
+.theme-switcher-container .theme-label { 
+    margin-right: 0; 
     font-size: 0.9em;
-    color: var(--og-text-color);
+    color: var(--text-color, #495057); /* Use CSS var for theming */
     font-weight: 500;
-    white-space: nowrap;
+    white-space: nowrap; 
 }
-.theme-switcher-container select#theme-select {
+.theme-switcher-container select#theme-select { 
     padding: 6px 8px;
     font-size: 0.9em;
     border-radius: 4px;
-    border: 1px solid var(--input-border-color);
+    border: 1px solid var(--input-border-color, #ced4da); /* Use CSS var */
     margin: 0;
     width: auto;
-    background-color: var(--input-bg-color);
-    color: var(--input-text-color);
+    background-color: var(--input-bg-color, #fff); /* Use CSS var */
+    color: var(--input-text-color, #495057); /* Use CSS var */
 }
+
+/* For pages like login/register where theme switcher is at the very top */
 .page-header-container {
     width: 100%;
-    max-width: 960px;
+    max-width: 960px; /* Match .container or adjust */
     margin: 0 auto 10px auto;
     display: flex;
     justify-content: flex-end;
-    padding: 10px 15px;
+    padding: 10px 15px; /* Adjust padding to align with .container's content area */
     box-sizing: border-box;
 }
-.page-header-container .theme-switcher-container { margin-left: 0; }
+.page-header-container .theme-switcher-container {
+    margin-left: 0; /* No auto margin needed here as parent handles alignment */
+}
 
-/* 通用標題 */
-.container > h1:not(.auth-form-container h1):not(header h1) {
-    text-align: center;
-    font-size: 1.8em;
-    margin-bottom: 15px;
-    color: var(--og-text-color);
+
+/* General h1, h2 for non-auth pages */
+.container > h1:not(.auth-form-container h1):not(header h1) { 
+    text-align: center; 
+    font-size: 1.8em; 
+    margin-bottom: 15px; 
+    color: #343a40; 
 }
-.dark-theme .container > h1:not(.auth-form-container h1):not(header h1) { color: #f5f5f5; }
 h2 {
-    font-size: 1.3em;
-    border-bottom: 2px solid var(--button-primary-bg-color);
+    font-size: 1.3em; 
+    border-bottom: 2px solid #007bff; 
     padding-bottom: 6px;
-    margin-top: 25px;
-    margin-bottom: 15px;
-    color: var(--og-text-color);
+    margin-top: 25px; 
+    margin-bottom: 15px; 
+    color: #343a40;
 }
-.dark-theme h2 { color: #f5f5f5; border-bottom-color: var(--button-primary-bg-color); }
 h2:first-of-type { margin-top: 0; }
 
-/* --- 統一輸入控制項樣式 --- */
+/* Unified Control Styling */
 input[type="text"], input[type="password"],
-input[type="search"],
-select, textarea {
+select, textarea,
+button, .button-link {
     display: inline-block;
     width: auto;
     padding: 10px 15px;
-    border: 1px solid var(--input-border-color);
+    border: 1px solid var(--input-border-color, #ced4da);
     border-radius: 5px;
     box-sizing: border-box;
     font-size: 0.95em;
     line-height: 1.5;
     vertical-align: middle;
-    margin: 0;
-    background-color: var(--input-bg-color);
-    color: var(--input-text-color);
+    margin: 5px;
+    background-color: var(--input-bg-color, #fff);
+    color: var(--input-text-color, #495057);
     transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 input[type="file"] {
     display: block; width: 100%; padding: 8px 10px; margin-bottom: 10px;
-    border: 1px solid var(--input-border-color);
+    border: 1px solid var(--input-border-color, #ced4da); 
     border-radius: 5px; box-sizing: border-box; font-size: 0.95em;
-    background-color: var(--input-bg-color);
-    color: var(--input-text-color);
 }
-textarea { min-height: 100px; width: 100%;}
+textarea { min-height: 100px; } 
+
 input[type="text"]:focus:not(.auth-form-container input),
 input[type="password"]:focus:not(.auth-form-container input),
-input[type="search"]:focus,
 select:focus:not(#theme-select),
 textarea:focus {
-    border-color: var(--button-primary-bg-color);
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    border-color: #80bdff; 
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); 
     outline: none;
 }
-.dark-theme input[type="text"]:focus:not(.auth-form-container input),
-.dark-theme input[type="password"]:focus:not(.auth-form-container input),
-.dark-theme input[type="search"]:focus,
-.dark-theme select:focus:not(#theme-select),
-.dark-theme textarea:focus {
-    border-color: var(--button-primary-bg-color);
-    box-shadow: 0 0 0 0.2rem rgba(var(--button-primary-bg-color), 0.35);
+
+button, button[type="submit"], .button-link {
+    background-color: #007bff; color: white !important; border-color: #007bff;
+    cursor: pointer; font-weight: 500; text-decoration: none; text-align: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
+button:hover, button[type="submit"]:hover, .button-link:hover {
+    background-color: #0069d9; border-color: #0062cc; color: white !important; text-decoration: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+button.secondary, .button-link.secondary { background-color: #6c757d; border-color: #6c757d; }
+button.secondary:hover, .button-link.secondary:hover { background-color: #5a6268; border-color: #545b62; }
 
-
-/* 訊息提示框 */
 .message { padding: 10px 12px; border-radius: 5px; margin-bottom: 15px; font-size: 0.95em; }
 .error-message { color: #842029; background-color: #f8d7da; border: 1px solid #f5c2c7; }
 .message:not(.error-message) { color: #0f5132; background-color: #d1e7dd; border: 1px solid #badbcc;}
-.warning-message { color: #664d03; background-color: #fff3cd; border-color: #ffecb5; }
+.warning-message { color: #664d03; background-color: #fff3cd; border-color: #ffecb5; } /* Added warning message style */
+
+
+.current-path { margin-bottom: 15px; padding: 10px; background-color: #e9ecef; border-radius: 5px; font-size: 0.9em; color: #495057; word-break: break-all; }
+.current-path a { font-weight: 500; }
+
+.file-browser-controls {
+    margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+}
+.file-browser-controls .control-form { display: flex; flex-grow: 1; gap: 8px; min-width: 200px; }
+.file-browser-controls .control-form input[type="text"] { flex-grow: 1; margin: 0; }
+.file-browser-controls .control-form button { flex-shrink: 0; margin: 0; }
+.file-browser-controls .upload-button-main, .file-browser-controls .view-toggle button { margin: 0; flex-shrink: 0; }
+.view-toggle { display: flex; gap: 8px; margin-left: auto; } 
+.view-toggle button { background-color: #6c757d; font-size: 0.9em; }
+.view-toggle button.active { background-color: #007bff; }
+
+#upload-section { display: none; padding: 15px; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 15px; background-color: #f8f9fa;}
+#upload-section h2 { margin-top: 0; font-size: 1.1em; }
+#drop-area {
+    border: 2px dashed #adb5bd; border-radius: 6px; padding: 25px; text-align: center;
+    margin-bottom: 0; background-color: #f0f2f5;
+}
+#drop-area.highlight { border-color: #007bff; background-color: #e9f5ff; }
+#drop-area p { margin: 0 0 10px 0; color: #495057; font-size: 0.9em; }
+#drop-area label { color: #007bff; cursor: pointer; text-decoration: underline; font-weight: 500; }
+#drop-area #upload-button { margin-top: 12px; width: 100%; }
+#file-list-preview ul { list-style-type: none; padding-left: 0; margin-top: 10px; text-align: left; }
+#file-list-preview li { font-size: 0.85em; color: #343a40; padding: 3px 0; }
+
+#file-container ul { list-style-type: none; padding: 0; margin:0;}
+.list-view li {
+    padding: 10px; margin-bottom: -1px; display: flex; justify-content: space-between; align-items: center;
+    border: 1px solid #dee2e6; background-color: #fff;
+    position: relative; 
+}
+.list-view li:first-child { border-top-left-radius: 5px; border-top-right-radius: 5px; }
+.list-view li:last-child { border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; margin-bottom: 0; }
+.list-view .file-entry { display: flex; align-items: center; flex-grow: 1; overflow: hidden; }
+.list-view .file-icon-large, .list-view .file-icon { display: none !important; }
+.list-view .file-name { font-weight: 500; color: #007bff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95em; }
+.list-view .file-entry a.file-name:hover { text-decoration: underline; }
+.list-view .file-entry .file-name { color: #212529; } 
+.list-view .file-actions-placeholder { min-width: 150px; text-align: right; font-size: 0.9em; color: #666; }
+
+.grid-view ul { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.grid-view li {
+    padding: 10px; min-height: 130px; background-color: #fff; border: 1px solid #dee2e6; border-radius: 6px;
+    text-align: center; display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-start; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    position: relative; 
+}
+.grid-view .file-icon { display: none !important; }
+.grid-view .file-icon-large { font-size: 2.8em; margin-bottom: 6px; display: inline-block !important; line-height:1; }
+.grid-view .file-icon-large.folder-icon { color: #ffc107; }
+.grid-view .file-name {
+    font-size: 0.8em; font-weight: 500; color: #343a40; word-break: break-all;
+    margin-bottom: 6px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; min-height: 2.2em;
+}
+.grid-view .file-actions { display: flex; flex-direction: column; gap: 4px; width: 100%; margin-top: auto; }
+.grid-view .file-actions .action-link { font-size: 0.75em; padding: 4px 6px; background-color: #f1f3f5; border-radius: 4px; color: #495057; display: block; }
+
+.rename-form {
+    display: none; position: absolute; left: 25px; right: 5px; top: calc(100% + 2px);
+    background-color: var(--rename-form-bg, #ffffff); padding: 12px;
+    border: 1px solid var(--rename-form-border-color, #cccccc);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 100;
+    border-radius: 6px; max-width: 400px; box-sizing: border-box;
+}
+.grid-view li .rename-form { 
+    left: 50%; transform: translateX(-50%) translateY(5px); 
+    width: calc(100% - 10px); max-width: 300px;
+}
+.rename-form form.inline-form { display: flex; gap: 8px; }
+.rename-form input[type="text"] { flex-grow: 1; }
+
+.admin-table-container { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; min-width: 500px; }
+table th, table td { border: 1px solid #dee2e6; padding: 8px 10px; text-align: left; }
+table th { background-color: #e9ecef; font-weight: 600; }
+table td .action-link, table td button.action-link { font-size: 0.85em; padding: 4px 6px; margin: 2px; }
+table td form { display: inline-flex !important; gap: 5px !important; align-items: center !important; flex-wrap: wrap; }
+table td form input[type="password"] { width: 120px !important; padding: 5px !important; font-size: 0.85em !important; margin:0; }
+table td form button { margin:0; }
+
+textarea#fileContent { /* Styles in edit-file.ejs are more specific */
+    min-height: 50vh; font-size: 0.9rem; margin:0; 
+}
+.editor-actions { margin-top: 15px; text-align: right; display: flex; gap: 10px; justify-content: flex-end; }
+.editor-actions button { margin-left: 0; margin-bottom:0; }
+
+.note { font-size: 0.85em; margin-top: 15px; padding: 10px; background-color: #f1f3f5; border-left: 4px solid #007bff; }
+
+/* Responsive adjustments */
+@media (min-width: 768px) { 
+    header {
+        flex-direction: row;
+        align-items: center; 
+    }
+    header h1 {
+        margin-bottom: 0; 
+        font-size: 1.75em;
+    }
+    .header-controls {
+        width: auto; 
+        margin-left: auto; 
+    }
+    .container { padding: 20px 25px; }
+    .auth-form-container { padding: 30px 40px; }
+    h1:not(.auth-form-container h1):not(header h1) { font-size: 2em; }
+    h2 { font-size: 1.4em; }
+    .grid-view ul { grid-template-columns: repeat(3, 1fr); }
+    .file-browser-controls .control-form { min-width: 300px; }
+}
+
+@media (min-width: 576px) { 
+    .file-browser-controls { flex-direction: row; align-items: center; }
+    .file-browser-controls .control-form { flex-grow: 0; min-width: 250px; }
+    .file-browser-controls .upload-button-main { width: auto; }
+    #drop-area #upload-button { width: auto; }
+    .grid-view ul { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+}
+
+@media (min-width: 992px) {
+     .grid-view ul { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
+
+/* Dark theme specific styles */
+body.dark-theme {
+    --text-color: #e0e0e0;
+    --input-border-color: #555;
+    --input-bg-color: #333;
+    --input-text-color: #e0e0e0;
+    --container-bg: #2c2c2c; /* For .rename-form background */
+    --border-color: #444;    /* For .rename-form border */
+}
+.dark-theme .theme-switcher-container .theme-label {
+    color: #e0e0e0;
+}
+.dark-theme .theme-switcher-container select#theme-select {
+    background-color: #333;
+    color: #e0e0e0;
+    border-color: #555;
+}
+.dark-theme .rename-form { 
+    background-color: var(--rename-form-bg, #3a3a3a); /* Fallback if CSS var not supported */
+    border-color: var(--rename-form-border-color, #555);
+    color: #e0e0e0; 
+}
+.dark-theme .rename-form input[type="text"] { 
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+    border-color: #555;
+}
+/* Add other dark theme overrides as needed */
 .dark-theme .message { color: #e0e0e0; background-color: #33414e; border-color: #4a5b6c; }
 .dark-theme .error-message { color: #f5c6cb; background-color: #5c2c31; border-color: #842029; }
 .dark-theme .warning-message { color: #ffeeba; background-color: #856404; border-color: #ffeeba;}
 
-/* 當前路徑 */
-.current-path {
-    margin-bottom: 15px; padding: 10px;
-    background-color: var(--og-input-bg-color);
-    border-radius: 5px; font-size: 0.9em;
-    color: var(--og-text-color);
-    word-break: break-all;
-}
-.dark-theme .current-path { background-color: #3a3a3a; color: #ccc; }
-.current-path a { font-weight: 500; color: var(--button-primary-bg-color); }
-.dark-theme .current-path a { color: #6cb2eb; }
-
-/* --- 通用表單組樣式 (用於 admin.ejs 和彈出視窗) --- */
-.form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 15px;
-}
-.form-group label {
-    margin-bottom: 5px;
-    font-weight: 500;
-}
-.form-group input[type="text"],
-.form-group input[type="password"],
-.form-group select,
-.form-group textarea {
-    width: 100%;
-}
-
-/* --- admin.ejs "新增用戶" 表單特定佈局 --- */
-form.control-form {
-    margin-top: 20px;
-    max-width: 500px;
-}
-form.control-form .form-group {
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-}
-form.control-form .form-group label {
-    flex-basis: 120px;
-    flex-shrink: 0;
-    text-align: right;
-    margin-bottom: 0;
-}
-form.control-form .form-group input[type="text"],
-form.control-form .form-group input[type="password"],
-form.control-form .form-group select {
-    flex-grow: 1;
-    max-width: calc(100% - 130px);
-}
-form.control-form button[type="submit"] {
-    margin-top: 10px;
-    margin-left: 130px;
-    background-color: var(--button-primary-bg-color);
-    color: var(--button-primary-text-color) !important;
-    border-color: var(--button-primary-border-color);
-}
-
-/* --- 文件瀏覽器控制按鈕 --- */
-.file-browser-controls {
-    display: flex;
-    flex-wrap: wrap; /* 如果空間不足，允許換行 */
-    align-items: center; /* 垂直居中對齊各個控制組 */
-    gap: 10px; /* 控制組之間的間隙 */
-    margin-bottom: 20px;
-}
-.file-browser-controls > * {
-    margin: 0; /* 重置子元素的 margin */
-}
-.file-browser-controls .actions-group-left {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-shrink: 0; /* 防止操作按鈕組收縮 */
-}
-#toggle-multi-select-btn {
-    flex-shrink: 0;
-}
-.file-browser-controls .actions-group-left button,
-#toggle-multi-select-btn, /* 確保多選按鈕也應用此 margin */
-.file-browser-controls .search-form-right button,
-.file-browser-controls .view-toggle button {
-    margin: 0; /* 確保按鈕本身沒有額外的 margin 影響佈局 */
-}
-.file-browser-controls .search-form-right { /* 這是 <form> 元素 */
-    display: flex;
-    align-items: center;
-    gap: 5px; /* 搜索輸入框和搜索按鈕之間的間隙 */
-    flex-grow: 1; /* 使搜索表單區域佔據可用空間 */
-    flex-shrink: 1; /* 允許搜索表單區域在空間不足時收縮 */
-    min-width: 180px; /* 搜索表單的最小寬度 */
-}
-.file-browser-controls .search-form-right input[type="search"] { /* 搜索輸入框 */
-    padding: 8px 10px;
-    font-size: 0.9em;
-    margin: 0;
-    /* flex-grow: 1; */ /* MODIFIED: 移除了此行，以防止輸入框過度伸展，將按鈕推開 */
-                       /* 輸入框的寬度將由 min-width 和媒體查詢中的 width 控制 */
-    min-width: 100px;  /* 輸入框的最小寬度 */
-    /* 提示: 在您的原始 CSS 中，媒體查詢已為此輸入框設定了 width: 200px 或 250px */
-}
-.file-browser-controls .search-form-right button { /* 搜索按鈕 */
-    flex-shrink: 0; /* 防止搜索按鈕收縮 */
-}
-.file-browser-controls .view-toggle {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-shrink: 0; /* 防止檢視切換按鈕組收縮 */
-    margin-left: auto; /* 將檢視切換按鈕推到最右邊 */
-}
-.file-browser-controls .view-toggle button.active {
-    background-color: var(--button-primary-bg-color);
-    color: var(--button-primary-text-color);
-    border-color: var(--button-primary-border-color);
-    opacity: 1;
-}
-
-/* 確保在 actions-group-left 不存在時，search-form-right 和 view-toggle 佈局依然正確 */
-.file-browser-controls:not(:has(.actions-group-left)) .search-form-right {
-    margin-left: 0; /* 如果 actions-group-left 不存在，則 search-form-right 不需要左邊距 */
-}
-.file-browser-controls:not(:has(.actions-group-left)) .view-toggle {
-    margin-left: auto; /* 保持 view-toggle 在最右邊 */
-}
-
-/* 響應式調整中關於搜索框寬度的部分 (來自您原始CSS，保持不變) */
-@media (min-width: 768px) {
-    /* ... header, container 等其他既有樣式 ... */
-    .file-browser-controls .search-form-right input[type="search"] { width: 250px; }
-}
-@media (min-width: 576px) {
-    .file-browser-controls .search-form-right input[type="search"] { width: 200px; }
-    /* ... 其他既有樣式 ... */
-}
-
-
-/* --- 文件列表及操作相關樣式 --- */
-#selection-action-bar {
-    padding: 10px;
-    background-color: #f0f0f0;
-    border-bottom: 1px solid #ccc;
-    margin-bottom: 15px;
-    display: none;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-}
-.dark-theme #selection-action-bar {
-    background-color: #252525;
-    border-bottom-color: var(--input-border-color);
-}
-#selection-action-bar button { margin: 0; }
-
-.item-checkbox {
-    display: none;
-    margin-right: 10px;
-    width: 18px;
-    height: 18px;
-    vertical-align: middle;
-}
-#file-container.multi-select-mode-active .item-checkbox { display: inline-block; }
-.file-entry-selectable { display: flex; align-items: center; width: 100%; }
-#file-container.list-view .file-entry-selectable { padding: 5px 0; }
-#file-container.grid-view .file-entry-selectable { padding: 0; }
-.file-content-wrapper {
-    flex-grow: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    overflow: hidden;
-}
-
-/* 列表視圖 */
-#file-container.list-view ul { list-style-type: none; padding: 0; margin:0; }
-#file-container.list-view li {
-    position: relative;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    margin-bottom: -1px;
-    border: 1px solid var(--og-border-color);
-    background-color: var(--og-container-bg);
-}
-.dark-theme #file-container.list-view li {
-    border-color: #444;
-    background-color: #2c2c2c;
-}
-#file-container.list-view li:first-child { border-top-left-radius: 5px; border-top-right-radius: 5px; }
-#file-container.list-view li:last-child { border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; margin-bottom: 0; }
-#file-container.list-view .file-entry {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-grow: 1;
-    min-width: 0;
-    overflow: hidden;
-}
-#file-container.list-view .file-icon-large,
-#file-container.list-view .file-icon { display: none !important; }
-#file-container.list-view .file-entry .file-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    flex-shrink: 1;
-    font-weight: 500;
-    font-size: 0.95em;
-    color: var(--og-text-color);
-}
-#file-container.list-view .file-entry a.file-name { color: var(--button-primary-bg-color); }
-.dark-theme #file-container.list-view .file-entry a.file-name { color: #6cb2eb; }
-#file-container.list-view .file-entry a.file-name:hover { text-decoration: underline; }
-#file-container.list-view .file-details {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    font-size: 0.85em;
-    color: var(--og-text-color);
-    opacity: 0.8;
-    margin-left: auto;
-    padding-left: 10px;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-.dark-theme #file-container.list-view .file-details { color: #bbb; }
-#file-container.list-view .file-details .file-size,
-#file-container.list-view .file-details .file-modified {
-    min-width: 80px;
-    text-align: right;
-}
-#file-container.grid-view .file-details { display: none; }
-#file-container.list-view .file-actions-placeholder {
-    min-width: 40px;
-    text-align: right;
-    font-size: 0.9em;
-    color: var(--og-text-color);
-    opacity: 0.7;
-    flex-shrink: 0;
-}
-.dark-theme #file-container.list-view .file-actions-placeholder { color: #aaa; }
-#file-container.list-view li.single-selected-item > .file-entry-selectable,
-#file-container.grid-view li.single-selected-item {
-    background-color: var(--hover-bg);
-    border-radius: 4px;
-}
-
-/* 彈出視窗 */
-#move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal {
-    display: none;
-    position: fixed;
-    z-index: 1001;
-    left: 0; top: 0;
-    width: 100%; height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.5);
-}
-.modal-content {
-    background-color: var(--modal-bg) !important;
-    color: var(--modal-text-color);
-    margin: 10% auto;
-    padding: 20px;
-    border: 1px solid var(--modal-border-color);
-    border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-.modal-content h3 { margin-top: 0; }
-.modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-.modal-content .form-group input[type="text"] {
-    width: 100%; padding: 10px; box-sizing: border-box;
-    border: 1px solid var(--input-border-color);
-    border-radius: 4px;
-    background-color: var(--input-bg-color);
-    color: var(--input-text-color);
-}
-.modal-actions {
-    text-align: right;
-    margin-top: 20px;
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-}
-.modal-actions button { margin: 0; }
-#video-player-modal .modal-content {
-    background-color: var(--video-modal-bg) !important;
-    color: var(--video-modal-text-color);
-    border-color: var(--video-modal-border-color);
-    max-width: 900px;
-    margin: 5% auto;
-}
-#video-player-modal #video-modal-title {
-    color: var(--video-modal-text-color);
-    margin-bottom: 15px;
-}
-#video-player-modal .close-modal-btn { color: var(--video-modal-close-btn-color); }
-#video-player-modal .close-modal-btn:hover,
-#video-player-modal .close-modal-btn:focus {
-    color: var(--video-modal-close-btn-hover-color);
-    text-decoration: none;
-    cursor: pointer;
-}
-#html5-video-player {
-    width: 100%;
-    max-height: 75vh;
-    display: block;
-    margin-top: 10px;
-    background-color: #000;
-    border-radius: 4px;
-}
-#directory-tree-container {
-    max-height: 250px;
-    overflow-y: auto;
-    border: 1px solid var(--input-border-color);
-    padding: 10px;
-    margin-bottom: 15px;
-    background-color: var(--input-bg-color);
-}
-#directory-tree-container ul { list-style-type: none; padding-left: 20px; margin: 0; }
-#directory-tree-container li { padding: 5px 0; cursor: pointer; border-bottom: 1px dashed var(--input-border-color); }
-#directory-tree-container li:last-child { border-bottom: none; }
-#directory-tree-container li:hover { background-color: var(--hover-bg); }
-#directory-tree-container li.selected-dir {
-    background-color: var(--button-primary-bg-color);
-    color: var(--button-primary-text-color);
-}
-.close-modal-btn {
-    float: right;
-    font-size: 1.5em;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: 1;
-    padding: 0 5px;
-    color: var(--modal-text-color);
-}
-.dark-theme .close-modal-btn { color: var(--modal-text-color); }
-
-
-/* 網格視圖 */
-#file-container.grid-view ul {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 12px;
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-#file-container.grid-view li {
-    padding: 10px;
-    min-height: 100px;
-    background-color: var(--og-container-bg);
-    border: 1px solid var(--og-border-color);
-    border-radius: 6px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    position: relative;
-}
-.dark-theme #file-container.grid-view li {
-    background-color: #2c2c2c;
-    border-color: #444;
-}
-#file-container.grid-view li .file-entry-selectable {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    flex-grow: 1;
-}
-#file-container.grid-view li .file-content-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    flex-grow: 1;
-    text-decoration: none;
-    color: inherit;
-    padding: 0;
-}
-#file-container.grid-view .file-entry {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    gap: 6px;
-    width: 100%;
-}
-#file-container.grid-view .file-icon-large {
-    font-size: 3.5em;
-    line-height: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 48px;
-    margin-bottom: 4px;
-    color: var(--og-text-color);
-}
-.dark-theme #file-container.grid-view .file-icon-large { color: #6cb2eb; }
-#file-container.grid-view .file-icon-large.folder-icon { color: #ffc107; }
-.dark-theme #file-container.grid-view .file-icon-large.folder-icon { color: #ffc107; }
-#file-container.grid-view .file-name {
-    font-size: 0.8em;
-    line-height: 1.3;
-    word-break: break-word;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    min-height: 2.6em;
-    margin-bottom: 6px;
-    color: var(--og-text-color);
-}
-#file-container.grid-view a.file-name { color: var(--button-primary-bg-color); }
-.dark-theme #file-container.grid-view .file-name { color: #e0e0e0; }
-.dark-theme #file-container.grid-view a.file-name { color: #6cb2eb; }
-#file-container.grid-view.multi-select-mode-active .item-checkbox { margin-bottom: 6px; }
-#file-container.grid-view .file-actions { display: flex; flex-direction: column; gap: 4px; width: 100%; margin-top: auto; }
-#file-container.grid-view .file-actions .action-link { font-size: 0.75em; padding: 4px 6px; background-color: #f1f3f5; border-radius: 4px; color: #495057; display: block; }
-.dark-theme #file-container.grid-view .file-actions .action-link { background-color: #3a3a3a; color: #ccc; }
-.dark-theme #file-container.grid-view .file-actions .action-link:hover { background-color: #454545; }
-
-/* 全選容器 */
-#select-all-container {
-    display: none;
-    align-items: center;
-    padding: 5px 10px;
-    background-color: #f9f9f9;
-    border-bottom: 1px solid #eee;
-}
-.dark-theme #select-all-container { background-color: #2e2e2e; border-bottom-color: #444; }
-#select-all-container.visible-in-multiselect { display: flex; }
-#select-all-container label { margin-left: 5px; font-weight: normal;}
-
-/* 重命名表單 */
-.rename-form {
-    display: none;
-    position: absolute;
-    background-color: var(--rename-form-bg);
-    padding: 10px;
-    border: 1px solid var(--rename-form-border-color);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    z-index: 100;
-    border-radius: 6px;
-    box-sizing: border-box;
-}
-#file-container.list-view li .rename-form {
-    left: 25px;
-    right: 5px;
-    top: calc(100% + 2px);
-    max-width: 400px;
-}
-#file-container.grid-view li .rename-form {
-    left: 50%;
-    transform: translateX(-50%) translateY(5px);
-    top: 100%;
-    margin-top: 5px;
-    width: calc(100% - 10px);
-    max-width: 180px;
-    right: auto;
-}
-.rename-form form.inline-form {
-    display: flex;
-    gap: 8px;
-    align-items: stretch;
-}
-.rename-form input[type="text"],
-.rename-form button {
-    box-sizing: border-box;
-    line-height: 1.4;
-    padding: 8px 10px;
-    font-size: 0.9em;
-    border-radius: 4px;
-    margin: 0;
-}
-.rename-form input[type="text"] {
-    flex-grow: 1;
-    padding-left: 8px;
-    padding-right: 8px;
-    background-color: var(--input-bg-color);
-    color: var(--input-text-color);
-    border: 1px solid var(--input-border-color);
-}
-.rename-form button {
-    white-space: nowrap;
-    border-width: 1px;
-    border-style: solid;
-}
-.rename-form button[type="submit"] {
-    background-color: var(--button-primary-bg-color);
-    color: var(--button-primary-text-color);
-    border-color: var(--button-primary-border-color);
-}
-.rename-form button.secondary {
-    background-color: var(--button-secondary-bg-color);
-    color: var(--button-secondary-text-color);
-    border-color: var(--button-secondary-border-color);
-}
-
-/* 上傳區域 */
-#upload-actions-container {
-    display: none;
-    padding: 10px 0;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-bottom: 15px;
-}
-#upload-actions-container button { margin: 0; }
-#upload-section {
-    display: none;
-    padding: 20px;
-    border: 1px solid var(--og-border-color);
-    border-radius: 6px;
-    margin-top: 0;
-    background-color: var(--og-input-bg-color);
-}
-.dark-theme #upload-section { background-color: #3a3a3a; border-color: #444; }
-#upload-section h2 { margin-top: 0; font-size: 1.1em; }
-#drop-area {
-    border: 2px dashed var(--button-primary-bg-color);
-    padding: 20px;
-    text-align: center;
-    border-radius: 5px;
-    background-color: var(--input-bg-color);
-    margin-bottom: 0;
-}
-.dark-theme #drop-area { border-color: var(--button-primary-bg-color); background-color: #2c2c2c; }
-#drop-area.highlight {
-    border-color: #28a745;
-    background-color: #e9f7ef;
-}
-.dark-theme #drop-area.highlight { background-color: #333; border-color: #28a745;}
-#drop-area p {
-    margin-bottom: 15px;
-    font-size: 1.1em;
-    color: var(--og-text-color);
-    opacity: 0.8;
-}
-.dark-theme #drop-area p { color: #adb5bd; }
-#drop-area label { color: var(--button-primary-bg-color); cursor: pointer; text-decoration: underline; font-weight: 500; }
-#upload-button { margin: 15px 0 0 0; }
-#file-list-preview ul { list-style-type: none; padding-left: 0; margin-top: 10px; text-align: left; }
-#file-list-preview li { font-size: 0.85em; color: var(--og-text-color); padding: 3px 0; }
-.dark-theme #file-list-preview li { color: #e0e0e0; }
-
-/* 搜索結果提示 */
-.search-results-info {
-    padding: 10px;
-    background-color: var(--og-input-bg-color);
-    border-radius: 5px;
-    margin-bottom: 15px;
-    font-size: 0.9em;
-}
-.dark-theme .search-results-info { background-color: #3a3a3a; }
-.file-location-in-search {
-    font-size: 0.8em;
-    color: var(--og-text-color);
-    opacity: 0.7;
-    margin-left: 8px;
-}
-.dark-theme .file-location-in-search { color: #adb5bd; }
-
-/* 進度條 */
-.progress-bar-container {
-    width: 100%;
-    background-color: var(--input-bg-color);
-    opacity: 0.8;
-    border-radius: 4px;
-    margin-top: 10px;
-    padding: 2px;
-    display: none;
-    box-sizing: border-box;
-}
-.dark-theme .progress-bar-container { background-color: #495057; opacity: 1;}
-.progress-bar {
-    display: block;
-    width: 0%;
-    height: 20px;
-    background-color: var(--button-primary-bg-color);
-    border: 1px solid var(--button-primary-border-color);
-    border-radius: 2px;
-    text-align: center;
-    line-height: 18px;
-    color: var(--button-primary-text-color);
-    font-size: 0.8em;
-    font-weight: bold;
-    transition: width 0.1s ease-in-out;
-    box-sizing: border-box;
-    overflow: hidden;
-}
-
-/* 文件容器最大高度 */
-#file-container {
-    max-height: calc(100vh - 320px);
-    overflow-y: auto;
-    padding-right: 5px;
-    box-sizing: border-box;
-}
-
-/* 管理員表格 */
-.admin-table-container { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; min-width: 500px; }
-table th, table td {
-    border: 1px solid var(--og-border-color);
-    padding: 8px 10px;
-    text-align: left;
-    color: var(--og-text-color);
-    vertical-align: middle;
-}
-.dark-theme table th, .dark-theme table td { border-color: #555; color: #e0e0e0;}
-table th {
-    background-color: var(--og-input-bg-color);
-    opacity: 0.9;
-    font-weight: 600;
-}
-.dark-theme table th { background-color: #3a3a3a; }
-
-/* 表格內的操作區域 */
-table td.actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-table td.actions form,
-table td.actions .button-link {
-    margin: 0;
-}
-table td.actions form {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-    flex-wrap: nowrap;
-}
-table td.actions form input[type="password"] {
-    width: 150px;
-    max-width: 180px;
-    padding: 5px 8px;
-    font-size: 0.85em;
-    margin:0;
-    flex-grow: 0;
-    flex-shrink: 1;
-}
-table td.actions form button,
-table td.actions .button-link.secondary {
-    margin:0;
-    padding: 5px 10px;
-    font-size: 0.85em;
-    flex-shrink: 0;
-}
-
-/* 編輯器樣式 */
-textarea#fileContent {
-    min-height: 50vh;
-    font-size: 0.9rem;
-    margin:0;
-    width: 100%;
-}
-.editor-actions {
-    margin-top: 15px;
-    text-align: right;
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-}
-.editor-actions button { margin-left: 0; margin-bottom:0; }
-
-.note {
-    font-size: 0.85em;
-    margin-top: 15px;
-    padding: 10px;
-    background-color: var(--og-input-bg-color);
-    opacity: 0.9;
-    border-left: 4px solid var(--button-primary-bg-color);
-    color: var(--og-text-color);
-}
-.dark-theme .note { background-color: #3a3a3a; color: #ccc; border-left-color: var(--button-primary-bg-color); }
-
-
-/* 響應式調整 */
-@media (min-width: 768px) {
-    header {
-        flex-direction: row;
-        align-items: center;
-    }
-    header h1 {
-        margin-bottom: 0;
-        font-size: 1.75em;
-    }
-    .header-controls {
-        width: auto;
-        margin-left: auto;
-    }
-    .container { padding: 20px 25px; }
-    .auth-form-container { padding: 30px 40px; }
-    /* .file-browser-controls .search-form-right input[type="search"] { width: 250px; } */ /* 已被整合到 .file-browser-controls 區塊內 */
-    form.control-form .form-group label { flex-basis: 120px; }
-    form.control-form button[type="submit"] { margin-left: 130px; }
-    table td.actions form input[type="password"] { width: 180px; }
-}
-@media (min-width: 576px) {
-    /* .file-browser-controls .search-form-right input[type="search"] { width: 200px; } */ /* 已被整合到 .file-browser-controls 區塊內 */
-    #file-container.grid-view ul { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
-    form.control-form { max-width: 600px; }
-    table td.actions form input[type="password"] { width: 150px; }
-}
-@media (min-width: 992px) {
-     #file-container.grid-view ul { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-     form.control-form { max-width: 700px; }
-}
