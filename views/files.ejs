@@ -2,1794 +2,1840 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= locals.pageTitle || ( (locals.viewTargetUsername ? viewTargetUsername : user.username) + ' 的文件') %> - 網路硬碟</title>
-    <link rel="stylesheet" href="/style.css">
-    <link id="theme-stylesheet" rel="stylesheet" href="">
-    <style>
-        /* CSS 變量定義 */
-        :root {
-            --button-primary-bg-color: #007bff;
-            --button-primary-text-color: #ffffff;
-            --button-primary-border-color: #007bff;
-            
-            /* Unified secondary button colors to primary */
-            --button-secondary-bg-color: var(--button-primary-bg-color);
-            --button-secondary-text-color: var(--button-primary-text-color);
-            --button-secondary-border-color: var(--button-primary-border-color);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= locals.pageTitle || ( (locals.viewTargetUsername ? viewTargetUsername : user.username) + ' 的文件') %> - 網路硬碟</title>
+    <link rel="stylesheet" href="/style.css">
+    <link id="theme-stylesheet" rel="stylesheet" href="">
+    <style>
+        /* CSS 變量定義 */
+        :root {
+            --button-primary-bg-color: #007bff;
+            --button-primary-text-color: #ffffff;
+            --button-primary-border-color: #007bff;
+            
+            --button-secondary-bg-color: #6c757d; /* 用於次要按鈕，例如取消 */
+            --button-secondary-text-color: #ffffff;
+            --button-secondary-border-color: #6c757d;
 
-            --input-border-color: #ccc;
-            --input-bg-color: #fff;
-            --input-text-color: #333;
+            --input-border-color: #ccc;
+            --input-bg-color: #fff;
+            --input-text-color: #333;
 
-            --modal-bg: #ffffff;
-            --modal-text-color: #333;
-            --modal-border-color: #888;
+            --modal-bg: #ffffff;
+            --modal-text-color: #333;
+            --modal-border-color: #888;
 
-            --rename-form-bg: #ffffff;
-            --rename-form-border-color: #cccccc;
+            --rename-form-bg: #ffffff;
+            --rename-form-border-color: #cccccc;
 
-            /* 新增: 視頻播放器模態框的變量 */
-            --video-modal-bg: #1c1c1c;
-            --video-modal-text-color: #f1f1f1;
-            --video-modal-border-color: #333;
-            --video-modal-close-btn-color: #aaa;
-            --video-modal-close-btn-hover-color: #fff;
-        }
+            /* 新增: 視頻播放器模態框的變量 */
+            --video-modal-bg: #1c1c1c;
+            --video-modal-text-color: #f1f1f1;
+            --video-modal-border-color: #333;
+            --video-modal-close-btn-color: #aaa;
+            --video-modal-close-btn-hover-color: #fff;
+        }
 
-        .dark-theme {
-            --button-primary-bg-color: #0056b3;
-            --button-primary-text-color: #ffffff;
-            --button-primary-border-color: #0056b3;
+        .dark-theme {
+            --button-primary-bg-color: #0056b3;
+            --button-primary-text-color: #ffffff;
+            --button-primary-border-color: #0056b3;
 
-            /* Unified secondary button colors to primary for dark theme */
-            --button-secondary-bg-color: var(--button-primary-bg-color);
-            --button-secondary-text-color: var(--button-primary-text-color);
-            --button-secondary-border-color: var(--button-primary-border-color);
-            
-            --input-border-color: #555;
-            --input-bg-color: #2c2c2c; 
-            --input-text-color: #e0e0e0;
-            
-            --modal-bg: #2c2c2c;
-            --modal-text-color: #e0e0e0;
-            --modal-border-color: #555;
+            --button-secondary-bg-color: #5a6268;
+            --button-secondary-text-color: #ffffff;
+            --button-secondary-border-color: #545b62;
+            
+            --input-border-color: #555;
+            --input-bg-color: #2c2c2c; 
+            --input-text-color: #e0e0e0;
+            
+            --modal-bg: #2c2c2c;
+            --modal-text-color: #e0e0e0;
+            --modal-border-color: #555;
 
-            --rename-form-bg: #3a3a3a;
-            --rename-form-border-color: #555;
+            --rename-form-bg: #3a3a3a;
+            --rename-form-border-color: #555;
 
-            /* 新增: 暗色主題下的視頻播放器模態框變量 */
-            --video-modal-bg: #2a2a2a;
-            --video-modal-text-color: #e0e0e0;
-            --video-modal-border-color: #444;
-            --video-modal-close-btn-color: #bbb;
-            --video-modal-close-btn-hover-color: #fff;
-        }
+            /* 新增: 暗色主題下的視頻播放器模態框變量 */
+            --video-modal-bg: #2a2a2a;
+            --video-modal-text-color: #e0e0e0;
+            --video-modal-border-color: #444;
+            --video-modal-close-btn-color: #bbb;
+            --video-modal-close-btn-hover-color: #fff;
+        }
 
-        /* Header navigation links styled as buttons */
-        .header-controls nav a {
-            background-color: var(--button-primary-bg-color);
-            color: var(--button-primary-text-color);
-            border: 1px solid var(--button-primary-border-color);
-            padding: 8px 12px;
-            border-radius: 4px;
-            text-decoration: none;
-            margin-left: 8px; 
-            display: inline-block;
+        /* 其他通用樣式 */
+        #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .dark-theme #selection-action-bar { background-color: #252525; border-bottom-color: #444; }
+        #selection-action-bar button { margin: 0; }
+        
+        .item-checkbox { 
+            display: none; 
+            margin-right: 10px; 
+            width: 18px; 
+            height: 18px; 
+            vertical-align: middle; 
+        }
+        #file-container.multi-select-mode-active .item-checkbox {
+            display: inline-block; 
+        }
+
+        .file-entry-selectable { display: flex; align-items: center; width: 100%; }
+        #file-container.list-view .file-entry-selectable {
+            padding: 5px 0;
+        }
+        #file-container.grid-view .file-entry-selectable {
+            padding: 0; 
+        }
+
+        .file-content-wrapper { 
+            flex-grow: 1; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center; 
+            cursor: pointer; 
+            overflow: hidden;
+        }
+        
+        .list-view li { position: relative; }
+        .list-view .file-entry {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-grow: 1;
+            min-width: 0;
+        }
+        .list-view .file-entry .file-name { 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            white-space: nowrap; 
+            flex-shrink: 1;
+        }
+
+        .list-view .file-details {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.85em;
+            color: #555;
+            margin-left: auto;
+            padding-left: 10px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .dark-theme .list-view .file-details { 
+            color: #bbb; 
+        }
+        .list-view .file-details .file-size,
+        .list-view .file-details .file-modified {
+            min-width: 80px;
+            text-align: right;
+        }
+        #file-container.grid-view .file-details {
+            display: none;
+        }
+
+        .list-view .file-actions-placeholder { 
+            min-width: 40px;
+            text-align: right; 
             font-size: 0.9em; 
-            line-height: 1.4; 
-            transition: opacity 0.15s ease-in-out; 
+            color: #666;
+            flex-shrink: 0;
+        }
+        .dark-theme .list-view .file-actions-placeholder { color: #aaa; }
+        
+        .list-view li.single-selected-item > .file-entry-selectable,
+        .grid-view li.single-selected-item { 
+            background-color: #e9e9e9; 
+            border-radius: 4px;
+        }
+        .dark-theme .list-view li.single-selected-item > .file-entry-selectable,
+        .dark-theme .grid-view li.single-selected-item {
+            background-color: #404040; 
         }
 
-        .header-controls nav a:hover {
-            opacity: 0.85; 
+        #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal { /* 新增 #video-player-modal */
+            display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.5); 
+        }
+        .modal-content { 
+            background-color: var(--modal-bg) !important;
+            color: var(--modal-text-color);
+            margin: 10% auto; 
+            padding: 20px; 
+            border: 1px solid var(--modal-border-color);
+            border-radius: 8px; 
+            width: 90%; 
+            max-width: 500px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
+        }
+        .modal-content h3 { margin-top: 0; }
+        .modal-content .form-group { margin-bottom: 15px; }
+        .modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .modal-content .form-group input[type="text"] {
+            width: 100%; padding: 10px; box-sizing: border-box;
+            border: 1px solid var(--input-border-color); border-radius: 4px;
+            background-color: var(--input-bg-color); color: var(--input-text-color);
+        }
+        .modal-actions { text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
+
+        /* 新增: 視頻播放器模態框特定樣式 */
+        #video-player-modal .modal-content {
+            background-color: var(--video-modal-bg) !important;
+            color: var(--video-modal-text-color);
+            border-color: var(--video-modal-border-color);
+            max-width: 900px; /* 可以更大一些以容納視頻 */
+            margin: 5% auto; /* 調整垂直邊距 */
+        }
+        #video-player-modal #video-modal-title {
+            color: var(--video-modal-text-color);
+            margin-bottom: 15px;
+        }
+        #video-player-modal .close-modal-btn {
+            color: var(--video-modal-close-btn-color);
+        }
+        #video-player-modal .close-modal-btn:hover,
+        #video-player-modal .close-modal-btn:focus {
+            color: var(--video-modal-close-btn-hover-color);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #html5-video-player {
+            width: 100%;
+            max-height: 75vh; /* 限制最大高度 */
+            display: block;
+            margin-top: 10px;
+            background-color: #000; /* 視頻背景通常為黑色 */
+            border-radius: 4px;
         }
 
-        /* 其他通用樣式 */
-        #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
-        .dark-theme #selection-action-bar { background-color: #252525; border-bottom-color: #444; }
-        /* Unified style for buttons in selection action bar */
-        #selection-action-bar button {
+
+        #directory-tree-container { 
+            max-height: 250px; 
+            overflow-y: auto; 
+            border: 1px solid var(--input-border-color); 
+            padding: 10px; 
+            margin-bottom: 15px; 
+            background-color: var(--input-bg-color); 
+        }
+        #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
+        #directory-tree-container li { padding: 5px 0; cursor: pointer; border-bottom: 1px dashed var(--input-border-color); }
+        #directory-tree-container li:last-child { border-bottom: none; }
+        #directory-tree-container li:hover { background-color: var(--hover-bg, #f0f0f0); } 
+        .dark-theme #directory-tree-container li:hover { --hover-bg: #4a4a4a; }
+        #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } 
+        .dark-theme #directory-tree-container li.selected-dir { background-color: #0056b3; }
+
+        .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
+        
+        /* --- Grid View Specific Styles --- */
+        #file-container.grid-view ul {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+            gap: 10px; 
+            list-style-type: none;
+            padding: 0;
             margin: 0;
-            padding: 8px 12px;
-            font-size: 0.9em;
-            border-radius: 4px;
+        }
+
+        #file-container.grid-view li {
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            padding: 8px; 
+            border-radius: 6px; 
+            position: relative;
+            min-height: 100px; 
+        }
+        
+        #file-container.grid-view li .file-entry-selectable {
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            width: 100%;
+            flex-grow: 1;
+        }
+        
+        #file-container.grid-view li .file-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;   
+            justify-content: center;
+            width: 100%;
+            flex-grow: 1;
+            text-decoration: none;
+            color: inherit;
+            padding: 0; 
+        }
+
+        .grid-view .file-entry { 
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center;   
+            text-align: center;       
+            gap: 6px; 
+            width: 100%;           
+        }
+
+        .grid-view .file-icon-large { 
+            font-size: 3.5em;         
+            line-height: 1;           
+            display: flex;           
+            justify-content: center; 
+            align-items: center;   
+            min-height: 48px;         
+            margin-bottom: 4px;     
+        }
+
+        .grid-view .file-name { 
+            font-size: 0.8em; 
+            line-height: 1.3;
+            word-break: break-word; 
+            display: -webkit-box;
+            -webkit-line-clamp: 1; 
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis; 
+            max-width: 100%;     
+        }
+        
+        #file-container.grid-view.multi-select-mode-active .item-checkbox {
+            margin-bottom: 6px; 
+        }
+        /* --- End of Grid View Specific Styles --- */
+        
+        #select-all-container { 
+            display: none; 
+            align-items: center; 
+            padding: 5px 10px; 
+            background-color: #f9f9f9; 
+            border-bottom: 1px solid #eee; 
+        }
+        .dark-theme #select-all-container { background-color: #2e2e2e; border-bottom-color: #444; }
+        
+        #select-all-container.visible-in-multiselect {
+            display: flex;
+        }
+
+        #select-all-container label { margin-left: 5px; font-weight: normal;}
+
+        .rename-form {
+            display: none;
+            position: absolute;
+            left: 25px; 
+            right: 5px; 
+            top: calc(100% + 2px); 
+            background-color: var(--rename-form-bg);
+            padding: 10px;
+            border: 1px solid var(--rename-form-border-color);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
+            z-index: 100;
+            border-radius: 6px;
+            max-width: 400px; 
+            box-sizing: border-box;
+        }
+        
+        #file-container.grid-view li .rename-form {
+            left: 50%;
+            transform: translateX(-50%);
+            top: 100%; 
+            margin-top: 5px; 
+            width: calc(100% - 10px); 
+            max-width: 180px; 
+            right: auto; 
+        }
+
+        .rename-form form.inline-form {
+            display: flex;
+            gap: 8px; 
+            align-items: stretch; 
+        }
+
+        .rename-form input[type="text"],
+        .rename-form button {
+            box-sizing: border-box; 
+            font-size: 0.9em;     
+            line-height: 1.4;   
+            padding-top: 6px;     
+            padding-bottom: 6px;  
+            border-radius: 4px;   
+            margin: 0;           
+        }
+
+        .rename-form input[type="text"] {
+            flex-grow: 1;
+            padding-left: 8px;
+            padding-right: 8px;
+            background-color: var(--input-bg-color);
+            color: var(--input-text-color);
+            border: 1px solid var(--input-border-color);
+        }
+
+        .rename-form button {
+            padding-left: 12px;  
+            padding-right: 12px;
             cursor: pointer;
-            border-width: 1px;
+            white-space: nowrap; 
+            border-width: 1px; 
             border-style: solid;
-            background-color: var(--button-primary-bg-color); /* Unified style */
-            color: var(--button-primary-text-color); /* Unified style */
-            border-color: var(--button-primary-border-color); /* Unified style */
-            transition: opacity 0.15s ease-in-out;
         }
-        #selection-action-bar button:hover:not(:disabled) {
-            opacity: 0.85;
-        }
-        #selection-action-bar button:disabled {
-            opacity: 0.65;
-            cursor: not-allowed;
-        }
-        
-        .item-checkbox { 
-            display: none; 
-            margin-right: 10px; 
-            width: 18px; 
-            height: 18px; 
-            vertical-align: middle; 
-        }
-        #file-container.multi-select-mode-active .item-checkbox {
-            display: inline-block; 
-        }
-
-        .file-entry-selectable { display: flex; align-items: center; width: 100%; }
-        #file-container.list-view .file-entry-selectable {
-            padding: 5px 0;
-        }
-        #file-container.grid-view .file-entry-selectable {
-            padding: 0; 
-        }
-
-        .file-content-wrapper { 
-            flex-grow: 1; 
-            display: flex;
-            justify-content: space-between;
-            align-items: center; 
-            cursor: pointer; 
-            overflow: hidden;
-        }
-        
-        .list-view li { position: relative; }
-        .list-view .file-entry {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-grow: 1;
-            min-width: 0;
-        }
-        .list-view .file-entry .file-name { 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            white-space: nowrap; 
-            flex-shrink: 1;
-        }
-
-        .list-view .file-details {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 0.85em;
-            color: #555;
-            margin-left: auto;
-            padding-left: 10px;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .dark-theme .list-view .file-details { 
-            color: #bbb; 
-        }
-        .list-view .file-details .file-size,
-        .list-view .file-details .file-modified {
-            min-width: 80px;
-            text-align: right;
-        }
-        #file-container.grid-view .file-details {
-            display: none;
-        }
-
-        .list-view .file-actions-placeholder { 
-            min-width: 40px;
-            text-align: right; 
-            font-size: 0.9em; 
-            color: #666;
-            flex-shrink: 0;
-        }
-        .dark-theme .list-view .file-actions-placeholder { color: #aaa; }
-        
-        .list-view li.single-selected-item > .file-entry-selectable,
-        .grid-view li.single-selected-item { 
-            background-color: #e9e9e9; 
-            border-radius: 4px;
-        }
-        .dark-theme .list-view li.single-selected-item > .file-entry-selectable,
-        .dark-theme .grid-view li.single-selected-item {
-            background-color: #404040; 
-        }
-
-        #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal { /* 新增 #video-player-modal */
-            display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: auto; background-color: rgba(0,0,0,0.5); 
-        }
-        .modal-content { 
-            background-color: var(--modal-bg) !important;
-            color: var(--modal-text-color);
-            margin: 10% auto; 
-            padding: 20px; 
-            border: 1px solid var(--modal-border-color);
-            border-radius: 8px; 
-            width: 90%; 
-            max-width: 500px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
-        }
-        .modal-content h3 { margin-top: 0; }
-        .modal-content .form-group { margin-bottom: 15px; }
-        .modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-        .modal-content .form-group input[type="text"] {
-            width: 100%; padding: 10px; box-sizing: border-box;
-            border: 1px solid var(--input-border-color); border-radius: 4px;
-            background-color: var(--input-bg-color); color: var(--input-text-color);
-        }
-        .modal-actions { text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
-        /* Unified style for buttons in modal actions */
-        .modal-actions button {
-            padding: 8px 15px; /* Adjusted padding for better appearance */
-            font-size: 0.9em;
-            border-radius: 4px;
-            cursor: pointer;
-            border-width: 1px;
-            border-style: solid;
-            background-color: var(--button-primary-bg-color); /* All modal buttons use primary style */
+        
+        .rename-form button[type="submit"] {
+            background-color: var(--button-primary-bg-color);
             color: var(--button-primary-text-color);
             border-color: var(--button-primary-border-color);
-            transition: opacity 0.15s ease-in-out;
         }
-        .modal-actions button:hover {
-            opacity: 0.85;
+        .rename-form button.secondary { 
+            background-color: var(--button-secondary-bg-color);
+            color: var(--button-secondary-text-color);
+            border-color: var(--button-secondary-border-color);
         }
-        /* Note: The .secondary class on modal buttons will now also render as primary due to variable changes and the above specific rule */
+        
+        #upload-actions-container { display: none; padding: 10px 0; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
+        #upload-actions-container button { margin: 0; }
+        #upload-section { display: none; padding: 20px; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 0; background-color: #f8f9fa; }
+        .dark-theme #upload-section { background-color: #3a3a3a; border-color: #444; }
+        #drop-area { border: 2px dashed #007bff; padding: 20px; text-align: center; border-radius: 5px; background-color: #fff; }
+        .dark-theme #drop-area { border-color: #0056b3; background-color: #2c2c2c; }
+        #drop-area.highlight { border-color: #28a745; background-color: #e9f7ef; }
+        .dark-theme #drop-area.highlight { background-color: #333; }
+        #drop-area p { margin-bottom: 15px; font-size: 1.1em; color: #6c757d; }
+        .dark-theme #drop-area p { color: #adb5bd; }
+        #upload-button { display: none; margin-top: 15px; }
 
+        .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
+        .dark-theme .search-results-info { background-color: #3a3a3a; }
+        .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
+        .dark-theme .file-location-in-search { color: #adb5bd; }
 
-        /* 新增: 視頻播放器模態框特定樣式 */
-        #video-player-modal .modal-content {
-            background-color: var(--video-modal-bg) !important;
-            color: var(--video-modal-text-color);
-            border-color: var(--video-modal-border-color);
-            max-width: 900px; /* 可以更大一些以容納視頻 */
-            margin: 5% auto; /* 調整垂直邊距 */
-        }
-        #video-player-modal #video-modal-title {
-            color: var(--video-modal-text-color);
-            margin-bottom: 15px;
-        }
-        #video-player-modal .close-modal-btn {
-            color: var(--video-modal-close-btn-color);
-        }
-        #video-player-modal .close-modal-btn:hover,
-        #video-player-modal .close-modal-btn:focus {
-            color: var(--video-modal-close-btn-hover-color);
-            text-decoration: none;
-            cursor: pointer;
-        }
-        #html5-video-player {
-            width: 100%;
-            max-height: 75vh; /* 限制最大高度 */
-            display: block;
-            margin-top: 10px;
-            background-color: #000; /* 視頻背景通常為黑色 */
-            border-radius: 4px;
-        }
-
-
-        #directory-tree-container { 
-            max-height: 250px; 
-            overflow-y: auto; 
-            border: 1px solid var(--input-border-color); 
-            padding: 10px; 
-            margin-bottom: 15px; 
-            background-color: var(--input-bg-color); 
-        }
-        #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
-        #directory-tree-container li { padding: 5px 0; cursor: pointer; border-bottom: 1px dashed var(--input-border-color); }
-        #directory-tree-container li:last-child { border-bottom: none; }
-        #directory-tree-container li:hover { background-color: var(--hover-bg, #f0f0f0); } 
-        .dark-theme #directory-tree-container li:hover { --hover-bg: #4a4a4a; }
-        #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } 
-        .dark-theme #directory-tree-container li.selected-dir { background-color: #0056b3; }
-
-        .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
-        
-        /* --- Grid View Specific Styles --- */
-        #file-container.grid-view ul {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
-            gap: 10px; 
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        #file-container.grid-view li {
-            display: flex;
-            flex-direction: column;
-            align-items: center; 
-            justify-content: center; 
-            padding: 8px; 
-            border-radius: 6px; 
-            position: relative;
-            min-height: 100px; 
-        }
-        
-        #file-container.grid-view li .file-entry-selectable {
-            display: flex;
-            flex-direction: column;
-            align-items: center; 
-            justify-content: center; 
-            width: 100%;
-            flex-grow: 1;
-        }
-        
-        #file-container.grid-view li .file-content-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;   
-            justify-content: center;
-            width: 100%;
-            flex-grow: 1;
-            text-decoration: none;
-            color: inherit;
-            padding: 0; 
-        }
-
-        .grid-view .file-entry { 
-            display: flex;
-            flex-direction: column;
-            justify-content: center; 
-            align-items: center;   
-            text-align: center;       
-            gap: 6px; 
-            width: 100%;           
-        }
-
-        .grid-view .file-icon-large { 
-            font-size: 3.5em;         
-            line-height: 1;           
-            display: flex;           
-            justify-content: center; 
-            align-items: center;   
-            min-height: 48px;         
-            margin-bottom: 4px;     
-        }
-
-        .grid-view .file-name { 
-            font-size: 0.8em; 
-            line-height: 1.3;
-            word-break: break-word; 
-            display: -webkit-box;
-            -webkit-line-clamp: 1; 
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis; 
-            max-width: 100%;     
-        }
-        
-        #file-container.grid-view.multi-select-mode-active .item-checkbox {
-            margin-bottom: 6px; 
-        }
-        /* --- End of Grid View Specific Styles --- */
-        
-        #select-all-container { 
-            display: none; 
-            align-items: center; 
-            padding: 5px 10px; 
-            background-color: #f9f9f9; 
-            border-bottom: 1px solid #eee; 
-        }
-        .dark-theme #select-all-container { background-color: #2e2e2e; border-bottom-color: #444; }
-        
-        #select-all-container.visible-in-multiselect {
-            display: flex;
-        }
-
-        #select-all-container label { margin-left: 5px; font-weight: normal;}
-
-        .rename-form {
-            display: none;
-            position: absolute;
-            left: 25px; 
-            right: 5px; 
-            top: calc(100% + 2px); 
-            background-color: var(--rename-form-bg);
-            padding: 10px;
-            border: 1px solid var(--rename-form-border-color);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
-            z-index: 100;
-            border-radius: 6px;
-            max-width: 400px; 
-            box-sizing: border-box;
-        }
-        
-        #file-container.grid-view li .rename-form {
-            left: 50%;
-            transform: translateX(-50%);
-            top: 100%; 
-            margin-top: 5px; 
-            width: calc(100% - 10px); 
-            max-width: 180px; 
-            right: auto; 
-        }
-
-        .rename-form form.inline-form {
-            display: flex;
-            gap: 8px; 
-            align-items: stretch; 
-        }
-
-        .rename-form input[type="text"],
-        .rename-form button {
-            box-sizing: border-box; 
-            font-size: 0.9em;     
-            line-height: 1.4;   
-            padding-top: 6px;     
-            padding-bottom: 6px;  
-            border-radius: 4px;   
-            margin: 0;           
-        }
-
-        .rename-form input[type="text"] {
-            flex-grow: 1;
-            padding-left: 8px;
-            padding-right: 8px;
-            background-color: var(--input-bg-color);
-            color: var(--input-text-color);
-            border: 1px solid var(--input-border-color);
-        }
-
-        .rename-form button {
-            padding-left: 12px;  
-            padding-right: 12px;
-            cursor: pointer;
-            white-space: nowrap; 
-            border-width: 1px; 
-            border-style: solid;
-            transition: opacity 0.15s ease-in-out; /* Added hover transition */
-        }
-        .rename-form button:hover {
-            opacity: 0.85; /* Added hover effect */
-        }
-        
-        .rename-form button[type="submit"] {
-            background-color: var(--button-primary-bg-color);
-            color: var(--button-primary-text-color);
-            border-color: var(--button-primary-border-color);
-        }
-        .rename-form button.secondary { /* This will now use primary styles due to variable changes */
-            background-color: var(--button-secondary-bg-color);
-            color: var(--button-secondary-text-color);
-            border-color: var(--button-secondary-border-color);
-        }
-        
-        #upload-actions-container { display: none; padding: 10px 0; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
-        /* Ensure buttons within upload-actions-container also get unified styling */
-        #upload-actions-container button { 
-            margin: 0; 
-            padding: 8px 12px;
-            font-size: 0.9em;
+        .file-browser-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .file-browser-controls .actions-group-left { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+        
+        .file-browser-controls .actions-group-left button,
+        #toggle-multi-select-btn { 
+            padding: 8px 12px; 
+            font-size: 0.9em; 
+            margin: 0;
             background-color: var(--button-primary-bg-color);
             color: var(--button-primary-text-color);
             border: 1px solid var(--button-primary-border-color);
             border-radius: 4px;
             cursor: pointer;
-            transition: opacity 0.15s ease-in-out;
         }
-        #upload-actions-container button:hover {
-            opacity: 0.85;
+        .file-browser-controls .actions-group-left button:hover,
+        #toggle-multi-select-btn:hover {
+            opacity: 0.9;
         }
 
-        #upload-section { display: none; padding: 20px; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 0; background-color: #f8f9fa; }
-        .dark-theme #upload-section { background-color: #3a3a3a; border-color: #444; }
-        #drop-area { border: 2px dashed #007bff; padding: 20px; text-align: center; border-radius: 5px; background-color: #fff; }
-        .dark-theme #drop-area { border-color: #0056b3; background-color: #2c2c2c; }
-        #drop-area.highlight { border-color: #28a745; background-color: #e9f7ef; }
-        .dark-theme #drop-area.highlight { background-color: #333; }
-        #drop-area p { margin-bottom: 15px; font-size: 1.1em; color: #6c757d; }
-        .dark-theme #drop-area p { color: #adb5bd; }
-
-        /* Ensure the main upload button gets unified styling */
-        #upload-button { 
-            display: none; 
-            margin-top: 15px; 
-            padding: 8px 12px; /* Consistent padding */
-            font-size: 0.9em; /* Consistent font size */
+        .file-browser-controls .search-form-right { display: flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
+        .file-browser-controls .search-form-right input[type="search"] { 
+            width: 180px; padding: 8px 10px; font-size: 0.9em; 
+            border: 1px solid var(--input-border-color); 
+            background-color: var(--input-bg-color);
+            color: var(--input-text-color);
+            border-radius: 4px; margin: 0; 
+        }
+        .file-browser-controls .search-form-right button { 
+            padding: 8px 12px; font-size: 0.9em; margin: 0;
             background-color: var(--button-primary-bg-color);
             color: var(--button-primary-text-color);
             border: 1px solid var(--button-primary-border-color);
             border-radius: 4px;
-            cursor: pointer;
-            transition: opacity 0.15s ease-in-out;
         }
-        #upload-button:hover {
-            opacity: 0.85;
+        .file-browser-controls .view-toggle { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+        .file-browser-controls .view-toggle button { 
+            padding: 8px 12px; font-size: 0.9em; margin: 0;
+            background-color: var(--button-secondary-bg-color);
+            color: var(--button-secondary-text-color);
+            border: 1px solid var(--button-secondary-border-color);
+            border-radius: 4px;
+        }
+        .file-browser-controls .view-toggle button.active {
+            background-color: var(--button-primary-bg-color);
+            border-color: var(--button-primary-border-color);
         }
 
+        .file-browser-controls:not(:has(.actions-group-left)) .search-form-right { margin-left: 0; flex-grow: 1; }
+        .file-browser-controls:not(:has(.actions-group-left)) .search-form-right input[type="search"] { flex-grow: 1; }
+        .file-browser-controls:not(:has(.actions-group-left)) .view-toggle { margin-left: auto; }
+        
+        .progress-bar-container { width: 100%; background-color: #e9ecef; border-radius: 4px; margin-top: 10px; padding: 2px; display: none; box-sizing: border-box; }
+        .dark-theme .progress-bar-container { background-color: #495057; }
+        .progress-bar { display: block; width: 0%; height: 20px; background-color: #007bff; border: 1px solid #0056b3; border-radius: 2px; text-align: center; line-height: 18px; color: white; font-size: 0.8em; font-weight: bold; transition: width 0.1s ease-in-out; box-sizing: border-box; overflow: hidden; }
+        .dark-theme .progress-bar { background-color: #0056b3; border-color: #003d80; }
 
-        .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
-        .dark-theme .search-results-info { background-color: #3a3a3a; }
-        .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
-        .dark-theme .file-location-in-search { color: #adb5bd; }
-
-        .file-browser-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
-        .file-browser-controls .actions-group-left { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
-        
-        .file-browser-controls .actions-group-left button,
-        #toggle-multi-select-btn { 
-            padding: 8px 12px; 
-            font-size: 0.9em; 
-            margin: 0;
-            background-color: var(--button-primary-bg-color);
-            color: var(--button-primary-text-color);
-            border: 1px solid var(--button-primary-border-color);
-            border-radius: 4px;
-            cursor: pointer;
-            transition: opacity 0.15s ease-in-out;
-        }
-        .file-browser-controls .actions-group-left button:hover,
-        #toggle-multi-select-btn:hover {
-            opacity: 0.85;
-        }
-
-        .file-browser-controls .search-form-right { display: flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
-        .file-browser-controls .search-form-right input[type="search"] { 
-            width: 180px; padding: 8px 10px; font-size: 0.9em; 
-            border: 1px solid var(--input-border-color); 
-            background-color: var(--input-bg-color);
-            color: var(--input-text-color);
-            border-radius: 4px; margin: 0; 
-        }
-        .file-browser-controls .search-form-right button { 
-            padding: 8px 12px; font-size: 0.9em; margin: 0;
-            background-color: var(--button-primary-bg-color);
-            color: var(--button-primary-text-color);
-            border: 1px solid var(--button-primary-border-color);
-            border-radius: 4px;
-            cursor: pointer;
-            transition: opacity 0.15s ease-in-out;
-        }
-        .file-browser-controls .search-form-right button:hover {
-            opacity: 0.85;
+        #file-container {
+            max-height: calc(100vh - 320px); 
+            overflow-y: auto;
+            padding-right: 5px; 
+            box-sizing: border-box;
         }
-        .file-browser-controls .view-toggle { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
-        .file-browser-controls .view-toggle button { 
-            padding: 8px 12px; font-size: 0.9em; margin: 0;
-            background-color: var(--button-secondary-bg-color); /* Will use primary due to var change */
-            color: var(--button-secondary-text-color); /* Will use primary due to var change */
-            border: 1px solid var(--button-secondary-border-color); /* Will use primary due to var change */
-            border-radius: 4px;
-            cursor: pointer;
-            transition: opacity 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
-        }
-        .file-browser-controls .view-toggle button:hover {
-            opacity: 0.85;
-        }
-        .file-browser-controls .view-toggle button.active {
-            background-color: var(--button-primary-bg-color); 
-            border-color: var(--button-primary-border-color);
-            color: var(--button-primary-text-color); 
-            opacity: 1; /* Ensure active is fully opaque and distinct */
-        }
-
-        .file-browser-controls:not(:has(.actions-group-left)) .search-form-right { margin-left: 0; flex-grow: 1; }
-        .file-browser-controls:not(:has(.actions-group-left)) .search-form-right input[type="search"] { flex-grow: 1; }
-        .file-browser-controls:not(:has(.actions-group-left)) .view-toggle { margin-left: auto; }
-        
-        .progress-bar-container { width: 100%; background-color: #e9ecef; border-radius: 4px; margin-top: 10px; padding: 2px; display: none; box-sizing: border-box; }
-        .dark-theme .progress-bar-container { background-color: #495057; }
-        .progress-bar { display: block; width: 0%; height: 20px; background-color: #007bff; border: 1px solid #0056b3; border-radius: 2px; text-align: center; line-height: 18px; color: white; font-size: 0.8em; font-weight: bold; transition: width 0.1s ease-in-out; box-sizing: border-box; overflow: hidden; }
-        .dark-theme .progress-bar { background-color: #0056b3; border-color: #003d80; }
-
-        #file-container {
-            max-height: calc(100vh - 320px); 
-            overflow-y: auto;
-            padding-right: 5px; 
-            box-sizing: border-box;
-        }
-    </style>
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>
-                <% if (locals.isSearchResult && locals.searchQuery) { %>
-                    有關 "<%= searchQuery %>" 的搜尋結果 <% if (locals.viewTargetUsername) { %>(在 <%= viewTargetUsername %> 的文件中)<% } else { %>(在您的文件中)<% } %>
-                <% } else if (locals.viewTargetUsername && user.role === 'admin') { %>
-                    管理員視角: <%= viewTargetUsername %> 的文件
-                <% } else { %>
-                    <%= user.username %> 的文件
-                <% } %>
-            </h1>
-            <div class="header-controls">
-                <nav>
-                    <% if (user.role === 'admin') { %><a href="/admin">管理面板</a><% } %>
-                    <a href="/change-password">修改密碼</a>
-                    <a href="/logout">登出</a>
-                </nav>
-                <%- include('partials/theme-switcher') %>
-            </div>
-        </header>
-
-        <% if (locals.message) { %>
-            <p class="message <%= (locals.messageType === 'error' || (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('沒有選擇文件') || message.includes('無效的') ))) ? 'error-message' : (locals.messageType === 'success' ? '' : (locals.messageType === 'warning' ? 'warning-message' : '') ) %>"><%= message %></p>
-        <% } %>
-
-        <% if (!locals.isSearchResult) { %>
-            <div class="current-path">
-                當前路徑:
-                <a href="/files<%= locals.viewTargetUsername && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>">根目錄</a>
-                <%
-                    let pathSegments = currentPath.split('/').filter(Boolean);
-                    let cumulativePathForLink = '';
-                    const adminTargetQueryForPath = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '';
-                %>
-                <% pathSegments.forEach(segment => { %>
-                    <% cumulativePathForLink += '/' + segment; %>
-                    / <a href="/files?path=<%= encodeURIComponent(cumulativePathForLink) %><%= adminTargetQueryForPath %>"><%= segment %></a>
-                <% }); %>
-            </div>
-        <% } else if (locals.searchQuery) { %>
-             <div class="search-results-info">
-                正在顯示包含 "<%= searchQuery %>" 的文件。
-                <a href="/files<%= locals.viewTargetUsername && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>">清除搜索並返回根目錄</a>
-            </div>
-        <% } %>
-
-        <div class="file-browser-controls">
-            <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
-                <div class="actions-group-left">
-                    <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
-                    <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
-                    <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button> 
-                </div>
-            <% } %>
-            <button type="button" id="toggle-multi-select-btn">啟用多選</button>
-        
-            <form action="/files" method="GET" class="control-form search-form-right">
-                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
-                    <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
-                <% } %>
-                <input type="search" name="q" placeholder="搜索..." value="<%= locals.searchQuery || '' %>">
-                <button type="submit">搜索</button>
-            </form>
-        
-            <div class="view-toggle">
-                <button id="listViewBtn">列表</button>
-                <button id="gridViewBtn">網格</button>
-            </div>
-        </div>
-        
-        <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
-            <div id="upload-actions-container" style="justify-content: flex-start;">
-                <button type="button" id="upload-files-btn">上傳文件</button>
-                <button type="button" id="upload-folder-btn">上傳文件夾</button>
-            </div>
-
-            <div id="upload-section">
-                <h2 id="upload-section-title">上傳到 "<%= currentPath === '/' ? '根目錄' : currentPath.split('/').pop() %>"</h2>
-                <div id="drop-area">
-                    <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
-                        <input type="hidden" name="currentPath" value="<%= currentPath %>">
-                        <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
-                        <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                        <input type="file" id="userFiles" name="userFiles" multiple style="display: none;"> 
-                        <p id="drop-area-text">將文件或文件夾拖拽到此處，或點擊上方按鈕選擇</p>
-                        <button type="submit" id="upload-button">上傳已選項目</button>
-                    </form>
-                    <div id="file-list-preview" style="margin-top:10px; text-align:left;"></div>
-                    <div class="progress-bar-container" id="upload-progress-container">
-                        <div class="progress-bar" id="upload-progress-bar">0%</div>
-                    </div>
-                </div>
-            </div>
-        <% } %>
-
-        <div id="selection-action-bar">
-            <span id="selection-count" style="margin-right: 15px;">已選擇 0 項</span>
-            <button id="action-play-btn" disabled>播放</button> <button id="action-edit-btn" disabled>編輯</button>
-            <button id="action-rename-btn" disabled>重命名</button>
-            <button id="action-move-btn" disabled>移動</button>
-            <button id="action-download-btn" disabled>下載選中項</button>
-            <button id="action-delete-btn" class="secondary" disabled>删除</button>
-        </div>
-
-        <h2><%= locals.isSearchResult ? '搜索結果' : '文件列表' %></h2>
-        <% if (items.length > 0) { %>
-            <div id="select-all-container"> 
-                <input type="checkbox" id="select-all-checkbox">
-                <label for="select-all-checkbox">全選/取消全選</label>
-            </div>
-        <% } %>
-        <div id="file-container" class="list-view"> 
-            <% if (items.length > 0) { %>
-                <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
-                <%
-                    const formatFileSize = (bytes) => {
-                        if (bytes === undefined || bytes === null || isNaN(bytes)) return '--';
-                        if (bytes === 0) return '0 B';
-                        const k = 1024;
-                        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-                        const i = Math.floor(Math.log(bytes) / Math.log(k));
-                        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-                    };
-                    const formatDate = (dateString) => {
-                        if (!dateString) return '--';
-                        try {
-                            return new Date(dateString).toLocaleDateString('zh-CN', {
-                                year: 'numeric', month: '2-digit', day: '2-digit'
-                            });
-                        } catch (e) {
-                            console.warn("Could not format date:", dateString, e);
-                            return '--';
-                        }
-                    };
-                %>
-                <ul>
-                    <% items.forEach(item => { %>
-                        <li data-item-path="<%= item.path %>">
-                            <div class="file-entry-selectable">
-                                <input type="checkbox" class="item-checkbox"
-                                       data-path="<%= item.path %>"
-                                       data-encoded-path="<%= item.encodedPath %>"
-                                       data-name="<%= item.name %>"
-                                       data-encoded-name="<%= item.encodedName %>"
-                                       data-is-dir="<%= item.isDir %>"
-                                       data-is-playable-video="<%= item.isPlayableVideo || false %>" data-video-type="<%= item.videoType || '' %>" data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>">
-                                <div class="file-content-wrapper">
-                                    <% if (item.isDir) { %>
-                                        <div class="file-entry">
-                                            <span class="file-icon-large folder-icon">📁</span>
-                                            <a href="/files?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name"><%= item.name %></a>
-                                            <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
-                                        </div>
-                                        <div class="file-details">
-                                            <span class="file-size"></span> 
-                                            <span class="file-modified"></span>
-                                        </div>
-                                    <% } else { // It's a file %>
-                                        <div class="file-entry">
-                                            <%
-                                                const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
-                                                let largeIcon = '📄'; 
-                                                let isViewableTextFile = false;
-                                                if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
-                                                    isViewableTextFile = true;
-                                                    largeIcon = '📝'; 
-                                                } else if (item.isPlayableVideo) { // 使用 server 端傳來的 isPlayableVideo
-                                                    largeIcon = '🎥';
-                                                }
-                                                else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
-                                                else if (['pdf'].includes(ext)) { largeIcon = '📕';}
-                                            %>
-                                            <span class="file-icon-large"><%= largeIcon %></span>
-                                            <% if (item.isPlayableVideo) { %>
-                                                <a href="#" class="file-name video-link" 
-                                                   data-path="<%= item.encodedPath %>" 
-                                                   data-name="<%= item.name %>" 
-                                                   data-type="<%= item.videoType %>"
-                                                   title="點擊播放 <%= item.name %>"><%= item.name %></a>
-                                            <% } else if (isViewableTextFile) { %>
-                                                <a href="/view?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name" title="點擊查看"><%= item.name %></a>
-                                            <% } else { %>
-                                                <span class="file-name"><%= item.name %></span>
-                                            <% } %>
-                                            <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
-                                        </div>
-                                        <div class="file-details">
-                                            <span class="file-size" title="<%= item.size %> bytes"><%= formatFileSize(item.size) %></span>
-                                            <span class="file-modified"><%= formatDate(item.lastModified) %></span>
-                                        </div>
-                                    <% } %>
-                                    <span class="file-actions-placeholder"></span> 
-                                </div>
-                            </div>
-                             <div class="rename-form" id="rename-form-<%= item.encodedName %>">
-                                <form action="/rename" method="POST" class="control-form inline-form">
-                                    <input type="hidden" name="currentPath" value="<%= locals.isSearchResult ? (item.path.substring(0, item.path.lastIndexOf('/')) || '/') : currentPath %>">
-                                    <input type="hidden" name="oldPath" value="<%= item.path %>">
-                                    <input type="hidden" name="isDir" value="<%= item.isDir %>">
-                                    <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
-                                    <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                                    <input type="text" name="newName" placeholder="新名稱" value="<%= item.name %>" required>
-                                    <button type="submit">確認</button>
-                                    <button type="button" class="secondary" onclick="hideRenameForm('<%= item.encodedName %>'); return false;">取消</button>
-                                </form>
-                            </div>
-                        </li>
-                    <% }) %>
-                </ul>
-            <% } else { %>
-                <p><%= locals.isSearchResult ? '找不到符合條件的文件。' : '此文件夾為空。' %></p>
-            <% } %>
-        </div>
-    </div>
-
-    <div id="create-item-modal">
-        <div class="modal-content">
-            <span class="close-modal-btn" id="close-create-item-modal-btn">&times;</span>
-            <h3 id="create-item-modal-title">创建新项目</h3>
-            <form id="create-item-form" method="POST"> 
-                <input type="hidden" name="currentPath" value="<%= currentPath %>">
-                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
-                    <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
-                <% } %>
-                <% if (locals.csrfToken) { %>
-                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <% } %>
-                <div class="form-group">
-                    <label for="create-item-name-input" id="create-item-name-label">名称:</label>
-                    <input type="text" id="create-item-name-input" name="" required> 
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="secondary" id="cancel-create-item-btn">取消</button>
-                    <button type="submit" id="confirm-create-item-btn">确认创建</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="move-modal">
-        <div class="modal-content"> <span class="close-modal-btn" id="close-move-modal-btn">&times;</span>
-            <h3>移動選中項目到:</h3>
-            <div id="directory-tree-container">
-                <p>正在加載目錄...</p>
-            </div>
-            <p>已選擇目標: <strong id="selected-destination-path">無</strong></p>
-            <input type="hidden" id="move-destination-input" value="">
-            <div class="modal-actions"> <button type="button" class="secondary" id="cancel-move-btn">取消</button>
-                <button id="confirm-move-btn" disabled>確認移動</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="overwrite-confirm-modal" class="modal" style="display:none; z-index: 1002;">
-        <div class="modal-content">
-            <span class="close-modal-btn" id="close-overwrite-modal-btn">&times;</span>
-            <h3>確認操作</h3>
-            <p id="overwrite-message">一個同名項目已存在。您要覆蓋它嗎？</p>
-            <div class="modal-actions">
-                <button type="button" class="secondary" id="overwrite-abandon-btn">放棄</button>
-                <button type="button" id="overwrite-confirm-btn">覆蓋</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="video-player-modal">
-        <div class="modal-content">
-            <span class="close-modal-btn" id="close-video-modal-btn">&times;</span>
-            <h3 id="video-modal-title" style="margin-bottom: 15px;">播放視頻</h3>
-            <video id="html5-video-player" controls controlsList="nodownload" width="100%" style="max-height: 75vh; display: block; background-color: #000;">
-                <source id="video-source" src="" type="">
-                您的瀏覽器不支持 HTML5 video 標籤。
-            </video>
-        </div>
-    </div>
-
-
-    <script src="/theme.js"></script>
-    <script>
-        const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
-        const ALLOWED_VIDEO_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_VIDEO_EXTENSIONS || []) %>; // 從 server 獲取
-        const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
-        const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
-        const CURRENT_USER_ROLE = "<%= user.role %>";
-        const CURRENT_PATH_ON_LOAD = "<%= currentPath %>";
-        const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
-        const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify(items.map(item => item.name.toLowerCase())) %>;
-        const HAS_ITEMS_ON_PAGE = <%= items.length > 0 %>;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const fileContainer = document.getElementById('file-container');
-            const selectAllCheckbox = document.getElementById('select-all-checkbox');
-            const selectAllContainer = document.getElementById('select-all-container'); 
-            const selectionActionBar = document.getElementById('selection-action-bar');
-            const selectionCountDisplay = document.getElementById('selection-count');
-            const actionPlayBtn = document.getElementById('action-play-btn'); // 新增
-            const actionEditBtn = document.getElementById('action-edit-btn');
-            const actionRenameBtn = document.getElementById('action-rename-btn');
-            const actionMoveBtn = document.getElementById('action-move-btn');
-            const actionDownloadBtn = document.getElementById('action-download-btn');
-            const actionDeleteBtn = document.getElementById('action-delete-btn');
-            
-            const moveModal = document.getElementById('move-modal');
-            const closeMoveModalBtn = document.getElementById('close-move-modal-btn');
-            const directoryTreeContainer = document.getElementById('directory-tree-container');
-            const confirmMoveBtn = document.getElementById('confirm-move-btn');
-            const cancelMoveBtn = document.getElementById('cancel-move-btn');
-            const selectedDestinationPathDisplay = document.getElementById('selected-destination-path');
-            const moveDestinationInput = document.getElementById('move-destination-input');
-            let currentDirectoryTree = [];
-
-            const toggleUploadActionsBtn = document.getElementById('toggleUploadActionsBtn');
-            const uploadActionsContainer = document.getElementById('upload-actions-container');
-            const uploadFilesBtn = document.getElementById('upload-files-btn');
-            const uploadFolderBtn = document.getElementById('upload-folder-btn');
-            const uploadSection = document.getElementById('upload-section');
-            const userFilesInput = document.getElementById('userFiles');
-            const dropAreaText = document.getElementById('drop-area-text');
-            const uploadForm = document.getElementById('upload-form');
-            const uploadProgressContainer = document.getElementById('upload-progress-container');
-            const uploadProgressBar = document.getElementById('upload-progress-bar');
-            const fileListPreview = document.getElementById('file-list-preview');
-            const uploadButton = document.getElementById('upload-button'); 
-            const dropArea = document.getElementById('drop-area');
-
-            const overwriteModal = document.getElementById('overwrite-confirm-modal');
-            const overwriteMessage = document.getElementById('overwrite-message');
-            const overwriteConfirmBtn = document.getElementById('overwrite-confirm-btn');
-            const overwriteAbandonBtn = document.getElementById('overwrite-abandon-btn');
-            const closeOverwriteModalBtn = document.getElementById('close-overwrite-modal-btn');
-
-            const toggleMultiSelectBtn = document.getElementById('toggle-multi-select-btn');
-            let multiSelectModeActive = false;
-            let currentSingleSelectedItem = null;
-
-            // 新增: 視頻播放器相關元素
-            const videoPlayerModal = document.getElementById('video-player-modal');
-            const html5VideoPlayer = document.getElementById('html5-video-player');
-            const videoSourceElement = document.getElementById('video-source');
-            const videoModalTitle = document.getElementById('video-modal-title');
-            const closeVideoModalBtn = document.getElementById('close-video-modal-btn');
-
-
-            function clearSingleSelection() {
-                if (currentSingleSelectedItem && currentSingleSelectedItem.element) {
-                    currentSingleSelectedItem.element.classList.remove('single-selected-item');
-                }
-                currentSingleSelectedItem = null;
-            }
-
-            function updateMultiSelectModeUI() {
-                if (!fileContainer || !toggleMultiSelectBtn) return;
-
-                if (multiSelectModeActive) {
-                    clearSingleSelection();
-                    fileContainer.classList.add('multi-select-mode-active');
-                    toggleMultiSelectBtn.textContent = '取消多選';
-                    if (selectAllContainer && HAS_ITEMS_ON_PAGE) { 
-                        selectAllContainer.classList.add('visible-in-multiselect'); 
-                    }
-                } else {
-                    fileContainer.classList.remove('multi-select-mode-active');
-                    toggleMultiSelectBtn.textContent = '啟用多選';
-                    if (selectAllContainer) { 
-                        selectAllContainer.classList.remove('visible-in-multiselect'); 
-                    }
-                    document.querySelectorAll('.item-checkbox:checked').forEach(cb => cb.checked = false);
-                    if (selectAllCheckbox) selectAllCheckbox.checked = false;
-                }
-                updateSelectionActions();
-            }
-            
-            if (toggleMultiSelectBtn) {
-                toggleMultiSelectBtn.addEventListener('click', () => {
-                    multiSelectModeActive = !multiSelectModeActive;
-                    updateMultiSelectModeUI();
-                });
-            }
-
-            function getCheckboxSelectedItems() {
-                const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox'); 
-                const selected = [];
-                currentCheckboxes.forEach((cb) => {
-                    if (cb.checked) {
-                        selected.push({
-                            path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
-                            name: cb.dataset.name, encodedName: cb.dataset.encodedName,
-                            isDir: cb.dataset.isDir === 'true', rawName: cb.dataset.rawName,
-                            isPlayableVideo: cb.dataset.isPlayableVideo === 'true', // 新增
-                            videoType: cb.dataset.videoType, // 新增
-                            element: cb.closest('li')
-                        });
-                    }
-                });
-                return selected;
-            }
-
-            function updateSelectionActions() {
-                let count = 0;
-                let itemsForActions = []; 
-                let isSingleFileEditable = false;
-                let isSingleFilePlayableVideo = false; // 新增
-
-                if (multiSelectModeActive) {
-                    const checkboxSelectedItems = getCheckboxSelectedItems();
-                    count = checkboxSelectedItems.length;
-                    itemsForActions = checkboxSelectedItems;
-                    if (count === 1 && itemsForActions[0]) {
-                        if (!itemsForActions[0].isDir) {
-                             const fileName = itemsForActions[0].name;
-                             const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
-                             if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
-                                 isSingleFileEditable = true;
-                             }
-                             if (itemsForActions[0].isPlayableVideo) { // 新增
-                                isSingleFilePlayableVideo = true;
-                             }
-                        }
-                    }
-                } else if (currentSingleSelectedItem) {
-                    count = 1;
-                    itemsForActions.push(currentSingleSelectedItem);
-                    if (!currentSingleSelectedItem.isDir) {
-                        const fileName = currentSingleSelectedItem.name;
-                        const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
-                         if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
-                            isSingleFileEditable = true;
-                        }
-                        if (currentSingleSelectedItem.isPlayableVideo) { // 新增
-                            isSingleFilePlayableVideo = true;
-                        }
-                    }
-                }
-
-                if (count > 0) {
-                    selectionActionBar.style.display = 'flex';
-                    selectionCountDisplay.textContent = `已選擇 ${count} 項`;
-                } else {
-                    selectionActionBar.style.display = 'none';
-                }
-                
-                if(actionPlayBtn) actionPlayBtn.disabled = !(count === 1 && isSingleFilePlayableVideo); // 新增
-                if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable);
-                if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
-                if(actionMoveBtn) actionMoveBtn.disabled = !(count > 0);
-                if(actionDownloadBtn) actionDownloadBtn.disabled = !(count > 0);
-                if(actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
-            }
-
-            document.querySelectorAll('#file-container .item-checkbox').forEach((checkbox) => {
-                checkbox.addEventListener('change', () => {
-                    if (multiSelectModeActive) { 
-                        clearSingleSelection(); 
-                        updateSelectionActions(); 
-                    } else {
-                        checkbox.checked = false; 
-                    }
-                });
-            });
-            
-            if (selectAllCheckbox && selectAllContainer) {
-                selectAllCheckbox.addEventListener('change', (e) => {
-                    if (!multiSelectModeActive) return; 
-                    clearSingleSelection(); 
-                    const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox'); 
-                    currentCheckboxes.forEach(cb => {
-                        if (cb.checked !== e.target.checked) { 
-                            cb.checked = e.target.checked;
-                        }
-                    });
-                    updateSelectionActions(); 
-                });
-            }
-
-            if (fileContainer) {
-                fileContainer.querySelectorAll('ul > li .file-content-wrapper').forEach(contentWrapper => {
-                    contentWrapper.addEventListener('click', (event) => {
-                        const listItem = contentWrapper.closest('li');
-                        if (!listItem) return;
-                        const checkbox = listItem.querySelector('.item-checkbox');
-                        if (!checkbox) return;
-
-                        // 如果點擊的是播放鏈接，則由其自身的事件處理器處理
-                        if (event.target.classList.contains('video-link') || event.target.closest('.video-link')) {
-                            return;
-                        }
-                        if (event.target.tagName === 'A' || event.target.closest('a') || 
-                            event.target.classList.contains('item-checkbox') || 
-                            event.target.closest('.rename-form')) {
-                            return;
-                        }
-
-                        const itemData = {
-                            path: checkbox.dataset.path, encodedPath: checkbox.dataset.encodedPath,
-                            name: checkbox.dataset.name, encodedName: checkbox.dataset.encodedName,
-                            isDir: checkbox.dataset.isDir === 'true', rawName: checkbox.dataset.rawName,
-                            isPlayableVideo: checkbox.dataset.isPlayableVideo === 'true', // 新增
-                            videoType: checkbox.dataset.videoType, // 新增
-                            element: listItem 
-                        };
-
-                        if (multiSelectModeActive) { 
-                            checkbox.checked = !checkbox.checked;
-                            clearSingleSelection();
-                        } else {
-                            if (currentSingleSelectedItem && currentSingleSelectedItem.element === listItem) {
-                                clearSingleSelection();
-                            } else {
-                                clearSingleSelection(); 
-                                currentSingleSelectedItem = itemData;
-                                listItem.classList.add('single-selected-item');
-                            }
-                        }
-                        updateSelectionActions();
-                    });
-                });
-            
-                fileContainer.addEventListener('click', (event) => {
-                    if (event.target.closest('li') === null && (event.target.isSameNode(fileContainer) || event.target.tagName === 'UL')) {
-                        if (!multiSelectModeActive) { 
-                            clearSingleSelection();
-                            updateSelectionActions(); 
-                        }
-                    }
-                });
-            }
-            
-            // 新增: 處理視頻播放鏈接點擊
-            document.querySelectorAll('.video-link').forEach(link => {
-                link.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    const encodedPath = this.dataset.path;
-                    const videoName = this.dataset.name;
-                    const videoType = this.dataset.type;
-                    openVideoPlayer(encodedPath, videoName, videoType);
-                });
-            });
-            
-            // 新增: 處理選擇操作欄中的播放按鈕
-            if (actionPlayBtn) {
-                actionPlayBtn.addEventListener('click', () => {
-                    if (actionPlayBtn.disabled) return;
-                    let itemToPlay = null;
-                    if (!multiSelectModeActive && currentSingleSelectedItem && currentSingleSelectedItem.isPlayableVideo) {
-                        itemToPlay = currentSingleSelectedItem;
-                    } else if (multiSelectModeActive) {
-                        const selected = getCheckboxSelectedItems();
-                        if (selected.length === 1 && selected[0].isPlayableVideo) {
-                            itemToPlay = selected[0];
-                        }
-                    }
-                    if (itemToPlay) {
-                        openVideoPlayer(itemToPlay.encodedPath, itemToPlay.name, itemToPlay.videoType);
-                    }
-                });
-            }
-
-
-             if (actionEditBtn) {
-                actionEditBtn.addEventListener('click', () => {
-                    if (actionEditBtn.disabled) return;
-                    let itemToEdit = null;
-                    if (!multiSelectModeActive && currentSingleSelectedItem) {
-                        itemToEdit = currentSingleSelectedItem;
-                    } else if (multiSelectModeActive) {
-                        const selected = getCheckboxSelectedItems();
-                        if (selected.length === 1) itemToEdit = selected[0];
-                    }
-
-                    if (itemToEdit && !itemToEdit.isDir) { 
-                        let url = `/edit?path=${itemToEdit.encodedPath}`;
-                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                            url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
-                        }
-                        window.location.href = url;
-                    }
-                });
-            }
-
-            if (actionRenameBtn) {
-                actionRenameBtn.addEventListener('click', () => {
-                    if (actionRenameBtn.disabled) return;
-                    let itemToRename = null;
-                     if (!multiSelectModeActive && currentSingleSelectedItem) {
-                        itemToRename = currentSingleSelectedItem;
-                    } else if (multiSelectModeActive) {
-                        const selected = getCheckboxSelectedItems();
-                        if (selected.length === 1) itemToRename = selected[0];
-                    }
-                    if (itemToRename) {
-                        showRenameForm(itemToRename.encodedName, itemToRename.name, itemToRename.isDir);
-                    }
-                });
-            }
-            
-            if (actionDownloadBtn) {
-                actionDownloadBtn.addEventListener('click', () => {
-                    if (actionDownloadBtn.disabled) return;
-                    let itemsToDownload = [];
-                    if (!multiSelectModeActive && currentSingleSelectedItem) {
-                        itemsToDownload.push(currentSingleSelectedItem);
-                    } else if (multiSelectModeActive) {
-                        itemsToDownload = getCheckboxSelectedItems();
-                    }
-
-                    if (itemsToDownload.length === 0) {
-                        alert("請選擇要下載的項目。"); return;
-                    }
-
-                    if (itemsToDownload.length === 1 && !itemsToDownload[0].isDir) {
-                        let url = `/download?path=${itemsToDownload[0].encodedPath}`;
-                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                            url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
-                        }
-                        const tempLink = document.createElement('a');
-                        tempLink.href = url;
-                        tempLink.setAttribute('download', itemsToDownload[0].name);
-                        tempLink.style.display = 'none';
-                        document.body.appendChild(tempLink);
-                        tempLink.click();
-                        document.body.removeChild(tempLink);
-                    } else { 
-                        const form = document.createElement('form');
-                        form.method = 'POST';
-                        form.action = '/download-archive';
-                        form.style.display = 'none';
-
-                        const itemsInput = document.createElement('input');
-                        itemsInput.type = 'hidden';
-                        itemsInput.name = 'items';
-                        const itemsForPayload = itemsToDownload.map(item => ({ 
-                            path: item.path, name: item.name, isDir: item.isDir 
-                        }));
-                        itemsInput.value = JSON.stringify(itemsForPayload);
-                        form.appendChild(itemsInput);
-
-                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                            const targetUserInput = document.createElement('input');
-                            targetUserInput.type = 'hidden';
-                            targetUserInput.name = 'targetUsername';
-                            targetUserInput.value = VIEW_TARGET_USERNAME;
-                            form.appendChild(targetUserInput);
-                        }
-                        if (CSRF_TOKEN) { 
-                            const csrfInput = document.createElement('input');
-                            csrfInput.type = 'hidden';
-                            csrfInput.name = '_csrf'; 
-                            csrfInput.value = CSRF_TOKEN;
-                            form.appendChild(csrfInput);
-                        }
-                        document.body.appendChild(form);
-                        try { form.submit(); } catch (e) { console.error("表單提交錯誤:", e); alert("觸發下載時發生錯誤。"); }
-                        setTimeout(() => {
-                           if (form.parentNode === document.body) { document.body.removeChild(form); }
-                        }, 100);
-                    }
-                });
-            }
-
-            if (actionDeleteBtn) {
-                actionDeleteBtn.addEventListener('click', async () => {
-                    if (actionDeleteBtn.disabled) return;
-                    let itemsToDelete = [];
-                     if (!multiSelectModeActive && currentSingleSelectedItem) {
-                        itemsToDelete.push(currentSingleSelectedItem);
-                    } else if (multiSelectModeActive) {
-                        itemsToDelete = getCheckboxSelectedItems();
-                    }
-
-                    if (itemsToDelete.length === 0) return;
-
-                    const itemNames = itemsToDelete.map(item => item.rawName).join(', ');
-                    if (confirm(`確定要刪除選中的 ${itemsToDelete.length} 個項目 (${itemNames}) 嗎？此操作不可恢復！`)) {
-                        let allSucceeded = true;
-                        let reloadPage = false;
-                        let errors = [];
-
-                        for (const item of itemsToDelete) {
-                            try {
-                                let deleteUrl = `/delete?path=${item.encodedPath}&isDir=${item.isDir}`;
-                                if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                                    deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
-                                }
-                                const response = await fetch(deleteUrl, { 
-                                    method: 'GET', // 假設 DELETE 也是 GET 請求，根據您的 server.js
-                                });
-
-                                if (response.ok) {
-                                    if (response.redirected || (response.headers.get("Content-Type") && response.headers.get("Content-Type").includes("application/json"))) {
-                                        try {
-                                            const result = await response.json(); 
-                                            if (result.success) {
-                                                reloadPage = true;
-                                            } else {
-                                                allSucceeded = false;
-                                                errors.push(result.message || `刪除 ${item.name} 失敗`);
-                                            }
-                                        } catch (e) { 
-                                            reloadPage = true; 
-                                        }
-                                    } else { 
-                                        reloadPage = true; 
-                                    }
-                                } else {
-                                    allSucceeded = false;
-                                    let errorMsg = `刪除 ${item.name} 失敗 (狀態: ${response.status})`;
-                                    try {
-                                        const errResult = await response.json();
-                                        if(errResult.message) errorMsg = errResult.message;
-                                    } catch(e) { /* ignore if not json */ }
-                                    errors.push(errorMsg);
-                                    console.error('刪除失敗:', item.name, response.status, await response.text());
-                                }
-                            } catch (error) {
-                                allSucceeded = false;
-                                errors.push(`刪除 ${item.name} 時發生客戶端錯誤`);
-                                console.error('刪除項目時出錯:', item.name, error);
-                            }
-                        }
-
-                        if (errors.length > 0) {
-                            alert("部分或全部項目刪除失敗：\n" + errors.join("\n"));
-                        } else if (allSucceeded) {
-                            alert("選中項目已成功刪除。");
-                        }
-                        
-                        if (reloadPage || !allSucceeded) { 
-                            window.location.reload();
-                        } else { 
-                             clearSingleSelection(); 
-                            if(selectAllCheckbox) selectAllCheckbox.checked = false; 
-                            document.querySelectorAll('#file-container .item-checkbox').forEach(cb => cb.checked = false); 
-                            updateSelectionActions();
-                        }
-                    }
-                });
-            }
-            
-            if (actionMoveBtn) {
-                actionMoveBtn.addEventListener('click', async () => {
-                    if (actionMoveBtn.disabled) return;
-                    let itemsToMove = [];
-                     if (!multiSelectModeActive && currentSingleSelectedItem) {
-                        itemsToMove.push(currentSingleSelectedItem);
-                    } else if (multiSelectModeActive) {
-                        itemsToMove = getCheckboxSelectedItems();
-                    }
-                    if (itemsToMove.length === 0) return;
-
-                    moveDestinationInput.value = ''; selectedDestinationPathDisplay.textContent = '無';
-                    confirmMoveBtn.disabled = true; directoryTreeContainer.innerHTML = '<p>正在加載目錄...</p>';
-                    moveModal.style.display = 'block';
-                    try {
-                        let fetchUrl = '/api/directories'; let queryParams = [];
-                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') queryParams.push(`targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`);
-                        
-                        const pathsToExclude = itemsToMove.flatMap(item => {
-                            if (item.isDir) {
-                                return [item.path];
-                            }
-                            return [];
-                        });
-                        if (pathsToExclude.length > 0) queryParams.push(`excludePaths=${encodeURIComponent(pathsToExclude.join(','))}`);
-                        
-                        if (queryParams.length > 0) fetchUrl += `?${queryParams.join('&')}`;
-                        
-                        const response = await fetch(fetchUrl);
-                        if (!response.ok) throw new Error(`無法獲取目錄列表: ${response.statusText}`);
-                        currentDirectoryTree = await response.json();
-                        renderDirectoryTree(currentDirectoryTree, directoryTreeContainer, itemsToMove);
-                    } catch (error) {
-                        console.error('獲取目錄樹時出錯:', error);
-                        directoryTreeContainer.innerHTML = `<p style="color:red;">加載目錄失敗: ${error.message}</p>`;
-                    }
-                });
-            }
-            function renderDirectoryTree(nodes, container, itemsBeingMoved) {
-                container.innerHTML = ''; const ul = document.createElement('ul');
-                const rootLi = document.createElement('li'); 
-                rootLi.textContent = '根目錄 (/)';
-                rootLi.dataset.path = '/'; 
-                
-                let isRootInvalid = itemsBeingMoved.some(item => item.path.substring(0, item.path.lastIndexOf('/')) === '' && item.path !== '/'); 
-
-                rootLi.addEventListener('click', (e) => selectDestination(e.target, '/'));
-                ul.appendChild(rootLi);
-
-                function buildTree(dirItems, parentUl, currentParentPath) {
-                    dirItems.forEach(dirNode => {
-                        const isMovingThisDirOrChild = itemsBeingMoved.some(movedItem => 
-                            movedItem.isDir && (dirNode.path === movedItem.path || dirNode.path.startsWith(movedItem.path + '/'))
-                        );
-                        const isCurrentParent = itemsBeingMoved.every(movedItem => { 
-                            const movedItemParentPath = movedItem.path.substring(0, movedItem.path.lastIndexOf('/')) || '/';
-                            return movedItemParentPath === dirNode.path;
-                        });
-
-                        if (isMovingThisDirOrChild) {
-                            return; 
-                        }
-
-                        const li = document.createElement('li'); 
-                        li.textContent = dirNode.name; 
-                        li.dataset.path = dirNode.path;
-                        if (isCurrentParent && itemsBeingMoved.length === 1) { 
-                            li.style.opacity = "0.5"; 
-                            li.style.pointerEvents = "none"; 
-                        } else {
-                           li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, dirNode.path); });
-                        }
-                        parentUl.appendChild(li);
-                        if (dirNode.children && dirNode.children.length > 0) {
-                            const nestedUl = document.createElement('ul'); 
-                            li.appendChild(nestedUl);
-                            buildTree(dirNode.children, nestedUl, dirNode.path);
-                        }
-                    });
-                }
-                buildTree(nodes, ul, '/'); 
-                container.appendChild(ul);
-            }
-            function selectDestination(targetElement, path) {
-                document.querySelectorAll('#directory-tree-container li.selected-dir').forEach(el => el.classList.remove('selected-dir'));
-                targetElement.classList.add('selected-dir');
-                selectedDestinationPathDisplay.textContent = path; moveDestinationInput.value = path;
-                confirmMoveBtn.disabled = false;
-            }
-            if (closeMoveModalBtn) closeMoveModalBtn.onclick = () => moveModal.style.display = 'none';
-            if (cancelMoveBtn) cancelMoveBtn.onclick = () => moveModal.style.display = 'none';
-            
-            if (confirmMoveBtn) {
-                confirmMoveBtn.addEventListener('click', async () => {
-                    let selectedToMove = [];
-                    if (!multiSelectModeActive && currentSingleSelectedItem) {
-                        selectedToMove.push(currentSingleSelectedItem);
-                    } else if (multiSelectModeActive) {
-                        selectedToMove = getCheckboxSelectedItems();
-                    }
-
-                    const destinationPath = moveDestinationInput.value;
-                    if (selectedToMove.length === 0 || (destinationPath === null || destinationPath === undefined) ) { 
-                        alert('請選擇要移動的項目和目標文件夾。'); return; 
-                    }
-
-                    for (const item of selectedToMove) {
-                        const itemParentPath = item.path.substring(0, item.path.lastIndexOf('/')) || '/';
-                        if (itemParentPath === destinationPath) {
-                            alert(`項目 "${item.name}" 已經在目標文件夾 "${destinationPath === '/' ? '根目錄' : destinationPath}" 中。`);
-                            return;
-                        }
-                        if (item.isDir && (destinationPath === item.path || destinationPath.startsWith(item.path + '/'))) {
-                            alert(`不能將文件夾 "${item.name}" 移動到其自身或其子文件夾中。`); return;
-                        }
-                    }
-                    try {
-                        const payload = { 
-                            sourcePaths: selectedToMove.map(item => item.path), 
-                            destinationPath: destinationPath, 
-                        };
-                        if (CSRF_TOKEN) payload._csrf = CSRF_TOKEN;
-                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') payload.targetUsername = VIEW_TARGET_USERNAME;
-                        
-                        const response = await fetch('/move-items', { 
-                            method: 'POST', headers: { 'Content-Type': 'application/json', },
-                            body: JSON.stringify(payload)
-                        });
-                        const result = await response.json(); 
-                        if (response.ok && result.success) { 
-                            alert(result.message || '項目移動成功！'); 
-                            window.location.href = result.redirectUrl || window.location.pathname + window.location.search; 
-                        } else {
-                             alert(`移動失敗: ${result.message || '伺服器發生未知錯誤。'}`);
-                        }
-                    } catch (error) { 
-                        console.error('移動項目時出錯:', error); 
-                        let errorMsg = `移動項目時發生客戶端錯誤。`;
-                        if (error instanceof SyntaxError) { 
-                            errorMsg += " 伺服器可能返回了非預期的回應格式。";
-                        } else if (error.message) {
-                            errorMsg += ` ${error.message}`;
-                        }
-                        alert(errorMsg); 
-                    }
-                    moveModal.style.display = 'none';
-                });
-            }
-
-            function showOverwriteConfirmationModal(itemName) {
-                return new Promise((resolve) => {
-                    if (!overwriteModal || !overwriteMessage || !overwriteConfirmBtn || !overwriteAbandonBtn || !closeOverwriteModalBtn) {
-                        console.error("Overwrite modal elements not found!");
-                        resolve('abandon'); 
-                        return;
-                    }
-                    overwriteMessage.textContent = `一個名為 "${itemName}" 的項目已存在於當前目錄。您要覆蓋它嗎？`;
-                    overwriteModal.style.display = 'block';
-
-                    const handleConfirm = () => { cleanupAndResolve('overwrite'); };
-                    const handleAbandon = () => { cleanupAndResolve('abandon'); };
-
-                    function cleanupAndResolve(decision) {
-                        overwriteModal.style.display = 'none';
-                        overwriteConfirmBtn.removeEventListener('click', handleConfirm);
-                        overwriteAbandonBtn.removeEventListener('click', handleAbandon);
-                        closeOverwriteModalBtn.removeEventListener('click', handleAbandon);
-                        resolve(decision);
-                    }
-
-                    overwriteConfirmBtn.addEventListener('click', handleConfirm, { once: true });
-                    overwriteAbandonBtn.addEventListener('click', handleAbandon, { once: true });
-                    closeOverwriteModalBtn.addEventListener('click', handleAbandon, { once: true });
-                });
-            }
-
-            if (toggleUploadActionsBtn && uploadActionsContainer && uploadSection) {
-                toggleUploadActionsBtn.addEventListener('click', () => {
-                    const isActionsHidden = uploadActionsContainer.style.display === 'none' || uploadActionsContainer.style.display === '';
-                    uploadActionsContainer.style.display = isActionsHidden ? 'flex' : 'none';
-                    if (!isActionsHidden) { 
-                        uploadSection.style.display = 'none'; 
-                        toggleUploadActionsBtn.textContent = '上傳';
-                        if(userFilesInput) userFilesInput.value = null;
-                        if(fileListPreview) fileListPreview.innerHTML = '';
-                        if(uploadButton) uploadButton.style.display = 'none';
-                        if(uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-
-                    } else { 
-                        toggleUploadActionsBtn.textContent = '取消上傳操作';
-                    }
-                });
-            }
-
-            if (uploadFilesBtn && uploadSection && userFilesInput && dropAreaText && fileListPreview && uploadButton) {
-                uploadFilesBtn.addEventListener('click', () => {
-                    userFilesInput.removeAttribute('webkitdirectory');
-                    userFilesInput.removeAttribute('directory');
-                    userFilesInput.setAttribute('multiple', '');
-                    if (dropAreaText) dropAreaText.textContent = '將文件拖拽到此處進行上傳，或點擊選擇文件。';
-                    uploadSection.style.display = 'block';
-                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
-                    if (!uploadActionsContainer || uploadActionsContainer.style.display === 'none') {
-                        if(uploadActionsContainer) uploadActionsContainer.style.display = 'flex';
-                    }
-                    userFilesInput.value = null; 
-                    fileListPreview.innerHTML = ''; 
-                    uploadButton.style.display = 'none'; 
-                    userFilesInput.click(); 
-                });
-            }
-
-            if (uploadFolderBtn && uploadSection && userFilesInput && dropAreaText && fileListPreview && uploadButton) {
-                uploadFolderBtn.addEventListener('click', () => {
-                    userFilesInput.setAttribute('webkitdirectory', '');
-                    userFilesInput.setAttribute('directory', '');
-                    userFilesInput.removeAttribute('multiple'); 
-                    if (dropAreaText) dropAreaText.textContent = '將文件夾拖拽到此處進行上傳，或點擊選擇文件夾。';
-                    uploadSection.style.display = 'block';
-                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
-                     if (!uploadActionsContainer || uploadActionsContainer.style.display === 'none') {
-                        if(uploadActionsContainer) uploadActionsContainer.style.display = 'flex';
-                    }
-                    userFilesInput.value = null; 
-                    fileListPreview.innerHTML = ''; 
-                    uploadButton.style.display = 'none';
-                    userFilesInput.click(); 
-                });
-            }
-            
-            if (uploadForm && userFilesInput) {
-                uploadForm.addEventListener('submit', async function(event) { 
-                    event.preventDefault(); 
-                    if (userFilesInput.files.length === 0) {
-                        alert('請選擇要上傳的文件或文件夾。');
-                        return;
-                    }
-
-                    const originalFiles = Array.from(userFilesInput.files);
-                    let finalFilesToUpload = []; 
-                    let processedTopLevelItems = new Set(); 
-
-                    for (const file of originalFiles) {
-                        let nameToCheck = file.name;
-                        let isTopLevelItem = true;
-                        if (file.webkitRelativePath) {
-                            const pathParts = file.webkitRelativePath.split('/');
-                            nameToCheck = pathParts[0]; 
-                            if (pathParts.length > 1) isTopLevelItem = false;
-                        }
-
-                        if (EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase()) && !processedTopLevelItems.has(nameToCheck.toLowerCase())) {
-                            processedTopLevelItems.add(nameToCheck.toLowerCase());
-                            const userDecision = await showOverwriteConfirmationModal(nameToCheck);
-                            if (userDecision === 'overwrite') {
-                                originalFiles.forEach(f => {
-                                    if ((f.webkitRelativePath && f.webkitRelativePath.startsWith(nameToCheck + '/')) || f.name === nameToCheck) {
-                                        if (!finalFilesToUpload.includes(f)) finalFilesToUpload.push(f);
-                                    }
-                                });
-                            } else {
-                                console.log(`Skipping ${nameToCheck} and its contents due to user choice.`);
-                            }
-                        } else if (!EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase())) {
-                            if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
-                             if(isTopLevelItem) processedTopLevelItems.add(nameToCheck.toLowerCase()); 
-                        } else if (processedTopLevelItems.has(nameToCheck.toLowerCase()) && finalFilesToUpload.some(f => (f.webkitRelativePath || f.name).startsWith(nameToCheck))) {
-                            if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
-                        }
-                    }
-
-
-                    if (finalFilesToUpload.length === 0) {
-                        alert('沒有文件準備上傳（可能所有衝突的文件都已被放棄）。');
-                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        if (uploadButton) uploadButton.style.display = 'none';
-                        if (fileListPreview) fileListPreview.innerHTML = '';
-                        if (userFilesInput) userFilesInput.value = null;
-                        return;
-                    }
-
-                    const formData = new FormData(); 
-                    const currentPathInput = uploadForm.querySelector('input[name="currentPath"]');
-                    if (currentPathInput) formData.append('currentPath', currentPathInput.value);
-                    
-                    const targetUsernameInput = uploadForm.querySelector('input[name="targetUsername"]');
-                    if (targetUsernameInput && targetUsernameInput.value) formData.append('targetUsername', targetUsernameInput.value);
-
-                    const csrfInput = uploadForm.querySelector('input[name="_csrf"]');
-                    if (csrfInput) formData.append('_csrf', csrfInput.value);
-
-                    for (const file of finalFilesToUpload) {
-                        formData.append('userFiles', file, file.webkitRelativePath || file.name);
-                    }
-
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('POST', uploadForm.action, true);
-                    if (uploadProgressContainer && uploadProgressBar) {
-                        uploadProgressContainer.style.display = 'block';
-                        uploadProgressBar.style.width = '0%';
-                        uploadProgressBar.textContent = '0%';
-                    }
-                    xhr.upload.onprogress = function(event) {
-                        if (event.lengthComputable) {
-                            const percentComplete = Math.round((event.loaded / event.total) * 100);
-                            if (uploadProgressBar) {
-                                uploadProgressBar.style.width = percentComplete + '%';
-                                uploadProgressBar.textContent = percentComplete + '%';
-                            }
-                        }
-                    };
-                    xhr.onload = function() {
-                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        if (xhr.status >= 200 && xhr.status < 300) { 
-                            let responseData = null;
-                            try { responseData = JSON.parse(xhr.responseText); } catch (e) { /* Ignore */ }
-
-                            if (responseData && responseData.redirectUrl) {
-                                window.location.href = responseData.redirectUrl;
-                            } else if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) { 
-                                window.location.href = xhr.responseURL; 
-                            } else {
-                                alert( (responseData && responseData.message) || '上傳成功！頁面將刷新。');
-                                window.location.reload(); 
-                            }
-                        } else { 
-                            let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
-                            try {
-                                const responseJson = JSON.parse(xhr.responseText);
-                                if (responseJson && responseJson.message) {
-                                    errorMessage = responseJson.message;
-                                }
-                            } catch (e) {
-                                if(xhr.responseText && xhr.responseText.length < 500) errorMessage = xhr.responseText; 
-                            }
-                            alert(errorMessage);
-                            console.error('Upload failed:', xhr.status, xhr.responseText);
-                        }
-                    };
-                    xhr.onerror = function(e) { 
-                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
-                        console.error('Upload network error:', e);
-                    };
-                    xhr.openUrl = uploadForm.action; 
-                    xhr.send(formData);
-                });
-            }
-
-            if (dropArea && userFilesInput && fileListPreview && uploadSection && dropAreaText && uploadActionsContainer && toggleUploadActionsBtn) { 
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, preventDefaults, false);
-                    document.body.addEventListener(eventName, preventDefaults, false); 
-                });
-                function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-                
-                dropArea.addEventListener('dragenter', () => dropArea.classList.add('highlight'), false);
-                dropArea.addEventListener('dragover', () => dropArea.classList.add('highlight'), false); 
-                dropArea.addEventListener('dragleave', (e) => {
-                    if (e.relatedTarget === null || !dropArea.contains(e.relatedTarget)) {
-                        dropArea.classList.remove('highlight');
-                    }
-                }, false);
-                
-                dropArea.addEventListener('drop', (e) => {
-                    preventDefaults(e); 
-                    dropArea.classList.remove('highlight');
-                    const dt = e.dataTransfer;
-                    const files = dt.files;
-                    
-                    let isLikelyFolderDrop = false;
-                    if (dt.items && dt.items.length > 0 && typeof dt.items[0].webkitGetAsEntry === 'function') {
-                        const entry = dt.items[0].webkitGetAsEntry();
-                        if (entry && entry.isDirectory) {
-                            isLikelyFolderDrop = true;
-                        }
-                    } else if (files.length > 0 && files[0].webkitRelativePath) { 
-                        const firstFileRelativePath = files[0].webkitRelativePath;
-                        if (firstFileRelativePath && firstFileRelativePath.includes('/')) {
-                             isLikelyFolderDrop = true;
-                        } else if (files.length > 1 && Array.from(files).every(f => f.webkitRelativePath.startsWith(firstFileRelativePath.split('/')[0]))) {
-                            isLikelyFolderDrop = true;
-                        }
-                    }
-
-
-                    if (isLikelyFolderDrop) {
-                        userFilesInput.setAttribute('webkitdirectory', '');
-                        userFilesInput.setAttribute('directory', '');
-                        userFilesInput.removeAttribute('multiple');
-                        if(dropAreaText) dropAreaText.textContent = '已拖入文件夾，準備上傳。';
-                    } else {
-                        userFilesInput.removeAttribute('webkitdirectory');
-                        userFilesInput.removeAttribute('directory');
-                        userFilesInput.setAttribute('multiple', '');
-                        if(dropAreaText) dropAreaText.textContent = '已拖入文件，準備上傳。';
-                    }
-
-                    userFilesInput.files = files; 
-                    updateFileListPreviewOnDrop(); 
-                    uploadSection.style.display = 'block'; 
-                    if (uploadActionsContainer.style.display === 'none') {
-                         uploadActionsContainer.style.display = 'flex'; 
-                    }
-                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
-                }, false);
-
-                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop); 
-
-                function updateFileListPreviewOnDrop() { 
-                    if (!fileListPreview || !userFilesInput || !uploadButton) return;
-                    fileListPreview.innerHTML = ''; 
-                    const files = userFilesInput.files;
-                    if (files.length > 0) {
-                        const list = document.createElement('ul');
-                        list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
-                        
-                        let isDirectoryUpload = false;
-                        if (userFilesInput.hasAttribute('webkitdirectory') || (files[0] && files[0].webkitRelativePath && files[0].webkitRelativePath.includes('/'))) {
-                            isDirectoryUpload = true;
-                        }
-
-
-                        if (isDirectoryUpload) {
-                            const folderName = files[0].webkitRelativePath.split('/')[0];
-                            const listItem = document.createElement('li');
-                            listItem.textContent = `文件夾: ${folderName} (${files.length} 個文件)`;
-                            listItem.style.fontSize = '0.9em'; listItem.style.fontWeight = 'bold';
-                            list.appendChild(listItem);
-                        } else { 
-                            for (let i = 0; i < files.length; i++) {
-                                const listItem = document.createElement('li');
-                                listItem.textContent = files[i].name + (files[i].size ? ` (${(files[i].size / 1024).toFixed(1)} KB)` : '');
-                                listItem.style.fontSize = '0.9em';
-                                list.appendChild(listItem);
-                            }
-                        }
-                        fileListPreview.appendChild(list);
-                        uploadButton.style.display = 'inline-block';
-                    } else {
-                        uploadButton.style.display = 'none';
-                    }
-                }
-                if (userFilesInput && uploadButton && userFilesInput.files.length === 0) {
-                     uploadButton.style.display = 'none';
-                }
-            }
-
-            const listViewBtn = document.getElementById('listViewBtn');
-            const gridViewBtn = document.getElementById('gridViewBtn');
-            if (fileContainer && listViewBtn && gridViewBtn) { 
-                function toggleView(viewType) {
-                    const isCurrentlyMultiSelect = fileContainer.classList.contains('multi-select-mode-active');
-                    fileContainer.classList.remove('list-view', 'grid-view');
-
-                    if (viewType === 'grid') {
-                        fileContainer.classList.add('grid-view'); 
-                        gridViewBtn.classList.add('active');
-                        listViewBtn.classList.remove('active');
-                        localStorage.setItem('fileView', 'grid');
-                    } else { 
-                        fileContainer.classList.add('list-view'); 
-                        listViewBtn.classList.add('active');
-                        gridViewBtn.classList.remove('active');
-                        localStorage.setItem('fileView', 'list');
-                    }
-                    if (isCurrentlyMultiSelect) { 
-                        fileContainer.classList.add('multi-select-mode-active');
-                    }
-                    clearSingleSelection();
+    <div class="container">
+        <header>
+            <h1>
+                <% if (locals.isSearchResult && locals.searchQuery) { %>
+                    有關 "<%= searchQuery %>" 的搜尋結果 <% if (locals.viewTargetUsername) { %>(在 <%= viewTargetUsername %> 的文件中)<% } else { %>(在您的文件中)<% } %>
+                <% } else if (locals.viewTargetUsername && user.role === 'admin') { %>
+                    管理員視角: <%= viewTargetUsername %> 的文件
+                <% } else { %>
+                    <%= user.username %> 的文件
+                <% } %>
+            </h1>
+            <div class="header-controls">
+                <nav>
+                    <% if (user.role === 'admin') { %><a href="/admin">管理面板</a><% } %>
+                    <a href="/change-password">修改密碼</a>
+                    <a href="/logout">登出</a>
+                </nav>
+                <%- include('partials/theme-switcher') %>
+            </div>
+        </header>
+
+        <% if (locals.message) { %>
+            <p class="message <%= (locals.messageType === 'error' || (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('沒有選擇文件') || message.includes('無效的') ))) ? 'error-message' : (locals.messageType === 'success' ? '' : (locals.messageType === 'warning' ? 'warning-message' : '') ) %>"><%= message %></p>
+        <% } %>
+
+        <% if (!locals.isSearchResult) { %>
+            <div class="current-path">
+                當前路徑:
+                <a href="/files<%= locals.viewTargetUsername && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>">根目錄</a>
+                <%
+                    let pathSegments = currentPath.split('/').filter(Boolean);
+                    let cumulativePathForLink = '';
+                    const adminTargetQueryForPath = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '';
+                %>
+                <% pathSegments.forEach(segment => { %>
+                    <% cumulativePathForLink += '/' + segment; %>
+                    / <a href="/files?path=<%= encodeURIComponent(cumulativePathForLink) %><%= adminTargetQueryForPath %>"><%= segment %></a>
+                <% }); %>
+            </div>
+        <% } else if (locals.searchQuery) { %>
+             <div class="search-results-info">
+                正在顯示包含 "<%= searchQuery %>" 的文件。
+                <a href="/files<%= locals.viewTargetUsername && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>">清除搜索並返回根目錄</a>
+            </div>
+        <% } %>
+
+        <div class="file-browser-controls">
+            <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
+                <div class="actions-group-left">
+                    <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
+                    <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
+                    <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button> 
+                </div>
+            <% } %>
+            <button type="button" id="toggle-multi-select-btn">啟用多選</button>
+        
+            <form action="/files" method="GET" class="control-form search-form-right">
+                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                    <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                <% } %>
+                <input type="search" name="q" placeholder="搜索..." value="<%= locals.searchQuery || '' %>">
+                <button type="submit">搜索</button>
+            </form>
+        
+            <div class="view-toggle">
+                <button id="listViewBtn">列表</button>
+                <button id="gridViewBtn">網格</button>
+            </div>
+        </div>
+        
+        <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
+            <div id="upload-actions-container" style="justify-content: flex-start;">
+                <button type="button" id="upload-files-btn">上傳文件</button>
+                <button type="button" id="upload-folder-btn">上傳文件夾</button>
+            </div>
+
+            <div id="upload-section">
+                <h2 id="upload-section-title">上傳到 "<%= currentPath === '/' ? '根目錄' : currentPath.split('/').pop() %>"</h2>
+                <div id="drop-area">
+                    <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="currentPath" value="<%= currentPath %>">
+                        <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
+                        <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
+                        <input type="file" id="userFiles" name="userFiles" multiple style="display: none;"> 
+                        <p id="drop-area-text">將文件或文件夾拖拽到此處，或點擊上方按鈕選擇</p>
+                        <button type="submit" id="upload-button">上傳已選項目</button>
+                    </form>
+                    <div id="file-list-preview" style="margin-top:10px; text-align:left;"></div>
+                    <div class="progress-bar-container" id="upload-progress-container">
+                        <div class="progress-bar" id="upload-progress-bar">0%</div>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+
+        <div id="selection-action-bar">
+            <span id="selection-count" style="margin-right: 15px;">已選擇 0 項</span>
+            <button id="action-play-btn" disabled>播放</button> <button id="action-edit-btn" disabled>編輯</button>
+            <button id="action-rename-btn" disabled>重命名</button>
+            <button id="action-move-btn" disabled>移動</button>
+            <button id="action-download-btn" disabled>下載選中項</button>
+            <button id="action-delete-btn" class="secondary" disabled>删除</button>
+        </div>
+
+        <h2><%= locals.isSearchResult ? '搜索結果' : '文件列表' %></h2>
+        <% if (items.length > 0) { %>
+            <div id="select-all-container"> 
+                <input type="checkbox" id="select-all-checkbox">
+                <label for="select-all-checkbox">全選/取消全選</label>
+            </div>
+        <% } %>
+        <div id="file-container" class="list-view"> 
+            <% if (items.length > 0) { %>
+                <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
+                <%
+                    const formatFileSize = (bytes) => {
+                        if (bytes === undefined || bytes === null || isNaN(bytes)) return '--';
+                        if (bytes === 0) return '0 B';
+                        const k = 1024;
+                        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+                        const i = Math.floor(Math.log(bytes) / Math.log(k));
+                        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+                    };
+                    const formatDate = (dateString) => {
+                        if (!dateString) return '--';
+                        try {
+                            return new Date(dateString).toLocaleDateString('zh-CN', {
+                                year: 'numeric', month: '2-digit', day: '2-digit'
+                            });
+                        } catch (e) {
+                            console.warn("Could not format date:", dateString, e);
+                            return '--';
+                        }
+                    };
+                %>
+                <ul>
+                    <% items.forEach(item => { %>
+                        <li data-item-path="<%= item.path %>">
+                            <div class="file-entry-selectable">
+                                <input type="checkbox" class="item-checkbox"
+                                       data-path="<%= item.path %>"
+                                       data-encoded-path="<%= item.encodedPath %>"
+                                       data-name="<%= item.name %>"
+                                       data-encoded-name="<%= item.encodedName %>"
+                                       data-is-dir="<%= item.isDir %>"
+                                       data-is-playable-video="<%= item.isPlayableVideo || false %>" data-video-type="<%= item.videoType || '' %>" data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>">
+                                <div class="file-content-wrapper">
+                                    <% if (item.isDir) { %>
+                                        <div class="file-entry">
+                                            <span class="file-icon-large folder-icon">📁</span>
+                                            <a href="/files?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name"><%= item.name %></a>
+                                            <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
+                                        </div>
+                                        <div class="file-details">
+                                            <span class="file-size"></span> 
+                                            <span class="file-modified"></span>
+                                        </div>
+                                    <% } else { // It's a file %>
+                                        <div class="file-entry">
+                                            <%
+                                                const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
+                                                let largeIcon = '📄'; 
+                                                let isViewableTextFile = false;
+                                                if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
+                                                    isViewableTextFile = true;
+                                                    largeIcon = '📝'; 
+                                                } else if (item.isPlayableVideo) { // 使用 server 端傳來的 isPlayableVideo
+                                                    largeIcon = '🎥';
+                                                }
+                                                else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
+                                                else if (['pdf'].includes(ext)) { largeIcon = '📕';}
+                                            %>
+                                            <span class="file-icon-large"><%= largeIcon %></span>
+                                            <% if (item.isPlayableVideo) { %>
+                                                <a href="#" class="file-name video-link" 
+                                                   data-path="<%= item.encodedPath %>" 
+                                                   data-name="<%= item.name %>" 
+                                                   data-type="<%= item.videoType %>"
+                                                   title="點擊播放 <%= item.name %>"><%= item.name %></a>
+                                            <% } else if (isViewableTextFile) { %>
+                                                <a href="/view?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name" title="點擊查看"><%= item.name %></a>
+                                            <% } else { %>
+                                                <span class="file-name"><%= item.name %></span>
+                                            <% } %>
+                                            <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
+                                        </div>
+                                        <div class="file-details">
+                                            <span class="file-size" title="<%= item.size %> bytes"><%= formatFileSize(item.size) %></span>
+                                            <span class="file-modified"><%= formatDate(item.lastModified) %></span>
+                                        </div>
+                                    <% } %>
+                                    <span class="file-actions-placeholder"></span> 
+                                </div>
+                            </div>
+                             <div class="rename-form" id="rename-form-<%= item.encodedName %>">
+                                <form action="/rename" method="POST" class="control-form inline-form">
+                                    <input type="hidden" name="currentPath" value="<%= locals.isSearchResult ? (item.path.substring(0, item.path.lastIndexOf('/')) || '/') : currentPath %>">
+                                    <input type="hidden" name="oldPath" value="<%= item.path %>">
+                                    <input type="hidden" name="isDir" value="<%= item.isDir %>">
+                                    <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
+                                    <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
+                                    <input type="text" name="newName" placeholder="新名稱" value="<%= item.name %>" required>
+                                    <button type="submit">確認</button>
+                                    <button type="button" class="secondary" onclick="hideRenameForm('<%= item.encodedName %>'); return false;">取消</button>
+                                </form>
+                            </div>
+                        </li>
+                    <% }) %>
+                </ul>
+            <% } else { %>
+                <p><%= locals.isSearchResult ? '找不到符合條件的文件。' : '此文件夾為空。' %></p>
+            <% } %>
+        </div>
+    </div>
+
+    <div id="create-item-modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="close-create-item-modal-btn">&times;</span>
+            <h3 id="create-item-modal-title">创建新项目</h3>
+            <form id="create-item-form" method="POST"> 
+                <input type="hidden" name="currentPath" value="<%= currentPath %>">
+                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
+                    <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                <% } %>
+                <% if (locals.csrfToken) { %>
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <% } %>
+                <div class="form-group">
+                    <label for="create-item-name-input" id="create-item-name-label">名称:</label>
+                    <input type="text" id="create-item-name-input" name="" required> 
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="secondary" id="cancel-create-item-btn">取消</button>
+                    <button type="submit" id="confirm-create-item-btn">确认创建</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="move-modal">
+        <div class="modal-content"> <span class="close-modal-btn" id="close-move-modal-btn">&times;</span>
+            <h3>移動選中項目到:</h3>
+            <div id="directory-tree-container">
+                <p>正在加載目錄...</p>
+            </div>
+            <p>已選擇目標: <strong id="selected-destination-path">無</strong></p>
+            <input type="hidden" id="move-destination-input" value="">
+            <div class="modal-actions"> <button type="button" class="secondary" id="cancel-move-btn">取消</button>
+                <button id="confirm-move-btn" disabled>確認移動</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="overwrite-confirm-modal" class="modal" style="display:none; z-index: 1002;">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="close-overwrite-modal-btn">&times;</span>
+            <h3>確認操作</h3>
+            <p id="overwrite-message">一個同名項目已存在。您要覆蓋它嗎？</p>
+            <div class="modal-actions">
+                <button type="button" class="secondary" id="overwrite-abandon-btn">放棄</button>
+                <button type="button" id="overwrite-confirm-btn">覆蓋</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="video-player-modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="close-video-modal-btn">&times;</span>
+            <h3 id="video-modal-title" style="margin-bottom: 15px;">播放視頻</h3>
+            <video id="html5-video-player" controls controlsList="nodownload" width="100%" style="max-height: 75vh; display: block; background-color: #000;">
+                <source id="video-source" src="" type="">
+                您的瀏覽器不支持 HTML5 video 標籤。
+            </video>
+        </div>
+    </div>
+
+
+    <script src="/theme.js"></script>
+    <script>
+        const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
+        const ALLOWED_VIDEO_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_VIDEO_EXTENSIONS || []) %>; // 從 server 獲取
+        const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
+        const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
+        const CURRENT_USER_ROLE = "<%= user.role %>";
+        const CURRENT_PATH_ON_LOAD = "<%= currentPath %>";
+        const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
+        const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify(items.map(item => item.name.toLowerCase())) %>;
+        const HAS_ITEMS_ON_PAGE = <%= items.length > 0 %>;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const fileContainer = document.getElementById('file-container');
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const selectAllContainer = document.getElementById('select-all-container'); 
+            const selectionActionBar = document.getElementById('selection-action-bar');
+            const selectionCountDisplay = document.getElementById('selection-count');
+            const actionPlayBtn = document.getElementById('action-play-btn'); // 新增
+            const actionEditBtn = document.getElementById('action-edit-btn');
+            const actionRenameBtn = document.getElementById('action-rename-btn');
+            const actionMoveBtn = document.getElementById('action-move-btn');
+            const actionDownloadBtn = document.getElementById('action-download-btn');
+            const actionDeleteBtn = document.getElementById('action-delete-btn');
+            
+            const moveModal = document.getElementById('move-modal');
+            const closeMoveModalBtn = document.getElementById('close-move-modal-btn');
+            const directoryTreeContainer = document.getElementById('directory-tree-container');
+            const confirmMoveBtn = document.getElementById('confirm-move-btn');
+            const cancelMoveBtn = document.getElementById('cancel-move-btn');
+            const selectedDestinationPathDisplay = document.getElementById('selected-destination-path');
+            const moveDestinationInput = document.getElementById('move-destination-input');
+            let currentDirectoryTree = [];
+
+            const toggleUploadActionsBtn = document.getElementById('toggleUploadActionsBtn');
+            const uploadActionsContainer = document.getElementById('upload-actions-container');
+            const uploadFilesBtn = document.getElementById('upload-files-btn');
+            const uploadFolderBtn = document.getElementById('upload-folder-btn');
+            const uploadSection = document.getElementById('upload-section');
+            const userFilesInput = document.getElementById('userFiles');
+            const dropAreaText = document.getElementById('drop-area-text');
+            const uploadForm = document.getElementById('upload-form');
+            const uploadProgressContainer = document.getElementById('upload-progress-container');
+            const uploadProgressBar = document.getElementById('upload-progress-bar');
+            const fileListPreview = document.getElementById('file-list-preview');
+            const uploadButton = document.getElementById('upload-button'); 
+            const dropArea = document.getElementById('drop-area');
+
+            const overwriteModal = document.getElementById('overwrite-confirm-modal');
+            const overwriteMessage = document.getElementById('overwrite-message');
+            const overwriteConfirmBtn = document.getElementById('overwrite-confirm-btn');
+            const overwriteAbandonBtn = document.getElementById('overwrite-abandon-btn');
+            const closeOverwriteModalBtn = document.getElementById('close-overwrite-modal-btn');
+
+            const toggleMultiSelectBtn = document.getElementById('toggle-multi-select-btn');
+            let multiSelectModeActive = false;
+            let currentSingleSelectedItem = null;
+
+            // 新增: 視頻播放器相關元素
+            const videoPlayerModal = document.getElementById('video-player-modal');
+            const html5VideoPlayer = document.getElementById('html5-video-player');
+            const videoSourceElement = document.getElementById('video-source');
+            const videoModalTitle = document.getElementById('video-modal-title');
+            const closeVideoModalBtn = document.getElementById('close-video-modal-btn');
+
+
+            function clearSingleSelection() {
+                if (currentSingleSelectedItem && currentSingleSelectedItem.element) {
+                    currentSingleSelectedItem.element.classList.remove('single-selected-item');
+                }
+                currentSingleSelectedItem = null;
+            }
+
+            function updateMultiSelectModeUI() {
+                if (!fileContainer || !toggleMultiSelectBtn) return;
+
+                if (multiSelectModeActive) {
+                    clearSingleSelection();
+                    fileContainer.classList.add('multi-select-mode-active');
+                    toggleMultiSelectBtn.textContent = '取消多選';
+                    if (selectAllContainer && HAS_ITEMS_ON_PAGE) { 
+                        selectAllContainer.classList.add('visible-in-multiselect'); 
+                    }
+                } else {
+                    fileContainer.classList.remove('multi-select-mode-active');
+                    toggleMultiSelectBtn.textContent = '啟用多選';
+                    if (selectAllContainer) { 
+                        selectAllContainer.classList.remove('visible-in-multiselect'); 
+                    }
+                    document.querySelectorAll('.item-checkbox:checked').forEach(cb => cb.checked = false);
+                    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                }
+                updateSelectionActions();
+            }
+            
+            if (toggleMultiSelectBtn) {
+                toggleMultiSelectBtn.addEventListener('click', () => {
+                    multiSelectModeActive = !multiSelectModeActive;
+                    updateMultiSelectModeUI();
+                });
+            }
+
+            function getCheckboxSelectedItems() {
+                const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox'); 
+                const selected = [];
+                currentCheckboxes.forEach((cb) => {
+                    if (cb.checked) {
+                        selected.push({
+                            path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
+                            name: cb.dataset.name, encodedName: cb.dataset.encodedName,
+                            isDir: cb.dataset.isDir === 'true', rawName: cb.dataset.rawName,
+                            isPlayableVideo: cb.dataset.isPlayableVideo === 'true', // 新增
+                            videoType: cb.dataset.videoType, // 新增
+                            element: cb.closest('li')
+                        });
+                    }
+                });
+                return selected;
+            }
+
+            function updateSelectionActions() {
+                let count = 0;
+                let itemsForActions = []; 
+                let isSingleFileEditable = false;
+                let isSingleFilePlayableVideo = false; // 新增
+
+                if (multiSelectModeActive) {
+                    const checkboxSelectedItems = getCheckboxSelectedItems();
+                    count = checkboxSelectedItems.length;
+                    itemsForActions = checkboxSelectedItems;
+                    if (count === 1 && itemsForActions[0]) {
+                        if (!itemsForActions[0].isDir) {
+                             const fileName = itemsForActions[0].name;
+                             const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
+                             if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
+                                 isSingleFileEditable = true;
+                             }
+                             if (itemsForActions[0].isPlayableVideo) { // 新增
+                                isSingleFilePlayableVideo = true;
+                             }
+                        }
+                    }
+                } else if (currentSingleSelectedItem) {
+                    count = 1;
+                    itemsForActions.push(currentSingleSelectedItem);
+                    if (!currentSingleSelectedItem.isDir) {
+                        const fileName = currentSingleSelectedItem.name;
+                        const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
+                         if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
+                            isSingleFileEditable = true;
+                        }
+                        if (currentSingleSelectedItem.isPlayableVideo) { // 新增
+                            isSingleFilePlayableVideo = true;
+                        }
+                    }
+                }
+
+                if (count > 0) {
+                    selectionActionBar.style.display = 'flex';
+                    selectionCountDisplay.textContent = `已選擇 ${count} 項`;
+                } else {
+                    selectionActionBar.style.display = 'none';
+                }
+                
+                if(actionPlayBtn) actionPlayBtn.disabled = !(count === 1 && isSingleFilePlayableVideo); // 新增
+                if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable);
+                if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
+                if(actionMoveBtn) actionMoveBtn.disabled = !(count > 0);
+                if(actionDownloadBtn) actionDownloadBtn.disabled = !(count > 0);
+                if(actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
+            }
+
+            document.querySelectorAll('#file-container .item-checkbox').forEach((checkbox) => {
+                checkbox.addEventListener('change', () => {
+                    if (multiSelectModeActive) { 
+                        clearSingleSelection(); 
+                        updateSelectionActions(); 
+                    } else {
+                        checkbox.checked = false; 
+                    }
+                });
+            });
+            
+            if (selectAllCheckbox && selectAllContainer) {
+                selectAllCheckbox.addEventListener('change', (e) => {
+                    if (!multiSelectModeActive) return; 
+                    clearSingleSelection(); 
+                    const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox'); 
+                    currentCheckboxes.forEach(cb => {
+                        if (cb.checked !== e.target.checked) { 
+                            cb.checked = e.target.checked;
+                        }
+                    });
+                    updateSelectionActions(); 
+                });
+            }
+
+            if (fileContainer) {
+                fileContainer.querySelectorAll('ul > li .file-content-wrapper').forEach(contentWrapper => {
+                    contentWrapper.addEventListener('click', (event) => {
+                        const listItem = contentWrapper.closest('li');
+                        if (!listItem) return;
+                        const checkbox = listItem.querySelector('.item-checkbox');
+                        if (!checkbox) return;
+
+                        // 如果點擊的是播放鏈接，則由其自身的事件處理器處理
+                        if (event.target.classList.contains('video-link') || event.target.closest('.video-link')) {
+                            return;
+                        }
+                        if (event.target.tagName === 'A' || event.target.closest('a') || 
+                            event.target.classList.contains('item-checkbox') || 
+                            event.target.closest('.rename-form')) {
+                            return;
+                        }
+
+                        const itemData = {
+                            path: checkbox.dataset.path, encodedPath: checkbox.dataset.encodedPath,
+                            name: checkbox.dataset.name, encodedName: checkbox.dataset.encodedName,
+                            isDir: checkbox.dataset.isDir === 'true', rawName: checkbox.dataset.rawName,
+                            isPlayableVideo: checkbox.dataset.isPlayableVideo === 'true', // 新增
+                            videoType: checkbox.dataset.videoType, // 新增
+                            element: listItem 
+                        };
+
+                        if (multiSelectModeActive) { 
+                            checkbox.checked = !checkbox.checked;
+                            clearSingleSelection();
+                        } else {
+                            if (currentSingleSelectedItem && currentSingleSelectedItem.element === listItem) {
+                                clearSingleSelection();
+                            } else {
+                                clearSingleSelection(); 
+                                currentSingleSelectedItem = itemData;
+                                listItem.classList.add('single-selected-item');
+                            }
+                        }
+                        updateSelectionActions();
+                    });
+                });
+            
+                fileContainer.addEventListener('click', (event) => {
+                    if (event.target.closest('li') === null && (event.target.isSameNode(fileContainer) || event.target.tagName === 'UL')) {
+                        if (!multiSelectModeActive) { 
+                            clearSingleSelection();
+                            updateSelectionActions(); 
+                        }
+                    }
+                });
+            }
+            
+            // 新增: 處理視頻播放鏈接點擊
+            document.querySelectorAll('.video-link').forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const encodedPath = this.dataset.path;
+                    const videoName = this.dataset.name;
+                    const videoType = this.dataset.type;
+                    openVideoPlayer(encodedPath, videoName, videoType);
+                });
+            });
+            
+            // 新增: 處理選擇操作欄中的播放按鈕
+            if (actionPlayBtn) {
+                actionPlayBtn.addEventListener('click', () => {
+                    if (actionPlayBtn.disabled) return;
+                    let itemToPlay = null;
+                    if (!multiSelectModeActive && currentSingleSelectedItem && currentSingleSelectedItem.isPlayableVideo) {
+                        itemToPlay = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1 && selected[0].isPlayableVideo) {
+                            itemToPlay = selected[0];
+                        }
+                    }
+                    if (itemToPlay) {
+                        openVideoPlayer(itemToPlay.encodedPath, itemToPlay.name, itemToPlay.videoType);
+                    }
+                });
+            }
+
+
+             if (actionEditBtn) {
+                actionEditBtn.addEventListener('click', () => {
+                    if (actionEditBtn.disabled) return;
+                    let itemToEdit = null;
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemToEdit = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1) itemToEdit = selected[0];
+                    }
+
+                    if (itemToEdit && !itemToEdit.isDir) { 
+                        let url = `/edit?path=${itemToEdit.encodedPath}`;
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                            url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                        }
+                        window.location.href = url;
+                    }
+                });
+            }
+
+            if (actionRenameBtn) {
+                actionRenameBtn.addEventListener('click', () => {
+                    if (actionRenameBtn.disabled) return;
+                    let itemToRename = null;
+                     if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemToRename = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1) itemToRename = selected[0];
+                    }
+                    if (itemToRename) {
+                        showRenameForm(itemToRename.encodedName, itemToRename.name, itemToRename.isDir);
+                    }
+                });
+            }
+            
+            if (actionDownloadBtn) {
+                actionDownloadBtn.addEventListener('click', () => {
+                    if (actionDownloadBtn.disabled) return;
+                    let itemsToDownload = [];
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemsToDownload.push(currentSingleSelectedItem);
+                    } else if (multiSelectModeActive) {
+                        itemsToDownload = getCheckboxSelectedItems();
+                    }
+
+                    if (itemsToDownload.length === 0) {
+                        alert("請選擇要下載的項目。"); return;
+                    }
+
+                    if (itemsToDownload.length === 1 && !itemsToDownload[0].isDir) {
+                        let url = `/download?path=${itemsToDownload[0].encodedPath}`;
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                            url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                        }
+                        const tempLink = document.createElement('a');
+                        tempLink.href = url;
+                        tempLink.setAttribute('download', itemsToDownload[0].name);
+                        tempLink.style.display = 'none';
+                        document.body.appendChild(tempLink);
+                        tempLink.click();
+                        document.body.removeChild(tempLink);
+                    } else { 
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '/download-archive';
+                        form.style.display = 'none';
+
+                        const itemsInput = document.createElement('input');
+                        itemsInput.type = 'hidden';
+                        itemsInput.name = 'items';
+                        const itemsForPayload = itemsToDownload.map(item => ({ 
+                            path: item.path, name: item.name, isDir: item.isDir 
+                        }));
+                        itemsInput.value = JSON.stringify(itemsForPayload);
+                        form.appendChild(itemsInput);
+
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                            const targetUserInput = document.createElement('input');
+                            targetUserInput.type = 'hidden';
+                            targetUserInput.name = 'targetUsername';
+                            targetUserInput.value = VIEW_TARGET_USERNAME;
+                            form.appendChild(targetUserInput);
+                        }
+                        if (CSRF_TOKEN) { 
+                            const csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = '_csrf'; 
+                            csrfInput.value = CSRF_TOKEN;
+                            form.appendChild(csrfInput);
+                        }
+                        document.body.appendChild(form);
+                        try { form.submit(); } catch (e) { console.error("表單提交錯誤:", e); alert("觸發下載時發生錯誤。"); }
+                        setTimeout(() => {
+                           if (form.parentNode === document.body) { document.body.removeChild(form); }
+                        }, 100);
+                    }
+                });
+            }
+
+            if (actionDeleteBtn) {
+                actionDeleteBtn.addEventListener('click', async () => {
+                    if (actionDeleteBtn.disabled) return;
+                    let itemsToDelete = [];
+                     if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemsToDelete.push(currentSingleSelectedItem);
+                    } else if (multiSelectModeActive) {
+                        itemsToDelete = getCheckboxSelectedItems();
+                    }
+
+                    if (itemsToDelete.length === 0) return;
+
+                    const itemNames = itemsToDelete.map(item => item.rawName).join(', ');
+                    if (confirm(`確定要刪除選中的 ${itemsToDelete.length} 個項目 (${itemNames}) 嗎？此操作不可恢復！`)) {
+                        let allSucceeded = true;
+                        let reloadPage = false;
+                        let errors = [];
+
+                        for (const item of itemsToDelete) {
+                            try {
+                                let deleteUrl = `/delete?path=${item.encodedPath}&isDir=${item.isDir}`;
+                                if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                                    deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                                }
+                                const response = await fetch(deleteUrl, { 
+                                    method: 'GET', // 假設 DELETE 也是 GET 請求，根據您的 server.js
+                                });
+
+                                if (response.ok) {
+                                    if (response.redirected || (response.headers.get("Content-Type") && response.headers.get("Content-Type").includes("application/json"))) {
+                                        try {
+                                            const result = await response.json(); 
+                                            if (result.success) {
+                                                reloadPage = true;
+                                            } else {
+                                                allSucceeded = false;
+                                                errors.push(result.message || `刪除 ${item.name} 失敗`);
+                                            }
+                                        } catch (e) { 
+                                            reloadPage = true; 
+                                        }
+                                    } else { 
+                                        reloadPage = true; 
+                                    }
+                                } else {
+                                    allSucceeded = false;
+                                    let errorMsg = `刪除 ${item.name} 失敗 (狀態: ${response.status})`;
+                                    try {
+                                        const errResult = await response.json();
+                                        if(errResult.message) errorMsg = errResult.message;
+                                    } catch(e) { /* ignore if not json */ }
+                                    errors.push(errorMsg);
+                                    console.error('刪除失敗:', item.name, response.status, await response.text());
+                                }
+                            } catch (error) {
+                                allSucceeded = false;
+                                errors.push(`刪除 ${item.name} 時發生客戶端錯誤`);
+                                console.error('刪除項目時出錯:', item.name, error);
+                            }
+                        }
+
+                        if (errors.length > 0) {
+                            alert("部分或全部項目刪除失敗：\n" + errors.join("\n"));
+                        } else if (allSucceeded) {
+                            alert("選中項目已成功刪除。");
+                        }
+                        
+                        if (reloadPage || !allSucceeded) { 
+                            window.location.reload();
+                        } else { 
+                             clearSingleSelection(); 
+                            if(selectAllCheckbox) selectAllCheckbox.checked = false; 
+                            document.querySelectorAll('#file-container .item-checkbox').forEach(cb => cb.checked = false); 
+                            updateSelectionActions();
+                        }
+                    }
+                });
+            }
+            
+            if (actionMoveBtn) {
+                actionMoveBtn.addEventListener('click', async () => {
+                    if (actionMoveBtn.disabled) return;
+                    let itemsToMove = [];
+                     if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemsToMove.push(currentSingleSelectedItem);
+                    } else if (multiSelectModeActive) {
+                        itemsToMove = getCheckboxSelectedItems();
+                    }
+                    if (itemsToMove.length === 0) return;
+
+                    moveDestinationInput.value = ''; selectedDestinationPathDisplay.textContent = '無';
+                    confirmMoveBtn.disabled = true; directoryTreeContainer.innerHTML = '<p>正在加載目錄...</p>';
+                    moveModal.style.display = 'block';
+                    try {
+                        let fetchUrl = '/api/directories'; let queryParams = [];
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') queryParams.push(`targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`);
+                        
+                        const pathsToExclude = itemsToMove.flatMap(item => {
+                            if (item.isDir) {
+                                return [item.path];
+                            }
+                            return [];
+                        });
+                        if (pathsToExclude.length > 0) queryParams.push(`excludePaths=${encodeURIComponent(pathsToExclude.join(','))}`);
+                        
+                        if (queryParams.length > 0) fetchUrl += `?${queryParams.join('&')}`;
+                        
+                        const response = await fetch(fetchUrl);
+                        if (!response.ok) throw new Error(`無法獲取目錄列表: ${response.statusText}`);
+                        currentDirectoryTree = await response.json();
+                        renderDirectoryTree(currentDirectoryTree, directoryTreeContainer, itemsToMove);
+                    } catch (error) {
+                        console.error('獲取目錄樹時出錯:', error);
+                        directoryTreeContainer.innerHTML = `<p style="color:red;">加載目錄失敗: ${error.message}</p>`;
+                    }
+                });
+            }
+            function renderDirectoryTree(nodes, container, itemsBeingMoved) {
+                container.innerHTML = ''; const ul = document.createElement('ul');
+                const rootLi = document.createElement('li'); 
+                rootLi.textContent = '根目錄 (/)';
+                rootLi.dataset.path = '/'; 
+                
+                let isRootInvalid = itemsBeingMoved.some(item => item.path.substring(0, item.path.lastIndexOf('/')) === '' && item.path !== '/'); 
+
+                rootLi.addEventListener('click', (e) => selectDestination(e.target, '/'));
+                ul.appendChild(rootLi);
+
+                function buildTree(dirItems, parentUl, currentParentPath) {
+                    dirItems.forEach(dirNode => {
+                        const isMovingThisDirOrChild = itemsBeingMoved.some(movedItem => 
+                            movedItem.isDir && (dirNode.path === movedItem.path || dirNode.path.startsWith(movedItem.path + '/'))
+                        );
+                        const isCurrentParent = itemsBeingMoved.every(movedItem => { 
+                            const movedItemParentPath = movedItem.path.substring(0, movedItem.path.lastIndexOf('/')) || '/';
+                            return movedItemParentPath === dirNode.path;
+                        });
+
+                        if (isMovingThisDirOrChild) {
+                            return; 
+                        }
+
+                        const li = document.createElement('li'); 
+                        li.textContent = dirNode.name; 
+                        li.dataset.path = dirNode.path;
+                        if (isCurrentParent && itemsBeingMoved.length === 1) { 
+                            li.style.opacity = "0.5"; 
+                            li.style.pointerEvents = "none"; 
+                        } else {
+                           li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, dirNode.path); });
+                        }
+                        parentUl.appendChild(li);
+                        if (dirNode.children && dirNode.children.length > 0) {
+                            const nestedUl = document.createElement('ul'); 
+                            li.appendChild(nestedUl);
+                            buildTree(dirNode.children, nestedUl, dirNode.path);
+                        }
+                    });
+                }
+                buildTree(nodes, ul, '/'); 
+                container.appendChild(ul);
+            }
+            function selectDestination(targetElement, path) {
+                document.querySelectorAll('#directory-tree-container li.selected-dir').forEach(el => el.classList.remove('selected-dir'));
+                targetElement.classList.add('selected-dir');
+                selectedDestinationPathDisplay.textContent = path; moveDestinationInput.value = path;
+                confirmMoveBtn.disabled = false;
+            }
+            if (closeMoveModalBtn) closeMoveModalBtn.onclick = () => moveModal.style.display = 'none';
+            if (cancelMoveBtn) cancelMoveBtn.onclick = () => moveModal.style.display = 'none';
+            
+            if (confirmMoveBtn) {
+                confirmMoveBtn.addEventListener('click', async () => {
+                    let selectedToMove = [];
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        selectedToMove.push(currentSingleSelectedItem);
+                    } else if (multiSelectModeActive) {
+                        selectedToMove = getCheckboxSelectedItems();
+                    }
+
+                    const destinationPath = moveDestinationInput.value;
+                    if (selectedToMove.length === 0 || (destinationPath === null || destinationPath === undefined) ) { 
+                        alert('請選擇要移動的項目和目標文件夾。'); return; 
+                    }
+
+                    for (const item of selectedToMove) {
+                        const itemParentPath = item.path.substring(0, item.path.lastIndexOf('/')) || '/';
+                        if (itemParentPath === destinationPath) {
+                            alert(`項目 "${item.name}" 已經在目標文件夾 "${destinationPath === '/' ? '根目錄' : destinationPath}" 中。`);
+                            return;
+                        }
+                        if (item.isDir && (destinationPath === item.path || destinationPath.startsWith(item.path + '/'))) {
+                            alert(`不能將文件夾 "${item.name}" 移動到其自身或其子文件夾中。`); return;
+                        }
+                    }
+                    try {
+                        const payload = { 
+                            sourcePaths: selectedToMove.map(item => item.path), 
+                            destinationPath: destinationPath, 
+                        };
+                        if (CSRF_TOKEN) payload._csrf = CSRF_TOKEN;
+                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') payload.targetUsername = VIEW_TARGET_USERNAME;
+                        
+                        const response = await fetch('/move-items', { 
+                            method: 'POST', headers: { 'Content-Type': 'application/json', },
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await response.json(); 
+                        if (response.ok && result.success) { 
+                            alert(result.message || '項目移動成功！'); 
+                            window.location.href = result.redirectUrl || window.location.pathname + window.location.search; 
+                        } else {
+                             alert(`移動失敗: ${result.message || '伺服器發生未知錯誤。'}`);
+                        }
+                    } catch (error) { 
+                        console.error('移動項目時出錯:', error); 
+                        let errorMsg = `移動項目時發生客戶端錯誤。`;
+                        if (error instanceof SyntaxError) { 
+                            errorMsg += " 伺服器可能返回了非預期的回應格式。";
+                        } else if (error.message) {
+                            errorMsg += ` ${error.message}`;
+                        }
+                        alert(errorMsg); 
+                    }
+                    moveModal.style.display = 'none';
+                });
+            }
+
+            function showOverwriteConfirmationModal(itemName) {
+                return new Promise((resolve) => {
+                    if (!overwriteModal || !overwriteMessage || !overwriteConfirmBtn || !overwriteAbandonBtn || !closeOverwriteModalBtn) {
+                        console.error("Overwrite modal elements not found!");
+                        resolve('abandon'); 
+                        return;
+                    }
+                    overwriteMessage.textContent = `一個名為 "${itemName}" 的項目已存在於當前目錄。您要覆蓋它嗎？`;
+                    overwriteModal.style.display = 'block';
+
+                    const handleConfirm = () => { cleanupAndResolve('overwrite'); };
+                    const handleAbandon = () => { cleanupAndResolve('abandon'); };
+
+                    function cleanupAndResolve(decision) {
+                        overwriteModal.style.display = 'none';
+                        overwriteConfirmBtn.removeEventListener('click', handleConfirm);
+                        overwriteAbandonBtn.removeEventListener('click', handleAbandon);
+                        closeOverwriteModalBtn.removeEventListener('click', handleAbandon);
+                        resolve(decision);
+                    }
+
+                    overwriteConfirmBtn.addEventListener('click', handleConfirm, { once: true });
+                    overwriteAbandonBtn.addEventListener('click', handleAbandon, { once: true });
+                    closeOverwriteModalBtn.addEventListener('click', handleAbandon, { once: true });
+                });
+            }
+
+            if (toggleUploadActionsBtn && uploadActionsContainer && uploadSection) {
+                toggleUploadActionsBtn.addEventListener('click', () => {
+                    const isActionsHidden = uploadActionsContainer.style.display === 'none' || uploadActionsContainer.style.display === '';
+                    uploadActionsContainer.style.display = isActionsHidden ? 'flex' : 'none';
+                    if (!isActionsHidden) { 
+                        uploadSection.style.display = 'none'; 
+                        toggleUploadActionsBtn.textContent = '上傳';
+                        if(userFilesInput) userFilesInput.value = null;
+                        if(fileListPreview) fileListPreview.innerHTML = '';
+                        if(uploadButton) uploadButton.style.display = 'none';
+                        if(uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+
+                    } else { 
+                        toggleUploadActionsBtn.textContent = '取消上傳操作';
+                    }
+                });
+            }
+
+            if (uploadFilesBtn && uploadSection && userFilesInput && dropAreaText && fileListPreview && uploadButton) {
+                uploadFilesBtn.addEventListener('click', () => {
+                    userFilesInput.removeAttribute('webkitdirectory');
+                    userFilesInput.removeAttribute('directory');
+                    userFilesInput.setAttribute('multiple', '');
+                    if (dropAreaText) dropAreaText.textContent = '將文件拖拽到此處進行上傳，或點擊選擇文件。';
+                    uploadSection.style.display = 'block';
+                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
+                    if (!uploadActionsContainer || uploadActionsContainer.style.display === 'none') {
+                        if(uploadActionsContainer) uploadActionsContainer.style.display = 'flex';
+                    }
+                    userFilesInput.value = null; 
+                    fileListPreview.innerHTML = ''; 
+                    uploadButton.style.display = 'none'; 
+                    userFilesInput.click(); 
+                });
+            }
+
+            if (uploadFolderBtn && uploadSection && userFilesInput && dropAreaText && fileListPreview && uploadButton) {
+                uploadFolderBtn.addEventListener('click', () => {
+                    userFilesInput.setAttribute('webkitdirectory', '');
+                    userFilesInput.setAttribute('directory', '');
+                    userFilesInput.removeAttribute('multiple'); 
+                    if (dropAreaText) dropAreaText.textContent = '將文件夾拖拽到此處進行上傳，或點擊選擇文件夾。';
+                    uploadSection.style.display = 'block';
+                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
+                     if (!uploadActionsContainer || uploadActionsContainer.style.display === 'none') {
+                        if(uploadActionsContainer) uploadActionsContainer.style.display = 'flex';
+                    }
+                    userFilesInput.value = null; 
+                    fileListPreview.innerHTML = ''; 
+                    uploadButton.style.display = 'none';
+                    userFilesInput.click(); 
+                });
+            }
+            
+            if (uploadForm && userFilesInput) {
+                uploadForm.addEventListener('submit', async function(event) { 
+                    event.preventDefault(); 
+                    if (userFilesInput.files.length === 0) {
+                        alert('請選擇要上傳的文件或文件夾。');
+                        return;
+                    }
+
+                    const originalFiles = Array.from(userFilesInput.files);
+                    let finalFilesToUpload = []; 
+                    let processedTopLevelItems = new Set(); 
+
+                    for (const file of originalFiles) {
+                        let nameToCheck = file.name;
+                        let isTopLevelItem = true;
+                        if (file.webkitRelativePath) {
+                            const pathParts = file.webkitRelativePath.split('/');
+                            nameToCheck = pathParts[0]; 
+                            if (pathParts.length > 1) isTopLevelItem = false;
+                        }
+
+                        if (EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase()) && !processedTopLevelItems.has(nameToCheck.toLowerCase())) {
+                            processedTopLevelItems.add(nameToCheck.toLowerCase());
+                            const userDecision = await showOverwriteConfirmationModal(nameToCheck);
+                            if (userDecision === 'overwrite') {
+                                originalFiles.forEach(f => {
+                                    if ((f.webkitRelativePath && f.webkitRelativePath.startsWith(nameToCheck + '/')) || f.name === nameToCheck) {
+                                        if (!finalFilesToUpload.includes(f)) finalFilesToUpload.push(f);
+                                    }
+                                });
+                            } else {
+                                console.log(`Skipping ${nameToCheck} and its contents due to user choice.`);
+                            }
+                        } else if (!EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase())) {
+                            if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
+                             if(isTopLevelItem) processedTopLevelItems.add(nameToCheck.toLowerCase()); 
+                        } else if (processedTopLevelItems.has(nameToCheck.toLowerCase()) && finalFilesToUpload.some(f => (f.webkitRelativePath || f.name).startsWith(nameToCheck))) {
+                            if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
+                        }
+                    }
+
+
+                    if (finalFilesToUpload.length === 0) {
+                        alert('沒有文件準備上傳（可能所有衝突的文件都已被放棄）。');
+                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                        if (uploadButton) uploadButton.style.display = 'none';
+                        if (fileListPreview) fileListPreview.innerHTML = '';
+                        if (userFilesInput) userFilesInput.value = null;
+                        return;
+                    }
+
+                    const formData = new FormData(); 
+                    const currentPathInput = uploadForm.querySelector('input[name="currentPath"]');
+                    if (currentPathInput) formData.append('currentPath', currentPathInput.value);
+                    
+                    const targetUsernameInput = uploadForm.querySelector('input[name="targetUsername"]');
+                    if (targetUsernameInput && targetUsernameInput.value) formData.append('targetUsername', targetUsernameInput.value);
+
+                    const csrfInput = uploadForm.querySelector('input[name="_csrf"]');
+                    if (csrfInput) formData.append('_csrf', csrfInput.value);
+
+                    for (const file of finalFilesToUpload) {
+                        formData.append('userFiles', file, file.webkitRelativePath || file.name);
+                    }
+
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', uploadForm.action, true);
+                    if (uploadProgressContainer && uploadProgressBar) {
+                        uploadProgressContainer.style.display = 'block';
+                        uploadProgressBar.style.width = '0%';
+                        uploadProgressBar.textContent = '0%';
+                    }
+                    xhr.upload.onprogress = function(event) {
+                        if (event.lengthComputable) {
+                            const percentComplete = Math.round((event.loaded / event.total) * 100);
+                            if (uploadProgressBar) {
+                                uploadProgressBar.style.width = percentComplete + '%';
+                                uploadProgressBar.textContent = percentComplete + '%';
+                            }
+                        }
+                    };
+                    xhr.onload = function() {
+                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                        if (xhr.status >= 200 && xhr.status < 300) { 
+                            let responseData = null;
+                            try { responseData = JSON.parse(xhr.responseText); } catch (e) { /* Ignore */ }
+
+                            if (responseData && responseData.redirectUrl) {
+                                window.location.href = responseData.redirectUrl;
+                            } else if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) { 
+                                window.location.href = xhr.responseURL; 
+                            } else {
+                                alert( (responseData && responseData.message) || '上傳成功！頁面將刷新。');
+                                window.location.reload(); 
+                            }
+                        } else { 
+                            let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
+                            try {
+                                const responseJson = JSON.parse(xhr.responseText);
+                                if (responseJson && responseJson.message) {
+                                    errorMessage = responseJson.message;
+                                }
+                            } catch (e) {
+                                if(xhr.responseText && xhr.responseText.length < 500) errorMessage = xhr.responseText; 
+                            }
+                            alert(errorMessage);
+                            console.error('Upload failed:', xhr.status, xhr.responseText);
+                        }
+                    };
+                    xhr.onerror = function(e) { 
+                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                        alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
+                        console.error('Upload network error:', e);
+                    };
+                    xhr.openUrl = uploadForm.action; 
+                    xhr.send(formData);
+                });
+            }
+
+            if (dropArea && userFilesInput && fileListPreview && uploadSection && dropAreaText && uploadActionsContainer && toggleUploadActionsBtn) { 
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false); 
+                });
+                function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+                
+                dropArea.addEventListener('dragenter', () => dropArea.classList.add('highlight'), false);
+                dropArea.addEventListener('dragover', () => dropArea.classList.add('highlight'), false); 
+                dropArea.addEventListener('dragleave', (e) => {
+                    if (e.relatedTarget === null || !dropArea.contains(e.relatedTarget)) {
+                        dropArea.classList.remove('highlight');
+                    }
+                }, false);
+                
+                dropArea.addEventListener('drop', (e) => {
+                    preventDefaults(e); 
+                    dropArea.classList.remove('highlight');
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    
+                    let isLikelyFolderDrop = false;
+                    if (dt.items && dt.items.length > 0 && typeof dt.items[0].webkitGetAsEntry === 'function') {
+                        const entry = dt.items[0].webkitGetAsEntry();
+                        if (entry && entry.isDirectory) {
+                            isLikelyFolderDrop = true;
+                        }
+                    } else if (files.length > 0 && files[0].webkitRelativePath) { 
+                        const firstFileRelativePath = files[0].webkitRelativePath;
+                        if (firstFileRelativePath && firstFileRelativePath.includes('/')) {
+                             isLikelyFolderDrop = true;
+                        } else if (files.length > 1 && Array.from(files).every(f => f.webkitRelativePath.startsWith(firstFileRelativePath.split('/')[0]))) {
+                            isLikelyFolderDrop = true;
+                        }
+                    }
+
+
+                    if (isLikelyFolderDrop) {
+                        userFilesInput.setAttribute('webkitdirectory', '');
+                        userFilesInput.setAttribute('directory', '');
+                        userFilesInput.removeAttribute('multiple');
+                        if(dropAreaText) dropAreaText.textContent = '已拖入文件夾，準備上傳。';
+                    } else {
+                        userFilesInput.removeAttribute('webkitdirectory');
+                        userFilesInput.removeAttribute('directory');
+                        userFilesInput.setAttribute('multiple', '');
+                        if(dropAreaText) dropAreaText.textContent = '已拖入文件，準備上傳。';
+                    }
+
+                    userFilesInput.files = files; 
+                    updateFileListPreviewOnDrop(); 
+                    uploadSection.style.display = 'block'; 
+                    if (uploadActionsContainer.style.display === 'none') {
+                         uploadActionsContainer.style.display = 'flex'; 
+                    }
+                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
+                }, false);
+
+                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop); 
+
+                function updateFileListPreviewOnDrop() { 
+                    if (!fileListPreview || !userFilesInput || !uploadButton) return;
+                    fileListPreview.innerHTML = ''; 
+                    const files = userFilesInput.files;
+                    if (files.length > 0) {
+                        const list = document.createElement('ul');
+                        list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
+                        
+                        let isDirectoryUpload = false;
+                        if (userFilesInput.hasAttribute('webkitdirectory') || (files[0] && files[0].webkitRelativePath && files[0].webkitRelativePath.includes('/'))) {
+                            isDirectoryUpload = true;
+                        }
+
+
+                        if (isDirectoryUpload) {
+                            const folderName = files[0].webkitRelativePath.split('/')[0];
+                            const listItem = document.createElement('li');
+                            listItem.textContent = `文件夾: ${folderName} (${files.length} 個文件)`;
+                            listItem.style.fontSize = '0.9em'; listItem.style.fontWeight = 'bold';
+                            list.appendChild(listItem);
+                        } else { 
+                            for (let i = 0; i < files.length; i++) {
+                                const listItem = document.createElement('li');
+                                listItem.textContent = files[i].name + (files[i].size ? ` (${(files[i].size / 1024).toFixed(1)} KB)` : '');
+                                listItem.style.fontSize = '0.9em';
+                                list.appendChild(listItem);
+                            }
+                        }
+                        fileListPreview.appendChild(list);
+                        uploadButton.style.display = 'inline-block';
+                    } else {
+                        uploadButton.style.display = 'none';
+                    }
+                }
+                if (userFilesInput && uploadButton && userFilesInput.files.length === 0) {
+                     uploadButton.style.display = 'none';
+                }
+            }
+
+            const listViewBtn = document.getElementById('listViewBtn');
+            const gridViewBtn = document.getElementById('gridViewBtn');
+            if (fileContainer && listViewBtn && gridViewBtn) { 
+                function toggleView(viewType) {
+                    const isCurrentlyMultiSelect = fileContainer.classList.contains('multi-select-mode-active');
+                    fileContainer.classList.remove('list-view', 'grid-view');
+
+                    if (viewType === 'grid') {
+                        fileContainer.classList.add('grid-view'); 
+                        gridViewBtn.classList.add('active');
+                        listViewBtn.classList.remove('active');
+                        localStorage.setItem('fileView', 'grid');
+                    } else { 
+                        fileContainer.classList.add('list-view'); 
+                        listViewBtn.classList.add('active');
+                        gridViewBtn.classList.remove('active');
+                        localStorage.setItem('fileView', 'list');
+                    }
+                    if (isCurrentlyMultiSelect) { 
+                        fileContainer.classList.add('multi-select-mode-active');
+                    }
+                    clearSingleSelection(); 
+                    updateSelectionActions(); 
+                }
+                const preferredView = localStorage.getItem('fileView') || 'list'; 
+                toggleView(preferredView); 
+                listViewBtn.addEventListener('click', () => toggleView('list'));
+                gridViewBtn.addEventListener('click', () => toggleView('grid'));
+            }
+
+            const createItemModal = document.getElementById('create-item-modal');
+            const closeCreateItemModalBtn = document.getElementById('close-create-item-modal-btn');
+            const cancelCreateItemBtn = document.getElementById('cancel-create-item-btn');
+            const createItemForm = document.getElementById('create-item-form');
+            const createItemModalTitle = document.getElementById('create-item-modal-title');
+            const createItemNameInput = document.getElementById('create-item-name-input');
+            const createItemNameLabel = document.getElementById('create-item-name-label');
+            const showCreateTextfileModalBtn = document.getElementById('show-create-textfile-modal-btn');
+            const showCreateFolderModalBtn = document.getElementById('show-create-folder-modal-btn');
+
+            function openCreateItemModal(type) {
+                if (!createItemModal || !createItemForm || !createItemModalTitle || !createItemNameLabel || !createItemNameInput) return;
+                createItemForm.reset(); 
+                
+                const currentPathForCreation = IS_SEARCH_RESULT_VIEW ? '/' : CURRENT_PATH_ON_LOAD;
+                const currentPathInputInForm = createItemForm.querySelector('input[name="currentPath"]');
+                if (currentPathInputInForm) currentPathInputInForm.value = currentPathForCreation;
+
+
+                if (type === 'textfile') {
+                    createItemModalTitle.textContent = '新建文本文件';
+                    createItemNameLabel.textContent = '文件名 (例如: mydoc.txt):';
+                    createItemNameInput.name = 'newFileName';
+                    createItemNameInput.placeholder = '例如: notes.txt, script.js';
+                    createItemForm.action = '/create-text-file';
+                } else if (type === 'folder') {
+                    createItemModalTitle.textContent = '创建新文件夹';
+                    createItemNameLabel.textContent = '文件夹名称:';
+                    createItemNameInput.name = 'folderName';
+                    createItemNameInput.placeholder = '例如: 我的文档';
+                    createItemForm.action = '/create-folder';
+                }
+                
+                const targetUsernameHiddenInput = createItemForm.querySelector('input[name="targetUsername"]');
+                if (targetUsernameHiddenInput) { 
+                    if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                        targetUsernameHiddenInput.value = VIEW_TARGET_USERNAME;
+                    } else {
+                        targetUsernameHiddenInput.value = ''; 
+                    }
+                }
+                createItemModal.style.display = 'block';
+                createItemNameInput.focus();
+            }
+
+            if (showCreateTextfileModalBtn) showCreateTextfileModalBtn.addEventListener('click', () => openCreateItemModal('textfile'));
+            if (showCreateFolderModalBtn) showCreateFolderModalBtn.addEventListener('click', () => openCreateItemModal('folder'));
+            if (closeCreateItemModalBtn) closeCreateItemModalBtn.onclick = () => createItemModal.style.display = 'none';
+            if (cancelCreateItemBtn) cancelCreateItemBtn.onclick = () => createItemModal.style.display = 'none';
+            
+            // 新增: 視頻播放器模態框的打開和關閉邏輯
+            function openVideoPlayer(encodedPath, videoName, videoType) {
+                if (!videoPlayerModal || !html5VideoPlayer || !videoSourceElement || !videoModalTitle) return;
+                
+                let videoSrc = `/stream/${encodedPath}`;
+                // 如果是管理員查看其他用戶的文件，添加 targetUsername 參數
+                if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
+                    videoSrc += `?targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                }
+
+                videoModalTitle.textContent = videoName || '播放視頻';
+                videoSourceElement.setAttribute('src', videoSrc);
+                if (videoType) {
+                    videoSourceElement.setAttribute('type', videoType);
+                } else {
+                    videoSourceElement.removeAttribute('type'); // 如果沒有類型信息，移除 type 讓瀏覽器猜測
+                }
+                html5VideoPlayer.load(); // 重新加載視頻源
+                // html5VideoPlayer.play(); // 可選: 自動播放
+                videoPlayerModal.style.display = 'block';
+            }
+
+            if (closeVideoModalBtn) {
+                closeVideoModalBtn.onclick = () => {
+                    if (videoPlayerModal) videoPlayerModal.style.display = 'none';
+                    if (html5VideoPlayer) {
+                        html5VideoPlayer.pause(); // 暫停播放
+                        videoSourceElement.setAttribute('src', ''); // 清空 src 以停止加載
+                    }
+                };
+            }
+
+
+            window.addEventListener('click', (event) => { 
+                if (event.target == createItemModal) createItemModal.style.display = 'none';
+                if (event.target == moveModal) moveModal.style.display = 'none'; 
+                if (event.target == overwriteModal) { 
+                    const abandonButton = overwriteModal.querySelector('#overwrite-abandon-btn');
+                    if (abandonButton) abandonButton.click(); 
+                }
+                if (event.target == videoPlayerModal) { // 新增: 點擊模態框外部關閉視頻播放器
+                     if (videoPlayerModal) videoPlayerModal.style.display = 'none';
+                    if (html5VideoPlayer) {
+                        html5VideoPlayer.pause();
+                        videoSourceElement.setAttribute('src', '');
+                    }
+                }
+            });
+
+            updateMultiSelectModeUI(); 
+            updateSelectionActions(); 
+
+        }); 
+
+        function showRenameForm(encodedName, currentName, isDir) { 
+            document.querySelectorAll('.rename-form').forEach(form => {
+                if (form.id !== 'rename-form-' + encodedName) {
+                    form.style.display = 'none';
+                }
+            });
+
+            const formContainer = document.getElementById('rename-form-' + encodedName);
+            if (formContainer) {
+                const isCurrentlyVisible = formContainer.style.display === 'block';
+                formContainer.style.display = isCurrentlyVisible ? 'none' : 'block';
+                
+                if (!isCurrentlyVisible) { 
+                    const inputField = formContainer.querySelector('input[name="newName"]');
+                    if (inputField) {
+                        inputField.value = currentName; 
+                        inputField.focus(); 
+                        if (!isDir && currentName.includes('.')) {
+                            const dotIndex = currentName.lastIndexOf('.');
+                            inputField.setSelectionRange(0, dotIndex);
+                        } else {
+                            inputField.select();
+                        }
+                    }
+                    const currentPathInput = formContainer.querySelector('input[name="currentPath"]');
+                    const oldPathInput = formContainer.querySelector('input[name="oldPath"]');
+                    if (currentPathInput && oldPathInput && IS_SEARCH_RESULT_VIEW) {
+                         const itemOriginalPath = oldPathInput.value;
+                         currentPathInput.value = itemOriginalPath.substring(0, itemOriginalPath.lastIndexOf('/')) || '/';
+                    } else if (currentPathInput) { 
+                        currentPathInput.value = CURRENT_PATH_ON_LOAD;
+                    }
+                }
+            }
+        }
+        function hideRenameForm(encodedName) { 
+            const form = document.getElementById('rename-form-' + encodedName);
+            if (form) form.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
