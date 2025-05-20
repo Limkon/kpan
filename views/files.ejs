@@ -7,7 +7,7 @@
     <title><%= locals.pageTitle || ( (locals.viewTargetUsername ? viewTargetUsername : user.username) + ' 的文件') %> - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
-    <%# Removed the entire inline <style> block to rely on /style.css and theme stylesheets %>
+    <%# 已移除內嵌樣式，所有樣式依賴 /style.css 和主題CSS %>
 </head>
 <body>
     <div class="container">
@@ -23,9 +23,10 @@
             </h1>
             <div class="header-controls">
                 <nav>
-                    <% if (user.role === 'admin') { %><a href="/admin" class="button-link secondary">管理面板</a><% } %>
-                    <a href="/change-password" class="button-link secondary">修改密碼</a>
-                    <a href="/logout" class="button-link secondary">登出</a>
+                    <%# 修改以下連結的 class，移除 'secondary'，使其套用主要按鈕樣式 %>
+                    <% if (user.role === 'admin') { %><a href="/admin" class="button-link">管理面板</a><% } %>
+                    <a href="/change-password" class="button-link">修改密碼</a>
+                    <a href="/logout" class="button-link">登出</a>
                 </nav>
                 <%- include('partials/theme-switcher') %>
             </div>
