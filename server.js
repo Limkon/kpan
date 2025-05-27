@@ -71,45 +71,57 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
         });
 
         // --- public_links 表格 ---
-        // 1. 確保表格存在且具有最新的基本結構 (CREATE TABLE IF NOT EXISTS 會處理)
-        db.run(`CREATE TABLE IF NOT EXISTS public_links (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            owner_id INTEGER NOT NULL,
-            file_path TEXT NOT NULL, 
-            is_directory BOOLEAN NOT NULL DEFAULT 0,
-            token TEXT UNIQUE NOT NULL, 
-            password_hash TEXT, 
-            expires_at DATETIME, 
-            allow_download BOOLEAN NOT NULL DEFAULT 1,
-            allow_view BOOLEAN NOT NULL DEFAULT 1, -- 確保 allow_view 在定義中
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            visit_count INTEGER DEFAULT 0,
-            FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
-        )`, (err) => {
+        const publicLinksTableDefinition = `
+            CREATE TABLE IF NOT EXISTS public_links (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                owner_id INTEGER NOT NULL,
+                file_path TEXT NOT NULL, 
+                is_directory BOOLEAN NOT NULL DEFAULT 0,
+                token TEXT UNIQUE NOT NULL, 
+                password_hash TEXT, 
+                expires_at DATETIME, -- 確保 expires_at 在定義中
+                allow_download BOOLEAN NOT NULL DEFAULT 1,
+                allow_view BOOLEAN NOT NULL DEFAULT 1,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                visit_count INTEGER DEFAULT 0,
+                FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `;
+
+        db.run(publicLinksTableDefinition, (err) => {
             if (err) {
                 console.error('創建/確保 public_links 表格結構時失敗:', err.message);
             } else {
                 console.log("'public_links' 表格已按最新定義準備就緒。");
 
-                // 2. 檢查並添加 'allow_view' 欄位 (針對可能存在的舊版表格進行遷移)
+                // 檢查並添加缺失的欄位
                 db.all("PRAGMA table_info(public_links)", (pragmaErr, columns) => {
                     if (pragmaErr) {
                         console.error("無法獲取 public_links 表格信息以進行遷移檢查:", pragmaErr.message);
                         return;
                     }
-                    const hasAllowView = columns.some(col => col.name === 'allow_view');
-                    if (!hasAllowView) {
-                        console.log("'public_links' 表格缺少 'allow_view' 欄位，正在嘗試添加...");
-                        db.run("ALTER TABLE public_links ADD COLUMN allow_view BOOLEAN NOT NULL DEFAULT 1", (alterErr) => {
-                            if (alterErr) {
-                                console.error("為 'public_links' 表格添加 'allow_view' 欄位失敗:", alterErr.message);
-                            } else {
-                                console.log("'allow_view' 欄位已成功添加到 'public_links' 表格。");
-                            }
-                        });
-                    } else {
-                        // console.log("'allow_view' 欄位已存在於 'public_links' 表格。"); // 可以取消註釋以進行調試
-                    }
+
+                    const columnChecks = [
+                        { name: 'allow_view', definition: 'BOOLEAN NOT NULL DEFAULT 1' },
+                        { name: 'expires_at', definition: 'DATETIME' } // expires_at 可以為 NULL
+                        // 如果將來有更多欄位，可以在此處添加
+                    ];
+
+                    columnChecks.forEach(colCheck => {
+                        const columnExists = columns.some(col => col.name === colCheck.name);
+                        if (!columnExists) {
+                            console.log(`'public_links' 表格缺少 '${colCheck.name}' 欄位，正在嘗試添加...`);
+                            db.run(`ALTER TABLE public_links ADD COLUMN ${colCheck.name} ${colCheck.definition}`, (alterErr) => {
+                                if (alterErr) {
+                                    console.error(`為 'public_links' 表格添加 '${colCheck.name}' 欄位失敗:`, alterErr.message);
+                                } else {
+                                    console.log(`'${colCheck.name}' 欄位已成功添加到 'public_links' 表格。`);
+                                }
+                            });
+                        } else {
+                            // console.log(`'${colCheck.name}' 欄位已存在於 'public_links' 表格。`);
+                        }
+                    });
                 });
             }
         });
@@ -1259,10 +1271,20 @@ app.get('/stream/:encodedPath(*)', isAuthenticated, async (req, res) => {
 // --- 新增: 公開分享連結路由 ---
 app.post('/actions/create-public-link', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
-    const { filePathToShare, isDirectory: isDirStr, allowDownload: allowDownloadStr, allowView: allowViewStr } = req.body;
+    const { filePathToShare, isDirectory: isDirStr, allowDownload: allowDownloadStr, allowView: allowViewStr, expiresAt: expiresAtStr } = req.body;
     const isDirectory = isDirStr === 'true';
     const allowDownload = allowDownloadStr !== 'false'; 
     const allowView = allowViewStr !== 'false';     
+    let expiresAt = null;
+    if (expiresAtStr) {
+        const parsedDate = new Date(expiresAtStr);
+        if (!isNaN(parsedDate.getTime())) {
+            expiresAt = parsedDate.toISOString();
+        } else {
+            console.warn("無效的過期日期格式:", expiresAtStr);
+        }
+    }
+
 
     let ownerIdToUse = actingUser.id;
     let ownerUsernameToUse = actingUser.username;
@@ -1292,9 +1314,9 @@ app.post('/actions/create-public-link', isAuthenticated, async (req, res) => {
 
         const token = uuidv4(); 
 
-        db.run(`INSERT INTO public_links (owner_id, file_path, is_directory, token, allow_download, allow_view) 
-                VALUES (?, ?, ?, ?, ?, ?)`,
-            [ownerIdToUse, filePathToShare, isDirectory ? 1 : 0, token, allowDownload ? 1 : 0, allowView ? 1 : 0],
+        db.run(`INSERT INTO public_links (owner_id, file_path, is_directory, token, allow_download, allow_view, expires_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [ownerIdToUse, filePathToShare, isDirectory ? 1 : 0, token, allowDownload ? 1 : 0, allowView ? 1 : 0, expiresAt],
             function (err) {
                 if (err) {
                     console.error("創建公開連結時插入數據庫錯誤:", err);
@@ -1371,6 +1393,11 @@ app.get('/public/:token', async (req, res) => {
         if (!link) {
             return res.status(404).render('error', { message: '分享連結不存在或已過期。', user: null, csrfToken: null });
         }
+        // 檢查連結是否已過期
+        if (link.expires_at && new Date(link.expires_at) < new Date()) {
+            return res.status(403).render('error', { message: '此分享連結已過期。', user: null, csrfToken: null });
+        }
+
 
         db.run("UPDATE public_links SET visit_count = visit_count + 1 WHERE id = ?", [link.id]);
 
@@ -1388,16 +1415,12 @@ app.get('/public/:token', async (req, res) => {
                  return res.status(403).render('error', { message: '此連結不允許查看或下載。', user: null, csrfToken: null });
             }
             if (link.allow_download) {
-                // Construct a download URL that points to a dedicated download handler or ensures the current route handles it.
-                // For simplicity, we assume /public/:token itself can trigger download for files if relPath is not for a dir.
-                // A more robust approach might be a dedicated /public/download/:token?relPath=...
                 let downloadUrl = `/public/download/${link.token}`;
-                if (link.is_directory && relPath) { // File within a shared directory
+                if (link.is_directory && relPath) { 
                     downloadUrl += `?relPath=${encodeURIComponent(relPath)}`;
-                } else if (link.is_directory && !relPath) { // Trying to download the root of a shared directory (not allowed directly here)
+                } else if (link.is_directory && !relPath) { 
                      return res.status(400).render('error', { message: '不能直接下載整個分享目錄，請進入目錄後單獨下載文件。', user: null, csrfToken: null });
                 }
-                // If it's a single file share (link.is_directory is false), relPath is not used for the main item.
                 
                 return res.download(fullItemPath, path.basename(itemRelativePath), (err) => {
                     if (err) {
@@ -1416,7 +1439,7 @@ app.get('/public/:token', async (req, res) => {
                         link: link, 
                         user: null, 
                         csrfToken: null,
-                        req: req // Pass req for URL construction in template if needed
+                        req: req 
                     });
                  }
                  return res.status(403).render('error', { message: '此連結不允許查看此文件類型。', user: null, csrfToken: null });
@@ -1464,10 +1487,9 @@ app.get('/public/:token', async (req, res) => {
     }
 });
 
-// Dedicated download route for items within a publicly shared directory or a single publicly shared file
 app.get('/public/download/:token', async (req, res) => {
     const { token } = req.params;
-    const { relPath } = req.query; // path relative to the root of the shared directory if token points to a dir
+    const { relPath } = req.query; 
 
     try {
         const link = await new Promise((resolve, reject) => {
@@ -1476,17 +1498,19 @@ app.get('/public/download/:token', async (req, res) => {
             });
         });
 
-        if (!link || !link.allow_download) { // Must allow download
+        if (!link || !link.allow_download) { 
             return res.status(403).render('error', { message: '此連結不存在、已過期或不允許下載。', user: null, csrfToken: null });
         }
+        if (link.expires_at && new Date(link.expires_at) < new Date()) {
+            return res.status(403).render('error', { message: '此分享連結已過期。', user: null, csrfToken: null });
+        }
         
-        let itemRelativePathForDownload = link.file_path; // Path of the shared item itself
-        if (link.is_directory && relPath) { // If accessing a file within a shared directory
+        let itemRelativePathForDownload = link.file_path; 
+        if (link.is_directory && relPath) { 
             itemRelativePathForDownload = path.posix.join(link.file_path, relPath);
-        } else if (link.is_directory && !relPath) { // Trying to download the root of a shared directory
+        } else if (link.is_directory && !relPath) { 
             return res.status(400).render('error', { message: '不能直接下載整個分享目錄，請打包下載或進入目錄單獨下載文件。', user: null, csrfToken: null });
         }
-        // If it's a single file share (link.is_directory is false), relPath is not used for the main item.
 
         const fullItemPathToDownload = resolvePathForUser(link.owner_username, itemRelativePathForDownload);
         const statsDownload = await fsp.stat(fullItemPathToDownload);
@@ -1495,9 +1519,6 @@ app.get('/public/download/:token', async (req, res) => {
             return res.status(400).render('error', { message: '請求下載的不是一個有效文件。', user: null, csrfToken: null });
         }
         
-        // Increment visit count (optional, could be specific to downloads)
-        // db.run("UPDATE public_links SET visit_count = visit_count + 1 WHERE id = ?", [link.id]);
-
         res.download(fullItemPathToDownload, path.basename(itemRelativePathForDownload), (downloadErr) => {
             if (downloadErr) {
                 console.error(`公開連結下載錯誤 (/public/download/${token}, path: ${itemRelativePathForDownload}):`, downloadErr);
@@ -1528,6 +1549,9 @@ app.get('/public/stream/:token', async (req, res) => {
 
         if (!link || !link.allow_view) { 
             return res.status(404).send('分享連結不存在、已過期或不允許查看。');
+        }
+        if (link.expires_at && new Date(link.expires_at) < new Date()) {
+            return res.status(403).send('此分享連結已過期。');
         }
         
         let itemRelativePath = link.file_path;
