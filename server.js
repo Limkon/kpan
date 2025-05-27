@@ -498,6 +498,7 @@ app.get('/files', isAuthenticated, async (req, res) => {
         let pageTitle = `${contextUsername} 的文件`;
         let isSearchResultView = false;
         let currentDisplayPath = relativeQueryPath;
+        const fullHostname = `${req.protocol}://${req.get('host')}`; // Get base URL for constructing public URLs
 
         if (searchQuery && viewMode === 'myfiles') {
             isSearchResultView = true;
@@ -547,16 +548,16 @@ app.get('/files', isAuthenticated, async (req, res) => {
                     });
             });
             items = items.map(link => ({
-                link_id: link.link_id,
+                ...link, // Spread existing link properties
                 name: path.basename(link.file_path), 
                 isDir: !!link.is_directory,
-                path: link.file_path, 
-                token: link.token,
-                publicUrl: `/public/${link.token}`, 
-                createdAt: link.created_at,
-                expiresAt: link.expires_at,
+                // path: link.file_path, // Already in link object
+                // token: link.token, // Already in link object
+                publicUrl: `${fullHostname}/public/${link.token}`, // Construct full URL here
+                // createdAt: link.created_at, // Already in link object
+                // expiresAt: link.expires_at, // Already in link object
                 hasPassword: !!link.password_hash,
-                visitCount: link.visit_count,
+                // visitCount: link.visit_count // Already in link object
             }));
         }
 
@@ -929,7 +930,7 @@ app.get('/delete', isAuthenticated, async (req, res) => {
     const parentRelativePath = path.posix.dirname(relativeItemPath);
     let redirectQuery = (parentRelativePath === '.' || parentRelativePath === '/' || parentRelativePath === '') ? '' : `path=${encodeURIComponent(parentRelativePath)}`;
     const adminQuery = (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) ? `&targetUsername=${encodeURIComponent(req.query.targetUsername)}` : '';
-    if (adminQuery) redirectQuery = redirectQuery ? `${redirectPathQuery}${adminQuery}` : (adminQuery.startsWith('&') ? adminQuery.substring(1) : adminQuery);
+    if (adminQuery) redirectQuery = redirectQuery ? `${redirectQuery}${adminQuery}` : (adminQuery.startsWith('&') ? adminQuery.substring(1) : adminQuery);
 
     try {
         const fullItemPath = resolvePathForUser(targetUsername, relativeItemPath);
@@ -1153,17 +1154,15 @@ app.get('/api/directories', isAuthenticated, async (req, res) => {
     }
 });
 
-// 新增 API: 獲取特定文件/目錄的公開連結
 app.get('/api/item-public-links', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
-    const { filePath } = req.query; // 期望的參數是 filePath
+    const { filePath } = req.query; 
 
     if (!filePath) {
         return res.status(400).json({ success: false, message: '未提供文件路徑。' });
     }
 
     let ownerIdToQuery = actingUser.id;
-    // 如果是管理員，並且提供了 targetUsername，則查詢目標用戶的連結
     if (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) {
         const targetUser = await new Promise((resolve) => 
             db.get("SELECT id FROM users WHERE username = ?", [req.query.targetUsername], (err, row) => resolve(row))
