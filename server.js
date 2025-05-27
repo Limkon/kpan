@@ -929,7 +929,7 @@ app.get('/delete', isAuthenticated, async (req, res) => {
     const parentRelativePath = path.posix.dirname(relativeItemPath);
     let redirectQuery = (parentRelativePath === '.' || parentRelativePath === '/' || parentRelativePath === '') ? '' : `path=${encodeURIComponent(parentRelativePath)}`;
     const adminQuery = (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) ? `&targetUsername=${encodeURIComponent(req.query.targetUsername)}` : '';
-    if (adminQuery) redirectQuery = redirectQuery ? `${redirectQuery}${adminQuery}` : (adminQuery.startsWith('&') ? adminQuery.substring(1) : adminQuery);
+    if (adminQuery) redirectQuery = redirectQuery ? `${redirectPathQuery}${adminQuery}` : (adminQuery.startsWith('&') ? adminQuery.substring(1) : adminQuery);
 
     try {
         const fullItemPath = resolvePathForUser(targetUsername, relativeItemPath);
@@ -1396,17 +1396,15 @@ app.post('/actions/revoke-public-link', isAuthenticated, async (req, res) => {
     });
 });
 
-// 新增: 批量撤銷公開連結路由
 app.post('/actions/revoke-public-links-batch', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
-    const { link_ids } = req.body; // Expecting an array of link_id
+    const { link_ids } = req.body; 
 
     if (!link_ids || !Array.isArray(link_ids) || link_ids.length === 0) {
         return res.status(400).json({ success: false, message: '未選擇要撤銷的連結。' });
     }
 
     let ownerIdToCheck = actingUser.id;
-    // If admin is revoking for another user, the contextUsername should be passed and validated
     if (actingUser.role === 'admin' && req.body.contextUsername) {
         const contextOwner = await new Promise((resolve) => 
             db.get("SELECT id FROM users WHERE username = ?", [req.body.contextUsername], (err, row) => resolve(row))
@@ -1438,7 +1436,7 @@ app.post('/actions/revoke-public-links-batch', isAuthenticated, async (req, res)
 // --- 公開連結訪問路由 ---
 app.get('/public/:token', async (req, res) => {
     const { token } = req.params;
-    const { relPath } = req.query; 
+    const { relPath } = req.query; // For accessing items within a shared directory
 
     try {
         const link = await new Promise((resolve, reject) => {
@@ -1453,7 +1451,6 @@ app.get('/public/:token', async (req, res) => {
         if (link.expires_at && new Date(link.expires_at) < new Date()) {
             return res.status(403).render('error', { message: '此分享連結已過期。', user: null, csrfToken: null });
         }
-
 
         db.run("UPDATE public_links SET visit_count = visit_count + 1 WHERE id = ?", [link.id]);
 
@@ -1472,16 +1469,10 @@ app.get('/public/:token', async (req, res) => {
 
             if (link.allow_view && isTextViewable) {
                 const content = await fsp.readFile(fullItemPath, 'utf8');
-                return res.render('public-view-file', { 
-                    filename: path.basename(itemRelativePath),
-                    content: content,
-                    fileExtension: fileExt,
-                    link: link, 
-                    user: null, 
-                    csrfToken: null,
-                    req: req 
-                });
+                res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+                return res.send(content); // Send raw text content
             } else if (link.allow_download) {
+                // Dedicated download route is preferred for clarity, but this can also work
                 return res.download(fullItemPath, path.basename(itemRelativePath), (err) => {
                     if (err) {
                         console.error(`公開連結下載錯誤 (${token}, path: ${itemRelativePath}):`, err);
