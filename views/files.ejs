@@ -96,7 +96,7 @@
             vertical-align: middle; 
         }
         #file-container.multi-select-mode-active .item-checkbox,
-        #file-container.multi-select-mode-active .public-link-checkbox { /* Apply to public links too */
+        #file-container.multi-select-mode-active .public-link-checkbox { 
             display: inline-block; 
         }
 
@@ -291,11 +291,11 @@
         #share-modal .form-group input[type="checkbox"] {
             width: auto; vertical-align: middle;
         }
-        .link-actions-group { /* For userShares view, to group View and Revoke buttons */
+        .link-actions-group { 
             display: flex;
-            gap: 5px; /* Space between View and Revoke buttons */
+            gap: 5px; 
             align-items: center;
-            margin-left: 10px; /* Space from the link details */
+            margin-left: 10px; 
         }
     </style>
 </head>
@@ -534,7 +534,7 @@
                                                 let largeIcon = '📄'; 
                                                 let isViewableTextFile = false;
                                                 if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
-                                                    isViewableTextFile = true; largeIcon = '📝'; 
+                                                    isViewableTextFile = true; largeIcon = '�'; 
                                                 } else if (item.isPlayableVideo) { largeIcon = '🎥'; }
                                                 else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
                                                 else if (['pdf'].includes(ext)) { largeIcon = '📕';}
@@ -929,7 +929,7 @@
                             if (data.success && data.links && data.links.length > 0) {
                                 hasExistingShares = true;
                             }
-                        } catch (e) { /* console.error("Error checking existing shares (multi-select):", e); */ }
+                        } catch (e) { /* Error checking existing shares, button remains hidden/disabled */ }
 
                     }
                 } else if (currentSingleSelectedItem) {
@@ -957,7 +957,7 @@
                         if (data.success && data.links && data.links.length > 0) {
                             hasExistingShares = true;
                         }
-                    } catch (e) { /* console.error("Error checking existing shares (single-select):", e); */ }
+                    } catch (e) { /* Error checking existing shares, button remains hidden/disabled */ }
                 }
 
                 if (count > 0) {
@@ -1811,7 +1811,7 @@
                                     }
                                 });
                             } else {
-                                console.log(`Skipping ${nameToCheck} and its contents due to user choice.`);
+                                // console.log(`Skipping ${nameToCheck} and its contents due to user choice.`);
                             }
                         } else if (!EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase())) {
                             if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
