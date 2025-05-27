@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= locals.pageTitle || ( (locals.viewTargetUsername ? viewTargetUsername : user.username) + ' 的文件') %> - 網路硬碟</title>
+    <title><%= locals.pageTitle || ( (locals.viewContextUser ? viewContextUser.username : user.username) + ' 的文件') %> - 網路硬碟</title>
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
@@ -29,12 +29,17 @@
             --rename-form-bg: #ffffff;
             --rename-form-border-color: #cccccc;
 
-            /* 新增: 視頻播放器模態框的變量 */
             --video-modal-bg: #1c1c1c;
             --video-modal-text-color: #f1f1f1;
             --video-modal-border-color: #333;
             --video-modal-close-btn-color: #aaa;
             --video-modal-close-btn-hover-color: #fff;
+
+            --tab-inactive-bg: #e9ecef;
+            --tab-inactive-text: #495057;
+            --tab-active-bg: #007bff;
+            --tab-active-text: #ffffff;
+            --tab-border: #dee2e6;
         }
 
         .dark-theme {
@@ -57,15 +62,47 @@
             --rename-form-bg: #3a3a3a;
             --rename-form-border-color: #555;
 
-            /* 新增: 暗色主題下的視頻播放器模態框變量 */
             --video-modal-bg: #2a2a2a;
             --video-modal-text-color: #e0e0e0;
             --video-modal-border-color: #444;
             --video-modal-close-btn-color: #bbb;
             --video-modal-close-btn-hover-color: #fff;
+
+            --tab-inactive-bg: #3a3a3a;
+            --tab-inactive-text: #adb5bd;
+            --tab-active-bg: #0056b3;
+            --tab-active-text: #ffffff;
+            --tab-border: #495057;
         }
 
-        /* 其他通用樣式 */
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--tab-border);
+        }
+        .nav-tabs .nav-link {
+            padding: 10px 15px;
+            text-decoration: none;
+            background-color: var(--tab-inactive-bg);
+            color: var(--tab-inactive-text);
+            border: 1px solid var(--tab-border);
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: var(--tab-active-bg);
+            color: var(--tab-active-text);
+            border-color: var(--tab-active-bg);
+        }
+        .nav-tabs .nav-link:hover:not(.active) {
+            opacity: 0.8;
+        }
+
+
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         .dark-theme #selection-action-bar { background-color: #252525; border-bottom-color: #444; }
         #selection-action-bar button { margin: 0; }
@@ -128,7 +165,9 @@
             color: #bbb; 
         }
         .list-view .file-details .file-size,
-        .list-view .file-details .file-modified {
+        .list-view .file-details .file-modified,
+        .list-view .file-details .file-owner,
+        .list-view .file-details .file-shared-with { /* For share views */
             min-width: 80px;
             text-align: right;
         }
@@ -155,7 +194,7 @@
             background-color: #404040; 
         }
 
-        #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal { /* 新增 #video-player-modal */
+        #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal, #share-modal {
             display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
             overflow: auto; background-color: rgba(0,0,0,0.5); 
         }
@@ -173,20 +212,20 @@
         .modal-content h3 { margin-top: 0; }
         .modal-content .form-group { margin-bottom: 15px; }
         .modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-        .modal-content .form-group input[type="text"] {
+        .modal-content .form-group input[type="text"],
+        .modal-content .form-group input[type="email"] { /* For username/email */
             width: 100%; padding: 10px; box-sizing: border-box;
             border: 1px solid var(--input-border-color); border-radius: 4px;
             background-color: var(--input-bg-color); color: var(--input-text-color);
         }
         .modal-actions { text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
 
-        /* 新增: 視頻播放器模態框特定樣式 */
         #video-player-modal .modal-content {
             background-color: var(--video-modal-bg) !important;
             color: var(--video-modal-text-color);
             border-color: var(--video-modal-border-color);
-            max-width: 900px; /* 可以更大一些以容納視頻 */
-            margin: 5% auto; /* 調整垂直邊距 */
+            max-width: 900px;
+            margin: 5% auto;
         }
         #video-player-modal #video-modal-title {
             color: var(--video-modal-text-color);
@@ -203,10 +242,10 @@
         }
         #html5-video-player {
             width: 100%;
-            max-height: 75vh; /* 限制最大高度 */
+            max-height: 75vh;
             display: block;
             margin-top: 10px;
-            background-color: #000; /* 視頻背景通常為黑色 */
+            background-color: #000;
             border-radius: 4px;
         }
 
@@ -229,7 +268,7 @@
 
         .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
         
-        /* --- Grid View Specific Styles --- */
+        /* Grid View Specific Styles */
         #file-container.grid-view ul {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
@@ -306,7 +345,6 @@
         #file-container.grid-view.multi-select-mode-active .item-checkbox {
             margin-bottom: 6px; 
         }
-        /* --- End of Grid View Specific Styles --- */
         
         #select-all-container { 
             display: none; 
@@ -469,10 +507,16 @@
         .dark-theme .progress-bar { background-color: #0056b3; border-color: #003d80; }
 
         #file-container {
-            max-height: calc(100vh - 320px); 
+            max-height: calc(100vh - 360px); /* Adjusted for tabs */
             overflow-y: auto;
             padding-right: 5px; 
             box-sizing: border-box;
+        }
+
+        .action-button-small {
+            padding: 3px 6px;
+            font-size: 0.8em;
+            margin-left: 5px;
         }
     </style>
 </head>
@@ -481,11 +525,15 @@
         <header>
             <h1>
                 <% if (locals.isSearchResult && locals.searchQuery) { %>
-                    有關 "<%= searchQuery %>" 的搜尋結果 <% if (locals.viewTargetUsername) { %>(在 <%= viewTargetUsername %> 的文件中)<% } else { %>(在您的文件中)<% } %>
-                <% } else if (locals.viewTargetUsername && user.role === 'admin') { %>
-                    管理員視角: <%= viewTargetUsername %> 的文件
+                    有關 "<%= searchQuery %>" 的搜尋結果 <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username) { %>(在 <%= viewContextUser.username %> 的文件中)<% } else { %>(在您的文件中)<% } %>
+                <% } else if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
+                    管理員視角: <%= viewContextUser.username %> 的文件
+                <% } else if (locals.viewMode === 'sharedWithMe') { %>
+                    與我分享的項目
+                <% } else if (locals.viewMode === 'userShares') { %>
+                    我分享的項目 <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>(來自 <%= viewContextUser.username %>)<% } %>
                 <% } else { %>
-                    <%= user.username %> 的文件
+                    <%= (locals.viewContextUser ? viewContextUser.username : user.username) %> 的文件
                 <% } %>
             </h1>
             <div class="header-controls">
@@ -501,30 +549,46 @@
         <% if (locals.message) { %>
             <p class="message <%= (locals.messageType === 'error' || (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('沒有選擇文件') || message.includes('無效的') ))) ? 'error-message' : (locals.messageType === 'success' ? '' : (locals.messageType === 'warning' ? 'warning-message' : '') ) %>"><%= message %></p>
         <% } %>
+        
+        <div class="nav-tabs">
+            <a href="/files<%= locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewContextUser.username) : '' %>" 
+               class="nav-link <%= (!locals.viewMode || locals.viewMode === 'myfiles') ? 'active' : '' %>">
+               我的文件
+            </a>
+            <a href="/files?viewMode=sharedWithMe<%= locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : '' %>" 
+               class="nav-link <%= locals.viewMode === 'sharedWithMe' ? 'active' : '' %>">
+               與我分享
+            </a>
+            <a href="/files?viewMode=userShares<%= locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : '' %>" 
+               class="nav-link <%= locals.viewMode === 'userShares' ? 'active' : '' %>">
+               我分享的
+            </a>
+        </div>
 
-        <% if (!locals.isSearchResult) { %>
+
+        <% if (!locals.isSearchResult && (!locals.viewMode || locals.viewMode === 'myfiles')) { %>
             <div class="current-path">
                 當前路徑:
-                <a href="/files<%= locals.viewTargetUsername && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>">根目錄</a>
+                <a href="/files<%= locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewContextUser.username) : '' %>">根目錄</a>
                 <%
                     let pathSegments = currentPath.split('/').filter(Boolean);
                     let cumulativePathForLink = '';
-                    const adminTargetQueryForPath = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '';
+                    const adminTargetQueryForPath = locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : '';
                 %>
                 <% pathSegments.forEach(segment => { %>
                     <% cumulativePathForLink += '/' + segment; %>
                     / <a href="/files?path=<%= encodeURIComponent(cumulativePathForLink) %><%= adminTargetQueryForPath %>"><%= segment %></a>
                 <% }); %>
             </div>
-        <% } else if (locals.searchQuery) { %>
+        <% } else if (locals.isSearchResult && locals.searchQuery) { %>
              <div class="search-results-info">
                 正在顯示包含 "<%= searchQuery %>" 的文件。
-                <a href="/files<%= locals.viewTargetUsername && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>">清除搜索並返回根目錄</a>
+                <a href="/files<%= locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewContextUser.username) : '' %>">清除搜索並返回根目錄</a>
             </div>
         <% } %>
 
         <div class="file-browser-controls">
-            <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
+            <% if ((!locals.viewMode || locals.viewMode === 'myfiles') && !locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
                 <div class="actions-group-left">
                     <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
                     <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
@@ -534,8 +598,11 @@
             <button type="button" id="toggle-multi-select-btn">啟用多選</button>
         
             <form action="/files" method="GET" class="control-form search-form-right">
-                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
-                    <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
+                    <input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>">
+                <% } %>
+                <% if (locals.viewMode) { %>
+                    <input type="hidden" name="viewMode" value="<%= locals.viewMode %>">
                 <% } %>
                 <input type="search" name="q" placeholder="搜索..." value="<%= locals.searchQuery || '' %>">
                 <button type="submit">搜索</button>
@@ -547,7 +614,7 @@
             </div>
         </div>
         
-        <% if (!locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
+        <% if ((!locals.viewMode || locals.viewMode === 'myfiles') && !locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
             <div id="upload-actions-container" style="justify-content: flex-start;">
                 <button type="button" id="upload-files-btn">上傳文件</button>
                 <button type="button" id="upload-folder-btn">上傳文件夾</button>
@@ -558,7 +625,7 @@
                 <div id="drop-area">
                     <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="currentPath" value="<%= currentPath %>">
-                        <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
+                        <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>"><% } %>
                         <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
                         <input type="file" id="userFiles" name="userFiles" multiple style="display: none;"> 
                         <p id="drop-area-text">將文件或文件夾拖拽到此處，或點擊上方按鈕選擇</p>
@@ -574,15 +641,29 @@
 
         <div id="selection-action-bar">
             <span id="selection-count" style="margin-right: 15px;">已選擇 0 項</span>
-            <button id="action-play-btn" disabled>播放</button> <button id="action-edit-btn" disabled>編輯</button>
-            <button id="action-rename-btn" disabled>重命名</button>
-            <button id="action-move-btn" disabled>移動</button>
+            <% if (locals.viewMode !== 'sharedWithMe' && locals.viewMode !== 'userShares') { // Standard actions for 'myfiles' %>
+                <button id="action-play-btn" disabled>播放</button> 
+                <button id="action-edit-btn" disabled>編輯</button>
+                <button id="action-rename-btn" disabled>重命名</button>
+                <button id="action-move-btn" disabled>移動</button>
+                <button id="action-share-btn" disabled>分享</button> <% } else if (locals.viewMode === 'sharedWithMe') { // Actions for 'sharedWithMe' %>
+                 <button id="action-play-btn" disabled>播放</button> 
+            <% } %>
             <button id="action-download-btn" disabled>下載選中項</button>
-            <button id="action-delete-btn" class="secondary" disabled>删除</button>
+            <% if (locals.viewMode !== 'sharedWithMe') { // Delete only if not 'sharedWithMe' (owner can delete, or admin) %>
+                 <button id="action-delete-btn" class="secondary" disabled>删除</button>
+            <% } %>
         </div>
+        
+        <% 
+            let pageHeading = '文件列表';
+            if (locals.isSearchResult) pageHeading = '搜索結果';
+            else if (locals.viewMode === 'sharedWithMe') pageHeading = '與我分享的項目';
+            else if (locals.viewMode === 'userShares') pageHeading = '我分享的項目';
+        %>
+        <h2><%= pageHeading %></h2>
 
-        <h2><%= locals.isSearchResult ? '搜索結果' : '文件列表' %></h2>
-        <% if (items.length > 0) { %>
+        <% if (items.length > 0 && locals.viewMode !== 'userShares') { // Select all only if not viewing 'my shares' (revoke is per item) %>
             <div id="select-all-container"> 
                 <input type="checkbox" id="select-all-checkbox">
                 <label for="select-all-checkbox">全選/取消全選</label>
@@ -590,7 +671,7 @@
         <% } %>
         <div id="file-container" class="list-view"> 
             <% if (items.length > 0) { %>
-                <% const adminTargetQueryForActions = locals.viewTargetUsername && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''; %>
+                <% const adminTargetQueryForActions = locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : ''; %>
                 <%
                     const formatFileSize = (bytes) => {
                         if (bytes === undefined || bytes === null || isNaN(bytes)) return '--';
@@ -603,8 +684,11 @@
                     const formatDate = (dateString) => {
                         if (!dateString) return '--';
                         try {
-                            return new Date(dateString).toLocaleDateString('zh-CN', {
-                                year: 'numeric', month: '2-digit', day: '2-digit'
+                            const date = new Date(dateString);
+                            if (isNaN(date.getTime())) return '--'; // Invalid date
+                            return date.toLocaleDateString('zh-CN', {
+                                year: 'numeric', month: '2-digit', day: '2-digit',
+                                hour: '2-digit', minute: '2-digit'
                             });
                         } catch (e) {
                             console.warn("Could not format date:", dateString, e);
@@ -614,25 +698,41 @@
                 %>
                 <ul>
                     <% items.forEach(item => { %>
-                        <li data-item-path="<%= item.path %>">
+                        <li data-item-path="<%= item.path %>" 
+                            <% if (locals.viewMode === 'sharedWithMe') { %>data-owner-username="<%= item.ownerUsername %>"<% } %>
+                            <% if (locals.viewMode === 'userShares') { %>data-share-id="<%= item.share_id %>"<% } %>
+                            >
                             <div class="file-entry-selectable">
+                                <% if (locals.viewMode !== 'userShares') { // No checkboxes for 'my shares' view %>
                                 <input type="checkbox" class="item-checkbox"
                                        data-path="<%= item.path %>"
                                        data-encoded-path="<%= item.encodedPath %>"
                                        data-name="<%= item.name %>"
                                        data-encoded-name="<%= item.encodedName %>"
                                        data-is-dir="<%= item.isDir %>"
-                                       data-is-playable-video="<%= item.isPlayableVideo || false %>" data-video-type="<%= item.videoType || '' %>" data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>">
+                                       data-is-playable-video="<%= item.isPlayableVideo || false %>" 
+                                       data-video-type="<%= item.videoType || '' %>" 
+                                       data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>"
+                                       <% if (locals.viewMode === 'sharedWithMe') { %>data-owner-username="<%= item.ownerUsername %>"<% } %>
+                                       >
+                                <% } %>
                                 <div class="file-content-wrapper">
                                     <% if (item.isDir) { %>
                                         <div class="file-entry">
                                             <span class="file-icon-large folder-icon">📁</span>
-                                            <a href="/files?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name"><%= item.name %></a>
-                                            <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
+                                            <% if (locals.viewMode === 'sharedWithMe') { %>
+                                                <a href="/files?path=<%= item.encodedPath %>&ownerUsername=<%= encodeURIComponent(item.ownerUsername) %>" class="file-name"><%= item.name %></a>
+                                            <% } else if (locals.viewMode === 'userShares') { %>
+                                                <span class="file-name"><%= item.name %></span> <% } else { %>
+                                                <a href="/files?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name"><%= item.name %></a>
+                                            <% } %>
+                                            <% if (locals.isSearchResult && (!locals.viewMode || locals.viewMode === 'myfiles')) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
                                         </div>
                                         <div class="file-details">
+                                            <% if (locals.viewMode === 'sharedWithMe') { %><span class="file-owner">擁有者: <%= item.ownerUsername %></span><% } %>
+                                            <% if (locals.viewMode === 'userShares') { %><span class="file-shared-with">分享給: <%= item.sharedWithUsername %></span><% } %>
                                             <span class="file-size"></span> 
-                                            <span class="file-modified"></span>
+                                            <span class="file-modified"><%= formatDate(item.lastModified || item.sharedAt) %></span>
                                         </div>
                                     <% } else { // It's a file %>
                                         <div class="file-entry">
@@ -643,7 +743,7 @@
                                                 if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
                                                     isViewableTextFile = true;
                                                     largeIcon = '📝'; 
-                                                } else if (item.isPlayableVideo) { // 使用 server 端傳來的 isPlayableVideo
+                                                } else if (item.isPlayableVideo) {
                                                     largeIcon = '🎥';
                                                 }
                                                 else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
@@ -655,39 +755,55 @@
                                                    data-path="<%= item.encodedPath %>" 
                                                    data-name="<%= item.name %>" 
                                                    data-type="<%= item.videoType %>"
+                                                   <% if (locals.viewMode === 'sharedWithMe') { %>data-owner-username="<%= item.ownerUsername %>"<% } %>
                                                    title="點擊播放 <%= item.name %>"><%= item.name %></a>
                                             <% } else if (isViewableTextFile) { %>
-                                                <a href="/view?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name" title="點擊查看"><%= item.name %></a>
+                                                <a href="/view?path=<%= item.encodedPath %><%= adminTargetQueryForActions %><% if (locals.viewMode === 'sharedWithMe') { %>&ownerUsername=<%= encodeURIComponent(item.ownerUsername) %><% } %>" class="file-name" title="點擊查看"><%= item.name %></a>
                                             <% } else { %>
                                                 <span class="file-name"><%= item.name %></span>
                                             <% } %>
-                                            <% if (locals.isSearchResult) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
+                                            <% if (locals.isSearchResult && (!locals.viewMode || locals.viewMode === 'myfiles')) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
                                         </div>
                                         <div class="file-details">
+                                            <% if (locals.viewMode === 'sharedWithMe') { %><span class="file-owner">擁有者: <%= item.ownerUsername %></span><% } %>
+                                            <% if (locals.viewMode === 'userShares') { %><span class="file-shared-with">分享給: <%= item.sharedWithUsername %></span><% } %>
                                             <span class="file-size" title="<%= item.size %> bytes"><%= formatFileSize(item.size) %></span>
-                                            <span class="file-modified"><%= formatDate(item.lastModified) %></span>
+                                            <span class="file-modified"><%= formatDate(item.lastModified || item.sharedAt) %></span>
                                         </div>
                                     <% } %>
-                                    <span class="file-actions-placeholder"></span> 
+                                    <% if (locals.viewMode === 'userShares') { %>
+                                        <form action="/actions/revoke-share" method="POST" style="margin-left:10px;">
+                                            <input type="hidden" name="shareId" value="<%= item.share_id %>">
+                                            <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
+                                                <input type="hidden" name="contextUsername" value="<%= viewContextUser.username %>">
+                                            <% } %>
+                                            <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
+                                            <button type="submit" class="secondary action-button-small" onclick="return confirm('確定要撤銷對此項目的分享嗎？');">撤銷分享</button>
+                                        </form>
+                                    <% } else { %>
+                                        <span class="file-actions-placeholder"></span> 
+                                    <% } %>
                                 </div>
                             </div>
+                            <% if (locals.viewMode !== 'sharedWithMe' && locals.viewMode !== 'userShares') { %>
                              <div class="rename-form" id="rename-form-<%= item.encodedName %>">
                                 <form action="/rename" method="POST" class="control-form inline-form">
                                     <input type="hidden" name="currentPath" value="<%= locals.isSearchResult ? (item.path.substring(0, item.path.lastIndexOf('/')) || '/') : currentPath %>">
                                     <input type="hidden" name="oldPath" value="<%= item.path %>">
                                     <input type="hidden" name="isDir" value="<%= item.isDir %>">
-                                    <% if (locals.viewTargetUsername && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
+                                    <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>"><% } %>
                                     <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
                                     <input type="text" name="newName" placeholder="新名稱" value="<%= item.name %>" required>
                                     <button type="submit">確認</button>
                                     <button type="button" class="secondary" onclick="hideRenameForm('<%= item.encodedName %>'); return false;">取消</button>
                                 </form>
                             </div>
+                            <% } %>
                         </li>
                     <% }) %>
                 </ul>
             <% } else { %>
-                <p><%= locals.isSearchResult ? '找不到符合條件的文件。' : '此文件夾為空。' %></p>
+                <p><%= locals.isSearchResult ? '找不到符合條件的文件。' : ( (locals.viewMode === 'sharedWithMe') ? '目前沒有與您分享的項目。' : (locals.viewMode === 'userShares') ? '您尚未分享任何項目。' : '此文件夾為空。' ) %></p>
             <% } %>
         </div>
     </div>
@@ -698,8 +814,8 @@
             <h3 id="create-item-modal-title">创建新项目</h3>
             <form id="create-item-form" method="POST"> 
                 <input type="hidden" name="currentPath" value="<%= currentPath %>">
-                <% if (locals.viewTargetUsername && user.role === 'admin') { %>
-                    <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+                <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
+                    <input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>">
                 <% } %>
                 <% if (locals.csrfToken) { %>
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -753,18 +869,44 @@
         </div>
     </div>
 
+    <div id="share-modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="close-share-modal-btn">&times;</span>
+            <h3>分享項目</h3>
+            <form id="share-form" action="/actions/share-file" method="POST">
+                <input type="hidden" name="filePathToShare" id="share-file-path-input">
+                <input type="hidden" name="isDirectory" id="share-is-directory-input">
+                <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
+                    <input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>"> <% } %>
+                <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
+                <p>將 "<strong id="share-item-name-display"></strong>" 分享給:</p>
+                <div class="form-group">
+                    <label for="share-username-input">用戶名:</label>
+                    <input type="text" id="share-username-input" name="usernameToShareWith" required placeholder="輸入對方的用戶名">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="secondary" id="cancel-share-btn">取消</button>
+                    <button type="submit" id="confirm-share-btn">確認分享</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <script src="/theme.js"></script>
     <script>
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
-        const ALLOWED_VIDEO_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_VIDEO_EXTENSIONS || []) %>; // 從 server 獲取
+        const ALLOWED_VIDEO_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_VIDEO_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
-        const VIEW_TARGET_USERNAME = "<%= locals.viewTargetUsername || '' %>";
-        const CURRENT_USER_ROLE = "<%= user.role %>";
+        const VIEW_CONTEXT_USER_USERNAME = "<%= locals.viewContextUser ? locals.viewContextUser.username : '' %>"; // Username of the context being viewed (e.g. admin viewing 'bob')
+        const CURRENT_SESSION_USER_ROLE = "<%= user.role %>"; // Role of the logged-in user
+        const CURRENT_SESSION_USER_USERNAME = "<%= user.username %>"; // Username of the logged-in user
         const CURRENT_PATH_ON_LOAD = "<%= currentPath %>";
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
         const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify(items.map(item => item.name.toLowerCase())) %>;
         const HAS_ITEMS_ON_PAGE = <%= items.length > 0 %>;
+        const CURRENT_VIEW_MODE = "<%= locals.viewMode || 'myfiles' %>";
+
 
         document.addEventListener('DOMContentLoaded', () => {
             const fileContainer = document.getElementById('file-container');
@@ -772,10 +914,11 @@
             const selectAllContainer = document.getElementById('select-all-container'); 
             const selectionActionBar = document.getElementById('selection-action-bar');
             const selectionCountDisplay = document.getElementById('selection-count');
-            const actionPlayBtn = document.getElementById('action-play-btn'); // 新增
+            const actionPlayBtn = document.getElementById('action-play-btn');
             const actionEditBtn = document.getElementById('action-edit-btn');
             const actionRenameBtn = document.getElementById('action-rename-btn');
             const actionMoveBtn = document.getElementById('action-move-btn');
+            const actionShareBtn = document.getElementById('action-share-btn'); // Share button
             const actionDownloadBtn = document.getElementById('action-download-btn');
             const actionDeleteBtn = document.getElementById('action-delete-btn');
             
@@ -812,12 +955,20 @@
             let multiSelectModeActive = false;
             let currentSingleSelectedItem = null;
 
-            // 新增: 視頻播放器相關元素
             const videoPlayerModal = document.getElementById('video-player-modal');
             const html5VideoPlayer = document.getElementById('html5-video-player');
             const videoSourceElement = document.getElementById('video-source');
             const videoModalTitle = document.getElementById('video-modal-title');
             const closeVideoModalBtn = document.getElementById('close-video-modal-btn');
+
+            const shareModal = document.getElementById('share-modal');
+            const closeShareModalBtn = document.getElementById('close-share-modal-btn');
+            const cancelShareBtn = document.getElementById('cancel-share-btn');
+            const shareForm = document.getElementById('share-form');
+            const shareItemNameDisplay = document.getElementById('share-item-name-display');
+            const shareFilePathInput = document.getElementById('share-file-path-input');
+            const shareIsDirectoryInput = document.getElementById('share-is-directory-input');
+            const shareUsernameInput = document.getElementById('share-username-input');
 
 
             function clearSingleSelection() {
@@ -834,7 +985,7 @@
                     clearSingleSelection();
                     fileContainer.classList.add('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '取消多選';
-                    if (selectAllContainer && HAS_ITEMS_ON_PAGE) { 
+                    if (selectAllContainer && HAS_ITEMS_ON_PAGE && CURRENT_VIEW_MODE !== 'userShares') { 
                         selectAllContainer.classList.add('visible-in-multiselect'); 
                     }
                 } else {
@@ -865,8 +1016,9 @@
                             path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
                             name: cb.dataset.name, encodedName: cb.dataset.encodedName,
                             isDir: cb.dataset.isDir === 'true', rawName: cb.dataset.rawName,
-                            isPlayableVideo: cb.dataset.isPlayableVideo === 'true', // 新增
-                            videoType: cb.dataset.videoType, // 新增
+                            isPlayableVideo: cb.dataset.isPlayableVideo === 'true',
+                            videoType: cb.dataset.videoType,
+                            ownerUsername: cb.dataset.ownerUsername || null, // For sharedWithMe items
                             element: cb.closest('li')
                         });
                     }
@@ -878,52 +1030,60 @@
                 let count = 0;
                 let itemsForActions = []; 
                 let isSingleFileEditable = false;
-                let isSingleFilePlayableVideo = false; // 新增
+                let isSingleFilePlayableVideo = false;
+                let isSingleItemSharable = false; // Can the single selected item be shared?
+
 
                 if (multiSelectModeActive) {
                     const checkboxSelectedItems = getCheckboxSelectedItems();
                     count = checkboxSelectedItems.length;
                     itemsForActions = checkboxSelectedItems;
                     if (count === 1 && itemsForActions[0]) {
-                        if (!itemsForActions[0].isDir) {
-                             const fileName = itemsForActions[0].name;
+                        const item = itemsForActions[0];
+                        if (!item.isDir) {
+                             const fileName = item.name;
                              const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
                              if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
                                  isSingleFileEditable = true;
                              }
-                             if (itemsForActions[0].isPlayableVideo) { // 新增
+                             if (item.isPlayableVideo) {
                                 isSingleFilePlayableVideo = true;
                              }
                         }
+                        if (CURRENT_VIEW_MODE === 'myfiles') isSingleItemSharable = true;
                     }
                 } else if (currentSingleSelectedItem) {
                     count = 1;
                     itemsForActions.push(currentSingleSelectedItem);
-                    if (!currentSingleSelectedItem.isDir) {
-                        const fileName = currentSingleSelectedItem.name;
+                    const item = currentSingleSelectedItem;
+                    if (!item.isDir) {
+                        const fileName = item.name;
                         const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
                          if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
                             isSingleFileEditable = true;
                         }
-                        if (currentSingleSelectedItem.isPlayableVideo) { // 新增
+                        if (item.isPlayableVideo) {
                             isSingleFilePlayableVideo = true;
                         }
                     }
+                    if (CURRENT_VIEW_MODE === 'myfiles') isSingleItemSharable = true;
                 }
 
-                if (count > 0) {
+                if (count > 0 && CURRENT_VIEW_MODE !== 'userShares') { // Action bar for non-userShares view
                     selectionActionBar.style.display = 'flex';
                     selectionCountDisplay.textContent = `已選擇 ${count} 項`;
                 } else {
                     selectionActionBar.style.display = 'none';
                 }
                 
-                if(actionPlayBtn) actionPlayBtn.disabled = !(count === 1 && isSingleFilePlayableVideo); // 新增
-                if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable);
-                if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
-                if(actionMoveBtn) actionMoveBtn.disabled = !(count > 0);
-                if(actionDownloadBtn) actionDownloadBtn.disabled = !(count > 0);
-                if(actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
+                if(actionPlayBtn) actionPlayBtn.disabled = !(count === 1 && isSingleFilePlayableVideo);
+                if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable && CURRENT_VIEW_MODE === 'myfiles'); // Edit only own files
+                if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1 && CURRENT_VIEW_MODE === 'myfiles'); // Rename only own files
+                if(actionMoveBtn) actionMoveBtn.disabled = !(count > 0 && CURRENT_VIEW_MODE === 'myfiles'); // Move only own files
+                if(actionShareBtn) actionShareBtn.disabled = !(count === 1 && isSingleItemSharable && CURRENT_VIEW_MODE === 'myfiles'); // Share only own files
+                
+                if(actionDownloadBtn) actionDownloadBtn.disabled = !(count > 0); // Download can be for own or sharedWithMe
+                if(actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0 && CURRENT_VIEW_MODE === 'myfiles'); // Delete only own files
             }
 
             document.querySelectorAll('#file-container .item-checkbox').forEach((checkbox) => {
@@ -939,7 +1099,7 @@
             
             if (selectAllCheckbox && selectAllContainer) {
                 selectAllCheckbox.addEventListener('change', (e) => {
-                    if (!multiSelectModeActive) return; 
+                    if (!multiSelectModeActive || CURRENT_VIEW_MODE === 'userShares') return; 
                     clearSingleSelection(); 
                     const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox'); 
                     currentCheckboxes.forEach(cb => {
@@ -952,18 +1112,17 @@
             }
 
             if (fileContainer) {
-                fileContainer.querySelectorAll('ul > li .file-content-wrapper').forEach(contentWrapper => {
+                fileContainer.querySelectorAll('ul > li .file-entry-selectable').forEach(contentWrapper => {
                     contentWrapper.addEventListener('click', (event) => {
+                        if (CURRENT_VIEW_MODE === 'userShares') return; // No selection in 'userShares' view
+
                         const listItem = contentWrapper.closest('li');
                         if (!listItem) return;
                         const checkbox = listItem.querySelector('.item-checkbox');
                         if (!checkbox) return;
 
-                        // 如果點擊的是播放鏈接，則由其自身的事件處理器處理
-                        if (event.target.classList.contains('video-link') || event.target.closest('.video-link')) {
-                            return;
-                        }
-                        if (event.target.tagName === 'A' || event.target.closest('a') || 
+                        if (event.target.classList.contains('video-link') || event.target.closest('.video-link') ||
+                            event.target.tagName === 'A' || event.target.closest('a') || 
                             event.target.classList.contains('item-checkbox') || 
                             event.target.closest('.rename-form')) {
                             return;
@@ -973,8 +1132,9 @@
                             path: checkbox.dataset.path, encodedPath: checkbox.dataset.encodedPath,
                             name: checkbox.dataset.name, encodedName: checkbox.dataset.encodedName,
                             isDir: checkbox.dataset.isDir === 'true', rawName: checkbox.dataset.rawName,
-                            isPlayableVideo: checkbox.dataset.isPlayableVideo === 'true', // 新增
-                            videoType: checkbox.dataset.videoType, // 新增
+                            isPlayableVideo: checkbox.dataset.isPlayableVideo === 'true',
+                            videoType: checkbox.dataset.videoType,
+                            ownerUsername: checkbox.dataset.ownerUsername || null,
                             element: listItem 
                         };
 
@@ -996,7 +1156,7 @@
             
                 fileContainer.addEventListener('click', (event) => {
                     if (event.target.closest('li') === null && (event.target.isSameNode(fileContainer) || event.target.tagName === 'UL')) {
-                        if (!multiSelectModeActive) { 
+                        if (!multiSelectModeActive && CURRENT_VIEW_MODE !== 'userShares') { 
                             clearSingleSelection();
                             updateSelectionActions(); 
                         }
@@ -1004,18 +1164,17 @@
                 });
             }
             
-            // 新增: 處理視頻播放鏈接點擊
             document.querySelectorAll('.video-link').forEach(link => {
                 link.addEventListener('click', function(event) {
                     event.preventDefault();
                     const encodedPath = this.dataset.path;
                     const videoName = this.dataset.name;
                     const videoType = this.dataset.type;
-                    openVideoPlayer(encodedPath, videoName, videoType);
+                    const ownerUsername = this.dataset.ownerUsername || null; // Get owner for shared videos
+                    openVideoPlayer(encodedPath, videoName, videoType, ownerUsername);
                 });
             });
             
-            // 新增: 處理選擇操作欄中的播放按鈕
             if (actionPlayBtn) {
                 actionPlayBtn.addEventListener('click', () => {
                     if (actionPlayBtn.disabled) return;
@@ -1029,15 +1188,15 @@
                         }
                     }
                     if (itemToPlay) {
-                        openVideoPlayer(itemToPlay.encodedPath, itemToPlay.name, itemToPlay.videoType);
+                        openVideoPlayer(itemToPlay.encodedPath, itemToPlay.name, itemToPlay.videoType, itemToPlay.ownerUsername);
                     }
                 });
             }
 
 
-             if (actionEditBtn) {
+             if (actionEditBtn) { // Edit only applies to 'myfiles' view
                 actionEditBtn.addEventListener('click', () => {
-                    if (actionEditBtn.disabled) return;
+                    if (actionEditBtn.disabled || CURRENT_VIEW_MODE !== 'myfiles') return;
                     let itemToEdit = null;
                     if (!multiSelectModeActive && currentSingleSelectedItem) {
                         itemToEdit = currentSingleSelectedItem;
@@ -1048,17 +1207,18 @@
 
                     if (itemToEdit && !itemToEdit.isDir) { 
                         let url = `/edit?path=${itemToEdit.encodedPath}`;
-                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                            url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                        // If admin is viewing another user's files, targetUsername is VIEW_CONTEXT_USER_USERNAME
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                            url += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
                         }
                         window.location.href = url;
                     }
                 });
             }
 
-            if (actionRenameBtn) {
+            if (actionRenameBtn) { // Rename only applies to 'myfiles' view
                 actionRenameBtn.addEventListener('click', () => {
-                    if (actionRenameBtn.disabled) return;
+                    if (actionRenameBtn.disabled || CURRENT_VIEW_MODE !== 'myfiles') return;
                     let itemToRename = null;
                      if (!multiSelectModeActive && currentSingleSelectedItem) {
                         itemToRename = currentSingleSelectedItem;
@@ -1088,8 +1248,11 @@
 
                     if (itemsToDownload.length === 1 && !itemsToDownload[0].isDir) {
                         let url = `/download?path=${itemsToDownload[0].encodedPath}`;
-                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                            url += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                        if (itemsToDownload[0].ownerUsername) { // Shared file
+                            url += `&ownerUsername=${encodeURIComponent(itemsToDownload[0].ownerUsername)}`;
+                        } else if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                            // Admin downloading another user's file (not a share, direct access)
+                            url += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
                         }
                         const tempLink = document.createElement('a');
                         tempLink.href = url;
@@ -1108,17 +1271,23 @@
                         itemsInput.type = 'hidden';
                         itemsInput.name = 'items';
                         const itemsForPayload = itemsToDownload.map(item => ({ 
-                            path: item.path, name: item.name, isDir: item.isDir 
+                            path: item.path, name: item.name, isDir: item.isDir,
+                            ownerUsername: item.ownerUsername || undefined // Include owner if it's a shared item
                         }));
                         itemsInput.value = JSON.stringify(itemsForPayload);
                         form.appendChild(itemsInput);
 
-                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                            const targetUserInput = document.createElement('input');
-                            targetUserInput.type = 'hidden';
-                            targetUserInput.name = 'targetUsername';
-                            targetUserInput.value = VIEW_TARGET_USERNAME;
-                            form.appendChild(targetUserInput);
+                        // If admin is viewing another user's files and initiating archive
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                            // And if all items are from this context user (not mixed with shares from others)
+                            const allFromContextUser = itemsToDownload.every(item => !item.ownerUsername || item.ownerUsername === VIEW_CONTEXT_USER_USERNAME);
+                            if (allFromContextUser) {
+                                const targetUserInput = document.createElement('input');
+                                targetUserInput.type = 'hidden';
+                                targetUserInput.name = 'targetUsername'; // Server expects this for admin context
+                                targetUserInput.value = VIEW_CONTEXT_USER_USERNAME;
+                                form.appendChild(targetUserInput);
+                            }
                         }
                         if (CSRF_TOKEN) { 
                             const csrfInput = document.createElement('input');
@@ -1136,9 +1305,9 @@
                 });
             }
 
-            if (actionDeleteBtn) {
+            if (actionDeleteBtn) { // Delete only applies to 'myfiles' view
                 actionDeleteBtn.addEventListener('click', async () => {
-                    if (actionDeleteBtn.disabled) return;
+                    if (actionDeleteBtn.disabled || CURRENT_VIEW_MODE !== 'myfiles') return;
                     let itemsToDelete = [];
                      if (!multiSelectModeActive && currentSingleSelectedItem) {
                         itemsToDelete.push(currentSingleSelectedItem);
@@ -1157,11 +1326,11 @@
                         for (const item of itemsToDelete) {
                             try {
                                 let deleteUrl = `/delete?path=${item.encodedPath}&isDir=${item.isDir}`;
-                                if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                                    deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                                if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                                    deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
                                 }
                                 const response = await fetch(deleteUrl, { 
-                                    method: 'GET', // 假設 DELETE 也是 GET 請求，根據您的 server.js
+                                    method: 'GET', 
                                 });
 
                                 if (response.ok) {
@@ -1215,9 +1384,9 @@
                 });
             }
             
-            if (actionMoveBtn) {
+            if (actionMoveBtn) { // Move only applies to 'myfiles' view
                 actionMoveBtn.addEventListener('click', async () => {
-                    if (actionMoveBtn.disabled) return;
+                    if (actionMoveBtn.disabled || CURRENT_VIEW_MODE !== 'myfiles') return;
                     let itemsToMove = [];
                      if (!multiSelectModeActive && currentSingleSelectedItem) {
                         itemsToMove.push(currentSingleSelectedItem);
@@ -1231,7 +1400,9 @@
                     moveModal.style.display = 'block';
                     try {
                         let fetchUrl = '/api/directories'; let queryParams = [];
-                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') queryParams.push(`targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`);
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                             queryParams.push(`targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`);
+                        }
                         
                         const pathsToExclude = itemsToMove.flatMap(item => {
                             if (item.isDir) {
@@ -1337,7 +1508,9 @@
                             destinationPath: destinationPath, 
                         };
                         if (CSRF_TOKEN) payload._csrf = CSRF_TOKEN;
-                        if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') payload.targetUsername = VIEW_TARGET_USERNAME;
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                            payload.targetUsername = VIEW_CONTEXT_USER_USERNAME;
+                        }
                         
                         const response = await fetch('/move-items', { 
                             method: 'POST', headers: { 'Content-Type': 'application/json', },
@@ -1363,6 +1536,32 @@
                     moveModal.style.display = 'none';
                 });
             }
+
+            // Share Modal Logic
+            if (actionShareBtn) {
+                actionShareBtn.addEventListener('click', () => {
+                    if (actionShareBtn.disabled || CURRENT_VIEW_MODE !== 'myfiles') return;
+                    let itemToShare = null;
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemToShare = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1) itemToShare = selected[0];
+                    }
+
+                    if (itemToShare && shareModal && shareItemNameDisplay && shareFilePathInput && shareIsDirectoryInput && shareUsernameInput) {
+                        shareItemNameDisplay.textContent = itemToShare.name;
+                        shareFilePathInput.value = itemToShare.path;
+                        shareIsDirectoryInput.value = itemToShare.isDir;
+                        shareUsernameInput.value = ''; // Clear previous username
+                        shareModal.style.display = 'block';
+                        shareUsernameInput.focus();
+                    }
+                });
+            }
+            if(closeShareModalBtn) closeShareModalBtn.onclick = () => shareModal.style.display = 'none';
+            if(cancelShareBtn) cancelShareBtn.onclick = () => shareModal.style.display = 'none';
+
 
             function showOverwriteConfirmationModal(itemName) {
                 return new Promise((resolve) => {
@@ -1728,8 +1927,8 @@
                 
                 const targetUsernameHiddenInput = createItemForm.querySelector('input[name="targetUsername"]');
                 if (targetUsernameHiddenInput) { 
-                    if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                        targetUsernameHiddenInput.value = VIEW_TARGET_USERNAME;
+                    if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                        targetUsernameHiddenInput.value = VIEW_CONTEXT_USER_USERNAME;
                     } else {
                         targetUsernameHiddenInput.value = ''; 
                     }
@@ -1743,25 +1942,32 @@
             if (closeCreateItemModalBtn) closeCreateItemModalBtn.onclick = () => createItemModal.style.display = 'none';
             if (cancelCreateItemBtn) cancelCreateItemBtn.onclick = () => createItemModal.style.display = 'none';
             
-            // 新增: 視頻播放器模態框的打開和關閉邏輯
-            function openVideoPlayer(encodedPath, videoName, videoType) {
+            function openVideoPlayer(encodedPath, videoName, videoType, ownerUsername = null) {
                 if (!videoPlayerModal || !html5VideoPlayer || !videoSourceElement || !videoModalTitle) return;
                 
                 let videoSrc = `/stream/${encodedPath}`;
-                // 如果是管理員查看其他用戶的文件，添加 targetUsername 參數
-                if (VIEW_TARGET_USERNAME && CURRENT_USER_ROLE === 'admin') {
-                    videoSrc += `?targetUsername=${encodeURIComponent(VIEW_TARGET_USERNAME)}`;
+                const queryParams = new URLSearchParams();
+
+                if (ownerUsername) { // For shared files
+                    queryParams.set('ownerUsername', ownerUsername);
+                } else if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                    // Admin viewing another user's file directly
+                    queryParams.set('targetUsername', VIEW_CONTEXT_USER_USERNAME);
                 }
+                
+                if (Array.from(queryParams).length > 0) {
+                    videoSrc += `?${queryParams.toString()}`;
+                }
+
 
                 videoModalTitle.textContent = videoName || '播放視頻';
                 videoSourceElement.setAttribute('src', videoSrc);
                 if (videoType) {
                     videoSourceElement.setAttribute('type', videoType);
                 } else {
-                    videoSourceElement.removeAttribute('type'); // 如果沒有類型信息，移除 type 讓瀏覽器猜測
+                    videoSourceElement.removeAttribute('type');
                 }
-                html5VideoPlayer.load(); // 重新加載視頻源
-                // html5VideoPlayer.play(); // 可選: 自動播放
+                html5VideoPlayer.load();
                 videoPlayerModal.style.display = 'block';
             }
 
@@ -1769,8 +1975,8 @@
                 closeVideoModalBtn.onclick = () => {
                     if (videoPlayerModal) videoPlayerModal.style.display = 'none';
                     if (html5VideoPlayer) {
-                        html5VideoPlayer.pause(); // 暫停播放
-                        videoSourceElement.setAttribute('src', ''); // 清空 src 以停止加載
+                        html5VideoPlayer.pause(); 
+                        videoSourceElement.setAttribute('src', ''); 
                     }
                 };
             }
@@ -1783,13 +1989,14 @@
                     const abandonButton = overwriteModal.querySelector('#overwrite-abandon-btn');
                     if (abandonButton) abandonButton.click(); 
                 }
-                if (event.target == videoPlayerModal) { // 新增: 點擊模態框外部關閉視頻播放器
+                if (event.target == videoPlayerModal) {
                      if (videoPlayerModal) videoPlayerModal.style.display = 'none';
                     if (html5VideoPlayer) {
                         html5VideoPlayer.pause();
                         videoSourceElement.setAttribute('src', '');
                     }
                 }
+                if (event.target == shareModal) shareModal.style.display = 'none';
             });
 
             updateMultiSelectModeUI(); 
