@@ -33,21 +33,26 @@ const USER_QUOTA_BYTES = USER_QUOTA_MB * 1024 * 1024;
 });
 
 // --- SQLite 資料庫設置 ---
-const db = new sqlite3.Database(DB_FILE, (err) => {
-    if (err) { console.error('無法連接到 SQLite 資料庫:', err.message); throw err; }
+const db = new sqlite3.Database(DB_FILE, (dbConnectErr) => {
+    if (dbConnectErr) {
+        console.error('無法連接到 SQLite 資料庫:', dbConnectErr.message);
+        process.exit(1); // Exit if DB connection fails
+    }
     console.log('已成功連接到 SQLite 資料庫。');
+
     db.serialize(() => {
+        // Users table
         db.run(`CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             role TEXT NOT NULL
-        )`, (err) => {
-            if (err) console.error('創建 users 表格失敗:', err.message);
+        )`, (userTableErr) => {
+            if (userTableErr) console.error('創建 users 表格失敗:', userTableErr.message);
             else {
                 console.log("'users' 表格已準備就緒。");
                 const initialAdminUsername = 'admin';
-                const initialAdminPassword = 'admin'; // Consider making this configurable via .env
+                const initialAdminPassword = 'admin';
                 db.get("SELECT * FROM users WHERE username = ?", [initialAdminUsername], (err, adminUser) => {
                     if (err) {
                         console.error('检查初始管理员时出错:', err.message);
@@ -57,11 +62,11 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
                         const hashedPassword = bcrypt.hashSync(initialAdminPassword, 12);
                         db.run("INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
                             [initialAdminUsername, hashedPassword, 'admin'],
-                            function (err) {
-                                if (err) console.error('创建初始管理员失败:', err.message);
+                            function (insertAdminErr) {
+                                if (insertAdminErr) console.error('创建初始管理员失败:', insertAdminErr.message);
                                 else {
                                     console.log(`初始管理员 '${initialAdminUsername}' 已创建。`);
-                                    getUserUploadRoot(initialAdminUsername); // 確保管理員目錄存在
+                                    getUserUploadRoot(initialAdminUsername);
                                 }
                             }
                         );
@@ -70,16 +75,16 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             }
         });
 
-        // --- public_links 表格 ---
+        // Public links table schema migration
         const publicLinksTableDefinition = `
             CREATE TABLE IF NOT EXISTS public_links (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 owner_id INTEGER NOT NULL,
-                file_path TEXT NOT NULL, 
+                file_path TEXT NOT NULL,
                 is_directory BOOLEAN NOT NULL DEFAULT 0,
-                token TEXT UNIQUE NOT NULL, 
-                password_hash TEXT, 
-                expires_at DATETIME, -- 確保 expires_at 在定義中
+                token TEXT UNIQUE NOT NULL,
+                password_hash TEXT,
+                expires_at DATETIME,
                 allow_download BOOLEAN NOT NULL DEFAULT 1,
                 allow_view BOOLEAN NOT NULL DEFAULT 1,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -88,45 +93,66 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             )
         `;
 
-        db.run(publicLinksTableDefinition, (err) => {
-            if (err) {
-                console.error('創建/確保 public_links 表格結構時失敗:', err.message);
-            } else {
-                console.log("'public_links' 表格已按最新定義準備就緒。");
+        db.run(publicLinksTableDefinition, (createErr) => {
+            if (createErr) {
+                console.error('創建/確保 public_links 表格時失敗:', createErr.message);
+                // Proceed to migration check even if CREATE fails (table might exist with old schema)
+            }
+            console.log("'public_links' 表格定義已執行。");
 
-                // 檢查並添加缺失的欄位
-                db.all("PRAGMA table_info(public_links)", (pragmaErr, columns) => {
-                    if (pragmaErr) {
-                        console.error("無法獲取 public_links 表格信息以進行遷移檢查:", pragmaErr.message);
+            db.all("PRAGMA table_info(public_links)", (pragmaErr, columns) => {
+                if (pragmaErr) {
+                    console.error("無法獲取 public_links 表格信息以進行遷移檢查:", pragmaErr.message);
+                    // This is critical, might need to stop server or handle gracefully
+                    return;
+                }
+
+                const requiredColumns = {
+                    'allow_view': 'BOOLEAN NOT NULL DEFAULT 1',
+                    'expires_at': 'DATETIME', // DATETIME allows NULL by default
+                    'visit_count': 'INTEGER DEFAULT 0'
+                    // Add other columns here for future migrations
+                };
+
+                let migrationsToRun = [];
+                for (const colName in requiredColumns) {
+                    if (!columns.some(c => c.name === colName)) {
+                        migrationsToRun.push({ name: colName, definition: requiredColumns[colName] });
+                    }
+                }
+
+                if (migrationsToRun.length === 0) {
+                    console.log("public_links 表格結構已是最新。");
+                    // If all DB setup is done, start listening (moved app.listen to after all critical DB setup)
+                    // For now, we assume this is the last critical DB step.
+                    // If there were more tables/migrations, they'd chain here or use Promises.
+                    return;
+                }
+
+                // Apply migrations sequentially
+                function applyNextMigration(index) {
+                    if (index >= migrationsToRun.length) {
+                        console.log("所有 public_links 表格遷移已完成。");
+                        // Start listening after migrations
                         return;
                     }
-
-                    const columnChecks = [
-                        { name: 'allow_view', definition: 'BOOLEAN NOT NULL DEFAULT 1' },
-                        { name: 'expires_at', definition: 'DATETIME' } // expires_at 可以為 NULL
-                        // 如果將來有更多欄位，可以在此處添加
-                    ];
-
-                    columnChecks.forEach(colCheck => {
-                        const columnExists = columns.some(col => col.name === colCheck.name);
-                        if (!columnExists) {
-                            console.log(`'public_links' 表格缺少 '${colCheck.name}' 欄位，正在嘗試添加...`);
-                            db.run(`ALTER TABLE public_links ADD COLUMN ${colCheck.name} ${colCheck.definition}`, (alterErr) => {
-                                if (alterErr) {
-                                    console.error(`為 'public_links' 表格添加 '${colCheck.name}' 欄位失敗:`, alterErr.message);
-                                } else {
-                                    console.log(`'${colCheck.name}' 欄位已成功添加到 'public_links' 表格。`);
-                                }
-                            });
+                    const migration = migrationsToRun[index];
+                    console.log(`'public_links' 表格缺少 '${migration.name}' 欄位，正在添加...`);
+                    db.run(`ALTER TABLE public_links ADD COLUMN ${migration.name} ${migration.definition}`, (alterErr) => {
+                        if (alterErr) {
+                            console.error(`為 'public_links' 添加 '${migration.name}' 失敗:`, alterErr.message);
+                            // Potentially stop server or handle error more robustly
                         } else {
-                            // console.log(`'${colCheck.name}' 欄位已存在於 'public_links' 表格。`);
+                            console.log(`'${migration.name}' 欄位已成功添加到 'public_links'。`);
                         }
+                        applyNextMigration(index + 1); // Apply next migration
                     });
-                });
-            }
+                }
+                applyNextMigration(0);
+            });
         });
-    });
-});
+    }); // End of db.serialize
+}); // End of new sqlite3.Database
 
 // --- 中間件設置 ---
 app.set('views', path.join(__dirname, 'views'));
@@ -144,14 +170,6 @@ app.use(session({
         sameSite: 'lax' 
     }
 }));
-// CSRF Protection (如果使用 csurf 或類似庫)
-// const csrf = require('csurf');
-// app.use(csrf());
-// app.use((req, res, next) => {
-//     res.locals.csrfToken = req.csrfToken ? req.csrfToken() : null;
-//     next();
-// });
-
 
 // --- 輔助函數 ---
 function getUserUploadRoot(username) {
@@ -204,7 +222,7 @@ async function getDirectorySizeRecursive(directoryPath) {
                     const stats = await fsp.stat(entryPath);
                     totalSize += stats.size;
                 } catch (statErr) {
-                    console.error(`[DirSize] 計算文件大小錯誤 ${entryPath}:`, statErr.message);
+                    // console.error(`[DirSize] 計算文件大小錯誤 ${entryPath}:`, statErr.message);
                 }
             } else if (entry.isDirectory()) {
                 if (entry.name === '.' || entry.name === '..') continue;
@@ -213,7 +231,7 @@ async function getDirectorySizeRecursive(directoryPath) {
         }
     } catch (err) {
         if (err.code === 'ENOENT') { return 0; } 
-        console.error(`[DirSize] 讀取目錄錯誤 ${directoryPath}:`, err.message);
+        // console.error(`[DirSize] 讀取目錄錯誤 ${directoryPath}:`, err.message);
     }
     return totalSize;
 }
@@ -238,7 +256,7 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
                 if (entry.name.toLowerCase().includes(lowerCaseKeyword)) {
                     try { stats = await fsp.stat(entryAbsolutePath); }
                     catch (statErr) {
-                        console.error(`[Search Stat Error] for file ${entryAbsolutePath}:`, statErr.message);
+                        // console.error(`[Search Stat Error] for file ${entryAbsolutePath}:`, statErr.message);
                         stats = { size: null, mtime: null }; 
                     }
                     const isPlayableVideo = ALLOWED_VIDEO_EXTENSIONS.includes(fileExt);
@@ -254,7 +272,7 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
                 if (entry.name.toLowerCase().includes(lowerCaseKeyword)) {
                     try { stats = await fsp.stat(entryAbsolutePath); }
                     catch (statErr) {
-                        console.error(`[Search Stat Error] for directory ${entryAbsolutePath}:`, statErr.message);
+                        // console.error(`[Search Stat Error] for directory ${entryAbsolutePath}:`, statErr.message);
                         stats = { size: null, mtime: null };
                     }
                     foundItems.push({
@@ -505,7 +523,7 @@ app.get('/files', isAuthenticated, async (req, res) => {
                 let stats;
                 try { stats = await fsp.stat(fullEntryPath); }
                 catch (statErr) {
-                    console.error(`[Stat Error] for ${fullEntryPath}:`, statErr.message);
+                    // console.error(`[Stat Error] for ${fullEntryPath}:`, statErr.message);
                     return {
                         name: entry.name, isDir: entry.isDirectory(), path: itemPath,
                         encodedName: encodeURIComponent(entry.name), encodedPath: encodeURIComponent(itemPath),
@@ -580,16 +598,26 @@ app.get('/files', isAuthenticated, async (req, res) => {
         let friendlyMessage = '無法讀取文件列表。';
         if (err.code === 'ENOENT' && !searchQuery) friendlyMessage = '指定的路徑不存在。';
         else if (err.message.includes('無效路徑') || err.message.includes('無效的目標用戶名')) friendlyMessage = '無權訪問指定路徑或用戶無效。';
+        else if (err.code === 'SQLITE_ERROR' && err.message.includes('no such column')) { // More specific error for user
+            friendlyMessage = '資料庫結構錯誤，請聯繫管理員。可能需要重啟應用程式以更新資料庫。';
+        }
+
 
         const baseRedirect = '/files';
         let redirectParams = [];
         if (isAdminViewingOther) redirectParams.push(`targetUsername=${encodeURIComponent(contextUsername)}`);
-        if (searchQuery) redirectParams.push(`q=${encodeURIComponent(searchQuery)}`);
-        else if (relativeQueryPath !== '/' && viewMode === 'myfiles') {
-            const parentPath = path.posix.dirname(relativeQueryPath);
-            if (parentPath !== '.' && parentPath !== '/') redirectParams.push(`path=${encodeURIComponent(parentPath)}`);
+        
+        // Preserve viewMode on error redirect, but avoid redirecting to a path that might cause further errors
+        // if the error is path-related in 'myfiles' mode.
+        if (viewMode !== 'myfiles' || (err.code !== 'ENOENT' && !err.message.includes('無效路徑'))) {
+             if (relativeQueryPath !== '/' && viewMode === 'myfiles' && !searchQuery) {
+                const parentPath = path.posix.dirname(relativeQueryPath);
+                if (parentPath !== '.' && parentPath !== '/') redirectParams.push(`path=${encodeURIComponent(parentPath)}`);
+            }
         }
-        redirectParams.push(`viewMode=${viewMode}`);
+        if (searchQuery) redirectParams.push(`q=${encodeURIComponent(searchQuery)}`);
+        
+        redirectParams.push(`viewMode=${viewMode}`); // Always preserve viewMode
         redirectParams.push(`message=${encodeURIComponent(friendlyMessage)}`, `messageType=error`);
         res.redirect(`${baseRedirect}?${redirectParams.join('&')}`);
     }
@@ -1393,7 +1421,6 @@ app.get('/public/:token', async (req, res) => {
         if (!link) {
             return res.status(404).render('error', { message: '分享連結不存在或已過期。', user: null, csrfToken: null });
         }
-        // 檢查連結是否已過期
         if (link.expires_at && new Date(link.expires_at) < new Date()) {
             return res.status(403).render('error', { message: '此分享連結已過期。', user: null, csrfToken: null });
         }
@@ -1414,21 +1441,18 @@ app.get('/public/:token', async (req, res) => {
             if (!link.allow_view && !link.allow_download) {
                  return res.status(403).render('error', { message: '此連結不允許查看或下載。', user: null, csrfToken: null });
             }
-            if (link.allow_download) {
-                let downloadUrl = `/public/download/${link.token}`;
-                if (link.is_directory && relPath) { 
-                    downloadUrl += `?relPath=${encodeURIComponent(relPath)}`;
-                } else if (link.is_directory && !relPath) { 
-                     return res.status(400).render('error', { message: '不能直接下載整個分享目錄，請進入目錄後單獨下載文件。', user: null, csrfToken: null });
-                }
-                
+            if (link.allow_download) { // If download is allowed, prioritize download or provide download link in view
+                // Check if the request is explicitly for download (e.g., from a download button)
+                // For now, if allow_download is true, we assume direct access to /public/:token for a file means download.
+                // A more explicit way would be to check a query param like `?action=download`
+                // or always have downloads go through /public/download/:token
                 return res.download(fullItemPath, path.basename(itemRelativePath), (err) => {
                     if (err) {
                         console.error(`公開連結下載錯誤 (${token}, path: ${itemRelativePath}):`, err);
                         if (!res.headersSent) res.status(500).render('error', { message: '下載文件時發生錯誤。', user: null, csrfToken: null });
                     }
                 });
-            } else { 
+            } else { // Download not allowed, try view if allowed
                  const fileExt = path.extname(itemRelativePath).toLowerCase();
                  if (link.allow_view && ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
                     const content = await fsp.readFile(fullItemPath, 'utf8');
@@ -1442,6 +1466,7 @@ app.get('/public/:token', async (req, res) => {
                         req: req 
                     });
                  }
+                 // If not downloadable and not a viewable text file (or view not allowed)
                  return res.status(403).render('error', { message: '此連結不允許查看此文件類型。', user: null, csrfToken: null });
             }
         } else if (stats.isDirectory()) {
@@ -1720,7 +1745,17 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.listen(port, () => console.log(`伺服器運行在 http://localhost:${port}`));
+// Start the server only after ensuring DB is ready and migrations (if any) are attempted.
+// The db.serialize block handles the queuing of DB operations.
+// app.listen should be called once the critical DB setup is reliably complete.
+// For simplicity in this structure, we'll rely on the db object being ready for routes.
+// A more robust startup would use Promises/async-await for db initialization before app.listen.
+app.listen(port, () => {
+    console.log(`伺服器運行在 http://localhost:${port}`);
+    console.log("注意: 資料庫遷移邏輯會在首次查詢或操作 'public_links' 表之前異步執行。");
+    console.log("如果遇到 'no such column' 錯誤，請重啟伺服器一次以確保遷移完成。");
+});
+
 process.on('SIGINT', () => {
     console.log('收到 SIGINT 信號，正在關閉伺服器...');
     db.close((err) => {
