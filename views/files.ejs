@@ -700,7 +700,7 @@
         const CURRENT_SESSION_USER_USERNAME = "<%= user.username %>";
         const CURRENT_PATH_ON_LOAD = "<%= currentPath %>";
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
-        const CURRENT_VIEW_MODE = "<%= locals.viewMode || 'myfiles' %>"; // Moved up
+        const CURRENT_VIEW_MODE = "<%= locals.viewMode || 'myfiles' %>"; 
         const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify((locals.viewMode || 'myfiles') === 'myfiles' ? items.map(item => item.name.toLowerCase()) : []) %>;
         const HAS_ITEMS_ON_PAGE = <%= items.length > 0 %>;
 
