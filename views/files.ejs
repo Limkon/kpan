@@ -700,9 +700,9 @@
         const CURRENT_SESSION_USER_USERNAME = "<%= user.username %>";
         const CURRENT_PATH_ON_LOAD = "<%= currentPath %>";
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
+        const CURRENT_VIEW_MODE = "<%= locals.viewMode || 'myfiles' %>"; // Moved up
         const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify(CURRENT_VIEW_MODE === 'myfiles' ? items.map(item => item.name.toLowerCase()) : []) %>;
         const HAS_ITEMS_ON_PAGE = <%= items.length > 0 %>;
-        const CURRENT_VIEW_MODE = "<%= locals.viewMode || 'myfiles' %>";
 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -2011,3 +2011,6 @@
     </script>
 </body>
 </html>
+" in the Canvas.
+I want to change the order of the lines.
+Move line 705 to before line 7
