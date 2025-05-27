@@ -1,0 +1,68 @@
+<%# views/public-view-file.ejs %>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查看文件: <%= filename %></title>
+    <link rel="stylesheet" href="/style.css"> <%# Assuming a global style.css %>
+    <link id="theme-stylesheet" rel="stylesheet" href="">
+    <style>
+        body { font-family: sans-serif; margin: 0; background-color: #f4f4f4; color: #333; }
+        .dark-theme body { background-color: #1e1e1e; color: #e0e0e0; }
+        .container { max-width: 900px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .dark-theme .container { background-color: #2c2c2c; box-shadow: 0 0 15px rgba(0,0,0,0.3); }
+        h1 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .dark-theme h1 { color: #e0e0e0; border-bottom-color: #444; }
+        pre { white-space: pre-wrap; word-wrap: break-word; background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #ddd; max-height: 70vh; overflow-y: auto; }
+        .dark-theme pre { background-color: #252525; border-color: #444; color: #ccc; }
+        .file-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .download-button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .dark-theme .download-button { background-color: #0056b3; }
+        .download-button:hover { opacity: 0.9; }
+        .footer-info { font-size: 0.8em; color: #777; margin-top: 20px; text-align: center; }
+        .dark-theme .footer-info { color: #aaa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="file-header">
+            <h1><%= filename %></h1>
+            <% if (link && link.allow_download) { %>
+                <a href="<%= req.originalUrl.replace('/public/', '/public/download/') %>" class="download-button" download>下載文件</a>
+                 <%# Note: /public/download/:token route needs to be implemented if not already for direct file download %>
+                 <%# For simplicity, if /public/:token already handles download for files, this can be simplified %>
+                 <%# Or, more robustly, the download link should be constructed like: %>
+                 <%# <a href="/public/download/<%= link.token %>" class="download-button" download>下載文件</a> %>
+                 <%# Assuming the /public/:token route handles file downloads directly if it's a file. %>
+                 <%# If it's a shared directory and this is a file within it, the URL needs ?relPath=... %>
+                 <%
+                    let downloadUrl = `/public/${link.token}`; // Base for single file share
+                    if (req.query.relPath) { // If viewing a file within a shared directory
+                        downloadUrl = `/public/download/${link.token}?relPath=${encodeURIComponent(req.query.relPath)}`;
+                    } else if (!link.is_directory) { // Single file shared directly
+                         // The current URL might be /public/:token, if it serves download, it's fine.
+                         // Or create a specific download endpoint:
+                         downloadUrl = `/public/download/${link.token}`;
+                    }
+                 %>
+                 <a href="<%= downloadUrl %>" class="download-button" download="<%= filename %>">下載文件</a>
+            <% } %>
+        </div>
+
+        <pre><code><%- content %></code></pre> <%# Use <%- to output unescaped HTML/text %>
+
+        <div class="footer-info">
+            此文件通過公開連結分享。由 <%= link.owner_username %> 分享於 <%= new Date(link.created_at).toLocaleString('zh-CN') %>。
+        </div>
+    </div>
+    <script src="/theme.js"></script> <%# Assuming a theme switcher script %>
+</body>
+</html>
