@@ -106,7 +106,7 @@ const db = new sqlite3.Database(DB_FILE, (dbConnectErr) => {
                 }
 
                 const requiredColumns = {
-                    'password_hash': 'TEXT', // Added this column check
+                    'password_hash': 'TEXT', 
                     'allow_view': 'BOOLEAN NOT NULL DEFAULT 1',
                     'expires_at': 'DATETIME', 
                     'visit_count': 'INTEGER DEFAULT 0'
@@ -599,8 +599,6 @@ app.get('/files', isAuthenticated, async (req, res) => {
         let redirectParams = [];
         if (isAdminViewingOther) redirectParams.push(`targetUsername=${encodeURIComponent(contextUsername)}`);
         
-        // Preserve viewMode on error redirect, but avoid redirecting to a path that might cause further errors
-        // if the error is path-related in 'myfiles' mode.
         if (viewMode !== 'myfiles' || (err.code !== 'ENOENT' && !err.message.includes('無效路徑'))) {
              if (relativeQueryPath !== '/' && viewMode === 'myfiles' && !searchQuery) {
                 const parentPath = path.posix.dirname(relativeQueryPath);
@@ -609,7 +607,7 @@ app.get('/files', isAuthenticated, async (req, res) => {
         }
         if (searchQuery) redirectParams.push(`q=${encodeURIComponent(searchQuery)}`);
         
-        redirectParams.push(`viewMode=${viewMode}`); // Always preserve viewMode
+        redirectParams.push(`viewMode=${viewMode}`); 
         redirectParams.push(`message=${encodeURIComponent(friendlyMessage)}`, `messageType=error`);
         res.redirect(`${baseRedirect}?${redirectParams.join('&')}`);
     }
@@ -1398,6 +1396,45 @@ app.post('/actions/revoke-public-link', isAuthenticated, async (req, res) => {
     });
 });
 
+// 新增: 批量撤銷公開連結路由
+app.post('/actions/revoke-public-links-batch', isAuthenticated, async (req, res) => {
+    const actingUser = req.session.user;
+    const { link_ids } = req.body; // Expecting an array of link_id
+
+    if (!link_ids || !Array.isArray(link_ids) || link_ids.length === 0) {
+        return res.status(400).json({ success: false, message: '未選擇要撤銷的連結。' });
+    }
+
+    let ownerIdToCheck = actingUser.id;
+    // If admin is revoking for another user, the contextUsername should be passed and validated
+    if (actingUser.role === 'admin' && req.body.contextUsername) {
+        const contextOwner = await new Promise((resolve) => 
+            db.get("SELECT id FROM users WHERE username = ?", [req.body.contextUsername], (err, row) => resolve(row))
+        );
+        if (contextOwner) {
+            ownerIdToCheck = contextOwner.id;
+        } else {
+            return res.status(403).json({ success: false, message: '上下文用戶無效，無法執行操作。' });
+        }
+    }
+
+    const placeholders = link_ids.map(() => '?').join(',');
+    const query = `DELETE FROM public_links WHERE id IN (${placeholders}) AND owner_id = ?`;
+    const params = [...link_ids, ownerIdToCheck];
+
+    db.run(query, params, function (err) {
+        if (err) {
+            console.error("批量撤銷公開連結時數據庫錯誤:", err);
+            return res.status(500).json({ success: false, message: '批量撤銷連結失敗：數據庫錯誤。' });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ success: false, message: '沒有找到可撤銷的連結，或您沒有權限操作。' });
+        }
+        res.json({ success: true, message: `成功撤銷 ${this.changes} 個公開連結。` });
+    });
+});
+
+
 // --- 公開連結訪問路由 ---
 app.get('/public/:token', async (req, res) => {
     const { token } = req.params;
@@ -1433,18 +1470,14 @@ app.get('/public/:token', async (req, res) => {
             if (!link.allow_view && !link.allow_download) {
                  return res.status(403).render('error', { message: '此連結不允許查看或下載。', user: null, csrfToken: null });
             }
-            if (link.allow_download) { // If download is allowed, prioritize download or provide download link in view
-                // Check if the request is explicitly for download (e.g., from a download button)
-                // For now, if allow_download is true, we assume direct access to /public/:token for a file means download.
-                // A more explicit way would be to check a query param like `?action=download`
-                // or always have downloads go through /public/download/:token
+            if (link.allow_download) { 
                 return res.download(fullItemPath, path.basename(itemRelativePath), (err) => {
                     if (err) {
                         console.error(`公開連結下載錯誤 (${token}, path: ${itemRelativePath}):`, err);
                         if (!res.headersSent) res.status(500).render('error', { message: '下載文件時發生錯誤。', user: null, csrfToken: null });
                     }
                 });
-            } else { // Download not allowed, try view if allowed
+            } else { 
                  const fileExt = path.extname(itemRelativePath).toLowerCase();
                  if (link.allow_view && ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
                     const content = await fsp.readFile(fullItemPath, 'utf8');
@@ -1458,7 +1491,6 @@ app.get('/public/:token', async (req, res) => {
                         req: req 
                     });
                  }
-                 // If not downloadable and not a viewable text file (or view not allowed)
                  return res.status(403).render('error', { message: '此連結不允許查看此文件類型。', user: null, csrfToken: null });
             }
         } else if (stats.isDirectory()) {
