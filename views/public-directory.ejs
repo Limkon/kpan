@@ -1,0 +1,100 @@
+<%# views/public-directory.ejs %>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>瀏覽目錄: <%= directoryName %></title>
+    <link rel="stylesheet" href="/style.css">
+    <link id="theme-stylesheet" rel="stylesheet" href="">
+    <style>
+        body { font-family: sans-serif; margin: 0; background-color: #f4f4f4; color: #333; }
+        .dark-theme body { background-color: #1e1e1e; color: #e0e0e0; }
+        .container { max-width: 900px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .dark-theme .container { background-color: #2c2c2c; box-shadow: 0 0 15px rgba(0,0,0,0.3); }
+        h1, h2 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .dark-theme h1, .dark-theme h2 { color: #e0e0e0; border-bottom-color: #444; }
+        ul { list-style-type: none; padding: 0; }
+        li { padding: 8px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .dark-theme li { border-bottom-color: #3a3a3a; }
+        li:last-child { border-bottom: none; }
+        a { color: #007bff; text-decoration: none; }
+        .dark-theme a { color: #6cb2eb; }
+        a:hover { text-decoration: underline; }
+        .item-name { font-weight: 500; }
+        .item-details { font-size: 0.85em; color: #777; }
+        .dark-theme .item-details { color: #aaa; }
+        .item-icon { margin-right: 8px; }
+        .breadcrumb { margin-bottom: 15px; font-size: 0.9em; }
+        .breadcrumb a { color: #007bff; }
+        .dark-theme .breadcrumb a { color: #6cb2eb; }
+        .footer-info { font-size: 0.8em; color: #777; margin-top: 20px; text-align: center; }
+        .dark-theme .footer-info { color: #aaa; }
+        .download-action { margin-left: 10px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>公開分享目錄: <%= directoryName %></h1>
+
+        <div class="breadcrumb">
+            <a href="/public/<%= link.token %>">根目錄 (<%= link.file_path === '/' ? '/' : link.file_path.split('/').pop() || '/' %>)</a>
+            <%
+                let segments = currentRelPath.split('/').filter(Boolean);
+                let cumulative = '';
+            %>
+            <% segments.forEach(segment => { %>
+                <% cumulative += (cumulative ? '/' : '') + segment; %>
+                / <a href="/public/<%= link.token %>?relPath=<%= encodeURIComponent(cumulative) %>"><%= segment %></a>
+            <% }); %>
+        </div>
+
+        <% if (items.length > 0) { %>
+            <ul>
+                <% items.forEach(item => { %>
+                    <li>
+                        <div>
+                            <span class="item-icon"><%= item.isDir ? '📁' : '📄' %></span>
+                            <% if (item.isDir) { %>
+                                <a href="/public/<%= link.token %>?relPath=<%= encodeURIComponent(item.path) %>" class="item-name"><%= item.name %></a>
+                            <% } else { %>
+                                <%
+                                    let viewOrDownloadUrl = `/public/${link.token}?relPath=${encodeURIComponent(item.path)}`;
+                                    // If a specific download route for files within public dirs is preferred:
+                                    // viewOrDownloadUrl = `/public/download/${link.token}?relPath=${encodeURIComponent(item.path)}`;
+                                    // For streaming, a similar logic would apply for video files.
+                                    const fileExt = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
+                                    let isPlayableVideo = ['.mp4', '.webm', '.ogg', '.mov'].includes('.' + fileExt); // Simplified check
+                                    let streamUrl = `/public/stream/${link.token}?relPath=${encodeURIComponent(item.path)}`;
+                                %>
+                                <% if (isPlayableVideo && link.allow_view) { %>
+                                    <a href="<%= streamUrl %>" target="_blank" class="item-name" title="點擊播放 <%= item.name %>"><%= item.name %></a>
+                                <% } else { %>
+                                    <a href="<%= viewOrDownloadUrl %>" class="item-name" <% if (link.allow_download) { %> download="<%= item.name %>" <% } %> title="點擊<%= link.allow_download ? '下載' : '查看' %>"><%= item.name %></a>
+                                <% } %>
+                            <% } %>
+                        </div>
+                        <div class="item-details">
+                            <% if (!item.isDir && item.size !== null) { %>
+                                <span><%= (item.size / 1024).toFixed(1) %> KB</span> |
+                            <% } %>
+                            <span><%= new Date(item.lastModified).toLocaleDateString('zh-CN') %></span>
+                            <% if (!item.isDir && link.allow_download) { %>
+                                <a href="/public/<%= link.token %>?relPath=<%= encodeURIComponent(item.path) %>" class="download-action" download="<%= item.name %>">(下載)</a>
+                                <%# Or more specific: <a href="/public/download/<%= link.token %>?relPath=<%= encodeURIComponent(item.path) %>" ... %>
+                            <% } %>
+                        </div>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } else { %>
+            <p>此目錄為空。</p>
+        <% } %>
+
+        <div class="footer-info">
+            此目錄通過公開連結分享。由 <%= link.owner_username %> 分享於 <%= new Date(link.created_at).toLocaleString('zh-CN') %>。
+        </div>
+    </div>
+    <script src="/theme.js"></script>
+</body>
+</html>
