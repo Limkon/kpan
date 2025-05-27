@@ -37,6 +37,8 @@
             --link-hover-color: #0056b3;
             --public-link-display-bg: #f8f9fa;
             --public-link-display-border: #ced4da;
+            --action-bar-bg: #f0f0f0;
+            --action-bar-border: #ccc;
         }
 
         .dark-theme {
@@ -65,6 +67,8 @@
             --link-hover-color: #8dc9f0;
             --public-link-display-bg: #2c2c2c;
             --public-link-display-border: #495057;
+            --action-bar-bg: #252525;
+            --action-bar-border: #444;
         }
 
         .nav-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--tab-border); }
@@ -72,12 +76,30 @@
         .nav-tabs .nav-link.active { background-color: var(--tab-active-bg); color: var(--tab-active-text); border-color: var(--tab-active-bg); }
         .nav-tabs .nav-link:hover:not(.active) { opacity: 0.8; }
 
-        #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
-        .dark-theme #selection-action-bar { background-color: #252525; border-bottom-color: #444; }
-        #selection-action-bar button { margin: 0; }
+        #selection-action-bar, #public-link-selection-action-bar { 
+            padding: 10px; 
+            background-color: var(--action-bar-bg); 
+            border-bottom: 1px solid var(--action-bar-border); 
+            margin-bottom: 15px; 
+            display: none; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+            align-items: center; 
+        }
+        #selection-action-bar button, #public-link-selection-action-bar button { margin: 0; }
         
-        .item-checkbox { display: none; margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
-        #file-container.multi-select-mode-active .item-checkbox { display: inline-block; }
+        .item-checkbox, .public-link-checkbox { 
+            display: none; 
+            margin-right: 10px; 
+            width: 18px; 
+            height: 18px; 
+            vertical-align: middle; 
+        }
+        #file-container.multi-select-mode-active .item-checkbox,
+        #file-container.multi-select-mode-active .public-link-checkbox { /* Apply to public links too */
+            display: inline-block; 
+        }
+
 
         .file-entry-selectable { display: flex; align-items: center; width: 100%; }
         #file-container.list-view .file-entry-selectable { padding: 5px 0; }
@@ -93,8 +115,8 @@
         .dark-theme .list-view .file-details { color: #bbb; }
         .list-view .file-details .file-size,
         .list-view .file-details .file-modified,
-        .list-view .file-details .file-public-link, /* For public link display */
-        .list-view .file-details .file-created-at { /* For public link display */
+        .list-view .file-details .file-public-link, 
+        .list-view .file-details .file-created-at { 
             min-width: 80px; text-align: right;
         }
         .list-view .file-details .file-public-link a { color: var(--link-color); text-decoration: none; }
@@ -179,12 +201,32 @@
         .grid-view .file-entry { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 6px; width: 100%; }
         .grid-view .file-icon-large { font-size: 3.5em; line-height: 1; display: flex; justify-content: center; align-items: center; min-height: 48px; margin-bottom: 4px; }
         .grid-view .file-name { font-size: 0.8em; line-height: 1.3; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-        #file-container.grid-view.multi-select-mode-active .item-checkbox { margin-bottom: 6px; }
+        #file-container.grid-view.multi-select-mode-active .item-checkbox,
+        #file-container.grid-view.multi-select-mode-active .public-link-checkbox { 
+            margin-bottom: 6px; 
+        }
         
-        #select-all-container { display: none; align-items: center; padding: 5px 10px; background-color: #f9f9f9; border-bottom: 1px solid #eee; }
-        .dark-theme #select-all-container { background-color: #2e2e2e; border-bottom-color: #444; }
-        #select-all-container.visible-in-multiselect { display: flex; }
-        #select-all-container label { margin-left: 5px; font-weight: normal;}
+        #select-all-container, #select-all-public-links-container { 
+            display: none; 
+            align-items: center; 
+            padding: 5px 10px; 
+            background-color: #f9f9f9; 
+            border-bottom: 1px solid #eee; 
+        }
+        .dark-theme #select-all-container, .dark-theme #select-all-public-links-container { 
+            background-color: #2e2e2e; 
+            border-bottom-color: #444; 
+        }
+        
+        #select-all-container.visible-in-multiselect,
+        #select-all-public-links-container.visible-in-multiselect {
+            display: flex;
+        }
+
+        #select-all-container label, #select-all-public-links-container label { 
+            margin-left: 5px; 
+            font-weight: normal;
+        }
 
         .rename-form { display: none; position: absolute; left: 25px; right: 5px; top: calc(100% + 2px); background-color: var(--rename-form-bg); padding: 10px; border: 1px solid var(--rename-form-border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 100; border-radius: 6px; max-width: 400px; box-sizing: border-box; }
         #file-container.grid-view li .rename-form { left: 50%; transform: translateX(-50%); top: 100%; margin-top: 5px; width: calc(100% - 10px); max-width: 180px; right: auto; }
@@ -234,7 +276,6 @@
         #file-container { max-height: calc(100vh - 360px); overflow-y: auto; padding-right: 5px; box-sizing: border-box; }
         .action-button-small { padding: 3px 6px; font-size: 0.8em; margin-left: 5px; }
 
-        /* Share Modal Specifics */
         #share-modal .form-group label[for="share-allow-download"],
         #share-modal .form-group label[for="share-allow-view"] {
             display: inline-block; margin-left: 5px; font-weight: normal;
@@ -323,7 +364,9 @@
                     <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button> 
                 </div>
             <% } %>
-            <% if (locals.viewMode !== 'userShares') { %> <button type="button" id="toggle-multi-select-btn">啟用多選</button>
+            <% if (locals.viewMode !== 'userShares') { %>
+                <button type="button" id="toggle-multi-select-btn">啟用多選</button>
+            <% } else if (items.length > 0) { %> <button type="button" id="toggle-multi-select-btn">啟用多選</button>
             <% } %>
         
             <form action="/files" method="GET" class="control-form search-form-right">
@@ -369,16 +412,21 @@
         <% } %>
 
         <% if (locals.viewMode !== 'userShares') { %>
-        <div id="selection-action-bar">
-            <span id="selection-count" style="margin-right: 15px;">已選擇 0 項</span>
-            <button id="action-play-btn" disabled>播放</button> 
-            <button id="action-edit-btn" disabled>編輯</button>
-            <button id="action-rename-btn" disabled>重命名</button>
-            <button id="action-move-btn" disabled>移動</button>
-            <button id="action-share-btn" disabled>創建公開連結</button>
-            <button id="action-download-btn" disabled>下載選中項</button>
-            <button id="action-delete-btn" class="secondary" disabled>删除</button>
-        </div>
+            <div id="selection-action-bar">
+                <span id="selection-count" style="margin-right: 15px;">已選擇 0 項</span>
+                <button id="action-play-btn" disabled>播放</button> 
+                <button id="action-edit-btn" disabled>編輯</button>
+                <button id="action-rename-btn" disabled>重命名</button>
+                <button id="action-move-btn" disabled>移動</button>
+                <button id="action-share-btn" disabled>創建公開連結</button>
+                <button id="action-download-btn" disabled>下載選中項</button>
+                <button id="action-delete-btn" class="secondary" disabled>删除</button>
+            </div>
+        <% } else { %>
+            <div id="public-link-selection-action-bar">
+                <span id="public-link-selection-count" style="margin-right: 15px;">已選擇 0 個連結</span>
+                <button id="action-revoke-selected-links-btn" class="secondary" disabled>撤銷選中連結</button>
+            </div>
         <% } %>
         
         <% 
@@ -393,7 +441,13 @@
                 <input type="checkbox" id="select-all-checkbox">
                 <label for="select-all-checkbox">全選/取消全選</label>
             </div>
+        <% } else if (items.length > 0 && locals.viewMode === 'userShares') { %>
+            <div id="select-all-public-links-container"> 
+                <input type="checkbox" id="select-all-public-links-checkbox">
+                <label for="select-all-public-links-checkbox">全選/取消全選</label>
+            </div>
         <% } %>
+
         <div id="file-container" class="list-view"> 
             <% if (items.length > 0) { %>
                 <% const adminTargetQueryForActions = locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : ''; %>
@@ -435,6 +489,8 @@
                                        data-video-type="<%= item.videoType || '' %>" 
                                        data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>"
                                        >
+                                <% } else { %>
+                                    <input type="checkbox" class="public-link-checkbox" data-link-id="<%= item.link_id %>">
                                 <% } %>
                                 <div class="file-content-wrapper">
                                     <% if (item.isDir) { %>
@@ -590,10 +646,12 @@
         </div>
     </div>
 
-    <div id="share-modal"> <div class="modal-content">
+    <div id="share-modal"> 
+        <div class="modal-content">
             <span class="close-modal-btn" id="close-share-modal-btn">&times;</span>
             <h3>創建公開分享連結</h3>
-            <form id="share-form"> <input type="hidden" name="filePathToShare" id="share-file-path-input">
+            <form id="share-form"> 
+                <input type="hidden" name="filePathToShare" id="share-file-path-input">
                 <input type="hidden" name="isDirectory" id="share-is-directory-input">
                 <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
                     <input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>">
@@ -642,7 +700,7 @@
         const CURRENT_SESSION_USER_USERNAME = "<%= user.username %>";
         const CURRENT_PATH_ON_LOAD = "<%= currentPath %>";
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
-        const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify(items.map(item => item.name.toLowerCase())) %>; // Only for 'myfiles' view
+        const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify(CURRENT_VIEW_MODE === 'myfiles' ? items.map(item => item.name.toLowerCase()) : []) %>;
         const HAS_ITEMS_ON_PAGE = <%= items.length > 0 %>;
         const CURRENT_VIEW_MODE = "<%= locals.viewMode || 'myfiles' %>";
 
@@ -660,6 +718,13 @@
             const actionShareBtn = document.getElementById('action-share-btn');
             const actionDownloadBtn = document.getElementById('action-download-btn');
             const actionDeleteBtn = document.getElementById('action-delete-btn');
+
+            // For Public Links View
+            const selectAllPublicLinksCheckbox = document.getElementById('select-all-public-links-checkbox');
+            const selectAllPublicLinksContainer = document.getElementById('select-all-public-links-container');
+            const publicLinkSelectionActionBar = document.getElementById('public-link-selection-action-bar');
+            const publicLinkSelectionCountDisplay = document.getElementById('public-link-selection-count');
+            const actionRevokeSelectedLinksBtn = document.getElementById('action-revoke-selected-links-btn');
             
             const moveModal = document.getElementById('move-modal');
             const closeMoveModalBtn = document.getElementById('close-move-modal-btn');
@@ -704,7 +769,6 @@
             const closeShareModalBtn = document.getElementById('close-share-modal-btn');
             const cancelShareBtn = document.getElementById('cancel-share-btn');
             const confirmShareBtn = document.getElementById('confirm-share-btn');
-            // const shareForm = document.getElementById('share-form'); // Already declared if needed
             const shareItemNameDisplay = document.getElementById('share-item-name-display');
             const shareFilePathInput = document.getElementById('share-file-path-input');
             const shareIsDirectoryInput = document.getElementById('share-is-directory-input');
@@ -727,33 +791,30 @@
 
             function updateMultiSelectModeUI() {
                 if (!fileContainer || !toggleMultiSelectBtn) return;
-                if (CURRENT_VIEW_MODE === 'userShares') { // Disable multi-select for userShares view
-                    fileContainer.classList.remove('multi-select-mode-active');
-                    if(toggleMultiSelectBtn) toggleMultiSelectBtn.style.display = 'none';
-                    if(selectAllContainer) selectAllContainer.classList.remove('visible-in-multiselect');
-                    return;
-                } else {
-                   if(toggleMultiSelectBtn) toggleMultiSelectBtn.style.display = 'inline-block';
-                }
-
+                
+                const isUserSharesView = CURRENT_VIEW_MODE === 'userShares';
 
                 if (multiSelectModeActive) {
                     clearSingleSelection();
                     fileContainer.classList.add('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '取消多選';
-                    if (selectAllContainer && HAS_ITEMS_ON_PAGE) { 
-                        selectAllContainer.classList.add('visible-in-multiselect'); 
+                    if (isUserSharesView && selectAllPublicLinksContainer && HAS_ITEMS_ON_PAGE) {
+                        selectAllPublicLinksContainer.classList.add('visible-in-multiselect');
+                    } else if (!isUserSharesView && selectAllContainer && HAS_ITEMS_ON_PAGE) {
+                        selectAllContainer.classList.add('visible-in-multiselect');
                     }
                 } else {
                     fileContainer.classList.remove('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '啟用多選';
-                    if (selectAllContainer) { 
-                        selectAllContainer.classList.remove('visible-in-multiselect'); 
-                    }
-                    document.querySelectorAll('.item-checkbox:checked').forEach(cb => cb.checked = false);
+                    if (selectAllContainer) selectAllContainer.classList.remove('visible-in-multiselect');
+                    if (selectAllPublicLinksContainer) selectAllPublicLinksContainer.classList.remove('visible-in-multiselect');
+                    
+                    document.querySelectorAll('.item-checkbox:checked, .public-link-checkbox:checked').forEach(cb => cb.checked = false);
                     if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                    if (selectAllPublicLinksCheckbox) selectAllPublicLinksCheckbox.checked = false;
                 }
-                updateSelectionActions();
+                updateSelectionActions(); // For 'myfiles' view
+                updatePublicLinkSelectionActions(); // For 'userShares' view
             }
             
             if (toggleMultiSelectBtn) {
@@ -763,7 +824,7 @@
                 });
             }
 
-            function getCheckboxSelectedItems() {
+            function getCheckboxSelectedItems() { // For 'myfiles' view
                 const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox'); 
                 const selected = [];
                 currentCheckboxes.forEach((cb) => {
@@ -780,9 +841,18 @@
                 });
                 return selected;
             }
+            
+            function getSelectedPublicLinkIds() { // For 'userShares' view
+                const selectedIds = [];
+                document.querySelectorAll('#file-container .public-link-checkbox:checked').forEach(cb => {
+                    selectedIds.push(cb.dataset.linkId);
+                });
+                return selectedIds;
+            }
 
-            function updateSelectionActions() {
-                 if (CURRENT_VIEW_MODE === 'userShares') {
+
+            function updateSelectionActions() { // For 'myfiles' view
+                 if (CURRENT_VIEW_MODE === 'userShares' || !selectionActionBar) {
                     if(selectionActionBar) selectionActionBar.style.display = 'none';
                     return;
                 }
@@ -809,7 +879,7 @@
                                 isSingleFilePlayableVideo = true;
                              }
                         }
-                        isSingleItemSharable = true; // Can share single selected item
+                        isSingleItemSharable = true; 
                     }
                 } else if (currentSingleSelectedItem) {
                     count = 1;
@@ -844,13 +914,44 @@
                 if(actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
             }
 
+            function updatePublicLinkSelectionActions() { // For 'userShares' view
+                if (CURRENT_VIEW_MODE !== 'userShares' || !publicLinkSelectionActionBar) {
+                    if(publicLinkSelectionActionBar) publicLinkSelectionActionBar.style.display = 'none';
+                    return;
+                }
+                const selectedLinkIds = getSelectedPublicLinkIds();
+                const count = selectedLinkIds.length;
+
+                if (count > 0) {
+                    publicLinkSelectionActionBar.style.display = 'flex';
+                    if(publicLinkSelectionCountDisplay) publicLinkSelectionCountDisplay.textContent = `已選擇 ${count} 個連結`;
+                    if(actionRevokeSelectedLinksBtn) actionRevokeSelectedLinksBtn.disabled = false;
+                } else {
+                    publicLinkSelectionActionBar.style.display = 'none';
+                    if(actionRevokeSelectedLinksBtn) actionRevokeSelectedLinksBtn.disabled = true;
+                }
+            }
+
+
             document.querySelectorAll('#file-container .item-checkbox').forEach((checkbox) => {
                 checkbox.addEventListener('change', () => {
+                    if (CURRENT_VIEW_MODE === 'userShares') return;
                     if (multiSelectModeActive) { 
                         clearSingleSelection(); 
                         updateSelectionActions(); 
                     } else {
                         checkbox.checked = false; 
+                    }
+                });
+            });
+            
+            document.querySelectorAll('#file-container .public-link-checkbox').forEach((checkbox) => {
+                checkbox.addEventListener('change', () => {
+                    if (CURRENT_VIEW_MODE !== 'userShares') return;
+                    if (multiSelectModeActive) {
+                        updatePublicLinkSelectionActions();
+                    } else {
+                        checkbox.checked = false; // Should not happen if multiSelectModeActive is false for userShares
                     }
                 });
             });
@@ -868,11 +969,36 @@
                     updateSelectionActions(); 
                 });
             }
+            
+            if (selectAllPublicLinksCheckbox && selectAllPublicLinksContainer) {
+                selectAllPublicLinksCheckbox.addEventListener('change', (e) => {
+                    if (!multiSelectModeActive || CURRENT_VIEW_MODE !== 'userShares') return;
+                    const currentCheckboxes = document.querySelectorAll('#file-container .public-link-checkbox');
+                    currentCheckboxes.forEach(cb => {
+                        if (cb.checked !== e.target.checked) {
+                            cb.checked = e.target.checked;
+                        }
+                    });
+                    updatePublicLinkSelectionActions();
+                });
+            }
+
 
             if (fileContainer) {
                 fileContainer.querySelectorAll('ul > li .file-entry-selectable').forEach(contentWrapper => {
                     contentWrapper.addEventListener('click', (event) => {
-                        if (CURRENT_VIEW_MODE === 'userShares') return;
+                        if (CURRENT_VIEW_MODE === 'userShares') { // Handle click on row for checkbox toggle in userShares
+                            const listItem = contentWrapper.closest('li');
+                            if (!listItem) return;
+                            const checkbox = listItem.querySelector('.public-link-checkbox');
+                            if (checkbox && event.target !== checkbox && !event.target.closest('form') && !event.target.closest('a')) {
+                                if (multiSelectModeActive) {
+                                    checkbox.checked = !checkbox.checked;
+                                    updatePublicLinkSelectionActions();
+                                }
+                            }
+                            return; 
+                        }
 
                         const listItem = contentWrapper.closest('li');
                         if (!listItem) return;
@@ -1283,7 +1409,6 @@
                 });
             }
 
-            // Public Link Sharing Logic
             if (actionShareBtn) {
                 actionShareBtn.addEventListener('click', () => {
                     if (actionShareBtn.disabled) return;
@@ -1337,8 +1462,6 @@
                             shareModal.style.display = 'none';
                             if (generatedPublicLinkInput) generatedPublicLinkInput.value = result.publicUrl;
                             if (publicLinkDisplayModal) publicLinkDisplayModal.style.display = 'block';
-                            // alert(`公開連結已創建: ${result.publicUrl}`);
-                            // Optionally, refresh the "My Shares" view if the user is on it.
                             if (CURRENT_VIEW_MODE === 'userShares') window.location.reload();
 
                         } else {
@@ -1354,7 +1477,7 @@
             if (copyPublicLinkBtn && generatedPublicLinkInput) {
                 copyPublicLinkBtn.addEventListener('click', () => {
                     generatedPublicLinkInput.select();
-                    generatedPublicLinkInput.setSelectionRange(0, 99999); // For mobile devices
+                    generatedPublicLinkInput.setSelectionRange(0, 99999); 
                     try {
                         const successful = document.execCommand('copy');
                         const msg = successful ? '連結已複製到剪貼簿！' : '複製失敗。';
@@ -1367,6 +1490,42 @@
             }
             if(closePublicLinkDisplayModalBtn) closePublicLinkDisplayModalBtn.onclick = () => publicLinkDisplayModal.style.display = 'none';
             if(okPublicLinkDisplayBtn) okPublicLinkDisplayBtn.onclick = () => publicLinkDisplayModal.style.display = 'none';
+
+
+            // Batch revoke for public links
+            if (actionRevokeSelectedLinksBtn) {
+                actionRevokeSelectedLinksBtn.addEventListener('click', async () => {
+                    const selectedLinkIds = getSelectedPublicLinkIds();
+                    if (selectedLinkIds.length === 0) {
+                        alert('請選擇要撤銷的公開連結。');
+                        return;
+                    }
+                    if (confirm(`確定要撤銷選中的 ${selectedLinkIds.length} 個公開連結嗎？`)) {
+                        const payload = {
+                            link_ids: selectedLinkIds,
+                            _csrf: CSRF_TOKEN
+                        };
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                            payload.contextUsername = VIEW_CONTEXT_USER_USERNAME;
+                        }
+                        try {
+                            const response = await fetch('/actions/revoke-public-links-batch', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                            const result = await response.json();
+                            alert(result.message || (result.success ? '連結已撤銷。' : '操作失敗。'));
+                            if (result.success) {
+                                window.location.reload();
+                            }
+                        } catch (error) {
+                            console.error('批量撤銷連結時出錯:', error);
+                            alert('批量撤銷連結時發生客戶端錯誤。');
+                        }
+                    }
+                });
+            }
 
 
             function showOverwriteConfirmationModal(itemName) {
@@ -1686,11 +1845,12 @@
                         gridViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'list');
                     }
-                    if (isCurrentlyMultiSelect && CURRENT_VIEW_MODE !== 'userShares') { 
+                    if (isCurrentlyMultiSelect) { 
                         fileContainer.classList.add('multi-select-mode-active');
                     }
                     clearSingleSelection(); 
                     updateSelectionActions(); 
+                    updatePublicLinkSelectionActions();
                 }
                 const preferredView = localStorage.getItem('fileView') || 'list'; 
                 toggleView(preferredView); 
@@ -1805,6 +1965,7 @@
 
             updateMultiSelectModeUI(); 
             updateSelectionActions(); 
+            updatePublicLinkSelectionActions();
 
         }); 
 
