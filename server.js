@@ -96,22 +96,20 @@ const db = new sqlite3.Database(DB_FILE, (dbConnectErr) => {
         db.run(publicLinksTableDefinition, (createErr) => {
             if (createErr) {
                 console.error('創建/確保 public_links 表格時失敗:', createErr.message);
-                // Proceed to migration check even if CREATE fails (table might exist with old schema)
             }
             console.log("'public_links' 表格定義已執行。");
 
             db.all("PRAGMA table_info(public_links)", (pragmaErr, columns) => {
                 if (pragmaErr) {
                     console.error("無法獲取 public_links 表格信息以進行遷移檢查:", pragmaErr.message);
-                    // This is critical, might need to stop server or handle gracefully
                     return;
                 }
 
                 const requiredColumns = {
+                    'password_hash': 'TEXT', // Added this column check
                     'allow_view': 'BOOLEAN NOT NULL DEFAULT 1',
-                    'expires_at': 'DATETIME', // DATETIME allows NULL by default
+                    'expires_at': 'DATETIME', 
                     'visit_count': 'INTEGER DEFAULT 0'
-                    // Add other columns here for future migrations
                 };
 
                 let migrationsToRun = [];
@@ -123,17 +121,12 @@ const db = new sqlite3.Database(DB_FILE, (dbConnectErr) => {
 
                 if (migrationsToRun.length === 0) {
                     console.log("public_links 表格結構已是最新。");
-                    // If all DB setup is done, start listening (moved app.listen to after all critical DB setup)
-                    // For now, we assume this is the last critical DB step.
-                    // If there were more tables/migrations, they'd chain here or use Promises.
                     return;
                 }
 
-                // Apply migrations sequentially
                 function applyNextMigration(index) {
                     if (index >= migrationsToRun.length) {
                         console.log("所有 public_links 表格遷移已完成。");
-                        // Start listening after migrations
                         return;
                     }
                     const migration = migrationsToRun[index];
@@ -141,18 +134,17 @@ const db = new sqlite3.Database(DB_FILE, (dbConnectErr) => {
                     db.run(`ALTER TABLE public_links ADD COLUMN ${migration.name} ${migration.definition}`, (alterErr) => {
                         if (alterErr) {
                             console.error(`為 'public_links' 添加 '${migration.name}' 失敗:`, alterErr.message);
-                            // Potentially stop server or handle error more robustly
                         } else {
                             console.log(`'${migration.name}' 欄位已成功添加到 'public_links'。`);
                         }
-                        applyNextMigration(index + 1); // Apply next migration
+                        applyNextMigration(index + 1); 
                     });
                 }
                 applyNextMigration(0);
             });
         });
-    }); // End of db.serialize
-}); // End of new sqlite3.Database
+    }); 
+}); 
 
 // --- 中間件設置 ---
 app.set('views', path.join(__dirname, 'views'));
@@ -1745,11 +1737,6 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Start the server only after ensuring DB is ready and migrations (if any) are attempted.
-// The db.serialize block handles the queuing of DB operations.
-// app.listen should be called once the critical DB setup is reliably complete.
-// For simplicity in this structure, we'll rely on the db object being ready for routes.
-// A more robust startup would use Promises/async-await for db initialization before app.listen.
 app.listen(port, () => {
     console.log(`伺服器運行在 http://localhost:${port}`);
     console.log("注意: 資料庫遷移邏輯會在首次查詢或操作 'public_links' 表之前異步執行。");
