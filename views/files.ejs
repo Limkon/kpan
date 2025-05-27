@@ -202,17 +202,36 @@
 
         .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
         
-        #file-container.grid-view ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; list-style-type: none; padding: 0; margin: 0; }
-        #file-container.grid-view li { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; border-radius: 6px; position: relative; min-height: 100px; }
+        #file-container.grid-view ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Increased minmax for grid items */ gap: 15px; list-style-type: none; padding: 0; margin: 0; }
+        #file-container.grid-view li { display: flex; flex-direction: column; align-items: center; justify-content: space-between; /* Changed to space-between */ padding: 10px; border-radius: 6px; position: relative; min-height: 120px; /* Increased height */ background-color: var(--input-bg-color); border: 1px solid var(--input-border-color); }
+        .dark-theme #file-container.grid-view li { background-color: #2c2c2c; border-color: #444; }
+
         #file-container.grid-view li .file-entry-selectable { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; flex-grow: 1; }
         #file-container.grid-view li .file-content-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; flex-grow: 1; text-decoration: none; color: inherit; padding: 0; }
-        .grid-view .file-entry { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 6px; width: 100%; }
+        .grid-view .file-entry { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 6px; width: 100%; margin-bottom: auto; /* Pushes actions to bottom */ }
         .grid-view .file-icon-large { font-size: 3.5em; line-height: 1; display: flex; justify-content: center; align-items: center; min-height: 48px; margin-bottom: 4px; }
-        .grid-view .file-name { font-size: 0.8em; line-height: 1.3; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        .grid-view .file-name { font-size: 0.8em; line-height: 1.3; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; /* Allow two lines for name */ -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
         #file-container.grid-view.multi-select-mode-active .item-checkbox,
         #file-container.grid-view.multi-select-mode-active .public-link-checkbox { 
-            margin-bottom: 6px; 
+            position: absolute; /* Position checkbox for grid view */
+            top: 5px;
+            left: 5px;
+            margin-bottom: 0; 
         }
+        .grid-view .link-actions-group { /* Specific for grid view */
+            display: flex;
+            justify-content: center; /* Center buttons */
+            gap: 5px;
+            width: 100%; /* Take full width */
+            margin-top: 8px; /* Space above buttons */
+            flex-wrap: wrap; /* Allow buttons to wrap if needed */
+        }
+        .grid-view .link-actions-group .action-button-small,
+        .grid-view .link-actions-group .revoke-single-link-form button {
+            font-size: 0.75em; /* Slightly smaller for grid */
+            padding: 4px 8px;
+        }
+
         
         #select-all-container, #select-all-public-links-container { 
             display: none; 
@@ -282,7 +301,27 @@
         .dark-theme .progress-bar { background-color: #0056b3; border-color: #003d80; }
 
         #file-container { max-height: calc(100vh - 360px); overflow-y: auto; padding-right: 5px; box-sizing: border-box; }
-        .action-button-small { padding: 3px 6px; font-size: 0.8em; margin-left: 5px; }
+        .action-button-small, a.action-button-small { /* Apply to <a> tags as well */
+            padding: 3px 6px; 
+            font-size: 0.8em; 
+            margin-left: 5px; 
+            text-decoration: none;
+            border: 1px solid var(--button-secondary-border-color);
+            background-color: var(--button-secondary-bg-color);
+            color: var(--button-secondary-text-color);
+            border-radius: 3px;
+            display: inline-block; /* Important for <a> tag to behave like button */
+            cursor: pointer;
+        }
+        .action-button-small:hover, a.action-button-small:hover {
+            opacity: 0.9;
+        }
+        .dark-theme .action-button-small, .dark-theme a.action-button-small {
+             border-color: var(--button-secondary-border-color);
+             background-color: var(--button-secondary-bg-color);
+             color: var(--button-secondary-text-color);
+        }
+
 
         #share-modal .form-group label[for="share-allow-download"],
         #share-modal .form-group label[for="share-allow-view"] {
@@ -295,7 +334,16 @@
             display: flex;
             gap: 5px; 
             align-items: center;
-            margin-left: 10px; 
+            margin-left: auto; /* Push to the right in list view */
+            padding-left: 10px; /* Ensure some space from details */
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+        #file-container.grid-view .link-actions-group {
+            margin-left: 0; /* Reset margin for grid view */
+            justify-content: center; /* Center buttons in grid view */
+            width: 100%;
+            margin-top: auto; /* Push to bottom of grid item */
+            padding-top: 5px; /* Space above buttons in grid */
         }
     </style>
 </head>
@@ -531,10 +579,10 @@
                                         <div class="file-entry">
                                             <%
                                                 const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
-                                                let largeIcon = '📄'; 
+                                                let largeIcon = '�'; 
                                                 let isViewableTextFile = false;
                                                 if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
-                                                    isViewableTextFile = true; largeIcon = '�'; 
+                                                    isViewableTextFile = true; largeIcon = '📝'; 
                                                 } else if (item.isPlayableVideo) { largeIcon = '🎥'; }
                                                 else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
                                                 else if (['pdf'].includes(ext)) { largeIcon = '📕';}
@@ -1295,7 +1343,7 @@
                                         if(errResult.message) errorMsg = errResult.message;
                                     } catch(e) { /* ignore if not json */ }
                                     errors.push(errorMsg);
-                                    console.error('刪除失敗:', item.name, response.status, await response.text());
+                                    // console.error('刪除失敗:', item.name, response.status, await response.text());
                                 }
                             } catch (error) {
                                 allSucceeded = false;
