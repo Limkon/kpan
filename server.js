@@ -590,7 +590,7 @@ app.get('/files', isAuthenticated, async (req, res) => {
         let friendlyMessage = '無法讀取文件列表。';
         if (err.code === 'ENOENT' && !searchQuery) friendlyMessage = '指定的路徑不存在。';
         else if (err.message.includes('無效路徑') || err.message.includes('無效的目標用戶名')) friendlyMessage = '無權訪問指定路徑或用戶無效。';
-        else if (err.code === 'SQLITE_ERROR' && err.message.includes('no such column')) { // More specific error for user
+        else if (err.code === 'SQLITE_ERROR' && err.message.includes('no such column')) { 
             friendlyMessage = '資料庫結構錯誤，請聯繫管理員。可能需要重啟應用程式以更新資料庫。';
         }
 
@@ -1467,31 +1467,29 @@ app.get('/public/:token', async (req, res) => {
         const stats = await fsp.stat(fullItemPath);
 
         if (stats.isFile()) {
-            if (!link.allow_view && !link.allow_download) {
-                 return res.status(403).render('error', { message: '此連結不允許查看或下載。', user: null, csrfToken: null });
-            }
-            if (link.allow_download) { 
+            const fileExt = path.extname(itemRelativePath).toLowerCase();
+            const isTextViewable = ALLOWED_TEXT_EXTENSIONS.includes(fileExt);
+
+            if (link.allow_view && isTextViewable) {
+                const content = await fsp.readFile(fullItemPath, 'utf8');
+                return res.render('public-view-file', { 
+                    filename: path.basename(itemRelativePath),
+                    content: content,
+                    fileExtension: fileExt,
+                    link: link, 
+                    user: null, 
+                    csrfToken: null,
+                    req: req 
+                });
+            } else if (link.allow_download) {
                 return res.download(fullItemPath, path.basename(itemRelativePath), (err) => {
                     if (err) {
                         console.error(`公開連結下載錯誤 (${token}, path: ${itemRelativePath}):`, err);
                         if (!res.headersSent) res.status(500).render('error', { message: '下載文件時發生錯誤。', user: null, csrfToken: null });
                     }
                 });
-            } else { 
-                 const fileExt = path.extname(itemRelativePath).toLowerCase();
-                 if (link.allow_view && ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
-                    const content = await fsp.readFile(fullItemPath, 'utf8');
-                    return res.render('public-view-file', { 
-                        filename: path.basename(itemRelativePath),
-                        content: content,
-                        fileExtension: fileExt,
-                        link: link, 
-                        user: null, 
-                        csrfToken: null,
-                        req: req 
-                    });
-                 }
-                 return res.status(403).render('error', { message: '此連結不允許查看此文件類型。', user: null, csrfToken: null });
+            } else {
+                return res.status(403).render('error', { message: '此連結不允許查看或下載此文件。', user: null, csrfToken: null });
             }
         } else if (stats.isDirectory()) {
             if (!link.allow_view) { 
