@@ -291,6 +291,12 @@
         #share-modal .form-group input[type="checkbox"] {
             width: auto; vertical-align: middle;
         }
+        .link-actions-group { /* For userShares view, to group View and Revoke buttons */
+            display: flex;
+            gap: 5px; /* Space between View and Revoke buttons */
+            align-items: center;
+            margin-left: 10px; /* Space from the link details */
+        }
     </style>
 </head>
 <body>
@@ -427,7 +433,8 @@
                 <button id="action-rename-btn" disabled>重命名</button>
                 <button id="action-move-btn" disabled>移動</button>
                 <button id="action-share-btn" disabled>創建公開連結</button>
-                <button id="action-view-existing-links-btn" disabled style="display:none;">查看已分享連結</button> <button id="action-download-btn" disabled>下載選中項</button>
+                <button id="action-view-existing-links-btn" disabled style="display:none;">查看已分享連結</button> 
+                <button id="action-download-btn" disabled>下載選中項</button>
                 <button id="action-delete-btn" class="secondary" disabled>删除</button>
             </div>
         <% } else { %>
@@ -559,14 +566,17 @@
                                         </div>
                                     <% } %>
                                     <% if (locals.viewMode === 'userShares') { %>
-                                        <form action="/actions/revoke-public-link" method="POST" style="margin-left:10px;" class="revoke-single-link-form">
-                                            <input type="hidden" name="link_id" value="<%= item.link_id %>">
-                                            <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
-                                                <input type="hidden" name="contextUsername" value="<%= viewContextUser.username %>">
-                                            <% } %>
-                                            <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                                            <button type="submit" class="secondary action-button-small" onclick="return confirm('確定要撤銷此公開連結嗎？');">撤銷</button>
-                                        </form>
+                                        <div class="link-actions-group">
+                                            <a href="<%= item.publicUrl %>" target="_blank" class="action-button-small" title="在新分頁中查看此公開連結">查看</a>
+                                            <form action="/actions/revoke-public-link" method="POST" class="revoke-single-link-form" style="display: inline;">
+                                                <input type="hidden" name="link_id" value="<%= item.link_id %>">
+                                                <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
+                                                    <input type="hidden" name="contextUsername" value="<%= viewContextUser.username %>">
+                                                <% } %>
+                                                <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
+                                                <button type="submit" class="secondary action-button-small" onclick="return confirm('確定要撤銷此公開連結嗎？');">撤銷</button>
+                                            </form>
+                                        </div>
                                     <% } else { %>
                                         <span class="file-actions-placeholder"></span> 
                                     <% } %>
@@ -909,23 +919,17 @@
                              }
                         }
                         isSingleItemSharable = true; 
-                        console.log(`[Debug] Checking shares for (multi-select): ${item.path}`);
                         try {
                             let apiUrl = `/api/item-public-links?filePath=${encodeURIComponent(item.path)}`;
                             if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
                                 apiUrl += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
                             }
-                            console.log(`[Debug] API URL: ${apiUrl}`);
                             const response = await fetch(apiUrl);
                             const data = await response.json();
-                            console.log(`[Debug] API Response for ${item.path}:`, data);
                             if (data.success && data.links && data.links.length > 0) {
                                 hasExistingShares = true;
-                                console.log(`[Debug] Has existing shares for ${item.path}: true`);
-                            } else {
-                                console.log(`[Debug] No existing shares for ${item.path} or API error. Success: ${data.success}, Links count: ${data.links ? data.links.length : 'N/A'}`);
                             }
-                        } catch (e) { console.error("Error checking existing shares (multi-select):", e); }
+                        } catch (e) { /* console.error("Error checking existing shares (multi-select):", e); */ }
 
                     }
                 } else if (currentSingleSelectedItem) {
@@ -943,23 +947,17 @@
                         }
                     }
                     isSingleItemSharable = true;
-                    console.log(`[Debug] Checking shares for (single-select): ${item.path}`);
                     try {
                         let apiUrl = `/api/item-public-links?filePath=${encodeURIComponent(item.path)}`;
                         if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
                             apiUrl += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
                         }
-                        console.log(`[Debug] API URL: ${apiUrl}`);
                         const response = await fetch(apiUrl);
                         const data = await response.json();
-                        console.log(`[Debug] API Response for ${item.path}:`, data);
                         if (data.success && data.links && data.links.length > 0) {
                             hasExistingShares = true;
-                             console.log(`[Debug] Has existing shares for ${item.path}: true`);
-                        } else {
-                            console.log(`[Debug] No existing shares for ${item.path} or API error. Success: ${data.success}, Links count: ${data.links ? data.links.length : 'N/A'}`);
                         }
-                    } catch (e) { console.error("Error checking existing shares (single-select):", e); }
+                    } catch (e) { /* console.error("Error checking existing shares (single-select):", e); */ }
                 }
 
                 if (count > 0) {
@@ -977,7 +975,6 @@
                 if(actionViewExistingLinksBtn) {
                     actionViewExistingLinksBtn.disabled = !(count === 1 && hasExistingShares);
                     actionViewExistingLinksBtn.style.display = (count === 1 && hasExistingShares) ? 'inline-block' : 'none';
-                    console.log(`[Debug] View Existing Links Button - Count: ${count}, HasShares: ${hasExistingShares}, Display: ${actionViewExistingLinksBtn.style.display}`);
                 }
                 if(actionDownloadBtn) actionDownloadBtn.disabled = !(count > 0);
                 if(actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
@@ -1658,21 +1655,19 @@
                                                         headers: { 'Content-Type': 'application/json' },
                                                         body: JSON.stringify(revokePayload)
                                                     });
-                                                    // Check if response is JSON before parsing
                                                     const contentType = revokeResponse.headers.get("content-type");
                                                     if (contentType && contentType.indexOf("application/json") !== -1) {
                                                         const revokeResult = await revokeResponse.json();
                                                         alert(revokeResult.message || (revokeResult.success ? '連結已撤銷。' : '操作失敗。'));
                                                     } else {
-                                                        // Handle non-JSON response (e.g. redirect)
                                                         if(revokeResponse.ok || revokeResponse.redirected) {
                                                             alert('連結已撤銷。頁面將刷新。');
                                                         } else {
                                                             alert('撤銷連結時發生錯誤。');
                                                         }
                                                     }
-                                                    existingLinksModal.style.display = 'none'; // Close modal
-                                                    window.location.reload(); // Refresh to reflect changes
+                                                    existingLinksModal.style.display = 'none'; 
+                                                    window.location.reload(); 
                                                 } catch (e) {
                                                     console.error("撤銷連結時出錯:", e);
                                                     alert('撤銷連結時發生客戶端錯誤。');
@@ -2187,4 +2182,4 @@
         }
     </script>
 </body>
-</ht
+</html>
