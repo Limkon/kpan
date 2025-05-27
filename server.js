@@ -396,17 +396,23 @@ app.get('/', (req, res) => res.redirect(req.session.user ? '/files' : '/login'))
 app.get('/register', (req, res) => res.render('register', { error: null, csrfToken: res.locals.csrfToken }));
 app.post('/register', (req, res) => {
     const { username, password, confirmPassword } = req.body;
-    if (!username || !password || !confirmPassword) return res.render('register', { error: '所有欄位均為必填項。', csrfToken: res.locals.csrfToken });
-    if (password !== confirmPassword) return res.render('register', { error: '兩次輸入的密碼不匹配。', csrfToken: res.locals.csrfToken });
+    // For user registration, password can be empty, but username and confirmPassword (if password is not empty) are still needed.
+    if (!username) { // Username is always required
+        return res.render('register', { error: '用戶名為必填項。', csrfToken: res.locals.csrfToken });
+    }
+    if (password !== confirmPassword) { // Passwords must match if password is provided
+        return res.render('register', { error: '兩次輸入的密碼不匹配。', csrfToken: res.locals.csrfToken });
+    }
     if (username.includes('/') || username.includes('..') || username.includes('\\') || username.length > 50 || !/^[a-zA-Z0-9_.-]+$/.test(username)) {
         return res.render('register', { error: '用戶名包含無效字符、過長或格式不正確。', csrfToken: res.locals.csrfToken });
     }
+
     db.get("SELECT * FROM users WHERE username = ?", [username], (err, row) => {
         if (err) { console.error("註冊時查詢用戶錯誤:", err); return res.render('register', { error: '註冊錯誤，請稍後再試。', csrfToken: res.locals.csrfToken }); }
         if (row) return res.render('register', { error: '用戶名已存在。', csrfToken: res.locals.csrfToken });
         
-        const hashedPassword = bcrypt.hashSync(password, 12);
-        const userRole = 'user'; 
+        const hashedPassword = bcrypt.hashSync(password || "", 12); // Hash empty string if password is empty
+        const userRole = 'user'; // Default role
         db.run("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", [username, hashedPassword, userRole], function (err) {
             if (err) { console.error("註冊時插入用戶錯誤:", err); return res.render('register', { error: '註冊失敗，請稍後再試。', csrfToken: res.locals.csrfToken }); }
             getUserUploadRoot(username); 
@@ -420,7 +426,8 @@ app.post('/login', (req, res) => {
     const { username, password } = req.body;
     db.get("SELECT * FROM users WHERE username = ?", [username], (err, user) => {
         if (err) { console.error("登錄時查詢用戶錯誤:", err); return res.render('login', { error: '登錄錯誤，請稍後再試。', csrfToken: res.locals.csrfToken }); }
-        if (user && bcrypt.compareSync(password, user.password)) {
+        // For login, bcrypt.compareSync will handle empty password comparison correctly if it was hashed as an empty string.
+        if (user && bcrypt.compareSync(password || "", user.password)) {
             req.session.user = { id: user.id, username: user.username, role: user.role };
             res.redirect('/files');
         } else {
@@ -440,17 +447,34 @@ app.get('/change-password', isAuthenticated, (req, res) => res.render('change-pa
 app.post('/change-password', isAuthenticated, (req, res) => {
     const { currentPassword, newPassword, confirmNewPassword } = req.body;
     const userId = req.session.user.id;
-    if (!currentPassword || !newPassword || !confirmNewPassword) return res.render('change-password', { user: req.session.user, message: '所有欄位均為必填項。', messageType: 'error', csrfToken: res.locals.csrfToken });
-    if (newPassword !== confirmNewPassword) return res.render('change-password', { user: req.session.user, message: '新密碼與確認密碼不匹配。', messageType: 'error', csrfToken: res.locals.csrfToken });
+    const userRole = req.session.user.role;
+
+    // For non-admin users, newPassword can be empty.
+    // currentPassword is still required to change to an empty password.
+    if (!currentPassword) {
+         return res.render('change-password', { user: req.session.user, message: '當前密碼為必填項。', messageType: 'error', csrfToken: res.locals.csrfToken });
+    }
+    if (newPassword !== confirmNewPassword) {
+        return res.render('change-password', { user: req.session.user, message: '新密碼與確認密碼不匹配。', messageType: 'error', csrfToken: res.locals.csrfToken });
+    }
+    // Admin password change still requires a new password
+    if (userRole === 'admin' && !newPassword) {
+        return res.render('change-password', { user: req.session.user, message: '管理員的新密碼不能為空。', messageType: 'error', csrfToken: res.locals.csrfToken });
+    }
     
-    db.get("SELECT password FROM users WHERE id = ?", [userId], (err, userRow) => {
-        if (err || !userRow || !bcrypt.compareSync(currentPassword, userRow.password)) {
-            if (err) console.error("修改密碼時查詢用戶錯誤:", err);
+    db.get("SELECT password, role FROM users WHERE id = ?", [userId], (err, userRow) => {
+        if (err || !userRow) {
+            if(err) console.error("修改密碼時查詢用戶錯誤:", err);
+            return res.render('change-password', { user: req.session.user, message: '無法獲取用戶信息。', messageType: 'error', csrfToken: res.locals.csrfToken });
+        }
+
+        if (!bcrypt.compareSync(currentPassword || "", userRow.password)) {
             return res.render('change-password', { user: req.session.user, message: '當前密碼不正確。', messageType: 'error', csrfToken: res.locals.csrfToken });
         }
-        const hashedNewPassword = bcrypt.hashSync(newPassword, 12);
-        db.run("UPDATE users SET password = ? WHERE id = ?", [hashedNewPassword, userId], (err) => {
-            if (err) { console.error("修改密碼時更新數據庫錯誤:", err); return res.render('change-password', { user: req.session.user, message: '更新密碼失敗。', messageType: 'error', csrfToken: res.locals.csrfToken }); }
+        
+        const hashedNewPassword = bcrypt.hashSync(newPassword || "", 12);
+        db.run("UPDATE users SET password = ? WHERE id = ?", [hashedNewPassword, userId], (updateErr) => {
+            if (updateErr) { console.error("修改密碼時更新數據庫錯誤:", updateErr); return res.render('change-password', { user: req.session.user, message: '更新密碼失敗。', messageType: 'error', csrfToken: res.locals.csrfToken }); }
             res.render('change-password', { user: req.session.user, message: '密碼已成功修改！', messageType: 'success', csrfToken: res.locals.csrfToken });
         });
     });
@@ -498,7 +522,7 @@ app.get('/files', isAuthenticated, async (req, res) => {
         let pageTitle = `${contextUsername} 的文件`;
         let isSearchResultView = false;
         let currentDisplayPath = relativeQueryPath;
-        const fullHostname = `${req.protocol}://${req.get('host')}`; // Get base URL for constructing public URLs
+        const fullHostname = `${req.protocol}://${req.get('host')}`; 
 
         if (searchQuery && viewMode === 'myfiles') {
             isSearchResultView = true;
@@ -516,7 +540,6 @@ app.get('/files', isAuthenticated, async (req, res) => {
                 let stats;
                 try { stats = await fsp.stat(fullEntryPath); }
                 catch (statErr) {
-                    // console.error(`[Stat Error] for ${fullEntryPath}:`, statErr.message);
                     return {
                         name: entry.name, isDir: entry.isDirectory(), path: itemPath,
                         encodedName: encodeURIComponent(entry.name), encodedPath: encodeURIComponent(itemPath),
@@ -548,16 +571,11 @@ app.get('/files', isAuthenticated, async (req, res) => {
                     });
             });
             items = items.map(link => ({
-                ...link, // Spread existing link properties
+                ...link, 
                 name: path.basename(link.file_path), 
                 isDir: !!link.is_directory,
-                // path: link.file_path, // Already in link object
-                // token: link.token, // Already in link object
-                publicUrl: `${fullHostname}/public/${link.token}`, // Construct full URL here
-                // createdAt: link.created_at, // Already in link object
-                // expiresAt: link.expires_at, // Already in link object
+                publicUrl: `${fullHostname}/public/${link.token}`, 
                 hasPassword: !!link.password_hash,
-                // visitCount: link.visit_count // Already in link object
             }));
         }
 
@@ -1698,16 +1716,23 @@ app.get('/admin', isAuthenticated, isAdmin, (req, res) => {
 
 app.post('/admin/add-user', isAuthenticated, isAdmin, (req, res) => {
     const { newUsername, newPassword, confirmNewPassword, role } = req.body;
-    if (!newUsername || !newPassword || !confirmNewPassword || !role) return res.redirect('/admin?message=所有新用戶欄位（包括角色）均為必填項。&messageType=error');
-    if (role !== 'user' && role !== 'admin') return res.redirect('/admin?message=無效的用戶角色。&messageType=error');
-    if (newPassword !== confirmNewPassword) return res.redirect('/admin?message=新用戶的兩次密碼輸入不匹配。&messageType=error');
+    if (!newUsername || !role) { // Password can be empty for user, but not for admin
+        return res.redirect('/admin?message=新用戶的用戶名和角色為必填項。&messageType=error');
+    }
+    if (role === 'admin' && (!newPassword || newPassword.length < 6)) {
+        return res.redirect('/admin?message=管理員的新密碼不能為空且長度至少為6位。&messageType=error');
+    }
+    if (newPassword !== confirmNewPassword) {
+        return res.redirect('/admin?message=新用戶的兩次密碼輸入不匹配。&messageType=error');
+    }
     if (newUsername.includes('/') || newUsername.includes('..') || newUsername.includes('\\') || newUsername.length > 50 || !/^[a-zA-Z0-9_.-]+$/.test(newUsername)) {
         return res.redirect('/admin?message=新用戶名包含無效字符、過長或格式不正確。&messageType=error');
     }
     db.get("SELECT * FROM users WHERE username = ?", [newUsername], (err, existingUser) => {
         if (err) { console.error("管理員添加用戶時檢查用戶名錯誤:", err); return res.redirect('/admin?message=添加用戶失敗，請稍後再試。&messageType=error'); }
         if (existingUser) return res.redirect(`/admin?message=用戶名 "${newUsername}" 已存在。&messageType=error`);
-        const hashedPassword = bcrypt.hashSync(newPassword, 12);
+        
+        const hashedPassword = bcrypt.hashSync(newPassword || "", 12); // Hash empty string if password is empty for 'user'
         db.run("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", [newUsername, hashedPassword, role], function (err) {
             if (err) { console.error("管理員添加用戶時插入數據庫錯誤:", err); return res.redirect('/admin?message=添加用戶失敗，請稍後再試。&messageType=error'); }
             getUserUploadRoot(newUsername); 
@@ -1718,20 +1743,30 @@ app.post('/admin/add-user', isAuthenticated, isAdmin, (req, res) => {
 
 app.post('/admin/reset-password/:userId', isAuthenticated, isAdmin, (req, res) => {
     const userIdToReset = parseInt(req.params.userId, 10);
-    const { newPassword } = req.body;
+    const { newPassword } = req.body; // newPassword can be empty for users
     if (isNaN(userIdToReset)) return res.redirect('/admin?message=無效的用戶ID。&messageType=error');
     if (req.session.user.id === userIdToReset) return res.redirect('/admin?message=不能通過此介面重置自己的密碼。請使用“修改密碼”功能。&messageType=error');
-    if (!newPassword || newPassword.length < 6) return res.redirect(`/admin?message=新密碼不能為空且長度至少為6位。&messageType=error`);
     
-    const hashedNewPassword = bcrypt.hashSync(newPassword, 12);
-    db.run("UPDATE users SET password = ? WHERE id = ? AND id != ?", [hashedNewPassword, userIdToReset, req.session.user.id], function (err) {
-        if (err || this.changes === 0) { 
-            if (err) console.error("管理員重置密碼錯誤:", err);
-            return res.redirect('/admin?message=重置密碼失敗 (用戶不存在或試圖重置當前管理員)。&messageType=error');
+    db.get("SELECT role FROM users WHERE id = ?", [userIdToReset], (err, targetUser) => {
+        if(err || !targetUser){
+            if(err) console.error("重置密碼時查詢目標用戶角色錯誤:", err);
+            return res.redirect('/admin?message=重置密碼失敗：找不到目標用戶。&messageType=error');
         }
-        db.get("SELECT username FROM users WHERE id = ?", [userIdToReset], (err, targetUser) => {
-            if (err) console.error("管理員重置密碼後查詢用戶名錯誤:", err);
-            res.redirect(`/admin?message=用戶 ${targetUser ? targetUser.username : `ID ${userIdToReset}`} 的密碼已成功重置。&messageType=success`);
+        // Admin password reset still requires a new password
+        if (targetUser.role === 'admin' && (!newPassword || newPassword.length < 6)) {
+            return res.redirect(`/admin?message=管理員的新密碼不能為空且長度至少為6位。&messageType=error`);
+        }
+
+        const hashedNewPassword = bcrypt.hashSync(newPassword || "", 12); // Hash empty string if newPassword is empty for 'user'
+        db.run("UPDATE users SET password = ? WHERE id = ? AND id != ?", [hashedNewPassword, userIdToReset, req.session.user.id], function (updateErr) {
+            if (updateErr || this.changes === 0) { 
+                if (updateErr) console.error("管理員重置密碼錯誤:", updateErr);
+                return res.redirect('/admin?message=重置密碼失敗 (用戶不存在或試圖重置當前管理員)。&messageType=error');
+            }
+            db.get("SELECT username FROM users WHERE id = ?", [userIdToReset], (selectErr, updatedUser) => {
+                if (selectErr) console.error("管理員重置密碼後查詢用戶名錯誤:", selectErr);
+                res.redirect(`/admin?message=用戶 ${updatedUser ? updatedUser.username : `ID ${userIdToReset}`} 的密碼已成功重置。&messageType=success`);
+            });
         });
     });
 });
@@ -1816,4 +1851,5 @@ process.on('SIGINT', () => {
         process.exit(0);
     });
 });
+
 
