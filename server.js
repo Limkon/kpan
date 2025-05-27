@@ -1,15 +1,15 @@
-// server.js (SQLite 版本 - 使用 yazl)
+// server.js (SQLite 版本 - 使用 yazl 和 uuid)
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
-const multer = require('multer');
+const multer = 'multer'; // 實際的 multer 實例在下方
 const fs = require('fs');
 const fsp = fs.promises; // fs.promises 用於異步文件操作
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const sqlite3 = require('sqlite3').verbose();
 const yazl = require('yazl'); // 引入 yazl
-const crypto = require('crypto'); // For generating unique tokens
+const { v4: uuidv4 } = require('uuid'); // 引入 uuid 生成 token
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -20,7 +20,7 @@ const UPLOAD_DIR_BASE = path.join(__dirname, 'uploads');
 const DB_FILE = path.join(DATA_DIR, 'netdisk.sqlite');
 const ALLOWED_TEXT_EXTENSIONS = ['.txt', '.md', '.json', '.js', '.css', '.html', '.xml', '.log', '.csv', '.py', '.java', '.c', '.cpp', '.go', '.rb'];
 const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov'];
-const SESSION_SECRET = process.env.SESSION_SECRET || 'a_very_very_strong_and_unique_secret_CHANGE_THIS_NOW';
+const SESSION_SECRET = process.env.SESSION_SECRET || 'a_very_very_strong_and_unique_secret_CHANGE_THIS_NOW_REALLY';
 const USER_QUOTA_MB = 90;
 const USER_QUOTA_BYTES = USER_QUOTA_MB * 1024 * 1024;
 
@@ -47,7 +47,7 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             else {
                 console.log("'users' 表格已準備就緒。");
                 const initialAdminUsername = 'admin';
-                const initialAdminPassword = 'admin';
+                const initialAdminPassword = 'admin'; // Consider making this configurable via .env
                 db.get("SELECT * FROM users WHERE username = ?", [initialAdminUsername], (err, adminUser) => {
                     if (err) {
                         console.error('检查初始管理员时出错:', err.message);
@@ -70,21 +70,8 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             }
         });
 
-        db.run(`CREATE TABLE IF NOT EXISTS shared_files (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            owner_id INTEGER NOT NULL,
-            shared_with_id INTEGER NOT NULL,
-            file_path TEXT NOT NULL, 
-            is_directory BOOLEAN NOT NULL DEFAULT 0,
-            permissions TEXT NOT NULL DEFAULT 'read-only',
-            shared_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
-            FOREIGN KEY (shared_with_id) REFERENCES users(id) ON DELETE CASCADE,
-            UNIQUE (owner_id, shared_with_id, file_path)
-        )`, (err) => {
-            if (err) console.error('創建 shared_files 表格失敗:', err.message);
-            else console.log("'shared_files' 表格已準備就緒。");
-        });
+        // 移除舊的 shared_files 表格 (如果存在)
+        // db.run("DROP TABLE IF EXISTS shared_files"); // 可選，如果確定不再需要舊的分享方式
 
         // --- 新增: public_links 表格 ---
         db.run(`CREATE TABLE IF NOT EXISTS public_links (
@@ -92,13 +79,13 @@ const db = new sqlite3.Database(DB_FILE, (err) => {
             owner_id INTEGER NOT NULL,
             file_path TEXT NOT NULL, -- 相對於擁有者根目錄的路徑
             is_directory BOOLEAN NOT NULL DEFAULT 0,
-            token TEXT UNIQUE NOT NULL, -- 用於公開鏈接的唯一令牌
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            -- expires_at DATETIME NULL, -- 可選：鏈接過期時間
-            -- password_hash TEXT NULL, -- 可選：受密碼保護的鏈接
+            token TEXT UNIQUE NOT NULL, -- 公開連結的唯一標識符
+            password_hash TEXT, -- 可選的密碼保護 (bcrypt 哈希)
+            expires_at DATETIME, -- 可選的過期時間
             allow_download BOOLEAN NOT NULL DEFAULT 1,
-            -- allow_view BOOLEAN NOT NULL DEFAULT 1, -- 視文件類型而定，通常在路由中處理
-            access_count INTEGER DEFAULT 0,
+            allow_view BOOLEAN NOT NULL DEFAULT 1, -- 對於目錄，這可能意味著允許列出內容
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            visit_count INTEGER DEFAULT 0,
             FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
         )`, (err) => {
             if (err) console.error('創建 public_links 表格失敗:', err.message);
@@ -112,37 +99,27 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Serve static files like CSS, client-side JS
-app.use('/uploads', isAuthenticated, (req, res, next) => { // Protect raw uploads directory listing
-    // This middleware specifically targets the /uploads route.
-    // If you have express.static(UPLOAD_DIR_BASE) or similar, that might serve files if not protected.
-    // The goal here is to prevent direct browsing of the /uploads directory itself if it's mapped.
-    // Individual file access (download, view, stream) is handled by specific routes.
-    console.log(`[Security] Attempt to access /uploads by ${req.session.user.username}. This route should ideally not serve a directory listing.`);
-    // It's better to not have a route that directly serves UPLOAD_DIR_BASE.
-    // If you must, ensure directory listing is disabled for it.
-    // For now, just block general access to a route named /uploads if it's not a specific file request handled by other routes.
-    return res.status(403).send('禁止直接訪問上傳目錄。');
-});
-
-
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // Set to true if using HTTPS
+        secure: process.env.NODE_ENV === 'production', // 應在生產環境中設為 true (HTTPS)
         httpOnly: true,
-        sameSite: 'lax' // Or 'strict' for better security if applicable
+        sameSite: 'lax' // 或 'strict' 以增強安全性
     }
 }));
+// CSRF Protection (如果使用 csurf 或類似庫)
+// const csrf = require('csurf');
+// app.use(csrf());
+// app.use((req, res, next) => {
+//     res.locals.csrfToken = req.csrfToken ? req.csrfToken() : null;
+//     next();
+// });
 
 
 // --- 輔助函數 ---
-function generateUniqueToken(length = 32) {
-    return crypto.randomBytes(length).toString('hex');
-}
-
 function getUserUploadRoot(username) {
     const userDir = path.join(UPLOAD_DIR_BASE, username);
     if (!fs.existsSync(userDir)) {
@@ -178,7 +155,7 @@ function getVideoMimeType(filePath) {
         case '.webm': return 'video/webm';
         case '.ogg': return 'video/ogg';
         case '.mov': return 'video/quicktime';
-        default: return 'application/octet-stream'; // Should not happen if filtered by ALLOWED_VIDEO_EXTENSIONS
+        default: return 'application/octet-stream'; // Fallback
     }
 }
 
@@ -201,7 +178,7 @@ async function getDirectorySizeRecursive(directoryPath) {
             }
         }
     } catch (err) {
-        if (err.code === 'ENOENT') { return 0; }
+        if (err.code === 'ENOENT') { return 0; } // 目錄不存在，大小為0
         console.error(`[DirSize] 讀取目錄錯誤 ${directoryPath}:`, err.message);
     }
     return totalSize;
@@ -228,7 +205,7 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
                     try { stats = await fsp.stat(entryAbsolutePath); }
                     catch (statErr) {
                         console.error(`[Search Stat Error] for file ${entryAbsolutePath}:`, statErr.message);
-                        stats = { size: null, mtime: null };
+                        stats = { size: null, mtime: null }; // Provide default if stat fails
                     }
                     const isPlayableVideo = ALLOWED_VIDEO_EXTENSIONS.includes(fileExt);
                     foundItems.push({
@@ -239,7 +216,7 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
                     });
                 }
             } else if (entry.isDirectory()) {
-                if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+                if (entry.name.startsWith('.') || entry.name === 'node_modules') continue; // Skip hidden/system dirs
                 if (entry.name.toLowerCase().includes(lowerCaseKeyword)) {
                     try { stats = await fsp.stat(entryAbsolutePath); }
                     catch (statErr) {
@@ -249,9 +226,10 @@ async function searchFilesRecursively(directoryToSearch, keyword, currentRelativ
                     foundItems.push({
                         name: entry.name, isDir: true, path: entryRelativePath,
                         encodedName: encodeURIComponent(entry.name), encodedPath: encodeURIComponent(entryRelativePath),
-                        size: null, lastModified: stats.mtime, isPlayableVideo: false
+                        size: null, lastModified: stats.mtime, isPlayableVideo: false // Directories are not playable videos
                     });
                 }
+                // Recursively search in subdirectories
                 const subDirectoryItems = await searchFilesRecursively(entryAbsolutePath, keyword, entryRelativePath, userUploadRoot);
                 foundItems = foundItems.concat(subDirectoryItems);
             }
@@ -273,41 +251,32 @@ async function getDirectoryTreeRecursive(directoryToScan, userUploadRoot, curren
             if (entry.isDirectory()) {
                 if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
                 const entryRelativePath = path.posix.join(currentRelativePath, entry.name);
+                // Check if this path or its parent is in pathsToExclude
                 if (pathsToExclude.some(excludePath => entryRelativePath === excludePath || entryRelativePath.startsWith(excludePath + '/'))) continue;
+
                 const children = await getDirectoryTreeRecursive(path.join(directoryToScan, entry.name), userUploadRoot, entryRelativePath, pathsToExclude);
                 tree.push({ name: entry.name, path: entryRelativePath, children: children });
             }
         }
     } catch (err) { console.error(`[DirTree] 讀取目錄 ${directoryToScan} 時發生錯誤:`, err.message); }
-    return tree.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN-u-co-pinyin'));
-}
-
-async function checkSharePermission(actingUserId, ownerUserId, relativeFilePath, isDirectory = false) {
-    return new Promise((resolve, reject) => {
-        db.get(`SELECT id FROM shared_files 
-                WHERE owner_id = ? AND shared_with_id = ? AND file_path = ? AND is_directory = ?`,
-            [ownerUserId, actingUserId, relativeFilePath, isDirectory ? 1 : 0], (err, row) => {
-                if (err) {
-                    console.error("檢查分享權限錯誤:", err);
-                    return reject(err);
-                }
-                resolve(!!row);
-            });
-    });
+    return tree.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN-u-co-pinyin')); // Sort by name
 }
 
 
 // --- Multer 設置 ---
-const storage = multer.diskStorage({
+const actualMulter = require('multer'); // The actual multer instance
+const storage = actualMulter.diskStorage({
     destination: async function (req, file, cb) {
-        console.log(`[Multer Destination] Received file: ${file.originalname}, webkitRelativePath: ${file.webkitRelativePath}`);
+        // console.log(`[Multer Destination] Received file: ${file.originalname}, webkitRelativePath: ${file.webkitRelativePath}`);
         const actingUsername = req.session.user.username;
-        let tempTargetUsername = actingUsername;
+        let tempTargetUsername = actingUsername; // Default to acting user
 
+        // If admin is uploading for another user
         if (req.session.user.role === 'admin' && req.body.targetUsername) {
             tempTargetUsername = req.body.targetUsername;
         }
 
+        // Validate target username format
         if (typeof tempTargetUsername !== 'string' || tempTargetUsername.includes('..') || tempTargetUsername.includes('/') || tempTargetUsername.includes('\\') || !/^[a-zA-Z0-9_.-]+$/.test(tempTargetUsername) || tempTargetUsername.length > 50) {
             console.error(`[Multer Security] 無效的目標用戶名嘗試: ${tempTargetUsername}`);
             const securityError = new Error('上傳操作因無效的目標用戶名被拒絕。');
@@ -316,6 +285,7 @@ const storage = multer.diskStorage({
         }
         const targetUsername = tempTargetUsername;
 
+        // Check user quota
         let userUploadRootForQuotaCheck;
         try {
             userUploadRootForQuotaCheck = getUserUploadRoot(targetUsername);
@@ -333,25 +303,26 @@ const storage = multer.diskStorage({
             return cb(checkError);
         }
 
-        const baseUploadPath = req.body.currentPath || '/';
-        console.log(`[Multer Destination] actingUsername: ${actingUsername}, targetUsername: ${targetUsername}, baseUploadPath: ${baseUploadPath}`);
+        // Determine final destination path including subdirectories from folder upload
+        const baseUploadPath = req.body.currentPath || '/'; // Base path from the form
+        // console.log(`[Multer Destination] actingUsername: ${actingUsername}, targetUsername: ${targetUsername}, baseUploadPath: ${baseUploadPath}`);
         let finalDestinationPath = baseUploadPath;
 
         if (file.webkitRelativePath && typeof file.webkitRelativePath === 'string') {
             const relativeFolderPath = path.dirname(file.webkitRelativePath);
-            console.log(`[Multer Destination] file.webkitRelativePath: ${file.webkitRelativePath}, parsed relativeFolderPath: ${relativeFolderPath}`);
+            // console.log(`[Multer Destination] file.webkitRelativePath: ${file.webkitRelativePath}, parsed relativeFolderPath: ${relativeFolderPath}`);
             if (relativeFolderPath && relativeFolderPath !== '.') {
                 finalDestinationPath = path.posix.join(baseUploadPath, relativeFolderPath);
             }
         }
-        console.log(`[Multer Destination] Calculated finalDestinationPath: ${finalDestinationPath}`);
+        // console.log(`[Multer Destination] Calculated finalDestinationPath: ${finalDestinationPath}`);
 
         try {
             const resolvedUploadDir = resolvePathForUser(targetUsername, finalDestinationPath);
-            console.log(`[Multer Destination] Resolved upload directory: ${resolvedUploadDir}`);
+            // console.log(`[Multer Destination] Resolved upload directory: ${resolvedUploadDir}`);
             if (!fs.existsSync(resolvedUploadDir)) {
                 await fsp.mkdir(resolvedUploadDir, { recursive: true });
-                console.log(`[Multer Destination] Created directory: ${resolvedUploadDir}`);
+                // console.log(`[Multer Destination] Created directory: ${resolvedUploadDir}`);
             }
             cb(null, resolvedUploadDir);
         } catch (err) {
@@ -360,20 +331,22 @@ const storage = multer.diskStorage({
         }
     },
     filename: function (req, file, cb) {
-        const safeFilename = path.basename(file.originalname);
-        console.log(`[Multer Filename] originalname: ${file.originalname}, safeFilename: ${safeFilename}`);
-        cb(null, Buffer.from(safeFilename, 'latin1').toString('utf8'));
+        // Sanitize filename to prevent path traversal or other issues
+        const safeFilename = path.basename(file.originalname); // Use path.basename to get only the filename
+        // console.log(`[Multer Filename] originalname: ${file.originalname}, safeFilename: ${safeFilename}`);
+        cb(null, Buffer.from(safeFilename, 'latin1').toString('utf8')); // Ensure correct encoding
     }
 });
 
-const upload = multer({
+const upload = actualMulter({
     storage: storage,
     fileFilter: (req, file, cb) => {
+        // Basic filename validation
         if (file.originalname.includes('..') || file.originalname.includes('/') || file.originalname.includes('\\')) {
             console.warn(`[Multer FileFilter] Invalid characters in filename: ${file.originalname}`);
             return cb(new Error('文件名包含無效字符。'), false);
         }
-        cb(null, true);
+        cb(null, true); // Accept the file
     },
     limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit per file
 });
@@ -384,7 +357,7 @@ function isAdmin(req, res, next) {
     if (req.session.user && req.session.user.role === 'admin') return next();
     res.status(403).render('error', {
         user: req.session.user, message: '禁止訪問：僅限管理員。',
-        csrfToken: res.locals.csrfToken
+        csrfToken: res.locals.csrfToken // Pass CSRF token if used
     });
 }
 
@@ -402,15 +375,13 @@ app.post('/register', (req, res) => {
     db.get("SELECT * FROM users WHERE username = ?", [username], (err, row) => {
         if (err) { console.error("註冊時查詢用戶錯誤:", err); return res.render('register', { error: '註冊錯誤，請稍後再試。', csrfToken: res.locals.csrfToken }); }
         if (row) return res.render('register', { error: '用戶名已存在。', csrfToken: res.locals.csrfToken });
-        db.get("SELECT COUNT(*) as count FROM users", (err, countRow) => {
-            if (err) { console.error("註冊時查詢用戶總數錯誤:", err); return res.render('register', { error: '註冊錯誤，請稍後再試。', csrfToken: res.locals.csrfToken }); }
-            const hashedPassword = bcrypt.hashSync(password, 12);
-            const userRole = 'user';
-            db.run("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", [username, hashedPassword, userRole], function (err) {
-                if (err) { console.error("註冊時插入用戶錯誤:", err); return res.render('register', { error: '註冊失敗，請稍後再試。', csrfToken: res.locals.csrfToken }); }
-                getUserUploadRoot(username);
-                res.redirect('/login?message=註冊成功，請登錄。');
-            });
+        
+        const hashedPassword = bcrypt.hashSync(password, 12);
+        const userRole = 'user'; // Default role
+        db.run("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", [username, hashedPassword, userRole], function (err) {
+            if (err) { console.error("註冊時插入用戶錯誤:", err); return res.render('register', { error: '註冊失敗，請稍後再試。', csrfToken: res.locals.csrfToken }); }
+            getUserUploadRoot(username); // Create user's upload directory
+            res.redirect('/login?message=註冊成功，請登錄。');
         });
     });
 });
@@ -442,6 +413,7 @@ app.post('/change-password', isAuthenticated, (req, res) => {
     const userId = req.session.user.id;
     if (!currentPassword || !newPassword || !confirmNewPassword) return res.render('change-password', { user: req.session.user, message: '所有欄位均為必填項。', messageType: 'error', csrfToken: res.locals.csrfToken });
     if (newPassword !== confirmNewPassword) return res.render('change-password', { user: req.session.user, message: '新密碼與確認密碼不匹配。', messageType: 'error', csrfToken: res.locals.csrfToken });
+    
     db.get("SELECT password FROM users WHERE id = ?", [userId], (err, userRow) => {
         if (err || !userRow || !bcrypt.compareSync(currentPassword, userRow.password)) {
             if (err) console.error("修改密碼時查詢用戶錯誤:", err);
@@ -465,7 +437,7 @@ app.get('/files', isAuthenticated, async (req, res) => {
     if (!relativeQueryPath || relativeQueryPath === '.') relativeQueryPath = '/';
 
     const searchQuery = req.query.q ? req.query.q.trim() : null;
-    const viewMode = req.query.viewMode || 'myfiles'; 
+    const viewMode = req.query.viewMode || 'myfiles'; // myfiles, userShares (public links by user)
 
     let contextUsername = actingUser.username;
     let contextUserId = actingUser.id;
@@ -533,91 +505,31 @@ app.get('/files', isAuthenticated, async (req, res) => {
                 };
             }));
             pageTitle = `${contextUsername} 的文件: ${relativeQueryPath}`;
-        } else if (viewMode === 'sharedWithMe') {
-            const userIdForSharedWithMe = isAdminViewingOther ? contextUserId : actingUser.id;
-            const userForSharedWithMe = isAdminViewingOther ? contextUsername : actingUser.username;
-
-            pageTitle = `與 ${userForSharedWithMe} 分享的項目`;
-            currentDisplayPath = '/';
-            const sharedEntries = await new Promise((resolve, reject) => {
-                db.all(`SELECT sf.id as share_id, sf.file_path, sf.is_directory, sf.permissions, sf.shared_at, u_owner.username as owner_username
-                        FROM shared_files sf
-                        JOIN users u_owner ON sf.owner_id = u_owner.id
-                        WHERE sf.shared_with_id = ?
-                        ORDER BY sf.shared_at DESC`,
-                    [userIdForSharedWithMe], (err, rows) => {
-                        if (err) reject(err); else resolve(rows);
-                    });
-            });
-            items = await Promise.all(sharedEntries.map(async entry => {
-                const ownerUploadRoot = getUserUploadRoot(entry.owner_username);
-                const fullSharedItemPath = path.join(ownerUploadRoot, entry.file_path);
-                let stats;
-                try { stats = await fsp.stat(fullSharedItemPath); }
-                catch (e) { stats = { size: null, mtime: null }; console.warn(`Stat failed for shared item ${entry.file_path} from ${entry.owner_username}`); }
-
-                const fileExt = path.extname(entry.file_path).toLowerCase();
-                const isPlayableVideo = !entry.is_directory && ALLOWED_VIDEO_EXTENSIONS.includes(fileExt);
-
-                return {
-                    share_id: entry.share_id,
-                    name: path.basename(entry.file_path),
-                    isDir: !!entry.is_directory,
-                    path: entry.file_path,
-                    encodedName: encodeURIComponent(path.basename(entry.file_path)),
-                    encodedPath: encodeURIComponent(entry.file_path),
-                    size: !entry.is_directory ? stats.size : null,
-                    lastModified: stats.mtime,
-                    sharedAt: entry.shared_at,
-                    ownerUsername: entry.owner_username,
-                    permissions: entry.permissions,
-                    isPlayableVideo: isPlayableVideo,
-                    videoType: isPlayableVideo ? getVideoMimeType(entry.file_path) : null,
-                };
-            }));
-        } else if (viewMode === 'userShares') {
-            pageTitle = `${contextUsername} 分享的項目`;
-            currentDisplayPath = '/';
-            const userSharedEntries = await new Promise((resolve, reject) => {
-                db.all(`SELECT sf.id as share_id, sf.file_path, sf.is_directory, sf.permissions, sf.shared_at, u_shared_with.username as shared_with_username
-                        FROM shared_files sf
-                        JOIN users u_shared_with ON sf.shared_with_id = u_shared_with.id
-                        WHERE sf.owner_id = ?
-                        ORDER BY sf.shared_at DESC`,
-                    [contextUserId], (err, rows) => {
-                        if (err) reject(err); else resolve(rows);
-                    });
-            });
-            items = userSharedEntries.map(entry => ({
-                share_id: entry.share_id,
-                name: path.basename(entry.file_path),
-                isDir: !!entry.is_directory,
-                path: entry.file_path,
-                encodedName: encodeURIComponent(path.basename(entry.file_path)),
-                sharedWithUsername: entry.shared_with_username,
-                sharedAt: entry.shared_at,
-                permissions: entry.permissions,
-            }));
-        } else if (viewMode === 'publicLinks') { // New view mode for listing public links
-            pageTitle = `${contextUsername} 的公開鏈接`;
+        } else if (viewMode === 'userShares') { // Display public links created by the contextUser
+            pageTitle = `${contextUsername} 的公開分享連結`;
             currentDisplayPath = '/'; // Public links are listed flat
-            const publicLinkEntries = await new Promise((resolve, reject) => {
-                db.all(`SELECT id, file_path, is_directory, token, created_at 
-                        FROM public_links
-                        WHERE owner_id = ?
+            items = await new Promise((resolve, reject) => {
+                db.all(`SELECT id as link_id, file_path, is_directory, token, created_at, expires_at, password_hash, visit_count 
+                        FROM public_links 
+                        WHERE owner_id = ? 
                         ORDER BY created_at DESC`,
                     [contextUserId], (err, rows) => {
                         if (err) reject(err); else resolve(rows);
                     });
             });
-            items = publicLinkEntries.map(entry => ({
-                public_link_id: entry.id,
-                name: path.basename(entry.file_path),
-                isDir: !!entry.is_directory,
-                path: entry.file_path, // Original path
-                token: entry.token,
-                createdAt: entry.created_at,
-                publicUrl: `${req.protocol}://${req.get('host')}/public/s/${entry.token}`
+            items = items.map(link => ({
+                link_id: link.link_id,
+                name: path.basename(link.file_path), // Show the base name of the shared item
+                isDir: !!link.is_directory,
+                path: link.file_path, // Original path in owner's dir
+                token: link.token,
+                publicUrl: `/public/${link.token}`, // Construct the public URL
+                createdAt: link.created_at,
+                expiresAt: link.expires_at,
+                hasPassword: !!link.password_hash,
+                visitCount: link.visit_count,
+                // We don't need encodedName/encodedPath for listing public links here,
+                // as actions will be based on link_id or token.
             }));
         }
 
@@ -629,7 +541,6 @@ app.get('/files', isAuthenticated, async (req, res) => {
                 return a.name.localeCompare(b.name, 'zh-CN-u-co-pinyin');
             });
         }
-
 
         res.render('files', {
             user: actingUser,
@@ -645,8 +556,7 @@ app.get('/files', isAuthenticated, async (req, res) => {
             ALLOWED_TEXT_EXTENSIONS: ALLOWED_TEXT_EXTENSIONS,
             ALLOWED_VIDEO_EXTENSIONS: ALLOWED_VIDEO_EXTENSIONS,
             csrfToken: res.locals.csrfToken,
-            message: req.query.message, messageType: req.query.messageType,
-            baseUrl: `${req.protocol}://${req.get('host')}` // For constructing full URLs
+            message: req.query.message, messageType: req.query.messageType
         });
     } catch (err) {
         console.error(`[${actingUser.username}] 瀏覽 ${contextUsername} 的文件夾 (模式: ${viewMode}, 路徑: ${relativeQueryPath}, 搜索: ${searchQuery || '無'}) 錯誤:`, err);
@@ -669,8 +579,7 @@ app.get('/files', isAuthenticated, async (req, res) => {
 });
 
 app.post('/upload', isAuthenticated, (req, res, next) => {
-    console.log(`[POST /upload] Request received. User: ${req.session.user.username}, Body keys:`, Object.keys(req.body));
-    upload.array('userFiles', 100)(req, res, (err) => {
+    upload.array('userFiles', 100)(req, res, (err) => { // Max 100 files per upload
         if (err) {
             console.error(`[POST /upload] Multer 上傳錯誤 for user ${req.session.user.username}:`, err.message, err.code ? `(Code: ${err.code})` : '', err.stack);
             const currentPath = req.body.currentPath || '/';
@@ -694,7 +603,7 @@ app.post('/upload', isAuthenticated, (req, res, next) => {
             return res.redirect(`/files?${redirectParams.toString()}`);
         }
 
-        console.log(`[POST /upload] Multer processed ${req.files ? req.files.length : 0} files for user ${req.session.user.username}.`);
+        // console.log(`[POST /upload] Multer processed ${req.files ? req.files.length : 0} files for user ${req.session.user.username}.`);
         const currentPath = req.body.currentPath || '/';
         const redirectParams = new URLSearchParams();
         if (currentPath !== '/') redirectParams.set('path', currentPath);
@@ -787,10 +696,24 @@ app.post('/rename', isAuthenticated, async (req, res) => {
         const fullNewPath = resolvePathForUser(targetUsername, path.posix.join(parentDirOfOld, finalNewName));
 
         if (!fs.existsSync(fullOldPath)) { return res.redirect(`/files?${redirectPathQuery}&message=原始文件或文件夾未找到。&messageType=error`); }
-        if (fs.existsSync(fullNewPath) && fullOldPath.toLowerCase() !== fullNewPath.toLowerCase()) {
+        if (fs.existsSync(fullNewPath) && fullOldPath.toLowerCase() !== fullNewPath.toLowerCase()) { // Allow renaming to same name with different case
             return res.redirect(`/files?${redirectPathQuery}&message=名稱 "${finalNewName}" 已存在。&messageType=error`);
         }
         await fsp.rename(fullOldPath, fullNewPath);
+
+        // Update public_links if the renamed item had any
+        const ownerUser = await new Promise((resolve) => db.get("SELECT id FROM users WHERE username = ?", [targetUsername], (err, row) => resolve(row)));
+        if (ownerUser) {
+            const newRelativePathForLink = path.posix.join(parentDirOfOld, finalNewName);
+            db.run("UPDATE public_links SET file_path = ? WHERE owner_id = ? AND file_path = ?",
+                [newRelativePathForLink, ownerUser.id, relativeOldPath],
+                (updErr) => {
+                    if (updErr) console.error(`重命名時更新 ${targetUsername} 的 ${relativeOldPath} 公開連結路徑至 ${newRelativePathForLink} 時出錯:`, updErr);
+                    else console.log(`已更新 ${targetUsername} 的 ${relativeOldPath} 公開連結路徑至 ${newRelativePathForLink}`);
+                }
+            );
+        }
+
         res.redirect(`/files?${redirectPathQuery}&message=重命名成功。&messageType=success`);
     } catch (err) {
         console.error(`[${actingUser.username}] 為 ${targetUsername} 重命名錯誤:`, err);
@@ -801,56 +724,33 @@ app.post('/rename', isAuthenticated, async (req, res) => {
 app.get('/download', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeFilePath = req.query.path;
-    const ownerUsernameQuery = req.query.ownerUsername;
+    let targetUsernameForDownload = actingUser.username; // Default to acting user
 
-    let fileOwnerUsername = actingUser.username;
-    let fileOwnerId = actingUser.id;
-
+    if (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) {
+        const targetUser = await new Promise((resolve) => db.get("SELECT id, username FROM users WHERE username = ?", [req.query.targetUsername], (err, row) => resolve(row)));
+        if (!targetUser) return res.status(404).render('error', { user: actingUser, message: '目標用戶不存在。', csrfToken: res.locals.csrfToken });
+        targetUsernameForDownload = targetUser.username;
+    }
+    
     if (!relativeFilePath) {
         return res.status(400).render('error', { user: actingUser, message: '未指定下載文件路徑。', csrfToken: res.locals.csrfToken });
     }
     
     try {
-        if (ownerUsernameQuery && ownerUsernameQuery !== actingUser.username) {
-            const owner = await new Promise((resolve, reject) => {
-                db.get("SELECT id, username FROM users WHERE username = ?", [ownerUsernameQuery], (err, row) => {
-                    if (err) reject(err); else resolve(row);
-                });
-            });
-
-            if (!owner) {
-                return res.status(404).render('error', { user: actingUser, message: '文件擁有者不存在。', csrfToken: res.locals.csrfToken });
-            }
-            fileOwnerUsername = owner.username;
-            fileOwnerId = owner.id;
-
-            const fullPathToCheck = resolvePathForUser(fileOwnerUsername, relativeFilePath);
-            const statsForType = await fsp.stat(fullPathToCheck);
-            const hasPermission = await checkSharePermission(actingUser.id, fileOwnerId, relativeFilePath, statsForType.isDirectory());
-            if (!hasPermission) {
-                return res.status(403).render('error', { user: actingUser, message: '您沒有權限下載此分享文件。', csrfToken: res.locals.csrfToken });
-            }
-        } else if (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) {
-            const targetUser = await new Promise((resolve) => db.get("SELECT id, username FROM users WHERE username = ?", [req.query.targetUsername], (err, row) => resolve(row)));
-            if (!targetUser) return res.status(404).render('error', { user: actingUser, message: '目標用戶不存在。', csrfToken: res.locals.csrfToken });
-            fileOwnerUsername = targetUser.username;
-        }
-
-
-        const fullFilePath = resolvePathForUser(fileOwnerUsername, relativeFilePath);
+        const fullFilePath = resolvePathForUser(targetUsernameForDownload, relativeFilePath);
         const stats = await fsp.stat(fullFilePath);
         if (stats.isFile()) {
-            res.download(fullFilePath, path.basename(relativeFilePath), (err) => {
+            res.download(fullFilePath, path.basename(relativeFilePath), (err) => { // Provide original filename for download
                 if (err) {
-                    console.error(`[${actingUser.username}] 為 ${fileOwnerUsername} 下載文件 ${relativeFilePath} 出錯:`, err);
+                    console.error(`[${actingUser.username}] 為 ${targetUsernameForDownload} 下載文件 ${relativeFilePath} 出錯:`, err);
                     if (!res.headersSent) { res.status(500).render('error', { user: actingUser, message: '下載文件時發生內部錯誤。', csrfToken: res.locals.csrfToken }); }
                 }
             });
-        } else {
-            res.status(400).render('error', { user: actingUser, message: '請求的資源不是一個有效文件 (不能下載文件夾，請使用打包下載)。', csrfToken: res.locals.csrfToken });
+        } else { // It's a directory
+            res.status(400).render('error', { user: actingUser, message: '請求的資源不是一個有效文件 (不能直接下載文件夾，請使用打包下載)。', csrfToken: res.locals.csrfToken });
         }
     } catch (err) {
-        console.error(`[${actingUser.username}] 為 ${fileOwnerUsername} 準備下載 ${relativeFilePath} 時出錯:`, err);
+        console.error(`[${actingUser.username}] 為 ${targetUsernameForDownload} 準備下載 ${relativeFilePath} 時出錯:`, err);
         if (err.code === 'ENOENT') return res.status(404).render('error', { user: actingUser, message: '文件未找到。', csrfToken: res.locals.csrfToken });
         if (err.message.includes('無效的目標用戶名') || err.message.includes('試圖訪問無效路徑')) return res.status(403).render('error', { user: actingUser, message: '禁止訪問。', csrfToken: res.locals.csrfToken });
         res.status(500).render('error', { user: actingUser, message: '處理下載請求時出錯。', csrfToken: res.locals.csrfToken });
@@ -859,8 +759,10 @@ app.get('/download', isAuthenticated, async (req, res) => {
 
 
 async function addDirectoryToZip(zipfile, dirPathOnServer, pathInZipBase, userRootForSecurityCheck) {
+    // Security check: ensure we are not zipping outside the user's designated root
     if (!path.resolve(dirPathOnServer).startsWith(path.resolve(userRootForSecurityCheck))) {
         console.warn(`[Zip Security] 嘗試添加用戶目錄 (${userRootForSecurityCheck}) 之外的路徑到壓縮包: ${dirPathOnServer}`);
+        // Add a warning file to the zip instead of failing silently or exposing structure
         zipfile.addBuffer(Buffer.from(`錯誤：嘗試打包一個不被允許的路徑: ${pathInZipBase}\n`), `打包安全警告/${path.basename(pathInZipBase)}-路徑錯誤.txt`);
         return;
     }
@@ -868,13 +770,17 @@ async function addDirectoryToZip(zipfile, dirPathOnServer, pathInZipBase, userRo
     const entries = await fsp.readdir(dirPathOnServer, { withFileTypes: true });
     for (const entry of entries) {
         const entryPathOnServer = path.join(dirPathOnServer, entry.name);
+        // Ensure pathInZip is correctly formed, especially for root items
         let entryPathInZip = path.posix.join(pathInZipBase, entry.name);
-        if (pathInZipBase === '/' && entryPathInZip.startsWith('//')) entryPathInZip = entryPathInZip.substring(1);
-        else if (entryPathInZip.startsWith('/')) entryPathInZip = entryPathInZip.substring(1);
+        if (pathInZipBase === '/' && entryPathInZip.startsWith('//')) entryPathInZip = entryPathInZip.substring(1); // Avoid leading '//'
+        else if (entryPathInZip.startsWith('/')) entryPathInZip = entryPathInZip.substring(1); // Avoid leading '/' if not root
 
         if (entry.isFile()) {
             zipfile.addFile(entryPathOnServer, entryPathInZip);
         } else if (entry.isDirectory()) {
+            // For directories, yazl automatically creates the directory entry when files are added under it.
+            // If you need to add an empty directory explicitly, use:
+            // zipfile.addEmptyDirectory(entryPathInZip);
             await addDirectoryToZip(zipfile, entryPathOnServer, entryPathInZip, userRootForSecurityCheck);
         }
     }
@@ -882,23 +788,22 @@ async function addDirectoryToZip(zipfile, dirPathOnServer, pathInZipBase, userRo
 
 
 app.post('/download-archive', isAuthenticated, async (req, res) => {
-    console.log("[/download-archive] Received request.");
     const actingUser = req.session.user;
-    const itemsToArchiveString = req.body.items;
+    const itemsToArchiveString = req.body.items; // Expecting a JSON string of [{path, name, isDir}]
     let itemsToArchive;
 
     if (itemsToArchiveString && typeof itemsToArchiveString === 'string') {
         try { itemsToArchive = JSON.parse(itemsToArchiveString); }
         catch (e) { return res.redirect((req.headers.referer || '/files') + '?message=打包下載失敗：項目列表格式錯誤。&messageType=error'); }
-    } else if (req.body.items && Array.isArray(req.body.items)) {
+    } else if (req.body.items && Array.isArray(req.body.items)) { // Fallback if already an array (less likely from form)
         itemsToArchive = req.body.items;
     } else {
         return res.redirect((req.headers.referer || '/files') + '?message=打包下載失敗：未提供項目列表。&messageType=error');
     }
 
-    let archiveOwnerUsername = actingUser.username;
-
+    let archiveOwnerUsername = actingUser.username; // By default, the acting user owns the files
     if (actingUser.role === 'admin' && req.body.targetUsername) {
+        // Admin is archiving files for another user
         const tempTarget = req.body.targetUsername;
          if (typeof tempTarget !== 'string' || tempTarget.includes('..') || tempTarget.includes('/') || tempTarget.includes('\\') || !/^[a-zA-Z0-9_.-]+$/.test(tempTarget) || tempTarget.length > 50) {
             return res.redirect((req.headers.referer || '/files') + '?message=打包下載失敗：無效的目標用戶名格式。&messageType=error');
@@ -924,13 +829,15 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(archiveName)}"`);
     res.setHeader('Content-Type', 'application/zip');
     zipfile.outputStream.pipe(res);
+    // Handle errors on the output stream (e.g., client disconnects)
     zipfile.outputStream.on('error', (err) => {
         console.error('Yazl outputStream error:', err);
         if (!res.headersSent) res.status(500).send('創建壓縮文件時發生錯誤。');
-        else if (!res.writableEnded) res.end();
+        else if (!res.writableEnded) res.end(); // Try to end response if possible
     });
-    res.on('error', (err) => console.error('Response stream error during zip download:', err));
+    res.on('error', (err) => console.error('Response stream error during zip download:', err)); // Catch errors on res too
     res.on('close', function () { console.log(`響應流已關閉，壓縮文件: ${archiveName}`); });
+
 
     try {
         for (const item of itemsToArchive) {
@@ -939,29 +846,10 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
                 zipfile.addBuffer(Buffer.from(`錯誤：一個無效的項目結構被傳遞。\nItem: ${JSON.stringify(item)}\n`), "打包錯誤日誌.txt");
                 continue;
             }
+            const fullPathOnServer = resolvePathForUser(archiveOwnerUsername, item.path);
+            const userUploadRootForZip = getUserUploadRoot(archiveOwnerUsername); // For security check in addDirectoryToZip
 
-            let currentItemOwnerUsername = item.ownerUsername || archiveOwnerUsername;
-            let currentItemOwnerId;
-            const ownerUserObj = await new Promise((resolve) => db.get("SELECT id FROM users WHERE username = ?", [currentItemOwnerUsername], (err, row) => resolve(row)));
-            if (!ownerUserObj) {
-                 zipfile.addBuffer(Buffer.from(`錯誤：項目 ${item.name} 的擁有者 ${currentItemOwnerUsername} 未找到。\n`), `打包錯誤日誌/${item.name}-用戶未找到.txt`);
-                 continue;
-            }
-            currentItemOwnerId = ownerUserObj.id;
-
-            if (item.ownerUsername && item.ownerUsername !== actingUser.username) {
-                 const fullPathToCheck = resolvePathForUser(item.ownerUsername, item.path);
-                 const statsForType = await fsp.stat(fullPathToCheck);
-                 const hasPermission = await checkSharePermission(actingUser.id, currentItemOwnerId, item.path, statsForType.isDirectory());
-                 if (!hasPermission) {
-                     zipfile.addBuffer(Buffer.from(`錯誤：您沒有權限打包分享的項目 ${item.name} (來自 ${item.ownerUsername})。\n`), `打包錯誤日誌/${item.name}-無權限.txt`);
-                     continue;
-                 }
-            }
-
-            const fullPathOnServer = resolvePathForUser(currentItemOwnerUsername, item.path);
-            const userUploadRootForZip = getUserUploadRoot(currentItemOwnerUsername);
-
+            // Correct path for items inside the zip (relative to zip root)
             let correctedPathInZip = item.path;
             if (correctedPathInZip.startsWith('/')) correctedPathInZip = correctedPathInZip.substring(1);
 
@@ -972,23 +860,27 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
             }
             const stat = await fsp.stat(fullPathOnServer);
             if (stat.isFile()) {
-                zipfile.addFile(fullPathOnServer, correctedPathInZip || item.name);
+                zipfile.addFile(fullPathOnServer, correctedPathInZip || item.name); // Use correctedPathInZip
             } else if (stat.isDirectory()) {
                 await addDirectoryToZip(zipfile, fullPathOnServer, correctedPathInZip || item.name, userUploadRootForZip);
             }
         }
-        zipfile.end();
+        zipfile.end(); // Finalize the zip file
         console.log(`[/download-archive] 所有項目已添加到 yazl，正在完成壓縮: ${archiveName}`);
     } catch (error) {
         console.error('添加文件到壓縮包時出錯:', error);
+        // Attempt to add an error log to the zip if possible
         try { zipfile.addBuffer(Buffer.from(`內部錯誤：處理某些文件時發生問題。\n${error.message}\n`), "內部伺服器錯誤日誌.txt"); }
         catch (zipError) { console.error("向 zip 添加錯誤日誌時也發生錯誤:", zipError); }
-        if (!res.headersSent) res.status(500).send(`創建壓縮文件時發生內部錯誤: ${error.message.includes('無效的目標用戶名') ? '目標用戶驗證失敗。' : error.message}`);
-        else if (!res.writableEnded) {
+
+        if (!res.headersSent) {
+            res.status(500).send(`創建壓縮文件時發生內部錯誤: ${error.message.includes('無效的目標用戶名') ? '目標用戶驗證失敗。' : error.message}`);
+        } else if (!res.writableEnded) {
             console.log("錯誤發生，但響應已開始，嘗試結束流。");
-            try { zipfile.outputStream.unpipe(res); } catch(e){}
+            try { zipfile.outputStream.unpipe(res); } catch(e){} // Try to unpipe safely
             res.end();
         }
+        // Ensure zipfile is ended if an error occurs mid-process
         if (zipfile && typeof zipfile.end === 'function' && !zipfile.ended) zipfile.end();
     }
 });
@@ -1024,16 +916,12 @@ app.get('/delete', isAuthenticated, async (req, res) => {
         if (isDir) { await fsp.rm(fullItemPath, { recursive: true, force: true }); }
         else { await fsp.unlink(fullItemPath); }
 
+        // Delete associated public links
         const ownerUser = await new Promise((resolve) => db.get("SELECT id FROM users WHERE username = ?", [targetUsername], (err, row) => resolve(row)));
         if (ownerUser) {
-            db.run("DELETE FROM shared_files WHERE owner_id = ? AND file_path = ?", [ownerUser.id, relativeItemPath], (delErr) => {
-                if (delErr) console.error(`刪除 ${targetUsername} 的 ${relativeItemPath} 的分享記錄時出錯:`, delErr);
-                else console.log(`已刪除 ${targetUsername} 的 ${relativeItemPath} 的相關分享記錄。`);
-            });
-            // Also delete public links for this item
             db.run("DELETE FROM public_links WHERE owner_id = ? AND file_path = ?", [ownerUser.id, relativeItemPath], (delErr) => {
-                if (delErr) console.error(`刪除 ${targetUsername} 的 ${relativeItemPath} 的公開鏈接記錄時出錯:`, delErr);
-                else console.log(`已刪除 ${targetUsername} 的 ${relativeItemPath} 的相關公開鏈接記錄。`);
+                if (delErr) console.error(`刪除 ${targetUsername} 的 ${relativeItemPath} 的公開連結時出錯:`, delErr);
+                else console.log(`已刪除 ${targetUsername} 的 ${relativeItemPath} 的相關公開連結。`);
             });
         }
 
@@ -1047,11 +935,15 @@ app.get('/delete', isAuthenticated, async (req, res) => {
 app.get('/view', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeFilePath = req.query.path;
-    const ownerUsernameQuery = req.query.ownerUsername;
+    let targetUsernameForView = actingUser.username;
+    let viewTargetUsernameForTemplate = null; // For admin viewing other's files directly
 
-    let fileOwnerUsername = actingUser.username;
-    let fileOwnerId = actingUser.id;
-    let viewTargetUsernameForTemplate = null;
+    if (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) {
+        const targetUser = await new Promise((resolve) => db.get("SELECT id, username FROM users WHERE username = ?", [req.query.targetUsername], (err, row) => resolve(row)));
+        if (!targetUser) return res.status(404).render('error', { user: actingUser, message: '目標用戶不存在。', csrfToken: res.locals.csrfToken });
+        targetUsernameForView = targetUser.username;
+        if (targetUsernameForView !== actingUser.username) viewTargetUsernameForTemplate = targetUsernameForView;
+    }
 
     if (!relativeFilePath) return res.status(400).render('error', { user: actingUser, message: '未指定查看文件路徑。', csrfToken: res.locals.csrfToken });
 
@@ -1062,28 +954,7 @@ app.get('/view', isAuthenticated, async (req, res) => {
     }
 
     try {
-        if (ownerUsernameQuery && ownerUsernameQuery !== actingUser.username) {
-            const owner = await new Promise((resolve) => db.get("SELECT id, username FROM users WHERE username = ?", [ownerUsernameQuery], (err, row) => resolve(row)));
-            if (!owner) return res.status(404).render('error', { user: actingUser, message: '文件擁有者不存在。', csrfToken: res.locals.csrfToken });
-            
-            fileOwnerUsername = owner.username;
-            fileOwnerId = owner.id;
-            viewTargetUsernameForTemplate = owner.username;
-
-            const fullPathToCheck = resolvePathForUser(fileOwnerUsername, relativeFilePath);
-            const statsForType = await fsp.stat(fullPathToCheck);
-            const hasPermission = await checkSharePermission(actingUser.id, fileOwnerId, relativeFilePath, statsForType.isDirectory());
-            if (!hasPermission) {
-                return res.status(403).render('error', { user: actingUser, message: '您沒有權限查看此分享文件。', csrfToken: res.locals.csrfToken });
-            }
-        } else if (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) {
-            const targetUser = await new Promise((resolve) => db.get("SELECT id, username FROM users WHERE username = ?", [req.query.targetUsername], (err, row) => resolve(row)));
-            if (!targetUser) return res.status(404).render('error', { user: actingUser, message: '目標用戶不存在。', csrfToken: res.locals.csrfToken });
-            fileOwnerUsername = targetUser.username;
-            if (fileOwnerUsername !== actingUser.username) viewTargetUsernameForTemplate = fileOwnerUsername;
-        }
-
-        const fullFilePath = resolvePathForUser(fileOwnerUsername, relativeFilePath);
+        const fullFilePath = resolvePathForUser(targetUsernameForView, relativeFilePath);
         const stats = await fsp.stat(fullFilePath);
         if (!stats.isFile()) return res.status(400).render('error', { user: actingUser, message: '請求的路徑不是一個文件。', csrfToken: res.locals.csrfToken });
         
@@ -1091,12 +962,11 @@ app.get('/view', isAuthenticated, async (req, res) => {
         res.render('view-file', {
             user: actingUser, viewTargetUsername: viewTargetUsernameForTemplate,
             filename: filename, content: content, currentPath: relativeFilePath,
-            fileOwnerIfShared: (ownerUsernameQuery && ownerUsernameQuery !== actingUser.username) ? ownerUsernameQuery : null,
             fileExtension: fileExt, ALLOWED_TEXT_EXTENSIONS: ALLOWED_TEXT_EXTENSIONS,
             csrfToken: res.locals.csrfToken, message: req.query.message, messageType: req.query.messageType
         });
     } catch (err) {
-        console.error(`[${actingUser.username}] 為 ${fileOwnerUsername} 讀取文件 ${relativeFilePath} 查看錯誤:`, err);
+        console.error(`[${actingUser.username}] 為 ${targetUsernameForView} 讀取文件 ${relativeFilePath} 查看錯誤:`, err);
         if (err.code === 'ENOENT') return res.status(404).render('error', { user: actingUser, message: '文件未找到。', csrfToken: res.locals.csrfToken });
         if (err.message.includes('無效的目標用戶名') || err.message.includes('試圖訪問無效路徑')) return res.status(403).render('error', { user: actingUser, message: '禁止訪問。', csrfToken: res.locals.csrfToken });
         res.status(500).render('error', { user: actingUser, message: '讀取文件內容失敗。', csrfToken: res.locals.csrfToken });
@@ -1106,10 +976,15 @@ app.get('/view', isAuthenticated, async (req, res) => {
 app.get('/edit', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeFilePath = req.query.path;
-    const ownerUsernameQuery = req.query.ownerUsername;
-
-    let fileOwnerUsername = actingUser.username;
+    let targetUsernameForEdit = actingUser.username;
     let viewTargetUsernameForTemplate = null;
+
+    if (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) {
+        const targetUser = await new Promise((resolve) => db.get("SELECT id, username FROM users WHERE username = ?", [req.query.targetUsername], (err, row) => resolve(row)));
+        if (!targetUser) return res.status(404).render('error', { user: actingUser, message: '目標用戶不存在。', csrfToken: res.locals.csrfToken });
+        targetUsernameForEdit = targetUser.username;
+        if (targetUsernameForEdit !== actingUser.username) viewTargetUsernameForTemplate = targetUsernameForEdit;
+    }
 
     if (!relativeFilePath) return res.status(400).render('error', { user: actingUser, message: '未指定編輯文件路徑。', csrfToken: res.locals.csrfToken });
 
@@ -1118,16 +993,7 @@ app.get('/edit', isAuthenticated, async (req, res) => {
     if (!ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) return res.status(403).render('error', { user: actingUser, message: `不支援編輯此文件類型 (${fileExt})。`, csrfToken: res.locals.csrfToken });
 
     try {
-        if (ownerUsernameQuery && ownerUsernameQuery !== actingUser.username) {
-             return res.status(403).render('error', { user: actingUser, message: '不允許直接編輯分享的文件。請先下載。', csrfToken: res.locals.csrfToken });
-        } else if (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) {
-            const targetUser = await new Promise((resolve) => db.get("SELECT id, username FROM users WHERE username = ?", [req.query.targetUsername], (err, row) => resolve(row)));
-            if (!targetUser) return res.status(404).render('error', { user: actingUser, message: '目標用戶不存在。', csrfToken: res.locals.csrfToken });
-            fileOwnerUsername = targetUser.username;
-            if (fileOwnerUsername !== actingUser.username) viewTargetUsernameForTemplate = fileOwnerUsername;
-        }
-
-        const fullFilePath = resolvePathForUser(fileOwnerUsername, relativeFilePath);
+        const fullFilePath = resolvePathForUser(targetUsernameForEdit, relativeFilePath);
         const stats = await fsp.stat(fullFilePath);
         if (!stats.isFile()) return res.status(400).render('error', { user: actingUser, message: '請求的路徑不是一個文件。', csrfToken: res.locals.csrfToken });
         
@@ -1135,11 +1001,10 @@ app.get('/edit', isAuthenticated, async (req, res) => {
         res.render('edit-file', {
             user: actingUser, viewTargetUsername: viewTargetUsernameForTemplate,
             filename: filename, content: content, currentPath: relativeFilePath,
-            fileOwnerIfShared: null,
             csrfToken: res.locals.csrfToken, message: req.query.message, messageType: req.query.messageType
         });
     } catch (err) {
-        console.error(`[${actingUser.username}] 為 ${fileOwnerUsername} 讀取文件 ${relativeFilePath} 編輯錯誤:`, err);
+        console.error(`[${actingUser.username}] 為 ${targetUsernameForEdit} 讀取文件 ${relativeFilePath} 編輯錯誤:`, err);
         if (err.code === 'ENOENT') return res.status(404).render('error', { user: actingUser, message: '文件未找到。', csrfToken: res.locals.csrfToken });
         if (err.message.includes('無效的目標用戶名') || err.message.includes('試圖訪問無效路徑')) return res.status(403).render('error', { user: actingUser, message: '禁止訪問。', csrfToken: res.locals.csrfToken });
         res.status(500).render('error', { user: actingUser, message: '讀取文件內容失敗。', csrfToken: res.locals.csrfToken });
@@ -1217,14 +1082,14 @@ app.post('/create-text-file', isAuthenticated, async (req, res) => {
     }
     let finalFileName = newFileName.trim();
     const fileExt = path.extname(finalFileName).toLowerCase();
-    if (!ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) finalFileName += '.txt';
+    if (!ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) finalFileName += '.txt'; // Default to .txt if extension is not text-editable
 
     try {
         const fullPathToCreate = resolvePathForUser(targetUsername, path.join(relativeCurrentPath, finalFileName));
         if (fs.existsSync(fullPathToCreate)) {
             return res.redirect(`/files?${redirectPathQuery}&message=文件 "${finalFileName}" 已存在。&messageType=error`);
         }
-        await fsp.writeFile(fullPathToCreate, '', 'utf8');
+        await fsp.writeFile(fullPathToCreate, '', 'utf8'); // Create empty file
 
         const editPath = path.posix.join(relativeCurrentPath, finalFileName);
         let editRedirectQuery = `path=${encodeURIComponent(editPath)}`;
@@ -1260,7 +1125,7 @@ app.get('/api/directories', isAuthenticated, async (req, res) => {
 
     try {
         const directoryTree = await getDirectoryTreeRecursive(userUploadRoot, userUploadRoot, '/', pathsToExclude);
-        res.json(directoryTree);
+        res.json(directoryTree); // Returns array of {name, path, children}
     } catch (error) {
         console.error(`[API DirTree] 獲取用戶 ${targetUsernameForTree} 的目錄樹時出錯:`, error);
         res.status(500).json({ success: false, message: '無法獲取目錄列表。' });
@@ -1269,7 +1134,7 @@ app.get('/api/directories', isAuthenticated, async (req, res) => {
 
 app.post('/move-items', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
-    const { sourcePaths, destinationPath } = req.body;
+    const { sourcePaths, destinationPath } = req.body; // sourcePaths is an array of relative paths
     let targetUsernameForMove = actingUser.username;
 
     if (actingUser.role === 'admin' && req.body.targetUsername) {
@@ -1288,7 +1153,7 @@ app.post('/move-items', isAuthenticated, async (req, res) => {
 
     try {
         const fullDestinationPath = resolvePathForUser(targetUsernameForMove, destinationPath);
-        const destStat = await fsp.stat(fullDestinationPath).catch(() => null);
+        const destStat = await fsp.stat(fullDestinationPath).catch(() => null); // Check if dest exists and is a dir
         if (!destStat || !destStat.isDirectory()) {
             return res.status(400).json({ success: false, message: '目標路徑不是一個有效的目錄。' });
         }
@@ -1300,36 +1165,31 @@ app.post('/move-items', isAuthenticated, async (req, res) => {
             }
             const fullSourcePath = resolvePathForUser(targetUsernameForMove, sourceRelPath);
             const itemName = path.basename(fullSourcePath);
-            const fullNewPath = path.join(fullDestinationPath, itemName);
+            const fullNewPath = path.join(fullDestinationPath, itemName); // New absolute path
 
+            // Prevent moving a directory into itself or a subdirectory of itself
             if (fs.existsSync(fullSourcePath) && (await fsp.stat(fullSourcePath)).isDirectory()) {
                 if (path.resolve(fullNewPath).startsWith(path.resolve(fullSourcePath) + path.sep) || path.resolve(fullNewPath) === path.resolve(fullSourcePath)) {
                     errors.push(`無法將文件夾 "${itemName}" 移動到其自身或其子文件夾中。`); continue;
                 }
             }
+            // Check for naming conflict at destination, unless it's a case-only rename
             if (fs.existsSync(fullNewPath)) {
-                if (path.resolve(fullSourcePath).toLowerCase() !== path.resolve(fullNewPath).toLowerCase()) {
+                if (path.resolve(fullSourcePath).toLowerCase() !== path.resolve(fullNewPath).toLowerCase()) { // Allow case change
                     errors.push(`目標位置已存在同名項目 "${itemName}"。`); continue;
                 }
             }
             try {
                 await fsp.rename(fullSourcePath, fullNewPath);
+                // Update public_links if the moved item had any
                 const ownerUser = await new Promise((resolve) => db.get("SELECT id FROM users WHERE username = ?", [targetUsernameForMove], (err, row) => resolve(row)));
-                if(ownerUser){
-                    const newRelativePath = path.posix.join(destinationPath, itemName);
-                    db.run("UPDATE shared_files SET file_path = ? WHERE owner_id = ? AND file_path = ?",
-                        [newRelativePath, ownerUser.id, sourceRelPath],
-                        (updErr) => {
-                            if(updErr) console.error(`更新 ${targetUsernameForMove} 的 ${sourceRelPath} 分享路徑至 ${newRelativePath} 時出錯:`, updErr);
-                            else console.log(`已更新 ${targetUsernameForMove} 的 ${sourceRelPath} 分享路徑至 ${newRelativePath}`);
-                        }
-                    );
-                    // Also update public_links path
+                if (ownerUser) {
+                    const newRelativePathForLink = path.posix.join(destinationPath, itemName);
                     db.run("UPDATE public_links SET file_path = ? WHERE owner_id = ? AND file_path = ?",
-                        [newRelativePath, ownerUser.id, sourceRelPath],
+                        [newRelativePathForLink, ownerUser.id, sourceRelPath],
                         (updErr) => {
-                            if(updErr) console.error(`更新 ${targetUsernameForMove} 的 ${sourceRelPath} 公開鏈接路徑至 ${newRelativePath} 時出錯:`, updErr);
-                            else console.log(`已更新 ${targetUsernameForMove} 的 ${sourceRelPath} 公開鏈接路徑至 ${newRelativePath}`);
+                            if (updErr) console.error(`移動時更新 ${targetUsernameForMove} 的 ${sourceRelPath} 公開連結路徑至 ${newRelativePathForLink} 時出錯:`, updErr);
+                            else console.log(`已更新 ${targetUsernameForMove} 的 ${sourceRelPath} 公開連結路徑至 ${newRelativePathForLink}`);
                         }
                     );
                 }
@@ -1359,32 +1219,18 @@ app.post('/move-items', isAuthenticated, async (req, res) => {
 app.get('/stream/:encodedPath(*)', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const relativeFilePath = decodeURIComponent(req.params.encodedPath);
-    const ownerUsernameQuery = req.query.ownerUsername;
+    let targetUsernameForStream = actingUser.username;
 
-    let fileOwnerUsername = actingUser.username;
-    let fileOwnerId = actingUser.id;
+    if (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) {
+        const targetUser = await new Promise((resolve) => db.get("SELECT id, username FROM users WHERE username = ?", [req.query.targetUsername], (err, row) => resolve(row)));
+        if (!targetUser) return res.status(404).send('目標用戶不存在。');
+        targetUsernameForStream = targetUser.username;
+    }
 
     if (!relativeFilePath) return res.status(400).send('未指定文件路徑。');
 
     try {
-        if (ownerUsernameQuery && ownerUsernameQuery !== actingUser.username) {
-            const owner = await new Promise((resolve) => db.get("SELECT id, username FROM users WHERE username = ?", [ownerUsernameQuery], (err, row) => resolve(row)));
-            if (!owner) return res.status(404).send('文件擁有者不存在。');
-            fileOwnerUsername = owner.username;
-            fileOwnerId = owner.id;
-
-            const fullPathToCheck = resolvePathForUser(fileOwnerUsername, relativeFilePath);
-            const statsForType = await fsp.stat(fullPathToCheck);
-            const hasPermission = await checkSharePermission(actingUser.id, fileOwnerId, relativeFilePath, statsForType.isDirectory());
-            if (!hasPermission) return res.status(403).send('您沒有權限串流此分享文件。');
-
-        } else if (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) {
-            const targetUser = await new Promise((resolve) => db.get("SELECT id, username FROM users WHERE username = ?", [req.query.targetUsername], (err, row) => resolve(row)));
-            if (!targetUser) return res.status(404).send('目標用戶不存在。');
-            fileOwnerUsername = targetUser.username;
-        }
-
-        const fullFilePath = resolvePathForUser(fileOwnerUsername, relativeFilePath);
+        const fullFilePath = resolvePathForUser(targetUsernameForStream, relativeFilePath);
         const stat = await fsp.stat(fullFilePath);
         const fileSize = stat.size;
         const range = req.headers.range;
@@ -1392,6 +1238,276 @@ app.get('/stream/:encodedPath(*)', isAuthenticated, async (req, res) => {
         if (!stat.isFile()) return res.status(404).send('請求的資源不是文件。');
         const mimeType = getVideoMimeType(fullFilePath);
         if (!ALLOWED_VIDEO_EXTENSIONS.includes(path.extname(fullFilePath).toLowerCase())) return res.status(403).send('不支持的視頻文件類型。');
+
+        if (range) {
+            const parts = range.replace(/bytes=/, "").split("-");
+            const start = parseInt(parts[0], 10);
+            let end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+            if (start >= fileSize || end >= fileSize || start > end) { // Invalid range
+                res.status(416).send('請求範圍不滿足'); return;
+            }
+            if (end > fileSize - 1) end = fileSize - 1; // Ensure end is within bounds
+            const chunksize = (end - start) + 1;
+            const file = fs.createReadStream(fullFilePath, { start, end });
+            const head = {
+                'Content-Range': `bytes ${start}-${end}/${fileSize}`, 'Accept-Ranges': 'bytes',
+                'Content-Length': chunksize, 'Content-Type': mimeType,
+            };
+            res.writeHead(206, head); // Partial Content
+            file.pipe(res);
+        } else { // No range requested, send the whole file
+            const head = { 'Content-Length': fileSize, 'Content-Type': mimeType, 'Accept-Ranges': 'bytes' };
+            res.writeHead(200, head); // OK
+            fs.createReadStream(fullFilePath).pipe(res);
+        }
+    } catch (err) {
+        console.error(`[${actingUser.username}] 視頻流錯誤 for ${targetUsernameForStream}/${relativeFilePath}:`, err.message);
+        if (err.code === 'ENOENT') res.status(404).send('找不到文件。');
+        else if (err.message.includes('無效的目標用戶名') || err.message.includes('試圖訪問無效路徑')) res.status(403).send('禁止訪問。');
+        else res.status(500).send('伺服器內部錯誤。');
+    }
+});
+
+// --- 新增: 公開分享連結路由 ---
+app.post('/actions/create-public-link', isAuthenticated, async (req, res) => {
+    const actingUser = req.session.user;
+    const { filePathToShare, isDirectory: isDirStr, allowDownload: allowDownloadStr, allowView: allowViewStr } = req.body;
+    const isDirectory = isDirStr === 'true';
+    const allowDownload = allowDownloadStr !== 'false'; // Default to true if not specified or 'true'
+    const allowView = allowViewStr !== 'false';     // Default to true
+
+    let ownerIdToUse = actingUser.id;
+    let ownerUsernameToUse = actingUser.username;
+
+    // If admin is creating link on behalf of another user
+    if (actingUser.role === 'admin' && req.body.targetUsername && req.body.targetUsername !== actingUser.username) {
+        const ownerUser = await new Promise((resolve) => db.get("SELECT id, username FROM users WHERE username = ?", [req.body.targetUsername], (err, row) => resolve(row)));
+        if (!ownerUser) {
+            return res.status(400).json({ success: false, message: '分享失敗：文件擁有者不存在。' });
+        }
+        ownerIdToUse = ownerUser.id;
+        ownerUsernameToUse = ownerUser.username;
+    }
+    
+    if (!filePathToShare) {
+        return res.status(400).json({ success: false, message: '分享失敗：未提供文件路徑。' });
+    }
+
+    try {
+        // Check if file/dir exists in owner's directory
+        const fullPath = resolvePathForUser(ownerUsernameToUse, filePathToShare);
+        if (!fs.existsSync(fullPath)) {
+            return res.status(404).json({ success: false, message: '分享失敗：指定的文件或目錄不存在。' });
+        }
+        const stat = await fsp.stat(fullPath);
+        if (isDirectory !== stat.isDirectory()){
+            return res.status(400).json({ success: false, message: `分享失敗：項目類型不匹配 (文件/目錄)。` });
+        }
+
+        const token = uuidv4(); // Generate a unique token
+        // Optional: Add password hashing if password is provided
+        // const passwordHash = req.body.password ? bcrypt.hashSync(req.body.password, 10) : null;
+        // const expiresAt = req.body.expiresAt || null; // Handle date parsing if used
+
+        db.run(`INSERT INTO public_links (owner_id, file_path, is_directory, token, allow_download, allow_view) 
+                VALUES (?, ?, ?, ?, ?, ?)`,
+            [ownerIdToUse, filePathToShare, isDirectory ? 1 : 0, token, allowDownload ? 1 : 0, allowView ? 1 : 0],
+            function (err) {
+                if (err) {
+                    console.error("創建公開連結時插入數據庫錯誤:", err);
+                    return res.status(500).json({ success: false, message: '分享失敗：數據庫錯誤。' });
+                }
+                const publicUrl = `${req.protocol}://${req.get('host')}/public/${token}`;
+                res.json({ success: true, message: '公開連結創建成功！', publicUrl: publicUrl, token: token });
+            }
+        );
+    } catch (err) {
+        console.error("創建公開連結時發生錯誤:", err);
+        res.status(500).json({ success: false, message: `分享失敗：${err.message}` });
+    }
+});
+
+app.post('/actions/revoke-public-link', isAuthenticated, async (req, res) => {
+    const actingUser = req.session.user;
+    const { link_id, token } = req.body; // Can revoke by ID or token
+
+    let ownerIdToCheck = actingUser.id;
+    let targetUsernameForRedirect = null;
+
+    if (actingUser.role === 'admin' && req.body.contextUsername) {
+        const contextOwner = await new Promise((resolve) => db.get("SELECT id FROM users WHERE username = ?", [req.body.contextUsername], (err,row) => resolve(row)));
+        if (contextOwner) {
+            ownerIdToCheck = contextOwner.id;
+            targetUsernameForRedirect = req.body.contextUsername;
+        } else {
+            return res.redirect(`/files?viewMode=userShares&message=撤銷連結失敗：上下文用戶不存在。&messageType=error`);
+        }
+    }
+
+    if (!link_id && !token) {
+        return res.redirect(`/files?viewMode=userShares${targetUsernameForRedirect ? `&targetUsername=${targetUsernameForRedirect}`:''}&message=撤銷連結失敗：未提供連結標識。&messageType=error`);
+    }
+
+    const query = link_id ? "DELETE FROM public_links WHERE id = ? AND owner_id = ?" : "DELETE FROM public_links WHERE token = ? AND owner_id = ?";
+    const params = link_id ? [link_id, ownerIdToCheck] : [token, ownerIdToCheck];
+
+    db.run(query, params, function (err) {
+        let message = '';
+        let messageType = '';
+        if (err) {
+            console.error("撤銷公開連結時數據庫錯誤:", err);
+            message = '撤銷連結失敗：數據庫錯誤。';
+            messageType = 'error';
+        } else if (this.changes === 0) {
+            message = '撤銷連結失敗：未找到連結記錄或您沒有權限撤銷此連結。';
+            messageType = 'warning';
+        } else {
+            message = '成功撤銷公開連結。';
+            messageType = 'success';
+        }
+        let redirectUrl = `/files?viewMode=userShares&message=${encodeURIComponent(message)}&messageType=${messageType}`;
+        if (targetUsernameForRedirect) {
+            redirectUrl += `&targetUsername=${encodeURIComponent(targetUsernameForRedirect)}`;
+        }
+        res.redirect(redirectUrl);
+    });
+});
+
+// --- 公開連結訪問路由 ---
+app.get('/public/:token', async (req, res) => {
+    const { token } = req.params;
+    const { relPath } = req.query; // For accessing items within a shared directory
+
+    try {
+        const link = await new Promise((resolve, reject) => {
+            db.get("SELECT pl.*, u.username as owner_username FROM public_links pl JOIN users u ON pl.owner_id = u.id WHERE pl.token = ?", [token], (err, row) => {
+                if (err) reject(err); else resolve(row);
+            });
+        });
+
+        if (!link) {
+            return res.status(404).render('error', { message: '分享連結不存在或已過期。', user: null, csrfToken: null });
+        }
+
+        // Increment visit count (optional, can be done async or batched)
+        db.run("UPDATE public_links SET visit_count = visit_count + 1 WHERE id = ?", [link.id]);
+
+        const ownerUsername = link.owner_username;
+        let itemRelativePath = link.file_path; // Path of the shared item itself
+        if (link.is_directory && relPath) { // If accessing a path within a shared directory
+            itemRelativePath = path.posix.join(link.file_path, relPath);
+        }
+        
+        const fullItemPath = resolvePathForUser(ownerUsername, itemRelativePath);
+        const stats = await fsp.stat(fullItemPath);
+
+        if (stats.isFile()) {
+            if (!link.allow_view && !link.allow_download) {
+                 return res.status(403).render('error', { message: '此連結不允許查看或下載。', user: null, csrfToken: null });
+            }
+            // For now, prioritize download for files. Viewing can be more complex.
+            if (link.allow_download) {
+                return res.download(fullItemPath, path.basename(itemRelativePath), (err) => {
+                    if (err) {
+                        console.error(`公開連結下載錯誤 (${token}, path: ${itemRelativePath}):`, err);
+                        if (!res.headersSent) res.status(500).render('error', { message: '下載文件時發生錯誤。', user: null, csrfToken: null });
+                    }
+                });
+            } else { // Not downloadable, try to view if allowed (simple text view for now)
+                 const fileExt = path.extname(itemRelativePath).toLowerCase();
+                 if (link.allow_view && ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
+                    const content = await fsp.readFile(fullItemPath, 'utf8');
+                    return res.render('public-view-file', { // Need a new EJS template for public viewing
+                        filename: path.basename(itemRelativePath),
+                        content: content,
+                        fileExtension: fileExt,
+                        link: link, // Pass link details for display
+                        user: null, // No logged-in user context for public pages
+                        csrfToken: null
+                    });
+                 }
+                 return res.status(403).render('error', { message: '此連結不允許查看此文件類型。', user: null, csrfToken: null });
+            }
+        } else if (stats.isDirectory()) {
+            if (!link.allow_view) { // allow_view for directory means list contents
+                return res.status(403).render('error', { message: '此連結不允許查看目錄內容。', user: null, csrfToken: null });
+            }
+            const dirEntries = await fsp.readdir(fullItemPath, { withFileTypes: true });
+            const items = await Promise.all(dirEntries.map(async entry => {
+                const entryRelPath = path.posix.join(relPath || '', entry.name); // Path relative to shared dir root
+                const fullEntryPath = path.join(fullItemPath, entry.name);
+                let entryStats;
+                try { entryStats = await fsp.stat(fullEntryPath); } catch (e) { entryStats = {size: null, mtime: null}; }
+                
+                return {
+                    name: entry.name,
+                    isDir: entry.isDirectory(),
+                    path: entryRelPath, // Relative path for links within the public view
+                    encodedName: encodeURIComponent(entry.name),
+                    size: entry.isFile() ? entryStats.size : null,
+                    lastModified: entryStats.mtime,
+                    // No video specific info here unless we add public streaming for individual files in dir
+                };
+            }));
+            items.sort((a, b) => { /* Sorting logic as in /files */
+                if (a.isDir && !b.isDir) return -1; if (!a.isDir && b.isDir) return 1;
+                return a.name.localeCompare(b.name, 'zh-CN-u-co-pinyin');
+            });
+
+            return res.render('public-directory', { // Need a new EJS template
+                link: link,
+                directoryName: path.basename(link.file_path) + (relPath ? '/' + relPath : ''),
+                items: items,
+                currentRelPath: relPath || '', // Current relative path within the shared dir
+                user: null, csrfToken: null
+            });
+        } else {
+            return res.status(404).render('error', { message: '分享的項目類型未知。', user: null, csrfToken: null });
+        }
+
+    } catch (err) {
+        console.error(`訪問公開連結 ${token} 錯誤:`, err);
+        if (err.code === 'ENOENT') return res.status(404).render('error', { message: '分享的項目未找到。', user: null, csrfToken: null });
+        res.status(500).render('error', { message: '處理分享連結時發生錯誤。', user: null, csrfToken: null });
+    }
+});
+
+// Public stream route (simplified, needs more robust handling like /stream)
+app.get('/public/stream/:token', async (req, res) => {
+    const { token } = req.params;
+    const { relPath } = req.query; // path relative to the root of the shared directory if token points to a dir
+
+    try {
+        const link = await new Promise((resolve, reject) => {
+            db.get("SELECT pl.*, u.username as owner_username FROM public_links pl JOIN users u ON pl.owner_id = u.id WHERE pl.token = ?", [token], (err, row) => {
+                if (err) reject(err); else resolve(row);
+            });
+        });
+
+        if (!link || !link.allow_view) { // Must allow view to stream
+            return res.status(404).send('分享連結不存在、已過期或不允許查看。');
+        }
+        
+        let itemRelativePath = link.file_path;
+        if (link.is_directory && relPath) {
+            itemRelativePath = path.posix.join(link.file_path, relPath);
+        } else if (link.is_directory && !relPath) {
+            return res.status(400).send('請求串流整個目錄是不被允許的。');
+        }
+
+
+        const fullFilePath = resolvePathForUser(link.owner_username, itemRelativePath);
+        const stat = await fsp.stat(fullFilePath);
+        if (!stat.isFile() || !ALLOWED_VIDEO_EXTENSIONS.includes(path.extname(fullFilePath).toLowerCase())) {
+            return res.status(403).send('請求的資源不是可串流的視頻文件。');
+        }
+        
+        // Increment visit count (optional)
+        db.run("UPDATE public_links SET visit_count = visit_count + 1 WHERE id = ?", [link.id]);
+
+        const fileSize = stat.size;
+        const range = req.headers.range;
+        const mimeType = getVideoMimeType(fullFilePath);
 
         if (range) {
             const parts = range.replace(/bytes=/, "").split("-");
@@ -1415,494 +1531,7 @@ app.get('/stream/:encodedPath(*)', isAuthenticated, async (req, res) => {
             fs.createReadStream(fullFilePath).pipe(res);
         }
     } catch (err) {
-        console.error(`[${actingUser.username}] 視頻流錯誤 for ${fileOwnerUsername}/${relativeFilePath}:`, err.message);
-        if (err.code === 'ENOENT') res.status(404).send('找不到文件。');
-        else if (err.message.includes('無效的目標用戶名') || err.message.includes('試圖訪問無效路徑')) res.status(403).send('禁止訪問。');
-        else res.status(500).send('伺服器內部錯誤。');
-    }
-});
-
-// --- User-to-User Sharing Routes ---
-app.post('/actions/share-file', isAuthenticated, async (req, res) => {
-    const actingUser = req.session.user;
-    const { filePathToShare, usernameToShareWith, isDirectory } = req.body;
-    const isDirBool = isDirectory === 'true';
-
-    let ownerIdToUse = actingUser.id;
-    let ownerUsernameToUse = actingUser.username;
-
-    if (actingUser.role === 'admin' && req.body.targetUsername && req.body.targetUsername !== actingUser.username) {
-        const ownerUser = await new Promise((resolve) => db.get("SELECT id, username FROM users WHERE username = ?", [req.body.targetUsername], (err, row) => resolve(row)));
-        if (!ownerUser) {
-            return res.redirect(`/files?path=${encodeURIComponent(path.dirname(filePathToShare))}&targetUsername=${encodeURIComponent(req.body.targetUsername)}&message=分享失敗：文件擁有者不存在。&messageType=error`);
-        }
-        ownerIdToUse = ownerUser.id;
-        ownerUsernameToUse = ownerUser.username;
-    }
-    
-    const sharedWithUser = await new Promise((resolve) => db.get("SELECT id FROM users WHERE username = ?", [usernameToShareWith], (err, row) => resolve(row)));
-
-    let redirectPath = path.posix.dirname(filePathToShare) || '/';
-    let redirectParams = new URLSearchParams();
-    if (redirectPath !== '/') redirectParams.set('path', redirectPath);
-    if (actingUser.role === 'admin' && req.body.targetUsername) {
-        redirectParams.set('targetUsername', req.body.targetUsername);
-    }
-
-
-    if (!filePathToShare || !usernameToShareWith) {
-        redirectParams.set('message', '分享失敗：未提供文件路徑或目標用戶名。');
-        redirectParams.set('messageType', 'error');
-        return res.redirect(`/files?${redirectParams.toString()}`);
-    }
-    if (!sharedWithUser) {
-        redirectParams.set('message', `分享失敗：用戶 "${usernameToShareWith}" 不存在。`);
-        redirectParams.set('messageType', 'error');
-        return res.redirect(`/files?${redirectParams.toString()}`);
-    }
-    if (sharedWithUser.id === ownerIdToUse) {
-        redirectParams.set('message', '不能與自己分享文件。');
-        redirectParams.set('messageType', 'warning');
-        return res.redirect(`/files?${redirectParams.toString()}`);
-    }
-
-    try {
-        const fullPath = resolvePathForUser(ownerUsernameToUse, filePathToShare);
-        if (!fs.existsSync(fullPath)) {
-            redirectParams.set('message', '分享失敗：指定的文件或目錄不存在。');
-            redirectParams.set('messageType', 'error');
-            return res.redirect(`/files?${redirectParams.toString()}`);
-        }
-        const stat = await fsp.stat(fullPath);
-        if (isDirBool !== stat.isDirectory()){
-            redirectParams.set('message', `分享失敗：項目類型不匹配 (文件/目錄)。`);
-            redirectParams.set('messageType', 'error');
-            return res.redirect(`/files?${redirectParams.toString()}`);
-        }
-
-
-        db.run(`INSERT INTO shared_files (owner_id, shared_with_id, file_path, is_directory, permissions) 
-                VALUES (?, ?, ?, ?, ?)`,
-            [ownerIdToUse, sharedWithUser.id, filePathToShare, isDirBool ? 1 : 0, 'read-only'],
-            function (err) {
-                if (err) {
-                    if (err.message.includes('UNIQUE constraint failed')) {
-                         redirectParams.set('message', `此項目已分享給用戶 "${usernameToShareWith}"。`);
-                         redirectParams.set('messageType', 'warning');
-                    } else {
-                        console.error("分享文件時插入數據庫錯誤:", err);
-                        redirectParams.set('message', '分享失敗：數據庫錯誤。');
-                        redirectParams.set('messageType', 'error');
-                    }
-                } else {
-                    redirectParams.set('message', `成功將 "${path.basename(filePathToShare)}" 分享給 ${usernameToShareWith}。`);
-                    redirectParams.set('messageType', 'success');
-                }
-                res.redirect(`/files?${redirectParams.toString()}`);
-            }
-        );
-    } catch (err) {
-        console.error("分享文件時發生錯誤:", err);
-        redirectParams.set('message', `分享失敗：${err.message}`);
-        redirectParams.set('messageType', 'error');
-        res.redirect(`/files?${redirectParams.toString()}`);
-    }
-});
-
-app.post('/actions/revoke-share', isAuthenticated, async (req, res) => {
-    const actingUser = req.session.user;
-    const { shareId } = req.body;
-
-    let targetUsernameForRedirect = null;
-    let ownerIdToCheck = actingUser.id;
-
-    if (actingUser.role === 'admin' && req.body.contextUsername) {
-        const contextOwner = await new Promise((resolve) => db.get("SELECT id FROM users WHERE username = ?", [req.body.contextUsername], (err,row) => resolve(row)));
-        if (contextOwner) {
-            ownerIdToCheck = contextOwner.id;
-            targetUsernameForRedirect = req.body.contextUsername;
-        } else {
-            return res.redirect(`/files?viewMode=userShares&message=撤銷分享失敗：上下文用戶不存在。&messageType=error`);
-        }
-    }
-
-
-    if (!shareId) {
-        return res.redirect(`/files?viewMode=userShares${targetUsernameForRedirect ? `&targetUsername=${targetUsernameForRedirect}`:''}&message=撤銷分享失敗：未提供分享ID。&messageType=error`);
-    }
-
-    db.run("DELETE FROM shared_files WHERE id = ? AND owner_id = ?", [shareId, ownerIdToCheck], function (err) {
-        let message = '';
-        let messageType = '';
-        if (err) {
-            console.error("撤銷分享時數據庫錯誤:", err);
-            message = '撤銷分享失敗：數據庫錯誤。';
-            messageType = 'error';
-        } else if (this.changes === 0) {
-            message = '撤銷分享失敗：未找到分享記錄或您沒有權限撤銷此分享。';
-            messageType = 'warning';
-        } else {
-            message = '成功撤銷分享。';
-            messageType = 'success';
-        }
-        let redirectUrl = `/files?viewMode=userShares&message=${encodeURIComponent(message)}&messageType=${messageType}`;
-        if (targetUsernameForRedirect) {
-            redirectUrl += `&targetUsername=${encodeURIComponent(targetUsernameForRedirect)}`;
-        }
-        res.redirect(redirectUrl);
-    });
-});
-
-// --- Public Link Sharing Routes ---
-app.post('/actions/create-public-link', isAuthenticated, async (req, res) => {
-    const actingUser = req.session.user;
-    const { filePathToShare, isDirectory } = req.body; // isDirectory is 'true' or 'false' (string)
-    const isDirBool = isDirectory === 'true';
-
-    let ownerIdToUse = actingUser.id;
-    let ownerUsernameToUse = actingUser.username;
-
-    // If admin is creating link on behalf of another user
-    if (actingUser.role === 'admin' && req.body.targetUsername && req.body.targetUsername !== actingUser.username) {
-        const ownerUser = await new Promise((resolve) => db.get("SELECT id, username FROM users WHERE username = ?", [req.body.targetUsername], (err, row) => resolve(row)));
-        if (!ownerUser) {
-            return res.status(404).json({ success: false, message: '創建公開鏈接失敗：文件擁有者不存在。' });
-        }
-        ownerIdToUse = ownerUser.id;
-        ownerUsernameToUse = ownerUser.username;
-    }
-
-    if (!filePathToShare) {
-        return res.status(400).json({ success: false, message: '創建公開鏈接失敗：未提供文件路徑。' });
-    }
-
-    try {
-        const fullPath = resolvePathForUser(ownerUsernameToUse, filePathToShare);
-        if (!fs.existsSync(fullPath)) {
-            return res.status(404).json({ success: false, message: '創建公開鏈接失敗：指定的文件或目錄不存在。' });
-        }
-        const stat = await fsp.stat(fullPath);
-        if (isDirBool !== stat.isDirectory()) {
-            return res.status(400).json({ success: false, message: '創建公開鏈接失敗：項目類型不匹配。' });
-        }
-
-        const token = generateUniqueToken();
-        db.run(`INSERT INTO public_links (owner_id, file_path, is_directory, token, allow_download) 
-                VALUES (?, ?, ?, ?, ?)`,
-            [ownerIdToUse, filePathToShare, isDirBool ? 1 : 0, token, 1], // Default allow_download to true
-            function (err) {
-                if (err) {
-                    console.error("創建公開鏈接時插入數據庫錯誤:", err);
-                    return res.status(500).json({ success: false, message: '創建公開鏈接失敗：數據庫錯誤。' });
-                }
-                const publicUrl = `${req.protocol}://${req.get('host')}/public/s/${token}`;
-                res.json({ success: true, message: '公開鏈接創建成功！', publicUrl: publicUrl, token: token });
-            }
-        );
-    } catch (err) {
-        console.error("創建公開鏈接時發生錯誤:", err);
-        res.status(500).json({ success: false, message: `創建公開鏈接失敗：${err.message}` });
-    }
-});
-
-app.post('/actions/revoke-public-link', isAuthenticated, async (req, res) => {
-    const actingUser = req.session.user;
-    const { tokenToRevoke } = req.body; // Can be token or ID, but token is better for UI consistency
-
-    if (!tokenToRevoke) {
-        return res.redirect(`/files?viewMode=publicLinks&message=撤銷鏈接失敗：未提供鏈接標識。&messageType=error`);
-    }
-    
-    let ownerIdToCheck = actingUser.id;
-    // If admin is revoking for another user, they must provide targetUsername
-    if (actingUser.role === 'admin' && req.body.contextUsername && req.body.contextUsername !== actingUser.username) {
-        const contextOwner = await new Promise((resolve) => db.get("SELECT id FROM users WHERE username = ?", [req.body.contextUsername], (err,row) => resolve(row)));
-        if (contextOwner) {
-            ownerIdToCheck = contextOwner.id;
-        } else {
-            return res.redirect(`/files?viewMode=publicLinks&targetUsername=${encodeURIComponent(req.body.contextUsername)}&message=撤銷鏈接失敗：上下文用戶不存在。&messageType=error`);
-        }
-    }
-
-    db.run("DELETE FROM public_links WHERE token = ? AND owner_id = ?", [tokenToRevoke, ownerIdToCheck], function (err) {
-        let message = '';
-        let messageType = '';
-        if (err) {
-            console.error("撤銷公開鏈接時數據庫錯誤:", err);
-            message = '撤銷鏈接失敗：數據庫錯誤。';
-            messageType = 'error';
-        } else if (this.changes === 0) {
-            message = '撤銷鏈接失敗：未找到鏈接記錄或您沒有權限撤銷此鏈接。';
-            messageType = 'warning';
-        } else {
-            message = '成功撤銷公開鏈接。';
-            messageType = 'success';
-        }
-        let redirectUrl = `/files?viewMode=publicLinks&message=${encodeURIComponent(message)}&messageType=${messageType}`;
-        if (actingUser.role === 'admin' && req.body.contextUsername && req.body.contextUsername !== actingUser.username) {
-            redirectUrl += `&targetUsername=${encodeURIComponent(req.body.contextUsername)}`;
-        }
-        res.redirect(redirectUrl);
-    });
-});
-
-
-// --- Public Access Routes (NO AUTHENTICATION) ---
-// Middleware to fetch public link details
-async function getPublicLinkDetails(req, res, next) {
-    const token = req.params.token;
-    if (!token) return res.status(400).render('error-public', { message: '無效的分享鏈接。' });
-
-    db.get("SELECT pl.*, u.username as owner_username FROM public_links pl JOIN users u ON pl.owner_id = u.id WHERE pl.token = ?", [token], async (err, link) => {
-        if (err) {
-            console.error("獲取公開鏈接詳情錯誤:", err);
-            return res.status(500).render('error-public', { message: '訪問分享鏈接時發生內部錯誤。' });
-        }
-        if (!link) {
-            return res.status(404).render('error-public', { message: '分享鏈接不存在或已過期。' });
-        }
-        // Optional: Check expiration, password here if implemented
-        req.publicLink = link;
-        try {
-            req.publicLink.fullPathOnServer = resolvePathForUser(link.owner_username, link.file_path);
-            if (!fs.existsSync(req.publicLink.fullPathOnServer)) {
-                 console.warn(`公開鏈接 ${token} 指向的文件/目錄在服務器上不存在: ${req.publicLink.fullPathOnServer}`);
-                 return res.status(404).render('error-public', { message: '分享的項目已不存在。' });
-            }
-            req.publicLink.stats = await fsp.stat(req.publicLink.fullPathOnServer);
-             // Increment access count (fire and forget)
-            db.run("UPDATE public_links SET access_count = access_count + 1 WHERE id = ?", [link.id], (acErr) => {
-                if (acErr) console.error(`更新公開鏈接 ${token} 訪問計數時出錯:`, acErr);
-            });
-            next();
-        } catch (resolveErr) {
-            console.error(`解析公開鏈接路徑錯誤 for token ${token}:`, resolveErr);
-            return res.status(500).render('error-public', { message: '無法訪問分享的項目。' });
-        }
-    });
-}
-
-// Public share landing page
-app.get('/public/s/:token', getPublicLinkDetails, async (req, res) => {
-    const { publicLink } = req;
-    const itemName = path.basename(publicLink.file_path);
-    let itemsInDir = [];
-
-    if (publicLink.is_directory) {
-        try {
-            const dirEntries = await fsp.readdir(publicLink.fullPathOnServer, { withFileTypes: true });
-            itemsInDir = await Promise.all(dirEntries.map(async entry => {
-                const itemRelPath = path.posix.join(publicLink.file_path, entry.name); // Path relative to owner's root
-                const fullEntryPath = path.join(publicLink.fullPathOnServer, entry.name);
-                const fileExt = path.extname(entry.name).toLowerCase();
-                let stats;
-                try { stats = await fsp.stat(fullEntryPath); } catch (e) { stats = { size: null, mtime: null }; }
-                const isPlayableVideo = entry.isFile() && ALLOWED_VIDEO_EXTENSIONS.includes(fileExt);
-                return {
-                    name: entry.name,
-                    isDir: entry.isDirectory(),
-                    pathInShare: entry.name, // Path relative to the shared directory root for public links
-                    encodedPathInShare: encodeURIComponent(entry.name),
-                    size: entry.isFile() ? stats.size : null,
-                    lastModified: stats.mtime,
-                    isPlayableVideo: isPlayableVideo,
-                    videoType: isPlayableVideo ? getVideoMimeType(entry.name) : null,
-                    isViewableText: entry.isFile() && ALLOWED_TEXT_EXTENSIONS.includes(fileExt)
-                };
-            }));
-            itemsInDir.sort((a,b) => { // Sort items within the public directory view
-                if (a.isDir && !b.isDir) return -1;
-                if (!a.isDir && b.isDir) return 1;
-                return a.name.localeCompare(b.name, 'zh-CN-u-co-pinyin');
-            });
-        } catch (dirErr) {
-            console.error(`讀取公開分享的文件夾 ${publicLink.fullPathOnServer} 內容時出錯:`, dirErr);
-            return res.status(500).render('error-public', { message: '無法讀取分享的文件夾內容。' });
-        }
-    }
-
-    res.render('public-share-page', {
-        link: publicLink,
-        itemName: itemName,
-        itemsInDir: itemsInDir, // Will be empty if not a directory
-        ALLOWED_TEXT_EXTENSIONS, // Pass to template for conditional rendering
-        ALLOWED_VIDEO_EXTENSIONS,
-        baseUrl: `${req.protocol}://${req.get('host')}`
-    });
-});
-
-// Public download route
-app.get('/public/dl/:token/:itemNameInPath?', getPublicLinkDetails, async (req, res) => {
-    const { publicLink } = req;
-    const { itemNameInPath } = req.params; // For files within a shared directory
-
-    if (!publicLink.allow_download) {
-        return res.status(403).render('error-public', { message: '此鏈接不允許下載。' });
-    }
-
-    let pathToDownload = publicLink.fullPathOnServer;
-    let downloadAsName = path.basename(publicLink.file_path);
-
-    if (publicLink.is_directory) {
-        if (itemNameInPath) { // Downloading a specific file from a shared directory
-            const decodedItemName = decodeURIComponent(itemNameInPath);
-            // Security: Ensure itemNameInPath does not contain '..' or other traversal attempts
-            if (decodedItemName.includes('..') || decodedItemName.includes('/') || decodedItemName.includes('\\')) {
-                return res.status(400).render('error-public', { message: '無效的文件名。' });
-            }
-            pathToDownload = path.join(publicLink.fullPathOnServer, decodedItemName);
-            downloadAsName = decodedItemName;
-            try {
-                const itemStat = await fsp.stat(pathToDownload);
-                if (!itemStat.isFile()) {
-                    return res.status(400).render('error-public', { message: '請求的項目不是一個文件。' });
-                }
-            } catch (e) {
-                return res.status(404).render('error-public', { message: '在分享的文件夾中未找到指定文件。' });
-            }
-        } else { // Downloading the entire shared directory as a zip
-            const archiveName = `${path.basename(publicLink.file_path) || 'shared-archive'}-${publicLink.token.substring(0,8)}.zip`;
-            const zipfile = new yazl.ZipFile();
-            res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(archiveName)}"`);
-            res.setHeader('Content-Type', 'application/zip');
-            zipfile.outputStream.pipe(res);
-            zipfile.outputStream.on('error', (err) => { console.error('Public Yazl outputStream error:', err); if (!res.headersSent) res.status(500).send('創建壓縮文件時發生錯誤。'); else if (!res.writableEnded) res.end(); });
-            res.on('error', (err) => console.error('Public Response stream error during zip download:', err));
-            
-            try {
-                // The userRootForSecurityCheck should be the owner's actual root, not the shared directory itself.
-                const ownerRoot = getUserUploadRoot(publicLink.owner_username);
-                await addDirectoryToZip(zipfile, publicLink.fullPathOnServer, path.basename(publicLink.file_path) || 'shared_items', ownerRoot);
-                zipfile.end();
-                return; // Handled by pipe
-            } catch (zipErr) {
-                console.error('公開鏈接打包下載錯誤:', zipErr);
-                if (!res.headersSent) res.status(500).send('打包文件夾時發生內部錯誤。');
-                else if (!res.writableEnded) res.end();
-                if (zipfile && typeof zipfile.end === 'function' && !zipfile.ended) zipfile.end();
-                return;
-            }
-        }
-    }
-    // If it's a single file (either directly shared or from a folder)
-    res.download(pathToDownload, downloadAsName, (err) => {
-        if (err) {
-            console.error(`公開鏈接下載文件 ${downloadAsName} 出錯:`, err);
-            if (!res.headersSent) { res.status(500).render('error-public', { message: '下載文件時發生內部錯誤。' }); }
-        }
-    });
-});
-
-
-// Public view route (for text files)
-app.get('/public/view/:token/:itemNameInPath?', getPublicLinkDetails, async (req, res) => {
-    const { publicLink } = req;
-    const { itemNameInPath } = req.params;
-
-    let pathToFileToView = publicLink.fullPathOnServer;
-    let filenameToView = path.basename(publicLink.file_path);
-
-    if (publicLink.is_directory) {
-        if (!itemNameInPath) return res.status(400).render('error-public', { message: '未指定要查看的文件。' });
-        const decodedItemName = decodeURIComponent(itemNameInPath);
-        if (decodedItemName.includes('..') || decodedItemName.includes('/') || decodedItemName.includes('\\')) {
-            return res.status(400).render('error-public', { message: '無效的文件名。' });
-        }
-        pathToFileToView = path.join(publicLink.fullPathOnServer, decodedItemName);
-        filenameToView = decodedItemName;
-        try {
-            const itemStat = await fsp.stat(pathToFileToView);
-            if (!itemStat.isFile()) return res.status(400).render('error-public', { message: '請求的項目不是一個文件。' });
-        } catch (e) {
-            return res.status(404).render('error-public', { message: '在分享的文件夾中未找到指定文件。' });
-        }
-    } else if (itemNameInPath && path.basename(publicLink.file_path) !== decodeURIComponent(itemNameInPath)) {
-        // This case should ideally not be hit if URL structure is /public/view/:token for single files
-        // and /public/view/:token/:itemName for files in dir.
-        return res.status(400).render('error-public', { message: '鏈接與文件名不匹配。' });
-    }
-
-
-    const fileExt = path.extname(filenameToView).toLowerCase();
-    if (!ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
-        return res.status(403).render('error-public', { message: `不支持預覽此文件類型 (${fileExt})。` });
-    }
-
-    try {
-        const content = await fsp.readFile(pathToFileToView, 'utf8');
-        res.render('view-file-public', { // A new template for public viewing
-            filename: filenameToView,
-            content: content,
-            link: publicLink, // Pass link for breadcrumbs or download options
-            fileExtension: fileExt,
-            itemNameInPath: itemNameInPath ? encodeURIComponent(itemNameInPath) : null
-        });
-    } catch (err) {
-        console.error(`公開鏈接讀取文件 ${filenameToView} 查看錯誤:`, err);
-        res.status(500).render('error-public', { message: '讀取文件內容失敗。' });
-    }
-});
-
-// Public stream route (for videos)
-app.get('/public/stream/:token/:itemNameInPath?', getPublicLinkDetails, async (req, res) => {
-    const { publicLink } = req;
-    const { itemNameInPath } = req.params;
-
-    let pathToFileToStream = publicLink.fullPathOnServer;
-    let filenameToStream = path.basename(publicLink.file_path);
-
-    if (publicLink.is_directory) {
-        if (!itemNameInPath) return res.status(400).send('未指定要串流的文件。');
-         const decodedItemName = decodeURIComponent(itemNameInPath);
-        if (decodedItemName.includes('..') || decodedItemName.includes('/') || decodedItemName.includes('\\')) {
-            return res.status(400).send('無效的文件名。');
-        }
-        pathToFileToStream = path.join(publicLink.fullPathOnServer, decodedItemName);
-        filenameToStream = decodedItemName;
-         try {
-            const itemStat = await fsp.stat(pathToFileToStream);
-            if (!itemStat.isFile()) return res.status(400).send('請求的項目不是一個文件。');
-        } catch (e) {
-            return res.status(404).send('在分享的文件夾中未找到指定文件。');
-        }
-    } else if (itemNameInPath && path.basename(publicLink.file_path) !== decodeURIComponent(itemNameInPath)) {
-        return res.status(400).send('鏈接與文件名不匹配。');
-    }
-
-    const fileExt = path.extname(filenameToStream).toLowerCase();
-    if (!ALLOWED_VIDEO_EXTENSIONS.includes(fileExt)) {
-        return res.status(403).send('不支持的視頻文件類型。');
-    }
-    
-    try {
-        const stat = await fsp.stat(pathToFileToStream);
-        const fileSize = stat.size;
-        const range = req.headers.range;
-        const mimeType = getVideoMimeType(pathToFileToStream);
-
-        if (range) {
-            const parts = range.replace(/bytes=/, "").split("-");
-            const start = parseInt(parts[0], 10);
-            let end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-            if (start >= fileSize || end >= fileSize || start > end) {
-                res.status(416).send('請求範圍不滿足'); return;
-            }
-             if (end > fileSize - 1) end = fileSize - 1;
-            const chunksize = (end - start) + 1;
-            const file = fs.createReadStream(pathToFileToStream, { start, end });
-            const head = {
-                'Content-Range': `bytes ${start}-${end}/${fileSize}`, 'Accept-Ranges': 'bytes',
-                'Content-Length': chunksize, 'Content-Type': mimeType,
-            };
-            res.writeHead(206, head);
-            file.pipe(res);
-        } else {
-            const head = { 'Content-Length': fileSize, 'Content-Type': mimeType, 'Accept-Ranges': 'bytes' };
-            res.writeHead(200, head);
-            fs.createReadStream(pathToFileToStream).pipe(res);
-        }
-    } catch (err) {
-        console.error(`公開鏈接視頻流錯誤 for ${filenameToStream}:`, err.message);
+        console.error(`公開連結串流錯誤 (${token}, relPath: ${relPath}):`, err.message);
         if (err.code === 'ENOENT') res.status(404).send('找不到文件。');
         else res.status(500).send('伺服器內部錯誤。');
     }
@@ -1934,7 +1563,7 @@ app.post('/admin/add-user', isAuthenticated, isAdmin, (req, res) => {
         const hashedPassword = bcrypt.hashSync(newPassword, 12);
         db.run("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", [newUsername, hashedPassword, role], function (err) {
             if (err) { console.error("管理員添加用戶時插入數據庫錯誤:", err); return res.redirect('/admin?message=添加用戶失敗，請稍後再試。&messageType=error'); }
-            getUserUploadRoot(newUsername);
+            getUserUploadRoot(newUsername); // Ensure directory is created
             res.redirect(`/admin?message=用戶 "${newUsername}" (角色: ${role}) 已成功創建。&messageType=success`);
         });
     });
@@ -1946,9 +1575,10 @@ app.post('/admin/reset-password/:userId', isAuthenticated, isAdmin, (req, res) =
     if (isNaN(userIdToReset)) return res.redirect('/admin?message=無效的用戶ID。&messageType=error');
     if (req.session.user.id === userIdToReset) return res.redirect('/admin?message=不能通過此介面重置自己的密碼。請使用“修改密碼”功能。&messageType=error');
     if (!newPassword || newPassword.length < 6) return res.redirect(`/admin?message=新密碼不能為空且長度至少為6位。&messageType=error`);
+    
     const hashedNewPassword = bcrypt.hashSync(newPassword, 12);
     db.run("UPDATE users SET password = ? WHERE id = ? AND id != ?", [hashedNewPassword, userIdToReset, req.session.user.id], function (err) {
-        if (err || this.changes === 0) {
+        if (err || this.changes === 0) { // Check if any row was updated
             if (err) console.error("管理員重置密碼錯誤:", err);
             return res.redirect('/admin?message=重置密碼失敗 (用戶不存在或試圖重置當前管理員)。&messageType=error');
         }
@@ -1966,18 +1596,18 @@ app.get('/admin/delete/:userId', isAuthenticated, isAdmin, async (req, res) => {
 
     try {
         const user = await new Promise((resolve, reject) => {
-            db.get("SELECT username FROM users WHERE id = ? AND id != ?", [userIdToDelete, req.session.user.id], (err, row) => {
+            db.get("SELECT username FROM users WHERE id = ? AND id != ?", [userIdToDelete, req.session.user.id], (err, row) => { // Ensure not deleting self
                 if (err) reject(err); else resolve(row);
             });
         });
         if (!user) return res.redirect('/admin?message=未找到用戶或試圖刪除當前管理員。&messageType=error');
 
         const userDirToDelete = getUserUploadRoot(user.username);
+        // Delete public links owned by this user
         await new Promise((resolve, reject) => {
-            db.parallelize(() => {
-                db.run("DELETE FROM shared_files WHERE owner_id = ? OR shared_with_id = ?", [userIdToDelete, userIdToDelete], (err) => { if(err) console.error("刪除用戶時清理其分享記錄錯誤:", err);});
-                db.run("DELETE FROM public_links WHERE owner_id = ?", [userIdToDelete], (err) => { if(err) console.error("刪除用戶時清理其公開鏈接錯誤:", err);});
-                resolve();
+            db.run("DELETE FROM public_links WHERE owner_id = ?", [userIdToDelete], (err) => { 
+                if(err) { console.error("刪除用戶時清理其擁有的公開連結錯誤:", err); reject(err); }
+                else resolve();
             });
         });
 
@@ -1989,7 +1619,7 @@ app.get('/admin/delete/:userId', isAuthenticated, isAdmin, async (req, res) => {
 
         if (dbChanges > 0) {
             if (fs.existsSync(userDirToDelete)) await fsp.rm(userDirToDelete, { recursive: true, force: true });
-            res.redirect(`/admin?message=用戶 ${user.username}、其文件及相關分享記錄已刪除。&messageType=success`);
+            res.redirect(`/admin?message=用戶 ${user.username}、其文件及相關公開連結已刪除。&messageType=success`);
         } else {
             res.redirect('/admin?message=刪除用戶失敗 (用戶可能已被刪除)。&messageType=error');
         }
@@ -2001,36 +1631,27 @@ app.get('/admin/delete/:userId', isAuthenticated, isAdmin, async (req, res) => {
 
 
 // --- 錯誤處理 ---
-// Public error page (simple, no session user)
-app.use('/public', (err, req, res, next) => { // Specific error handler for /public routes
-    console.error(`[Public Route Error] ${req.method} ${req.originalUrl}:`, err.stack || err.message || err);
-    let publicMessage = '訪問分享內容時發生錯誤。';
-    if (process.env.NODE_ENV !== 'production' && err.message) publicMessage = err.message;
-    if (err.publicMessage) publicMessage = err.publicMessage; // Custom public message if set on error
-    if (res.headersSent) return next(err);
-    res.status(err.status || 500).render('error-public', { message: publicMessage });
-});
-
-app.use((req, res, next) => { // 404 handler for authenticated routes
+app.use((req, res, next) => { // 404 Handler
     res.status(404).render('error', { user: req.session.user, message: '找不到頁面 (404)。', csrfToken: res.locals.csrfToken });
 });
-app.use((err, req, res, next) => { // General error handler for authenticated routes
+app.use((err, req, res, next) => { // General Error Handler
     const usernameForLog = req.session.user ? req.session.user.username : '未認證用戶';
     console.error(`[${usernameForLog}] 全局錯誤處理: ${req.method} ${req.originalUrl}`, err.stack || err.message || err);
 
     let publicMessage = '伺服器內部錯誤 (500)。';
-    if (process.env.NODE_ENV !== 'production' && err.message) publicMessage = err.message;
-    if (err.publicMessage) publicMessage = err.publicMessage;
+    if (process.env.NODE_ENV !== 'production' && err.message) publicMessage = err.message; // Show more details in dev
+    if (err.publicMessage) publicMessage = err.publicMessage; // Custom public message if provided
 
-    if (err instanceof multer.MulterError) {
+    // Handle specific error types like Multer errors
+    if (err instanceof actualMulter.MulterError) { // Use actualMulter here
         publicMessage = `上傳錯誤: ${err.message}`;
         if (err.code === 'LIMIT_FILE_SIZE') publicMessage = '文件大小超過限制。';
         if (err.code === 'LIMIT_UNEXPECTED_FILE') publicMessage = '上傳了非預期的文件欄位。';
     } else if (err.code === 'USER_QUOTA_EXCEEDED' || err.code === 'QUOTA_CHECK_ERROR' || err.code === 'INVALID_TARGET_USERNAME_UPLOAD') {
-        publicMessage = err.message;
+        publicMessage = err.message; // Use specific messages for these codes
     }
 
-    if (res.headersSent) return next(err);
+    if (res.headersSent) return next(err); // If headers already sent, delegate to default Express error handler
     res.status(err.status || 500).render('error', {
         user: req.session.user, message: publicMessage, csrfToken: res.locals.csrfToken
     });
