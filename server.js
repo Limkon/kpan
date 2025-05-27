@@ -1153,6 +1153,51 @@ app.get('/api/directories', isAuthenticated, async (req, res) => {
     }
 });
 
+// 新增 API: 獲取特定文件/目錄的公開連結
+app.get('/api/item-public-links', isAuthenticated, async (req, res) => {
+    const actingUser = req.session.user;
+    const { filePath } = req.query; // 期望的參數是 filePath
+
+    if (!filePath) {
+        return res.status(400).json({ success: false, message: '未提供文件路徑。' });
+    }
+
+    let ownerIdToQuery = actingUser.id;
+    // 如果是管理員，並且提供了 targetUsername，則查詢目標用戶的連結
+    if (actingUser.role === 'admin' && req.query.targetUsername && req.query.targetUsername !== actingUser.username) {
+        const targetUser = await new Promise((resolve) => 
+            db.get("SELECT id FROM users WHERE username = ?", [req.query.targetUsername], (err, row) => resolve(row))
+        );
+        if (targetUser) {
+            ownerIdToQuery = targetUser.id;
+        } else {
+            return res.status(404).json({ success: false, message: '目標用戶不存在。' });
+        }
+    }
+
+    try {
+        db.all("SELECT id as link_id, token, created_at, expires_at, allow_download, allow_view, visit_count FROM public_links WHERE owner_id = ? AND file_path = ? ORDER BY created_at DESC", 
+            [ownerIdToQuery, filePath], 
+            (err, links) => {
+                if (err) {
+                    console.error(`獲取項目 ${filePath} 的公開連結時出錯:`, err);
+                    return res.status(500).json({ success: false, message: '獲取連結列表失敗。' });
+                }
+                const fullHostname = `${req.protocol}://${req.get('host')}`;
+                const linksWithUrls = links.map(link => ({
+                    ...link,
+                    publicUrl: `${fullHostname}/public/${link.token}`
+                }));
+                res.json({ success: true, links: linksWithUrls });
+            }
+        );
+    } catch (error) {
+        console.error(`處理 /api/item-public-links 請求時出錯:`, error);
+        res.status(500).json({ success: false, message: '伺服器內部錯誤。' });
+    }
+});
+
+
 app.post('/move-items', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const { sourcePaths, destinationPath } = req.body; 
@@ -1436,7 +1481,7 @@ app.post('/actions/revoke-public-links-batch', isAuthenticated, async (req, res)
 // --- 公開連結訪問路由 ---
 app.get('/public/:token', async (req, res) => {
     const { token } = req.params;
-    const { relPath } = req.query; // For accessing items within a shared directory
+    const { relPath } = req.query; 
 
     try {
         const link = await new Promise((resolve, reject) => {
@@ -1451,6 +1496,7 @@ app.get('/public/:token', async (req, res) => {
         if (link.expires_at && new Date(link.expires_at) < new Date()) {
             return res.status(403).render('error', { message: '此分享連結已過期。', user: null, csrfToken: null });
         }
+
 
         db.run("UPDATE public_links SET visit_count = visit_count + 1 WHERE id = ?", [link.id]);
 
@@ -1470,9 +1516,8 @@ app.get('/public/:token', async (req, res) => {
             if (link.allow_view && isTextViewable) {
                 const content = await fsp.readFile(fullItemPath, 'utf8');
                 res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-                return res.send(content); // Send raw text content
+                return res.send(content);
             } else if (link.allow_download) {
-                // Dedicated download route is preferred for clarity, but this can also work
                 return res.download(fullItemPath, path.basename(itemRelativePath), (err) => {
                     if (err) {
                         console.error(`公開連結下載錯誤 (${token}, path: ${itemRelativePath}):`, err);
