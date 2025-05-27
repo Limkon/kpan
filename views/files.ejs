@@ -8,430 +8,192 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* CSS 變量定義 */
         :root {
             --button-primary-bg-color: #007bff;
             --button-primary-text-color: #ffffff;
             --button-primary-border-color: #007bff;
-            
-            --button-secondary-bg-color: #6c757d; /* 用於次要按鈕，例如取消 */
+            --button-secondary-bg-color: #6c757d;
             --button-secondary-text-color: #ffffff;
             --button-secondary-border-color: #6c757d;
-
             --input-border-color: #ccc;
             --input-bg-color: #fff;
             --input-text-color: #333;
-
             --modal-bg: #ffffff;
             --modal-text-color: #333;
             --modal-border-color: #888;
-
             --rename-form-bg: #ffffff;
             --rename-form-border-color: #cccccc;
-
             --video-modal-bg: #1c1c1c;
             --video-modal-text-color: #f1f1f1;
             --video-modal-border-color: #333;
             --video-modal-close-btn-color: #aaa;
             --video-modal-close-btn-hover-color: #fff;
-
             --tab-inactive-bg: #e9ecef;
             --tab-inactive-text: #495057;
             --tab-active-bg: #007bff;
             --tab-active-text: #ffffff;
             --tab-border: #dee2e6;
+            --link-color: #007bff;
+            --link-hover-color: #0056b3;
+            --public-link-display-bg: #f8f9fa;
+            --public-link-display-border: #ced4da;
         }
 
         .dark-theme {
             --button-primary-bg-color: #0056b3;
-            --button-primary-text-color: #ffffff;
             --button-primary-border-color: #0056b3;
-
             --button-secondary-bg-color: #5a6268;
-            --button-secondary-text-color: #ffffff;
             --button-secondary-border-color: #545b62;
-            
             --input-border-color: #555;
-            --input-bg-color: #2c2c2c; 
+            --input-bg-color: #2c2c2c;
             --input-text-color: #e0e0e0;
-            
             --modal-bg: #2c2c2c;
             --modal-text-color: #e0e0e0;
             --modal-border-color: #555;
-
             --rename-form-bg: #3a3a3a;
             --rename-form-border-color: #555;
-
             --video-modal-bg: #2a2a2a;
             --video-modal-text-color: #e0e0e0;
             --video-modal-border-color: #444;
             --video-modal-close-btn-color: #bbb;
             --video-modal-close-btn-hover-color: #fff;
-
             --tab-inactive-bg: #3a3a3a;
             --tab-inactive-text: #adb5bd;
             --tab-active-bg: #0056b3;
-            --tab-active-text: #ffffff;
             --tab-border: #495057;
+            --link-color: #6cb2eb;
+            --link-hover-color: #8dc9f0;
+            --public-link-display-bg: #2c2c2c;
+            --public-link-display-border: #495057;
         }
 
-        /* Navigation Tabs */
-        .nav-tabs {
-            display: flex;
-            margin-bottom: 15px;
-            border-bottom: 1px solid var(--tab-border);
-        }
-        .nav-tabs .nav-link {
-            padding: 10px 15px;
-            text-decoration: none;
-            background-color: var(--tab-inactive-bg);
-            color: var(--tab-inactive-text);
-            border: 1px solid var(--tab-border);
-            border-bottom: none;
-            margin-right: 5px;
-            border-radius: 5px 5px 0 0;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        .nav-tabs .nav-link.active {
-            background-color: var(--tab-active-bg);
-            color: var(--tab-active-text);
-            border-color: var(--tab-active-bg);
-        }
-        .nav-tabs .nav-link:hover:not(.active) {
-            opacity: 0.8;
-        }
-
+        .nav-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--tab-border); }
+        .nav-tabs .nav-link { padding: 10px 15px; text-decoration: none; background-color: var(--tab-inactive-bg); color: var(--tab-inactive-text); border: 1px solid var(--tab-border); border-bottom: none; margin-right: 5px; border-radius: 5px 5px 0 0; font-weight: 500; cursor: pointer; }
+        .nav-tabs .nav-link.active { background-color: var(--tab-active-bg); color: var(--tab-active-text); border-color: var(--tab-active-bg); }
+        .nav-tabs .nav-link:hover:not(.active) { opacity: 0.8; }
 
         #selection-action-bar { padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #ccc; margin-bottom: 15px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; }
         .dark-theme #selection-action-bar { background-color: #252525; border-bottom-color: #444; }
         #selection-action-bar button { margin: 0; }
         
-        .item-checkbox { 
-            display: none; 
-            margin-right: 10px; 
-            width: 18px; 
-            height: 18px; 
-            vertical-align: middle; 
-        }
-        #file-container.multi-select-mode-active .item-checkbox {
-            display: inline-block; 
-        }
+        .item-checkbox { display: none; margin-right: 10px; width: 18px; height: 18px; vertical-align: middle; }
+        #file-container.multi-select-mode-active .item-checkbox { display: inline-block; }
 
         .file-entry-selectable { display: flex; align-items: center; width: 100%; }
-        #file-container.list-view .file-entry-selectable {
-            padding: 5px 0;
-        }
-        #file-container.grid-view .file-entry-selectable {
-            padding: 0; 
-        }
+        #file-container.list-view .file-entry-selectable { padding: 5px 0; }
+        #file-container.grid-view .file-entry-selectable { padding: 0; }
 
-        .file-content-wrapper { 
-            flex-grow: 1; 
-            display: flex;
-            justify-content: space-between;
-            align-items: center; 
-            cursor: pointer; 
-            overflow: hidden;
-        }
+        .file-content-wrapper { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; cursor: pointer; overflow: hidden; }
         
         .list-view li { position: relative; }
-        .list-view .file-entry {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-grow: 1;
-            min-width: 0;
-        }
-        .list-view .file-entry .file-name { 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            white-space: nowrap; 
-            flex-shrink: 1;
-        }
+        .list-view .file-entry { display: flex; align-items: center; gap: 8px; flex-grow: 1; min-width: 0; }
+        .list-view .file-entry .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 1; }
 
-        .list-view .file-details {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 0.85em;
-            color: #555;
-            margin-left: auto;
-            padding-left: 10px;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .dark-theme .list-view .file-details { 
-            color: #bbb; 
-        }
+        .list-view .file-details { display: flex; align-items: center; gap: 15px; font-size: 0.85em; color: #555; margin-left: auto; padding-left: 10px; white-space: nowrap; flex-shrink: 0; }
+        .dark-theme .list-view .file-details { color: #bbb; }
         .list-view .file-details .file-size,
         .list-view .file-details .file-modified,
-        .list-view .file-details .file-owner,
-        .list-view .file-details .file-shared-with { /* For share views */
-            min-width: 80px;
-            text-align: right;
+        .list-view .file-details .file-public-link, /* For public link display */
+        .list-view .file-details .file-created-at { /* For public link display */
+            min-width: 80px; text-align: right;
         }
-        #file-container.grid-view .file-details {
-            display: none;
-        }
+        .list-view .file-details .file-public-link a { color: var(--link-color); text-decoration: none; }
+        .list-view .file-details .file-public-link a:hover { color: var(--link-hover-color); text-decoration: underline; }
 
-        .list-view .file-actions-placeholder { 
-            min-width: 40px;
-            text-align: right; 
-            font-size: 0.9em; 
-            color: #666;
-            flex-shrink: 0;
-        }
+        #file-container.grid-view .file-details { display: none; }
+
+        .list-view .file-actions-placeholder { min-width: 40px; text-align: right; font-size: 0.9em; color: #666; flex-shrink: 0; }
         .dark-theme .list-view .file-actions-placeholder { color: #aaa; }
         
         .list-view li.single-selected-item > .file-entry-selectable,
-        .grid-view li.single-selected-item { 
-            background-color: #e9e9e9; 
-            border-radius: 4px;
-        }
+        .grid-view li.single-selected-item { background-color: #e9e9e9; border-radius: 4px; }
         .dark-theme .list-view li.single-selected-item > .file-entry-selectable,
-        .dark-theme .grid-view li.single-selected-item {
-            background-color: #404040; 
-        }
+        .dark-theme .grid-view li.single-selected-item { background-color: #404040; }
 
-        #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal, #share-modal {
+        #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal, #share-modal, #public-link-display-modal {
             display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
             overflow: auto; background-color: rgba(0,0,0,0.5); 
         }
-        .modal-content { 
-            background-color: var(--modal-bg) !important;
-            color: var(--modal-text-color);
-            margin: 10% auto; 
-            padding: 20px; 
-            border: 1px solid var(--modal-border-color);
-            border-radius: 8px; 
-            width: 90%; 
-            max-width: 500px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
-        }
+        .modal-content { background-color: var(--modal-bg) !important; color: var(--modal-text-color); margin: 10% auto; padding: 20px; border: 1px solid var(--modal-border-color); border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .modal-content h3 { margin-top: 0; }
         .modal-content .form-group { margin-bottom: 15px; }
         .modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
         .modal-content .form-group input[type="text"],
-        .modal-content .form-group input[type="email"] { /* For username/email */
+        .modal-content .form-group input[type="email"],
+        .modal-content .form-group input[type="url"] {
             width: 100%; padding: 10px; box-sizing: border-box;
             border: 1px solid var(--input-border-color); border-radius: 4px;
             background-color: var(--input-bg-color); color: var(--input-text-color);
         }
         .modal-actions { text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
 
-        #video-player-modal .modal-content {
-            background-color: var(--video-modal-bg) !important;
-            color: var(--video-modal-text-color);
-            border-color: var(--video-modal-border-color);
-            max-width: 900px;
-            margin: 5% auto;
-        }
-        #video-player-modal #video-modal-title {
-            color: var(--video-modal-text-color);
-            margin-bottom: 15px;
-        }
-        #video-player-modal .close-modal-btn {
-            color: var(--video-modal-close-btn-color);
-        }
+        #video-player-modal .modal-content { background-color: var(--video-modal-bg) !important; color: var(--video-modal-text-color); border-color: var(--video-modal-border-color); max-width: 900px; margin: 5% auto; }
+        #video-player-modal #video-modal-title { color: var(--video-modal-text-color); margin-bottom: 15px; }
+        #video-player-modal .close-modal-btn { color: var(--video-modal-close-btn-color); }
         #video-player-modal .close-modal-btn:hover,
-        #video-player-modal .close-modal-btn:focus {
-            color: var(--video-modal-close-btn-hover-color);
-            text-decoration: none;
-            cursor: pointer;
-        }
-        #html5-video-player {
-            width: 100%;
-            max-height: 75vh;
-            display: block;
-            margin-top: 10px;
-            background-color: #000;
-            border-radius: 4px;
-        }
+        #video-player-modal .close-modal-btn:focus { color: var(--video-modal-close-btn-hover-color); text-decoration: none; cursor: pointer; }
+        #html5-video-player { width: 100%; max-height: 75vh; display: block; margin-top: 10px; background-color: #000; border-radius: 4px; }
 
-
-        #directory-tree-container { 
-            max-height: 250px; 
-            overflow-y: auto; 
-            border: 1px solid var(--input-border-color); 
+        #public-link-display-modal .modal-content { max-width: 600px; }
+        #generated-public-link { 
+            width: calc(100% - 85px); 
             padding: 10px; 
-            margin-bottom: 15px; 
-            background-color: var(--input-bg-color); 
+            border: 1px solid var(--public-link-display-border); 
+            background-color: var(--public-link-display-bg); 
+            border-radius: 4px 0 0 4px; 
+            font-family: monospace;
+            font-size: 0.9em;
+            box-sizing: border-box;
+            color: var(--input-text-color);
         }
+        #copy-public-link-btn { 
+            padding: 10px 15px; 
+            border-radius: 0 4px 4px 0; 
+            margin-left: -1px; 
+            border: 1px solid var(--button-primary-border-color);
+            background-color: var(--button-primary-bg-color);
+            color: var(--button-primary-text-color);
+            cursor: pointer;
+            box-sizing: border-box;
+            height: calc(20px + 2*10px + 2*1px); /* Match input height */
+        }
+        #copy-public-link-btn:hover { opacity: 0.9; }
+        .public-link-container { display: flex; align-items: center; margin-top: 10px; }
+
+
+        #directory-tree-container { max-height: 250px; overflow-y: auto; border: 1px solid var(--input-border-color); padding: 10px; margin-bottom: 15px; background-color: var(--input-bg-color); }
         #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
         #directory-tree-container li { padding: 5px 0; cursor: pointer; border-bottom: 1px dashed var(--input-border-color); }
         #directory-tree-container li:last-child { border-bottom: none; }
         #directory-tree-container li:hover { background-color: var(--hover-bg, #f0f0f0); } 
         .dark-theme #directory-tree-container li:hover { --hover-bg: #4a4a4a; }
-        #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } 
         .dark-theme #directory-tree-container li.selected-dir { background-color: #0056b3; }
+        #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } 
 
         .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
         
-        /* Grid View Specific Styles */
-        #file-container.grid-view ul {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
-            gap: 10px; 
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        #file-container.grid-view li {
-            display: flex;
-            flex-direction: column;
-            align-items: center; 
-            justify-content: center; 
-            padding: 8px; 
-            border-radius: 6px; 
-            position: relative;
-            min-height: 100px; 
-        }
+        #file-container.grid-view ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; list-style-type: none; padding: 0; margin: 0; }
+        #file-container.grid-view li { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; border-radius: 6px; position: relative; min-height: 100px; }
+        #file-container.grid-view li .file-entry-selectable { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; flex-grow: 1; }
+        #file-container.grid-view li .file-content-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; flex-grow: 1; text-decoration: none; color: inherit; padding: 0; }
+        .grid-view .file-entry { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 6px; width: 100%; }
+        .grid-view .file-icon-large { font-size: 3.5em; line-height: 1; display: flex; justify-content: center; align-items: center; min-height: 48px; margin-bottom: 4px; }
+        .grid-view .file-name { font-size: 0.8em; line-height: 1.3; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        #file-container.grid-view.multi-select-mode-active .item-checkbox { margin-bottom: 6px; }
         
-        #file-container.grid-view li .file-entry-selectable {
-            display: flex;
-            flex-direction: column;
-            align-items: center; 
-            justify-content: center; 
-            width: 100%;
-            flex-grow: 1;
-        }
-        
-        #file-container.grid-view li .file-content-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;   
-            justify-content: center;
-            width: 100%;
-            flex-grow: 1;
-            text-decoration: none;
-            color: inherit;
-            padding: 0; 
-        }
-
-        .grid-view .file-entry { 
-            display: flex;
-            flex-direction: column;
-            justify-content: center; 
-            align-items: center;   
-            text-align: center;       
-            gap: 6px; 
-            width: 100%;           
-        }
-
-        .grid-view .file-icon-large { 
-            font-size: 3.5em;         
-            line-height: 1;           
-            display: flex;           
-            justify-content: center; 
-            align-items: center;   
-            min-height: 48px;         
-            margin-bottom: 4px;     
-        }
-
-        .grid-view .file-name { 
-            font-size: 0.8em; 
-            line-height: 1.3;
-            word-break: break-word; 
-            display: -webkit-box;
-            -webkit-line-clamp: 1; 
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis; 
-            max-width: 100%;     
-        }
-        
-        #file-container.grid-view.multi-select-mode-active .item-checkbox {
-            margin-bottom: 6px; 
-        }
-        
-        #select-all-container { 
-            display: none; 
-            align-items: center; 
-            padding: 5px 10px; 
-            background-color: #f9f9f9; 
-            border-bottom: 1px solid #eee; 
-        }
+        #select-all-container { display: none; align-items: center; padding: 5px 10px; background-color: #f9f9f9; border-bottom: 1px solid #eee; }
         .dark-theme #select-all-container { background-color: #2e2e2e; border-bottom-color: #444; }
-        
-        #select-all-container.visible-in-multiselect {
-            display: flex;
-        }
-
+        #select-all-container.visible-in-multiselect { display: flex; }
         #select-all-container label { margin-left: 5px; font-weight: normal;}
 
-        .rename-form {
-            display: none;
-            position: absolute;
-            left: 25px; 
-            right: 5px; 
-            top: calc(100% + 2px); 
-            background-color: var(--rename-form-bg);
-            padding: 10px;
-            border: 1px solid var(--rename-form-border-color);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
-            z-index: 100;
-            border-radius: 6px;
-            max-width: 400px; 
-            box-sizing: border-box;
-        }
-        
-        #file-container.grid-view li .rename-form {
-            left: 50%;
-            transform: translateX(-50%);
-            top: 100%; 
-            margin-top: 5px; 
-            width: calc(100% - 10px); 
-            max-width: 180px; 
-            right: auto; 
-        }
-
-        .rename-form form.inline-form {
-            display: flex;
-            gap: 8px; 
-            align-items: stretch; 
-        }
-
-        .rename-form input[type="text"],
-        .rename-form button {
-            box-sizing: border-box; 
-            font-size: 0.9em;     
-            line-height: 1.4;   
-            padding-top: 6px;     
-            padding-bottom: 6px;  
-            border-radius: 4px;   
-            margin: 0;           
-        }
-
-        .rename-form input[type="text"] {
-            flex-grow: 1;
-            padding-left: 8px;
-            padding-right: 8px;
-            background-color: var(--input-bg-color);
-            color: var(--input-text-color);
-            border: 1px solid var(--input-border-color);
-        }
-
-        .rename-form button {
-            padding-left: 12px;  
-            padding-right: 12px;
-            cursor: pointer;
-            white-space: nowrap; 
-            border-width: 1px; 
-            border-style: solid;
-        }
-        
-        .rename-form button[type="submit"] {
-            background-color: var(--button-primary-bg-color);
-            color: var(--button-primary-text-color);
-            border-color: var(--button-primary-border-color);
-        }
-        .rename-form button.secondary { 
-            background-color: var(--button-secondary-bg-color);
-            color: var(--button-secondary-text-color);
-            border-color: var(--button-secondary-border-color);
-        }
+        .rename-form { display: none; position: absolute; left: 25px; right: 5px; top: calc(100% + 2px); background-color: var(--rename-form-bg); padding: 10px; border: 1px solid var(--rename-form-border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 100; border-radius: 6px; max-width: 400px; box-sizing: border-box; }
+        #file-container.grid-view li .rename-form { left: 50%; transform: translateX(-50%); top: 100%; margin-top: 5px; width: calc(100% - 10px); max-width: 180px; right: auto; }
+        .rename-form form.inline-form { display: flex; gap: 8px; align-items: stretch; }
+        .rename-form input[type="text"], .rename-form button { box-sizing: border-box; font-size: 0.9em; line-height: 1.4; padding-top: 6px; padding-bottom: 6px; border-radius: 4px; margin: 0; }
+        .rename-form input[type="text"] { flex-grow: 1; padding-left: 8px; padding-right: 8px; background-color: var(--input-bg-color); color: var(--input-text-color); border: 1px solid var(--input-border-color); }
+        .rename-form button { padding-left: 12px; padding-right: 12px; cursor: pointer; white-space: nowrap; border-width: 1px; border-style: solid; }
+        .rename-form button[type="submit"] { background-color: var(--button-primary-bg-color); color: var(--button-primary-text-color); border-color: var(--button-primary-border-color); }
+        .rename-form button.secondary { background-color: var(--button-secondary-bg-color); color: var(--button-secondary-text-color); border-color: var(--button-secondary-border-color); }
         
         #upload-actions-container { display: none; padding: 10px 0; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
         #upload-actions-container button { margin: 0; }
@@ -452,51 +214,14 @@
 
         .file-browser-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
         .file-browser-controls .actions-group-left { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
-        
-        .file-browser-controls .actions-group-left button,
-        #toggle-multi-select-btn { 
-            padding: 8px 12px; 
-            font-size: 0.9em; 
-            margin: 0;
-            background-color: var(--button-primary-bg-color);
-            color: var(--button-primary-text-color);
-            border: 1px solid var(--button-primary-border-color);
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .file-browser-controls .actions-group-left button:hover,
-        #toggle-multi-select-btn:hover {
-            opacity: 0.9;
-        }
-
+        .file-browser-controls .actions-group-left button, #toggle-multi-select-btn { padding: 8px 12px; font-size: 0.9em; margin: 0; background-color: var(--button-primary-bg-color); color: var(--button-primary-text-color); border: 1px solid var(--button-primary-border-color); border-radius: 4px; cursor: pointer; }
+        .file-browser-controls .actions-group-left button:hover, #toggle-multi-select-btn:hover { opacity: 0.9; }
         .file-browser-controls .search-form-right { display: flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
-        .file-browser-controls .search-form-right input[type="search"] { 
-            width: 180px; padding: 8px 10px; font-size: 0.9em; 
-            border: 1px solid var(--input-border-color); 
-            background-color: var(--input-bg-color);
-            color: var(--input-text-color);
-            border-radius: 4px; margin: 0; 
-        }
-        .file-browser-controls .search-form-right button { 
-            padding: 8px 12px; font-size: 0.9em; margin: 0;
-            background-color: var(--button-primary-bg-color);
-            color: var(--button-primary-text-color);
-            border: 1px solid var(--button-primary-border-color);
-            border-radius: 4px;
-        }
+        .file-browser-controls .search-form-right input[type="search"] { width: 180px; padding: 8px 10px; font-size: 0.9em; border: 1px solid var(--input-border-color); background-color: var(--input-bg-color); color: var(--input-text-color); border-radius: 4px; margin: 0; }
+        .file-browser-controls .search-form-right button { padding: 8px 12px; font-size: 0.9em; margin: 0; background-color: var(--button-primary-bg-color); color: var(--button-primary-text-color); border: 1px solid var(--button-primary-border-color); border-radius: 4px; }
         .file-browser-controls .view-toggle { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
-        .file-browser-controls .view-toggle button { 
-            padding: 8px 12px; font-size: 0.9em; margin: 0;
-            background-color: var(--button-secondary-bg-color);
-            color: var(--button-secondary-text-color);
-            border: 1px solid var(--button-secondary-border-color);
-            border-radius: 4px;
-        }
-        .file-browser-controls .view-toggle button.active {
-            background-color: var(--button-primary-bg-color);
-            border-color: var(--button-primary-border-color);
-        }
-
+        .file-browser-controls .view-toggle button { padding: 8px 12px; font-size: 0.9em; margin: 0; background-color: var(--button-secondary-bg-color); color: var(--button-secondary-text-color); border: 1px solid var(--button-secondary-border-color); border-radius: 4px; }
+        .file-browser-controls .view-toggle button.active { background-color: var(--button-primary-bg-color); border-color: var(--button-primary-border-color); }
         .file-browser-controls:not(:has(.actions-group-left)) .search-form-right { margin-left: 0; flex-grow: 1; }
         .file-browser-controls:not(:has(.actions-group-left)) .search-form-right input[type="search"] { flex-grow: 1; }
         .file-browser-controls:not(:has(.actions-group-left)) .view-toggle { margin-left: auto; }
@@ -506,17 +231,16 @@
         .progress-bar { display: block; width: 0%; height: 20px; background-color: #007bff; border: 1px solid #0056b3; border-radius: 2px; text-align: center; line-height: 18px; color: white; font-size: 0.8em; font-weight: bold; transition: width 0.1s ease-in-out; box-sizing: border-box; overflow: hidden; }
         .dark-theme .progress-bar { background-color: #0056b3; border-color: #003d80; }
 
-        #file-container {
-            max-height: calc(100vh - 360px); /* Adjusted for tabs */
-            overflow-y: auto;
-            padding-right: 5px; 
-            box-sizing: border-box;
-        }
+        #file-container { max-height: calc(100vh - 360px); overflow-y: auto; padding-right: 5px; box-sizing: border-box; }
+        .action-button-small { padding: 3px 6px; font-size: 0.8em; margin-left: 5px; }
 
-        .action-button-small {
-            padding: 3px 6px;
-            font-size: 0.8em;
-            margin-left: 5px;
+        /* Share Modal Specifics */
+        #share-modal .form-group label[for="share-allow-download"],
+        #share-modal .form-group label[for="share-allow-view"] {
+            display: inline-block; margin-left: 5px; font-weight: normal;
+        }
+        #share-modal .form-group input[type="checkbox"] {
+            width: auto; vertical-align: middle;
         }
     </style>
 </head>
@@ -524,17 +248,25 @@
     <div class="container">
         <header>
             <h1>
-                <% if (locals.isSearchResult && locals.searchQuery) { %>
-                    有關 "<%= searchQuery %>" 的搜尋結果 <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username) { %>(在 <%= viewContextUser.username %> 的文件中)<% } else { %>(在您的文件中)<% } %>
-                <% } else if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
-                    管理員視角: <%= viewContextUser.username %> 的文件
-                <% } else if (locals.viewMode === 'sharedWithMe') { %>
-                    與我分享的項目
-                <% } else if (locals.viewMode === 'userShares') { %>
-                    我分享的項目 <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>(來自 <%= viewContextUser.username %>)<% } %>
-                <% } else { %>
-                    <%= (locals.viewContextUser ? viewContextUser.username : user.username) %> 的文件
-                <% } %>
+                <% 
+                let headerTitle = (locals.viewContextUser ? viewContextUser.username : user.username) + ' 的文件';
+                if (locals.isSearchResult && locals.searchQuery) {
+                    headerTitle = `有關 "${searchQuery}" 的搜尋結果`;
+                    if (locals.viewContextUser && locals.viewContextUser.username !== user.username) {
+                        headerTitle += ` (在 ${viewContextUser.username} 的文件中)`;
+                    } else {
+                        headerTitle += ` (在您的文件中)`;
+                    }
+                } else if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') {
+                    headerTitle = `管理員視角: ${viewContextUser.username} 的文件`;
+                } else if (locals.viewMode === 'userShares') {
+                    headerTitle = `我創建的公開連結`;
+                    if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') {
+                        headerTitle += ` (來自 ${viewContextUser.username})`;
+                    }
+                }
+                %>
+                <%= headerTitle %>
             </h1>
             <div class="header-controls">
                 <nav>
@@ -555,13 +287,9 @@
                class="nav-link <%= (!locals.viewMode || locals.viewMode === 'myfiles') ? 'active' : '' %>">
                我的文件
             </a>
-            <a href="/files?viewMode=sharedWithMe<%= locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : '' %>" 
-               class="nav-link <%= locals.viewMode === 'sharedWithMe' ? 'active' : '' %>">
-               與我分享
-            </a>
             <a href="/files?viewMode=userShares<%= locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : '' %>" 
                class="nav-link <%= locals.viewMode === 'userShares' ? 'active' : '' %>">
-               我分享的
+               我的公開連結
             </a>
         </div>
 
@@ -595,7 +323,8 @@
                     <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button> 
                 </div>
             <% } %>
-            <button type="button" id="toggle-multi-select-btn">啟用多選</button>
+            <% if (locals.viewMode !== 'userShares') { %> <button type="button" id="toggle-multi-select-btn">啟用多選</button>
+            <% } %>
         
             <form action="/files" method="GET" class="control-form search-form-right">
                 <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
@@ -639,31 +368,27 @@
             </div>
         <% } %>
 
+        <% if (locals.viewMode !== 'userShares') { %>
         <div id="selection-action-bar">
             <span id="selection-count" style="margin-right: 15px;">已選擇 0 項</span>
-            <% if (locals.viewMode !== 'sharedWithMe' && locals.viewMode !== 'userShares') { // Standard actions for 'myfiles' %>
-                <button id="action-play-btn" disabled>播放</button> 
-                <button id="action-edit-btn" disabled>編輯</button>
-                <button id="action-rename-btn" disabled>重命名</button>
-                <button id="action-move-btn" disabled>移動</button>
-                <button id="action-share-btn" disabled>分享</button> <% } else if (locals.viewMode === 'sharedWithMe') { // Actions for 'sharedWithMe' %>
-                 <button id="action-play-btn" disabled>播放</button> 
-            <% } %>
+            <button id="action-play-btn" disabled>播放</button> 
+            <button id="action-edit-btn" disabled>編輯</button>
+            <button id="action-rename-btn" disabled>重命名</button>
+            <button id="action-move-btn" disabled>移動</button>
+            <button id="action-share-btn" disabled>創建公開連結</button>
             <button id="action-download-btn" disabled>下載選中項</button>
-            <% if (locals.viewMode !== 'sharedWithMe') { // Delete only if not 'sharedWithMe' (owner can delete, or admin) %>
-                 <button id="action-delete-btn" class="secondary" disabled>删除</button>
-            <% } %>
+            <button id="action-delete-btn" class="secondary" disabled>删除</button>
         </div>
+        <% } %>
         
         <% 
             let pageHeading = '文件列表';
             if (locals.isSearchResult) pageHeading = '搜索結果';
-            else if (locals.viewMode === 'sharedWithMe') pageHeading = '與我分享的項目';
-            else if (locals.viewMode === 'userShares') pageHeading = '我分享的項目';
+            else if (locals.viewMode === 'userShares') pageHeading = '我創建的公開連結';
         %>
         <h2><%= pageHeading %></h2>
 
-        <% if (items.length > 0 && locals.viewMode !== 'userShares') { // Select all only if not viewing 'my shares' (revoke is per item) %>
+        <% if (items.length > 0 && locals.viewMode !== 'userShares') { %>
             <div id="select-all-container"> 
                 <input type="checkbox" id="select-all-checkbox">
                 <label for="select-all-checkbox">全選/取消全選</label>
@@ -685,25 +410,21 @@
                         if (!dateString) return '--';
                         try {
                             const date = new Date(dateString);
-                            if (isNaN(date.getTime())) return '--'; // Invalid date
+                            if (isNaN(date.getTime())) return '--';
                             return date.toLocaleDateString('zh-CN', {
                                 year: 'numeric', month: '2-digit', day: '2-digit',
                                 hour: '2-digit', minute: '2-digit'
                             });
-                        } catch (e) {
-                            console.warn("Could not format date:", dateString, e);
-                            return '--';
-                        }
+                        } catch (e) { return '--'; }
                     };
                 %>
                 <ul>
                     <% items.forEach(item => { %>
                         <li data-item-path="<%= item.path %>" 
-                            <% if (locals.viewMode === 'sharedWithMe') { %>data-owner-username="<%= item.ownerUsername %>"<% } %>
-                            <% if (locals.viewMode === 'userShares') { %>data-share-id="<%= item.share_id %>"<% } %>
+                            <% if (locals.viewMode === 'userShares') { %>data-link-id="<%= item.link_id %>" data-token="<%= item.token %>"<% } %>
                             >
                             <div class="file-entry-selectable">
-                                <% if (locals.viewMode !== 'userShares') { // No checkboxes for 'my shares' view %>
+                                <% if (locals.viewMode !== 'userShares') { %>
                                 <input type="checkbox" class="item-checkbox"
                                        data-path="<%= item.path %>"
                                        data-encoded-path="<%= item.encodedPath %>"
@@ -713,26 +434,27 @@
                                        data-is-playable-video="<%= item.isPlayableVideo || false %>" 
                                        data-video-type="<%= item.videoType || '' %>" 
                                        data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>"
-                                       <% if (locals.viewMode === 'sharedWithMe') { %>data-owner-username="<%= item.ownerUsername %>"<% } %>
                                        >
                                 <% } %>
                                 <div class="file-content-wrapper">
                                     <% if (item.isDir) { %>
                                         <div class="file-entry">
                                             <span class="file-icon-large folder-icon">📁</span>
-                                            <% if (locals.viewMode === 'sharedWithMe') { %>
-                                                <a href="/files?path=<%= item.encodedPath %>&ownerUsername=<%= encodeURIComponent(item.ownerUsername) %>" class="file-name"><%= item.name %></a>
-                                            <% } else if (locals.viewMode === 'userShares') { %>
-                                                <span class="file-name"><%= item.name %></span> <% } else { %>
+                                            <% if (locals.viewMode === 'userShares') { %>
+                                                <span class="file-name"><%= item.name %></span>
+                                            <% } else { %>
                                                 <a href="/files?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name"><%= item.name %></a>
                                             <% } %>
                                             <% if (locals.isSearchResult && (!locals.viewMode || locals.viewMode === 'myfiles')) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
                                         </div>
                                         <div class="file-details">
-                                            <% if (locals.viewMode === 'sharedWithMe') { %><span class="file-owner">擁有者: <%= item.ownerUsername %></span><% } %>
-                                            <% if (locals.viewMode === 'userShares') { %><span class="file-shared-with">分享給: <%= item.sharedWithUsername %></span><% } %>
-                                            <span class="file-size"></span> 
-                                            <span class="file-modified"><%= formatDate(item.lastModified || item.sharedAt) %></span>
+                                            <% if (locals.viewMode === 'userShares') { %>
+                                                <span class="file-public-link"><a href="<%= item.publicUrl %>" target="_blank" title="點擊打開公開連結"><%= item.publicUrl %></a></span>
+                                                <span class="file-created-at">創建於: <%= formatDate(item.createdAt) %></span>
+                                            <% } else { %>
+                                                <span class="file-size"></span> 
+                                                <span class="file-modified"><%= formatDate(item.lastModified) %></span>
+                                            <% } %>
                                         </div>
                                     <% } else { // It's a file %>
                                         <div class="file-entry">
@@ -741,51 +463,52 @@
                                                 let largeIcon = '📄'; 
                                                 let isViewableTextFile = false;
                                                 if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
-                                                    isViewableTextFile = true;
-                                                    largeIcon = '📝'; 
-                                                } else if (item.isPlayableVideo) {
-                                                    largeIcon = '🎥';
-                                                }
+                                                    isViewableTextFile = true; largeIcon = '📝'; 
+                                                } else if (item.isPlayableVideo) { largeIcon = '🎥'; }
                                                 else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
                                                 else if (['pdf'].includes(ext)) { largeIcon = '📕';}
                                             %>
                                             <span class="file-icon-large"><%= largeIcon %></span>
-                                            <% if (item.isPlayableVideo) { %>
+                                            <% if (locals.viewMode === 'userShares') { %>
+                                                <span class="file-name"><%= item.name %></span>
+                                            <% } else if (item.isPlayableVideo) { %>
                                                 <a href="#" class="file-name video-link" 
                                                    data-path="<%= item.encodedPath %>" 
                                                    data-name="<%= item.name %>" 
                                                    data-type="<%= item.videoType %>"
-                                                   <% if (locals.viewMode === 'sharedWithMe') { %>data-owner-username="<%= item.ownerUsername %>"<% } %>
                                                    title="點擊播放 <%= item.name %>"><%= item.name %></a>
                                             <% } else if (isViewableTextFile) { %>
-                                                <a href="/view?path=<%= item.encodedPath %><%= adminTargetQueryForActions %><% if (locals.viewMode === 'sharedWithMe') { %>&ownerUsername=<%= encodeURIComponent(item.ownerUsername) %><% } %>" class="file-name" title="點擊查看"><%= item.name %></a>
+                                                <a href="/view?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name" title="點擊查看"><%= item.name %></a>
                                             <% } else { %>
                                                 <span class="file-name"><%= item.name %></span>
                                             <% } %>
                                             <% if (locals.isSearchResult && (!locals.viewMode || locals.viewMode === 'myfiles')) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
                                         </div>
                                         <div class="file-details">
-                                            <% if (locals.viewMode === 'sharedWithMe') { %><span class="file-owner">擁有者: <%= item.ownerUsername %></span><% } %>
-                                            <% if (locals.viewMode === 'userShares') { %><span class="file-shared-with">分享給: <%= item.sharedWithUsername %></span><% } %>
-                                            <span class="file-size" title="<%= item.size %> bytes"><%= formatFileSize(item.size) %></span>
-                                            <span class="file-modified"><%= formatDate(item.lastModified || item.sharedAt) %></span>
+                                            <% if (locals.viewMode === 'userShares') { %>
+                                                <span class="file-public-link"><a href="<%= item.publicUrl %>" target="_blank" title="點擊打開公開連結"><%= item.publicUrl %></a></span>
+                                                <span class="file-created-at">創建於: <%= formatDate(item.createdAt) %></span>
+                                            <% } else { %>
+                                                <span class="file-size" title="<%= item.size %> bytes"><%= formatFileSize(item.size) %></span>
+                                                <span class="file-modified"><%= formatDate(item.lastModified) %></span>
+                                            <% } %>
                                         </div>
                                     <% } %>
                                     <% if (locals.viewMode === 'userShares') { %>
-                                        <form action="/actions/revoke-share" method="POST" style="margin-left:10px;">
-                                            <input type="hidden" name="shareId" value="<%= item.share_id %>">
+                                        <form action="/actions/revoke-public-link" method="POST" style="margin-left:10px;">
+                                            <input type="hidden" name="link_id" value="<%= item.link_id %>">
                                             <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
                                                 <input type="hidden" name="contextUsername" value="<%= viewContextUser.username %>">
                                             <% } %>
                                             <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                                            <button type="submit" class="secondary action-button-small" onclick="return confirm('確定要撤銷對此項目的分享嗎？');">撤銷分享</button>
+                                            <button type="submit" class="secondary action-button-small" onclick="return confirm('確定要撤銷此公開連結嗎？');">撤銷連結</button>
                                         </form>
                                     <% } else { %>
                                         <span class="file-actions-placeholder"></span> 
                                     <% } %>
                                 </div>
                             </div>
-                            <% if (locals.viewMode !== 'sharedWithMe' && locals.viewMode !== 'userShares') { %>
+                            <% if (locals.viewMode !== 'userShares') { %>
                              <div class="rename-form" id="rename-form-<%= item.encodedName %>">
                                 <form action="/rename" method="POST" class="control-form inline-form">
                                     <input type="hidden" name="currentPath" value="<%= locals.isSearchResult ? (item.path.substring(0, item.path.lastIndexOf('/')) || '/') : currentPath %>">
@@ -803,7 +526,7 @@
                     <% }) %>
                 </ul>
             <% } else { %>
-                <p><%= locals.isSearchResult ? '找不到符合條件的文件。' : ( (locals.viewMode === 'sharedWithMe') ? '目前沒有與您分享的項目。' : (locals.viewMode === 'userShares') ? '您尚未分享任何項目。' : '此文件夾為空。' ) %></p>
+                <p><%= locals.isSearchResult ? '找不到符合條件的文件。' : ( (locals.viewMode === 'userShares') ? '您尚未創建任何公開連結。' : '此文件夾為空。' ) %></p>
             <% } %>
         </div>
     </div>
@@ -817,9 +540,7 @@
                 <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
                     <input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>">
                 <% } %>
-                <% if (locals.csrfToken) { %>
-                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <% } %>
+                <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
                 <div class="form-group">
                     <label for="create-item-name-input" id="create-item-name-label">名称:</label>
                     <input type="text" id="create-item-name-input" name="" required> 
@@ -869,26 +590,44 @@
         </div>
     </div>
 
-    <div id="share-modal">
-        <div class="modal-content">
+    <div id="share-modal"> <div class="modal-content">
             <span class="close-modal-btn" id="close-share-modal-btn">&times;</span>
-            <h3>分享項目</h3>
-            <form id="share-form" action="/actions/share-file" method="POST">
-                <input type="hidden" name="filePathToShare" id="share-file-path-input">
+            <h3>創建公開分享連結</h3>
+            <form id="share-form"> <input type="hidden" name="filePathToShare" id="share-file-path-input">
                 <input type="hidden" name="isDirectory" id="share-is-directory-input">
                 <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
-                    <input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>"> <% } %>
+                    <input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>">
+                <% } %>
                 <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                <p>將 "<strong id="share-item-name-display"></strong>" 分享給:</p>
+                <p>為 "<strong id="share-item-name-display"></strong>" 創建公開連結:</p>
                 <div class="form-group">
-                    <label for="share-username-input">用戶名:</label>
-                    <input type="text" id="share-username-input" name="usernameToShareWith" required placeholder="輸入對方的用戶名">
+                    <input type="checkbox" id="share-allow-download" name="allowDownload" checked>
+                    <label for="share-allow-download">允許下載</label>
+                </div>
+                <div class="form-group">
+                    <input type="checkbox" id="share-allow-view" name="allowView" checked>
+                    <label for="share-allow-view">允許預覽 (如果支持)</label>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="secondary" id="cancel-share-btn">取消</button>
-                    <button type="submit" id="confirm-share-btn">確認分享</button>
+                    <button type="button" id="confirm-share-btn">創建連結</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div id="public-link-display-modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="close-public-link-display-modal-btn">&times;</span>
+            <h3>公開連結已創建</h3>
+            <p>您可以複製下面的連結進行分享:</p>
+            <div class="public-link-container">
+                <input type="url" id="generated-public-link" readonly>
+                <button id="copy-public-link-btn">複製</button>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="secondary" id="ok-public-link-display-btn">完成</button>
+            </div>
         </div>
     </div>
 
@@ -898,12 +637,12 @@
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
         const ALLOWED_VIDEO_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_VIDEO_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
-        const VIEW_CONTEXT_USER_USERNAME = "<%= locals.viewContextUser ? locals.viewContextUser.username : '' %>"; // Username of the context being viewed (e.g. admin viewing 'bob')
-        const CURRENT_SESSION_USER_ROLE = "<%= user.role %>"; // Role of the logged-in user
-        const CURRENT_SESSION_USER_USERNAME = "<%= user.username %>"; // Username of the logged-in user
+        const VIEW_CONTEXT_USER_USERNAME = "<%= locals.viewContextUser ? locals.viewContextUser.username : '' %>";
+        const CURRENT_SESSION_USER_ROLE = "<%= user.role %>";
+        const CURRENT_SESSION_USER_USERNAME = "<%= user.username %>";
         const CURRENT_PATH_ON_LOAD = "<%= currentPath %>";
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
-        const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify(items.map(item => item.name.toLowerCase())) %>;
+        const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify(items.map(item => item.name.toLowerCase())) %>; // Only for 'myfiles' view
         const HAS_ITEMS_ON_PAGE = <%= items.length > 0 %>;
         const CURRENT_VIEW_MODE = "<%= locals.viewMode || 'myfiles' %>";
 
@@ -918,7 +657,7 @@
             const actionEditBtn = document.getElementById('action-edit-btn');
             const actionRenameBtn = document.getElementById('action-rename-btn');
             const actionMoveBtn = document.getElementById('action-move-btn');
-            const actionShareBtn = document.getElementById('action-share-btn'); // Share button
+            const actionShareBtn = document.getElementById('action-share-btn');
             const actionDownloadBtn = document.getElementById('action-download-btn');
             const actionDeleteBtn = document.getElementById('action-delete-btn');
             
@@ -964,11 +703,19 @@
             const shareModal = document.getElementById('share-modal');
             const closeShareModalBtn = document.getElementById('close-share-modal-btn');
             const cancelShareBtn = document.getElementById('cancel-share-btn');
-            const shareForm = document.getElementById('share-form');
+            const confirmShareBtn = document.getElementById('confirm-share-btn');
+            // const shareForm = document.getElementById('share-form'); // Already declared if needed
             const shareItemNameDisplay = document.getElementById('share-item-name-display');
             const shareFilePathInput = document.getElementById('share-file-path-input');
             const shareIsDirectoryInput = document.getElementById('share-is-directory-input');
-            const shareUsernameInput = document.getElementById('share-username-input');
+            const shareAllowDownloadCheckbox = document.getElementById('share-allow-download');
+            const shareAllowViewCheckbox = document.getElementById('share-allow-view');
+
+            const publicLinkDisplayModal = document.getElementById('public-link-display-modal');
+            const generatedPublicLinkInput = document.getElementById('generated-public-link');
+            const copyPublicLinkBtn = document.getElementById('copy-public-link-btn');
+            const closePublicLinkDisplayModalBtn = document.getElementById('close-public-link-display-modal-btn');
+            const okPublicLinkDisplayBtn = document.getElementById('ok-public-link-display-btn');
 
 
             function clearSingleSelection() {
@@ -980,12 +727,21 @@
 
             function updateMultiSelectModeUI() {
                 if (!fileContainer || !toggleMultiSelectBtn) return;
+                if (CURRENT_VIEW_MODE === 'userShares') { // Disable multi-select for userShares view
+                    fileContainer.classList.remove('multi-select-mode-active');
+                    if(toggleMultiSelectBtn) toggleMultiSelectBtn.style.display = 'none';
+                    if(selectAllContainer) selectAllContainer.classList.remove('visible-in-multiselect');
+                    return;
+                } else {
+                   if(toggleMultiSelectBtn) toggleMultiSelectBtn.style.display = 'inline-block';
+                }
+
 
                 if (multiSelectModeActive) {
                     clearSingleSelection();
                     fileContainer.classList.add('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '取消多選';
-                    if (selectAllContainer && HAS_ITEMS_ON_PAGE && CURRENT_VIEW_MODE !== 'userShares') { 
+                    if (selectAllContainer && HAS_ITEMS_ON_PAGE) { 
                         selectAllContainer.classList.add('visible-in-multiselect'); 
                     }
                 } else {
@@ -1018,7 +774,6 @@
                             isDir: cb.dataset.isDir === 'true', rawName: cb.dataset.rawName,
                             isPlayableVideo: cb.dataset.isPlayableVideo === 'true',
                             videoType: cb.dataset.videoType,
-                            ownerUsername: cb.dataset.ownerUsername || null, // For sharedWithMe items
                             element: cb.closest('li')
                         });
                     }
@@ -1027,11 +782,15 @@
             }
 
             function updateSelectionActions() {
+                 if (CURRENT_VIEW_MODE === 'userShares') {
+                    if(selectionActionBar) selectionActionBar.style.display = 'none';
+                    return;
+                }
                 let count = 0;
                 let itemsForActions = []; 
                 let isSingleFileEditable = false;
                 let isSingleFilePlayableVideo = false;
-                let isSingleItemSharable = false; // Can the single selected item be shared?
+                let isSingleItemSharable = false;
 
 
                 if (multiSelectModeActive) {
@@ -1050,7 +809,7 @@
                                 isSingleFilePlayableVideo = true;
                              }
                         }
-                        if (CURRENT_VIEW_MODE === 'myfiles') isSingleItemSharable = true;
+                        isSingleItemSharable = true; // Can share single selected item
                     }
                 } else if (currentSingleSelectedItem) {
                     count = 1;
@@ -1066,10 +825,10 @@
                             isSingleFilePlayableVideo = true;
                         }
                     }
-                    if (CURRENT_VIEW_MODE === 'myfiles') isSingleItemSharable = true;
+                    isSingleItemSharable = true;
                 }
 
-                if (count > 0 && CURRENT_VIEW_MODE !== 'userShares') { // Action bar for non-userShares view
+                if (count > 0) {
                     selectionActionBar.style.display = 'flex';
                     selectionCountDisplay.textContent = `已選擇 ${count} 項`;
                 } else {
@@ -1077,13 +836,12 @@
                 }
                 
                 if(actionPlayBtn) actionPlayBtn.disabled = !(count === 1 && isSingleFilePlayableVideo);
-                if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable && CURRENT_VIEW_MODE === 'myfiles'); // Edit only own files
-                if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1 && CURRENT_VIEW_MODE === 'myfiles'); // Rename only own files
-                if(actionMoveBtn) actionMoveBtn.disabled = !(count > 0 && CURRENT_VIEW_MODE === 'myfiles'); // Move only own files
-                if(actionShareBtn) actionShareBtn.disabled = !(count === 1 && isSingleItemSharable && CURRENT_VIEW_MODE === 'myfiles'); // Share only own files
-                
-                if(actionDownloadBtn) actionDownloadBtn.disabled = !(count > 0); // Download can be for own or sharedWithMe
-                if(actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0 && CURRENT_VIEW_MODE === 'myfiles'); // Delete only own files
+                if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable);
+                if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
+                if(actionMoveBtn) actionMoveBtn.disabled = !(count > 0);
+                if(actionShareBtn) actionShareBtn.disabled = !(count === 1 && isSingleItemSharable);
+                if(actionDownloadBtn) actionDownloadBtn.disabled = !(count > 0);
+                if(actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
             }
 
             document.querySelectorAll('#file-container .item-checkbox').forEach((checkbox) => {
@@ -1114,7 +872,7 @@
             if (fileContainer) {
                 fileContainer.querySelectorAll('ul > li .file-entry-selectable').forEach(contentWrapper => {
                     contentWrapper.addEventListener('click', (event) => {
-                        if (CURRENT_VIEW_MODE === 'userShares') return; // No selection in 'userShares' view
+                        if (CURRENT_VIEW_MODE === 'userShares') return;
 
                         const listItem = contentWrapper.closest('li');
                         if (!listItem) return;
@@ -1134,7 +892,6 @@
                             isDir: checkbox.dataset.isDir === 'true', rawName: checkbox.dataset.rawName,
                             isPlayableVideo: checkbox.dataset.isPlayableVideo === 'true',
                             videoType: checkbox.dataset.videoType,
-                            ownerUsername: checkbox.dataset.ownerUsername || null,
                             element: listItem 
                         };
 
@@ -1170,8 +927,7 @@
                     const encodedPath = this.dataset.path;
                     const videoName = this.dataset.name;
                     const videoType = this.dataset.type;
-                    const ownerUsername = this.dataset.ownerUsername || null; // Get owner for shared videos
-                    openVideoPlayer(encodedPath, videoName, videoType, ownerUsername);
+                    openVideoPlayer(encodedPath, videoName, videoType);
                 });
             });
             
@@ -1188,15 +944,15 @@
                         }
                     }
                     if (itemToPlay) {
-                        openVideoPlayer(itemToPlay.encodedPath, itemToPlay.name, itemToPlay.videoType, itemToPlay.ownerUsername);
+                        openVideoPlayer(itemToPlay.encodedPath, itemToPlay.name, itemToPlay.videoType);
                     }
                 });
             }
 
 
-             if (actionEditBtn) { // Edit only applies to 'myfiles' view
+             if (actionEditBtn) {
                 actionEditBtn.addEventListener('click', () => {
-                    if (actionEditBtn.disabled || CURRENT_VIEW_MODE !== 'myfiles') return;
+                    if (actionEditBtn.disabled) return;
                     let itemToEdit = null;
                     if (!multiSelectModeActive && currentSingleSelectedItem) {
                         itemToEdit = currentSingleSelectedItem;
@@ -1207,7 +963,6 @@
 
                     if (itemToEdit && !itemToEdit.isDir) { 
                         let url = `/edit?path=${itemToEdit.encodedPath}`;
-                        // If admin is viewing another user's files, targetUsername is VIEW_CONTEXT_USER_USERNAME
                         if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
                             url += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
                         }
@@ -1216,9 +971,9 @@
                 });
             }
 
-            if (actionRenameBtn) { // Rename only applies to 'myfiles' view
+            if (actionRenameBtn) {
                 actionRenameBtn.addEventListener('click', () => {
-                    if (actionRenameBtn.disabled || CURRENT_VIEW_MODE !== 'myfiles') return;
+                    if (actionRenameBtn.disabled) return;
                     let itemToRename = null;
                      if (!multiSelectModeActive && currentSingleSelectedItem) {
                         itemToRename = currentSingleSelectedItem;
@@ -1248,10 +1003,7 @@
 
                     if (itemsToDownload.length === 1 && !itemsToDownload[0].isDir) {
                         let url = `/download?path=${itemsToDownload[0].encodedPath}`;
-                        if (itemsToDownload[0].ownerUsername) { // Shared file
-                            url += `&ownerUsername=${encodeURIComponent(itemsToDownload[0].ownerUsername)}`;
-                        } else if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
-                            // Admin downloading another user's file (not a share, direct access)
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
                             url += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
                         }
                         const tempLink = document.createElement('a');
@@ -1271,23 +1023,17 @@
                         itemsInput.type = 'hidden';
                         itemsInput.name = 'items';
                         const itemsForPayload = itemsToDownload.map(item => ({ 
-                            path: item.path, name: item.name, isDir: item.isDir,
-                            ownerUsername: item.ownerUsername || undefined // Include owner if it's a shared item
+                            path: item.path, name: item.name, isDir: item.isDir 
                         }));
                         itemsInput.value = JSON.stringify(itemsForPayload);
                         form.appendChild(itemsInput);
 
-                        // If admin is viewing another user's files and initiating archive
                         if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
-                            // And if all items are from this context user (not mixed with shares from others)
-                            const allFromContextUser = itemsToDownload.every(item => !item.ownerUsername || item.ownerUsername === VIEW_CONTEXT_USER_USERNAME);
-                            if (allFromContextUser) {
-                                const targetUserInput = document.createElement('input');
-                                targetUserInput.type = 'hidden';
-                                targetUserInput.name = 'targetUsername'; // Server expects this for admin context
-                                targetUserInput.value = VIEW_CONTEXT_USER_USERNAME;
-                                form.appendChild(targetUserInput);
-                            }
+                            const targetUserInput = document.createElement('input');
+                            targetUserInput.type = 'hidden';
+                            targetUserInput.name = 'targetUsername';
+                            targetUserInput.value = VIEW_CONTEXT_USER_USERNAME;
+                            form.appendChild(targetUserInput);
                         }
                         if (CSRF_TOKEN) { 
                             const csrfInput = document.createElement('input');
@@ -1305,9 +1051,9 @@
                 });
             }
 
-            if (actionDeleteBtn) { // Delete only applies to 'myfiles' view
+            if (actionDeleteBtn) {
                 actionDeleteBtn.addEventListener('click', async () => {
-                    if (actionDeleteBtn.disabled || CURRENT_VIEW_MODE !== 'myfiles') return;
+                    if (actionDeleteBtn.disabled) return;
                     let itemsToDelete = [];
                      if (!multiSelectModeActive && currentSingleSelectedItem) {
                         itemsToDelete.push(currentSingleSelectedItem);
@@ -1384,9 +1130,9 @@
                 });
             }
             
-            if (actionMoveBtn) { // Move only applies to 'myfiles' view
+            if (actionMoveBtn) {
                 actionMoveBtn.addEventListener('click', async () => {
-                    if (actionMoveBtn.disabled || CURRENT_VIEW_MODE !== 'myfiles') return;
+                    if (actionMoveBtn.disabled) return;
                     let itemsToMove = [];
                      if (!multiSelectModeActive && currentSingleSelectedItem) {
                         itemsToMove.push(currentSingleSelectedItem);
@@ -1537,10 +1283,10 @@
                 });
             }
 
-            // Share Modal Logic
+            // Public Link Sharing Logic
             if (actionShareBtn) {
                 actionShareBtn.addEventListener('click', () => {
-                    if (actionShareBtn.disabled || CURRENT_VIEW_MODE !== 'myfiles') return;
+                    if (actionShareBtn.disabled) return;
                     let itemToShare = null;
                     if (!multiSelectModeActive && currentSingleSelectedItem) {
                         itemToShare = currentSingleSelectedItem;
@@ -1549,18 +1295,78 @@
                         if (selected.length === 1) itemToShare = selected[0];
                     }
 
-                    if (itemToShare && shareModal && shareItemNameDisplay && shareFilePathInput && shareIsDirectoryInput && shareUsernameInput) {
+                    if (itemToShare && shareModal && shareItemNameDisplay && shareFilePathInput && shareIsDirectoryInput) {
                         shareItemNameDisplay.textContent = itemToShare.name;
                         shareFilePathInput.value = itemToShare.path;
                         shareIsDirectoryInput.value = itemToShare.isDir;
-                        shareUsernameInput.value = ''; // Clear previous username
+                        if(shareAllowDownloadCheckbox) shareAllowDownloadCheckbox.checked = true;
+                        if(shareAllowViewCheckbox) shareAllowViewCheckbox.checked = true;
                         shareModal.style.display = 'block';
-                        shareUsernameInput.focus();
                     }
                 });
             }
             if(closeShareModalBtn) closeShareModalBtn.onclick = () => shareModal.style.display = 'none';
             if(cancelShareBtn) cancelShareBtn.onclick = () => shareModal.style.display = 'none';
+
+            if (confirmShareBtn) {
+                confirmShareBtn.addEventListener('click', async () => {
+                    const filePath = shareFilePathInput.value;
+                    const isDirectory = shareIsDirectoryInput.value === 'true';
+                    const allowDownload = shareAllowDownloadCheckbox ? shareAllowDownloadCheckbox.checked : true;
+                    const allowView = shareAllowViewCheckbox ? shareAllowViewCheckbox.checked : true;
+
+                    const payload = {
+                        filePathToShare: filePath,
+                        isDirectory: isDirectory,
+                        allowDownload: allowDownload,
+                        allowView: allowView,
+                        _csrf: CSRF_TOKEN
+                    };
+                    if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                        payload.targetUsername = VIEW_CONTEXT_USER_USERNAME;
+                    }
+
+                    try {
+                        const response = await fetch('/actions/create-public-link', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            shareModal.style.display = 'none';
+                            if (generatedPublicLinkInput) generatedPublicLinkInput.value = result.publicUrl;
+                            if (publicLinkDisplayModal) publicLinkDisplayModal.style.display = 'block';
+                            // alert(`公開連結已創建: ${result.publicUrl}`);
+                            // Optionally, refresh the "My Shares" view if the user is on it.
+                            if (CURRENT_VIEW_MODE === 'userShares') window.location.reload();
+
+                        } else {
+                            alert(`創建公開連結失敗: ${result.message || '未知錯誤'}`);
+                        }
+                    } catch (error) {
+                        console.error('創建公開連結時出錯:', error);
+                        alert('創建公開連結時發生客戶端錯誤。');
+                    }
+                });
+            }
+
+            if (copyPublicLinkBtn && generatedPublicLinkInput) {
+                copyPublicLinkBtn.addEventListener('click', () => {
+                    generatedPublicLinkInput.select();
+                    generatedPublicLinkInput.setSelectionRange(0, 99999); // For mobile devices
+                    try {
+                        const successful = document.execCommand('copy');
+                        const msg = successful ? '連結已複製到剪貼簿！' : '複製失敗。';
+                        alert(msg);
+                    } catch (err) {
+                        alert('複製失敗，您的瀏覽器可能不支持此操作。');
+                        console.error('無法複製文本: ', err);
+                    }
+                });
+            }
+            if(closePublicLinkDisplayModalBtn) closePublicLinkDisplayModalBtn.onclick = () => publicLinkDisplayModal.style.display = 'none';
+            if(okPublicLinkDisplayBtn) okPublicLinkDisplayBtn.onclick = () => publicLinkDisplayModal.style.display = 'none';
 
 
             function showOverwriteConfirmationModal(itemName) {
@@ -1880,7 +1686,7 @@
                         gridViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'list');
                     }
-                    if (isCurrentlyMultiSelect) { 
+                    if (isCurrentlyMultiSelect && CURRENT_VIEW_MODE !== 'userShares') { 
                         fileContainer.classList.add('multi-select-mode-active');
                     }
                     clearSingleSelection(); 
@@ -1942,16 +1748,13 @@
             if (closeCreateItemModalBtn) closeCreateItemModalBtn.onclick = () => createItemModal.style.display = 'none';
             if (cancelCreateItemBtn) cancelCreateItemBtn.onclick = () => createItemModal.style.display = 'none';
             
-            function openVideoPlayer(encodedPath, videoName, videoType, ownerUsername = null) {
+            function openVideoPlayer(encodedPath, videoName, videoType) {
                 if (!videoPlayerModal || !html5VideoPlayer || !videoSourceElement || !videoModalTitle) return;
                 
                 let videoSrc = `/stream/${encodedPath}`;
                 const queryParams = new URLSearchParams();
 
-                if (ownerUsername) { // For shared files
-                    queryParams.set('ownerUsername', ownerUsername);
-                } else if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
-                    // Admin viewing another user's file directly
+                if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
                     queryParams.set('targetUsername', VIEW_CONTEXT_USER_USERNAME);
                 }
                 
@@ -1997,6 +1800,7 @@
                     }
                 }
                 if (event.target == shareModal) shareModal.style.display = 'none';
+                if (event.target == publicLinkDisplayModal) publicLinkDisplayModal.style.display = 'none';
             });
 
             updateMultiSelectModeUI(); 
