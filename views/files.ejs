@@ -419,7 +419,7 @@
                 <button id="action-rename-btn" disabled>重命名</button>
                 <button id="action-move-btn" disabled>移動</button>
                 <button id="action-share-btn" disabled>創建公開連結</button>
-                <button id="action-download-btn" disabled>下載選中項</button>
+                <button id="action-view-existing-links-btn" disabled style="display:none;">查看已分享連結</button> <button id="action-download-btn" disabled>下載選中項</button>
                 <button id="action-delete-btn" class="secondary" disabled>删除</button>
             </div>
         <% } else { %>
@@ -551,13 +551,13 @@
                                         </div>
                                     <% } %>
                                     <% if (locals.viewMode === 'userShares') { %>
-                                        <form action="/actions/revoke-public-link" method="POST" style="margin-left:10px;">
+                                        <form action="/actions/revoke-public-link" method="POST" style="margin-left:10px;" class="revoke-single-link-form">
                                             <input type="hidden" name="link_id" value="<%= item.link_id %>">
                                             <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
                                                 <input type="hidden" name="contextUsername" value="<%= viewContextUser.username %>">
                                             <% } %>
                                             <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                                            <button type="submit" class="secondary action-button-small" onclick="return confirm('確定要撤銷此公開連結嗎？');">撤銷連結</button>
+                                            <button type="submit" class="secondary action-button-small" onclick="return confirm('確定要撤銷此公開連結嗎？');">撤銷</button>
                                         </form>
                                     <% } else { %>
                                         <span class="file-actions-placeholder"></span> 
@@ -689,6 +689,19 @@
         </div>
     </div>
 
+    <div id="existing-links-modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="close-existing-links-modal-btn">&times;</span>
+            <h3>項目 "<span id="existing-links-item-name"></span>" 的已分享連結</h3>
+            <div id="existing-links-list-container">
+                <p>正在加載連結...</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="secondary" id="done-existing-links-btn">完成</button>
+            </div>
+        </div>
+    </div>
+
 
     <script src="/theme.js"></script>
     <script>
@@ -701,7 +714,7 @@
         const CURRENT_PATH_ON_LOAD = "<%= currentPath %>";
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
         const CURRENT_VIEW_MODE = "<%= locals.viewMode || 'myfiles' %>"; 
-        const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify((locals.viewMode || 'myfiles') === 'myfiles' ? items.map(item => item.name.toLowerCase()) : []) %>;
+        const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify((locals.viewMode || 'myfiles') === 'myfiles' && Array.isArray(items) ? items.map(item => item.name.toLowerCase()) : []) %>;
         const HAS_ITEMS_ON_PAGE = <%= items.length > 0 %>;
 
 
@@ -716,6 +729,7 @@
             const actionRenameBtn = document.getElementById('action-rename-btn');
             const actionMoveBtn = document.getElementById('action-move-btn');
             const actionShareBtn = document.getElementById('action-share-btn');
+            const actionViewExistingLinksBtn = document.getElementById('action-view-existing-links-btn'); // New button
             const actionDownloadBtn = document.getElementById('action-download-btn');
             const actionDeleteBtn = document.getElementById('action-delete-btn');
 
@@ -781,6 +795,13 @@
             const closePublicLinkDisplayModalBtn = document.getElementById('close-public-link-display-modal-btn');
             const okPublicLinkDisplayBtn = document.getElementById('ok-public-link-display-btn');
 
+            // New Modal for Existing Links
+            const existingLinksModal = document.getElementById('existing-links-modal');
+            const closeExistingLinksModalBtn = document.getElementById('close-existing-links-modal-btn');
+            const doneExistingLinksBtn = document.getElementById('done-existing-links-btn');
+            const existingLinksItemNameSpan = document.getElementById('existing-links-item-name');
+            const existingLinksListContainer = document.getElementById('existing-links-list-container');
+
 
             function clearSingleSelection() {
                 if (currentSingleSelectedItem && currentSingleSelectedItem.element) {
@@ -813,8 +834,8 @@
                     if (selectAllCheckbox) selectAllCheckbox.checked = false;
                     if (selectAllPublicLinksCheckbox) selectAllPublicLinksCheckbox.checked = false;
                 }
-                updateSelectionActions(); // For 'myfiles' view
-                updatePublicLinkSelectionActions(); // For 'userShares' view
+                updateSelectionActions(); 
+                updatePublicLinkSelectionActions(); 
             }
             
             if (toggleMultiSelectBtn) {
@@ -824,7 +845,7 @@
                 });
             }
 
-            function getCheckboxSelectedItems() { // For 'myfiles' view
+            function getCheckboxSelectedItems() { 
                 const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox'); 
                 const selected = [];
                 currentCheckboxes.forEach((cb) => {
@@ -842,7 +863,7 @@
                 return selected;
             }
             
-            function getSelectedPublicLinkIds() { // For 'userShares' view
+            function getSelectedPublicLinkIds() { 
                 const selectedIds = [];
                 document.querySelectorAll('#file-container .public-link-checkbox:checked').forEach(cb => {
                     selectedIds.push(cb.dataset.linkId);
@@ -851,7 +872,7 @@
             }
 
 
-            function updateSelectionActions() { // For 'myfiles' view
+            async function updateSelectionActions() { 
                  if (CURRENT_VIEW_MODE === 'userShares' || !selectionActionBar) {
                     if(selectionActionBar) selectionActionBar.style.display = 'none';
                     return;
@@ -861,6 +882,7 @@
                 let isSingleFileEditable = false;
                 let isSingleFilePlayableVideo = false;
                 let isSingleItemSharable = false;
+                let hasExistingShares = false; // New flag
 
 
                 if (multiSelectModeActive) {
@@ -880,6 +902,19 @@
                              }
                         }
                         isSingleItemSharable = true; 
+                        // Check for existing shares for the single selected item
+                        try {
+                            let apiUrl = `/api/item-public-links?filePath=${encodeURIComponent(item.path)}`;
+                            if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                                apiUrl += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
+                            }
+                            const response = await fetch(apiUrl);
+                            const data = await response.json();
+                            if (data.success && data.links && data.links.length > 0) {
+                                hasExistingShares = true;
+                            }
+                        } catch (e) { console.error("Error checking existing shares:", e); }
+
                     }
                 } else if (currentSingleSelectedItem) {
                     count = 1;
@@ -896,6 +931,18 @@
                         }
                     }
                     isSingleItemSharable = true;
+                    // Check for existing shares for the single selected item
+                    try {
+                        let apiUrl = `/api/item-public-links?filePath=${encodeURIComponent(item.path)}`;
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                            apiUrl += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
+                        }
+                        const response = await fetch(apiUrl);
+                        const data = await response.json();
+                        if (data.success && data.links && data.links.length > 0) {
+                            hasExistingShares = true;
+                        }
+                    } catch (e) { console.error("Error checking existing shares:", e); }
                 }
 
                 if (count > 0) {
@@ -910,11 +957,15 @@
                 if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
                 if(actionMoveBtn) actionMoveBtn.disabled = !(count > 0);
                 if(actionShareBtn) actionShareBtn.disabled = !(count === 1 && isSingleItemSharable);
+                if(actionViewExistingLinksBtn) {
+                    actionViewExistingLinksBtn.disabled = !(count === 1 && hasExistingShares);
+                    actionViewExistingLinksBtn.style.display = (count === 1 && hasExistingShares) ? 'inline-block' : 'none';
+                }
                 if(actionDownloadBtn) actionDownloadBtn.disabled = !(count > 0);
                 if(actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
             }
 
-            function updatePublicLinkSelectionActions() { // For 'userShares' view
+            function updatePublicLinkSelectionActions() { 
                 if (CURRENT_VIEW_MODE !== 'userShares' || !publicLinkSelectionActionBar) {
                     if(publicLinkSelectionActionBar) publicLinkSelectionActionBar.style.display = 'none';
                     return;
@@ -951,7 +1002,7 @@
                     if (multiSelectModeActive) {
                         updatePublicLinkSelectionActions();
                     } else {
-                        checkbox.checked = false; // Should not happen if multiSelectModeActive is false for userShares
+                        checkbox.checked = false; 
                     }
                 });
             });
@@ -986,8 +1037,8 @@
 
             if (fileContainer) {
                 fileContainer.querySelectorAll('ul > li .file-entry-selectable').forEach(contentWrapper => {
-                    contentWrapper.addEventListener('click', (event) => {
-                        if (CURRENT_VIEW_MODE === 'userShares') { // Handle click on row for checkbox toggle in userShares
+                    contentWrapper.addEventListener('click', async (event) => { // Added async
+                        if (CURRENT_VIEW_MODE === 'userShares') { 
                             const listItem = contentWrapper.closest('li');
                             if (!listItem) return;
                             const checkbox = listItem.querySelector('.public-link-checkbox');
@@ -1033,15 +1084,15 @@
                                 listItem.classList.add('single-selected-item');
                             }
                         }
-                        updateSelectionActions();
+                        await updateSelectionActions(); // Make it await
                     });
                 });
             
-                fileContainer.addEventListener('click', (event) => {
+                fileContainer.addEventListener('click', async (event) => { // Added async
                     if (event.target.closest('li') === null && (event.target.isSameNode(fileContainer) || event.target.tagName === 'UL')) {
                         if (!multiSelectModeActive && CURRENT_VIEW_MODE !== 'userShares') { 
                             clearSingleSelection();
-                            updateSelectionActions(); 
+                            await updateSelectionActions(); // Make it await
                         }
                     }
                 });
@@ -1526,6 +1577,113 @@
                     }
                 });
             }
+            
+            // View Existing Links Modal Logic
+            if (actionViewExistingLinksBtn && existingLinksModal && closeExistingLinksModalBtn && doneExistingLinksBtn && existingLinksItemNameSpan && existingLinksListContainer) {
+                actionViewExistingLinksBtn.addEventListener('click', async () => {
+                    if (actionViewExistingLinksBtn.disabled) return;
+                    let selectedItem = null;
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        selectedItem = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1) selectedItem = selected[0];
+                    }
+
+                    if (selectedItem) {
+                        existingLinksItemNameSpan.textContent = selectedItem.name;
+                        existingLinksListContainer.innerHTML = '<p>正在加載連結...</p>';
+                        existingLinksModal.style.display = 'block';
+
+                        try {
+                            let apiUrl = `/api/item-public-links?filePath=${encodeURIComponent(selectedItem.path)}`;
+                            if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                                apiUrl += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
+                            }
+                            const response = await fetch(apiUrl);
+                            const data = await response.json();
+
+                            if (data.success && data.links) {
+                                if (data.links.length > 0) {
+                                    const ul = document.createElement('ul');
+                                    ul.style.listStyleType = 'none';
+                                    ul.style.paddingLeft = '0';
+                                    data.links.forEach(link => {
+                                        const li = document.createElement('li');
+                                        li.style.padding = '8px 0';
+                                        li.style.borderBottom = '1px solid #eee';
+
+                                        const linkUrl = document.createElement('a');
+                                        linkUrl.href = link.publicUrl;
+                                        linkUrl.textContent = link.publicUrl;
+                                        linkUrl.target = '_blank';
+                                        
+                                        const createdAt = new Date(link.created_at).toLocaleString('zh-CN');
+                                        const details = document.createElement('span');
+                                        details.textContent = ` (創建於: ${createdAt}, ${link.allow_download ? '允許下載' : '禁止下載'}, ${link.allow_view ? '允許預覽' : '禁止預覽'}, 訪問: ${link.visit_count} 次)`;
+                                        details.style.fontSize = '0.8em';
+                                        details.style.color = '#777';
+
+                                        const revokeBtn = document.createElement('button');
+                                        revokeBtn.textContent = '撤銷此連結';
+                                        revokeBtn.className = 'secondary action-button-small';
+                                        revokeBtn.style.marginLeft = '10px';
+                                        revokeBtn.onclick = async () => {
+                                            if (confirm(`確定要撤銷連結 ${link.publicUrl} 嗎？`)) {
+                                                const revokePayload = { link_id: link.link_id, _csrf: CSRF_TOKEN };
+                                                 if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                                                    revokePayload.contextUsername = VIEW_CONTEXT_USER_USERNAME;
+                                                }
+                                                try {
+                                                    const revokeResponse = await fetch('/actions/revoke-public-link', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify(revokePayload)
+                                                    });
+                                                    // Check if response is JSON before parsing
+                                                    const contentType = revokeResponse.headers.get("content-type");
+                                                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                                                        const revokeResult = await revokeResponse.json();
+                                                        alert(revokeResult.message || (revokeResult.success ? '連結已撤銷。' : '操作失敗。'));
+                                                    } else {
+                                                        // Handle non-JSON response (e.g. redirect)
+                                                        if(revokeResponse.ok || revokeResponse.redirected) {
+                                                            alert('連結已撤銷。頁面將刷新。');
+                                                        } else {
+                                                            alert('撤銷連結時發生錯誤。');
+                                                        }
+                                                    }
+                                                    existingLinksModal.style.display = 'none'; // Close modal
+                                                    window.location.reload(); // Refresh to reflect changes
+                                                } catch (e) {
+                                                    console.error("撤銷連結時出錯:", e);
+                                                    alert('撤銷連結時發生客戶端錯誤。');
+                                                }
+                                            }
+                                        };
+
+                                        li.appendChild(linkUrl);
+                                        li.appendChild(details);
+                                        li.appendChild(revokeBtn);
+                                        ul.appendChild(li);
+                                    });
+                                    existingLinksListContainer.innerHTML = '';
+                                    existingLinksListContainer.appendChild(ul);
+                                } else {
+                                    existingLinksListContainer.innerHTML = '<p>此項目沒有已分享的公開連結。</p>';
+                                }
+                            } else {
+                                existingLinksListContainer.innerHTML = `<p style="color:red;">獲取連結列表失敗: ${data.message || '未知錯誤'}</p>`;
+                            }
+                        } catch (error) {
+                            console.error('獲取已分享連結時出錯:', error);
+                            existingLinksListContainer.innerHTML = `<p style="color:red;">獲取連結列表時發生客戶端錯誤。</p>`;
+                        }
+                    }
+                });
+                if(closeExistingLinksModalBtn) closeExistingLinksModalBtn.onclick = () => existingLinksModal.style.display = 'none';
+                if(doneExistingLinksBtn) doneExistingLinksBtn.onclick = () => existingLinksModal.style.display = 'none';
+            }
 
 
             function showOverwriteConfirmationModal(itemName) {
@@ -1961,6 +2119,7 @@
                 }
                 if (event.target == shareModal) shareModal.style.display = 'none';
                 if (event.target == publicLinkDisplayModal) publicLinkDisplayModal.style.display = 'none';
+                if (event.target == existingLinksModal) existingLinksModal.style.display = 'none';
             });
 
             updateMultiSelectModeUI(); 
