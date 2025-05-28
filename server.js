@@ -764,7 +764,7 @@ app.post('/rename', isAuthenticated, async (req, res) => {
                 [newRelativePathForLink, ownerUser.id, relativeOldPath],
                 (updErr) => {
                     if (updErr) console.error(`重命名時更新 ${targetUsername} 的 ${relativeOldPath} 公開連結路徑至 ${newRelativePathForLink} 時出錯:`, updErr);
-                    else console.log(`已更新 ${targetUsername} 的 ${relativeOldPath} 公開連結路徑至 ${newRelativePathForLink}`);
+                    // else console.log(`已更新 ${targetUsername} 的 ${relativeOldPath} 公開連結路徑至 ${newRelativePathForLink}`);
                 }
             );
         }
@@ -912,7 +912,7 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
             }
         }
         zipfile.end(); 
-        console.log(`[/download-archive] 所有項目已添加到 yazl，正在完成壓縮: ${archiveName}`);
+        // console.log(`[/download-archive] 所有項目已添加到 yazl，正在完成壓縮: ${archiveName}`);
     } catch (error) {
         console.error('添加文件到壓縮包時出錯:', error);
         try { zipfile.addBuffer(Buffer.from(`內部錯誤：處理某些文件時發生問題。\n${error.message}\n`), "內部伺服器錯誤日誌.txt"); }
@@ -921,7 +921,7 @@ app.post('/download-archive', isAuthenticated, async (req, res) => {
         if (!res.headersSent) {
             res.status(500).send(`創建壓縮文件時發生內部錯誤: ${error.message.includes('無效的目標用戶名') ? '目標用戶驗證失敗。' : error.message}`);
         } else if (!res.writableEnded) {
-            console.log("錯誤發生，但響應已開始，嘗試結束流。");
+            // console.log("錯誤發生，但響應已開始，嘗試結束流。");
             try { zipfile.outputStream.unpipe(res); } catch(e){} 
             res.end();
         }
@@ -964,7 +964,7 @@ app.get('/delete', isAuthenticated, async (req, res) => {
         if (ownerUser) {
             db.run("DELETE FROM public_links WHERE owner_id = ? AND file_path = ?", [ownerUser.id, relativeItemPath], (delErr) => {
                 if (delErr) console.error(`刪除 ${targetUsername} 的 ${relativeItemPath} 的公開連結時出錯:`, delErr);
-                else console.log(`已刪除 ${targetUsername} 的 ${relativeItemPath} 的相關公開連結。`);
+                // else console.log(`已刪除 ${targetUsername} 的 ${relativeItemPath} 的相關公開連結。`);
             });
         }
 
@@ -1272,7 +1272,7 @@ app.post('/move-items', isAuthenticated, async (req, res) => {
                         [newRelativePathForLink, ownerUser.id, sourceRelPath],
                         (updErr) => {
                             if (updErr) console.error(`移動時更新 ${targetUsernameForMove} 的 ${sourceRelPath} 公開連結路徑至 ${newRelativePathForLink} 時出錯:`, updErr);
-                            else console.log(`已更新 ${targetUsernameForMove} 的 ${sourceRelPath} 公開連結路徑至 ${newRelativePathForLink}`);
+                            // else console.log(`已更新 ${targetUsernameForMove} 的 ${sourceRelPath} 公開連結路徑至 ${newRelativePathForLink}`);
                         }
                     );
                 }
@@ -1356,8 +1356,7 @@ app.post('/actions/create-public-link', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const { filePathToShare, isDirectory: isDirStr, allowDownload: allowDownloadStr, allowView: allowViewStr, expiresAt: expiresAtStr } = req.body;
     
-    // Robust boolean conversion for isDirectory
-    const isDirectory = (isDirStr === 'true' || isDirStr === true); 
+    const isDirectory = String(isDirStr).toLowerCase() === 'true'; // Robust boolean conversion
 
     const allowDownload = allowDownloadStr !== 'false'; 
     const allowView = allowViewStr !== 'false';     
@@ -1394,14 +1393,8 @@ app.post('/actions/create-public-link', isAuthenticated, async (req, res) => {
         }
         const stat = await fsp.stat(fullPath);
 
-        console.log(`[Share Debug] filePathToShare: ${filePathToShare}`);
-        console.log(`[Share Debug] isDirStr (from client): '${isDirStr}', type: ${typeof isDirStr}`);
-        console.log(`[Share Debug] isDirectory (converted): ${isDirectory}, type: ${typeof isDirectory}`);
-        console.log(`[Share Debug] stat.isDirectory(): ${stat.isDirectory()}, type: ${typeof stat.isDirectory()}`);
-
-
         if (isDirectory !== stat.isDirectory()){ 
-            return res.status(400).json({ success: false, message: `分享失敗：項目類型不匹配 (文件/目錄)。前端報送 isDirectory=${isDirectory} (類型: ${typeof isDirectory}), 實際 isDirectory=${stat.isDirectory()} (類型: ${typeof stat.isDirectory()})` });
+            return res.status(400).json({ success: false, message: `分享失敗：項目類型不匹配 (文件/目錄)。前端報送 isDirectory=${isDirectory}, 實際 isDirectory=${stat.isDirectory()}` });
         }
 
         const token = uuidv4(); 
