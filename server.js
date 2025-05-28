@@ -15,10 +15,6 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // --- 啟用 'trust proxy' ---
-// 這對於在反向代理 (如 Nginx, Heroku, Cloudflare 等) 後運行應用程式以正確識別協議 (http/https) 很重要。
-// 'loopback' 表示信任來自本地回環地址的代理請求。
-// 如果您的代理在不同的 IP 上，您可能需要更具體的設置，例如 app.set('trust proxy', '127.0.0.1'); 或 app.set('trust proxy', 1); (信任第一個代理)
-// 設置為 true 會信任 X-Forwarded-Proto 標頭。
 app.set('trust proxy', true);
 
 
@@ -26,7 +22,11 @@ app.set('trust proxy', true);
 const DATA_DIR = path.join(__dirname, 'data');
 const UPLOAD_DIR_BASE = path.join(__dirname, 'uploads');
 const DB_FILE = path.join(DATA_DIR, 'netdisk.sqlite');
-const ALLOWED_TEXT_EXTENSIONS = ['.txt', '.md', '.json', '.js', '.css', '.html', '.xml', '.log', '.csv', '.py', '.java', '.c', '.cpp', '.go', '.rb'];
+const ALLOWED_TEXT_EXTENSIONS = [
+    '.txt', '.md', '.json', '.js', '.css', '.html', '.xml', '.log', '.csv', 
+    '.py', '.java', '.c', '.cpp', '.go', '.rb', '.sh', '.bat', '.ps1', 
+    '.yaml', '.yml', '.ini', '.conf', '.cfg', '.env', '.sql', '.php', '.pl', '.ts' 
+];
 const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov'];
 const SESSION_SECRET = process.env.SESSION_SECRET || 'a_very_very_strong_and_unique_secret_CHANGE_THIS_NOW_REALLY';
 const USER_QUOTA_MB = 90;
@@ -1577,7 +1577,9 @@ app.get('/public/:token', async (req, res) => {
                 directoryName: path.basename(link.file_path) + (relPath ? '/' + relPath : ''),
                 items: items,
                 currentRelPath: relPath || '', 
-                user: null, csrfToken: null
+                user: null, csrfToken: null,
+                ALLOWED_TEXT_EXTENSIONS_FOR_PUBLIC_VIEW: ALLOWED_TEXT_EXTENSIONS, // Pass to template
+                ALLOWED_VIDEO_EXTENSIONS_FOR_PUBLIC_VIEW: ALLOWED_VIDEO_EXTENSIONS  // Pass to template
             });
         } else {
             return res.status(404).render('error', { message: '分享的項目類型未知。', user: null, csrfToken: null });
