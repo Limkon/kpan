@@ -1578,16 +1578,16 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
                         });
-                         // Check if the response is ok (status in the range 200-299)
+                        
                         if (!response.ok) {
                             let serverErrorMessage = `伺服器錯誤，狀態碼: ${response.status}`;
                             try {
-                                const errorData = await response.text(); 
+                                const errorText = await response.text(); 
                                 if (response.headers.get("content-type")?.includes("application/json")) {
-                                    const jsonData = JSON.parse(errorData);
-                                    serverErrorMessage = jsonData.message || errorData;
+                                    const jsonData = JSON.parse(errorText);
+                                    serverErrorMessage = jsonData.message || errorText;
                                 } else {
-                                     serverErrorMessage = errorData.length > 200 ? errorData.substring(0, 200) + "..." : errorData;
+                                     serverErrorMessage = errorText.length > 200 ? errorText.substring(0, 200) + "..." : errorText;
                                 }
                             } catch (e) { /* Failed to parse error response body */ }
                             throw new Error(serverErrorMessage); 
