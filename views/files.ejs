@@ -748,7 +748,9 @@
     <div id="public-link-display-modal">
         <div class="modal-content">
             <span class="close-modal-btn" id="close-public-link-display-modal-btn">&times;</span>
-            <h3 id="public-link-modal-title">公開連結</h3> <p id="public-link-modal-message">您可以複製下面的連結進行分享:</p> <div class="public-link-container">
+            <h3 id="public-link-modal-title">公開連結</h3> 
+            <p id="public-link-modal-message">您可以複製下面的連結進行分享:</p> 
+            <div class="public-link-container">
                 <input type="url" id="generated-public-link" readonly>
                 <button id="copy-public-link-btn">複製</button>
             </div>
@@ -1111,7 +1113,7 @@
                             const listItem = contentWrapper.closest('li');
                             if (!listItem) return;
                             const checkbox = listItem.querySelector('.public-link-checkbox');
-                            if (checkbox && event.target !== checkbox && !event.target.closest('form') && !event.target.closest('a.action-button-small') && !event.target.classList.contains('view-public-link-btn')) { 
+                            if (checkbox && event.target !== checkbox && !event.target.closest('form') && !event.target.classList.contains('view-public-link-btn')) { 
                                 if (multiSelectModeActive) {
                                     checkbox.checked = !checkbox.checked;
                                     updatePublicLinkSelectionActions();
@@ -1576,7 +1578,22 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
                         });
-                        const result = await response.json();
+                         // Check if the response is ok (status in the range 200-299)
+                        if (!response.ok) {
+                            let serverErrorMessage = `伺服器錯誤，狀態碼: ${response.status}`;
+                            try {
+                                const errorData = await response.text(); 
+                                if (response.headers.get("content-type")?.includes("application/json")) {
+                                    const jsonData = JSON.parse(errorData);
+                                    serverErrorMessage = jsonData.message || errorData;
+                                } else {
+                                     serverErrorMessage = errorData.length > 200 ? errorData.substring(0, 200) + "..." : errorData;
+                                }
+                            } catch (e) { /* Failed to parse error response body */ }
+                            throw new Error(serverErrorMessage); 
+                        }
+                        const result = await response.json(); 
+                        
                         if (result.success) {
                             shareModal.style.display = 'none';
                             if (publicLinkModalTitle) publicLinkModalTitle.textContent = '公開連結已創建';
@@ -1588,9 +1605,9 @@
                         } else {
                             alert(`創建公開連結失敗: ${result.message || '未知錯誤'}`);
                         }
-                    } catch (error) {
-                        console.error('創建公開連結時出錯:', error);
-                        alert('創建公開連結時發生客戶端錯誤。');
+                    } catch (error) { 
+                        console.error('創建公開連結時出錯:', error); 
+                        alert(`創建公開連結時發生客戶端錯誤。\n詳細信息: ${error.message}`);
                     }
                 });
             }
@@ -1757,8 +1774,8 @@
                 button.addEventListener('click', function() {
                     const publicUrl = this.dataset.url;
                     if (publicLinkDisplayModal && generatedPublicLinkInput && publicLinkModalTitle && publicLinkModalMessage) {
-                        publicLinkModalTitle.textContent = '查看公開連結';
-                        publicLinkModalMessage.textContent = '連結地址:';
+                        publicLinkModalTitle.textContent = '查看公開連結'; 
+                        publicLinkModalMessage.textContent = '連結地址:';     
                         generatedPublicLinkInput.value = publicUrl;
                         publicLinkDisplayModal.style.display = 'block';
                     }
