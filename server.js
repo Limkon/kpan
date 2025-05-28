@@ -1355,7 +1355,7 @@ app.get('/stream/:encodedPath(*)', isAuthenticated, async (req, res) => {
 app.post('/actions/create-public-link', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const { filePathToShare, isDirectory: isDirStr, allowDownload: allowDownloadStr, allowView: allowViewStr, expiresAt: expiresAtStr } = req.body;
-    const isDirectory = isDirStr === 'true';
+    const isDirectory = isDirStr === 'true'; // Convert string from form to boolean
     const allowDownload = allowDownloadStr !== 'false'; 
     const allowView = allowViewStr !== 'false';     
     let expiresAt = null;
@@ -1391,8 +1391,9 @@ app.post('/actions/create-public-link', isAuthenticated, async (req, res) => {
             return res.status(404).json({ success: false, message: '分享失敗：指定的文件或目錄不存在。' });
         }
         const stat = await fsp.stat(fullPath);
-        if (isDirectory !== stat.isDirectory()){
-            return res.status(400).json({ success: false, message: `分享失敗：項目類型不匹配 (文件/目錄)。` });
+        // Correctly compare boolean isDirectory with stat.isDirectory()
+        if (isDirectory !== stat.isDirectory()){ 
+            return res.status(400).json({ success: false, message: `分享失敗：項目類型不匹配 (文件/目錄)。前端報送 isDirectory=${isDirectory}, 實際 isDirectory=${stat.isDirectory()}` });
         }
 
         const token = uuidv4(); 
@@ -1578,8 +1579,8 @@ app.get('/public/:token', async (req, res) => {
                 items: items,
                 currentRelPath: relPath || '', 
                 user: null, csrfToken: null,
-                ALLOWED_TEXT_EXTENSIONS_FOR_PUBLIC_VIEW: ALLOWED_TEXT_EXTENSIONS, // Pass to template
-                ALLOWED_VIDEO_EXTENSIONS_FOR_PUBLIC_VIEW: ALLOWED_VIDEO_EXTENSIONS  // Pass to template
+                ALLOWED_TEXT_EXTENSIONS_FOR_PUBLIC_VIEW: ALLOWED_TEXT_EXTENSIONS, 
+                ALLOWED_VIDEO_EXTENSIONS_FOR_PUBLIC_VIEW: ALLOWED_VIDEO_EXTENSIONS  
             });
         } else {
             return res.status(404).render('error', { message: '分享的項目類型未知。', user: null, csrfToken: null });
