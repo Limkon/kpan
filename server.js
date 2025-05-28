@@ -1355,7 +1355,10 @@ app.get('/stream/:encodedPath(*)', isAuthenticated, async (req, res) => {
 app.post('/actions/create-public-link', isAuthenticated, async (req, res) => {
     const actingUser = req.session.user;
     const { filePathToShare, isDirectory: isDirStr, allowDownload: allowDownloadStr, allowView: allowViewStr, expiresAt: expiresAtStr } = req.body;
-    const isDirectory = isDirStr === 'true'; // Convert string from form to boolean
+    
+    // Robust boolean conversion for isDirectory
+    const isDirectory = (isDirStr === 'true' || isDirStr === true); 
+
     const allowDownload = allowDownloadStr !== 'false'; 
     const allowView = allowViewStr !== 'false';     
     let expiresAt = null;
@@ -1367,7 +1370,6 @@ app.post('/actions/create-public-link', isAuthenticated, async (req, res) => {
             console.warn("無效的過期日期格式:", expiresAtStr);
         }
     }
-
 
     let ownerIdToUse = actingUser.id;
     let ownerUsernameToUse = actingUser.username;
@@ -1391,9 +1393,15 @@ app.post('/actions/create-public-link', isAuthenticated, async (req, res) => {
             return res.status(404).json({ success: false, message: '分享失敗：指定的文件或目錄不存在。' });
         }
         const stat = await fsp.stat(fullPath);
-        // Correctly compare boolean isDirectory with stat.isDirectory()
+
+        console.log(`[Share Debug] filePathToShare: ${filePathToShare}`);
+        console.log(`[Share Debug] isDirStr (from client): '${isDirStr}', type: ${typeof isDirStr}`);
+        console.log(`[Share Debug] isDirectory (converted): ${isDirectory}, type: ${typeof isDirectory}`);
+        console.log(`[Share Debug] stat.isDirectory(): ${stat.isDirectory()}, type: ${typeof stat.isDirectory()}`);
+
+
         if (isDirectory !== stat.isDirectory()){ 
-            return res.status(400).json({ success: false, message: `分享失敗：項目類型不匹配 (文件/目錄)。前端報送 isDirectory=${isDirectory}, 實際 isDirectory=${stat.isDirectory()}` });
+            return res.status(400).json({ success: false, message: `分享失敗：項目類型不匹配 (文件/目錄)。前端報送 isDirectory=${isDirectory} (類型: ${typeof isDirectory}), 實際 isDirectory=${stat.isDirectory()} (類型: ${typeof stat.isDirectory()})` });
         }
 
         const token = uuidv4(); 
