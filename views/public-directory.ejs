@@ -4,95 +4,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>瀏覽目錄: <%= directoryName %></title>
+    <title>瀏覽目錄: <%= locals.directoryName || "分享的目錄" %></title>
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        body { font-family: sans-serif; margin: 0; background-color: #f4f4f4; color: #333; }
-        .dark-theme body { background-color: #1e1e1e; color: #e0e0e0; }
-        .container { max-width: 900px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .dark-theme .container { background-color: #2c2c2c; box-shadow: 0 0 15px rgba(0,0,0,0.3); }
-        h1, h2 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .dark-theme h1, .dark-theme h2 { color: #e0e0e0; border-bottom-color: #444; }
-        ul { list-style-type: none; padding: 0; }
-        li { padding: 8px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-        .dark-theme li { border-bottom-color: #3a3a3a; }
-        li:last-child { border-bottom: none; }
-        a { color: #007bff; text-decoration: none; }
-        .dark-theme a { color: #6cb2eb; }
-        a:hover { text-decoration: underline; }
-        .item-name { font-weight: 500; }
-        .item-details { font-size: 0.85em; color: #777; }
-        .dark-theme .item-details { color: #aaa; }
-        .item-icon { margin-right: 8px; }
-        .breadcrumb { margin-bottom: 15px; font-size: 0.9em; }
-        .breadcrumb a { color: #007bff; }
-        .dark-theme .breadcrumb a { color: #6cb2eb; }
-        .footer-info { font-size: 0.8em; color: #777; margin-top: 20px; text-align: center; }
-        .dark-theme .footer-info { color: #aaa; }
-        .download-action { margin-left: 10px; font-size: 0.9em; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            background-color: #f8f9fa;
+            color: #212529;
+            line-height: 1.6;
+        }
+        .dark-theme body {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .container {
+            max-width: 960px;
+            margin: 30px auto;
+            padding: 25px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .dark-theme .container {
+            background-color: #2c2c2c;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+        }
+        h1, h2 {
+            color: #343a40;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .dark-theme h1, .dark-theme h2 {
+            color: #f1f1f1;
+            border-bottom-color: #495057;
+        }
+        ul.item-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul.item-list li {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+        .dark-theme ul.item-list li {
+            border-bottom-color: #3a3a3a;
+        }
+        ul.item-list li:last-child {
+            border-bottom: none;
+        }
+        ul.item-list li:hover {
+            background-color: #f1f3f5;
+        }
+        .dark-theme ul.item-list li:hover {
+            background-color: #383838;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .dark-theme a {
+            color: #6cb2eb;
+        }
+        a:hover {
+            text-decoration: underline;
+            color: #0056b3;
+        }
+        .dark-theme a:hover {
+            color: #8dc9f0;
+        }
+        .item-name-link { /* Class for the main item name link */
+            font-weight: 500;
+        }
+        .item-details {
+            font-size: 0.875em;
+            color: #6c757d;
+            margin-left: 10px; /* Add some space to the left of details */
+        }
+        .dark-theme .item-details {
+            color: #adb5bd;
+        }
+        .item-icon {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 0.95em;
+            padding: 10px 15px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+        .dark-theme .breadcrumb {
+            background-color: #343a40;
+        }
+        .breadcrumb a {
+            color: #007bff;
+        }
+        .dark-theme .breadcrumb a {
+            color: #8dc9f0;
+        }
+        .footer-info {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 30px;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+        .dark-theme .footer-info {
+            color: #adb5bd;
+            border-top-color: #3a3a3a;
+        }
+        .download-action-btn { /* Make it look like a button */
+            margin-left: 15px;
+            font-size: 0.9em;
+            padding: 5px 10px;
+            border: 1px solid #007bff;
+            color: #007bff;
+            background-color: transparent;
+            border-radius: 4px;
+            transition: background-color 0.2s, color 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .dark-theme .download-action-btn {
+            border-color: #6cb2eb;
+            color: #6cb2eb;
+        }
+        .download-action-btn:hover {
+            background-color: #007bff;
+            color: #fff;
+        }
+        .dark-theme .download-action-btn:hover {
+            background-color: #6cb2eb;
+            color: #1a1a1a;
+        }
+        .item-actions { /* Container for actions like download button */
+            margin-left: auto; /* Push actions to the right */
+            display: flex;
+            align-items: center;
+        }
+        .empty-dir-message {
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+        .dark-theme .empty-dir-message {
+            color: #adb5bd;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>公開分享目錄: <%= directoryName %></h1>
+        <h1>公開分享目錄: <%= locals.directoryName || "分享的目錄" %></h1>
 
         <div class="breadcrumb">
-            <a href="/public/<%= link.token %>">根目錄 (<%= link.file_path === '/' ? '/' : link.file_path.split('/').pop() || '/' %>)</a>
+            <a href="/public/<%= locals.link.token %>">根目錄 (<%= locals.link.file_path === '/' ? '/' : locals.link.file_path.split('/').pop() || '/' %>)</a>
             <%
-                let segments = currentRelPath.split('/').filter(Boolean);
+                let segments = (locals.currentRelPath || '').split('/').filter(Boolean);
                 let cumulative = '';
             %>
             <% segments.forEach(segment => { %>
                 <% cumulative += (cumulative ? '/' : '') + segment; %>
-                / <a href="/public/<%= link.token %>?relPath=<%= encodeURIComponent(cumulative) %>"><%= segment %></a>
+                / <a href="/public/<%= locals.link.token %>?relPath=<%= encodeURIComponent(cumulative) %>"><%= segment %></a>
             <% }); %>
         </div>
 
-        <% if (items.length > 0) { %>
-            <ul>
+        <% if (locals.items && items.length > 0) { %>
+            <ul class="item-list">
                 <% items.forEach(item => { %>
                     <li>
-                        <div>
+                        <div style="display: flex; align-items: center; flex-grow: 1; min-width: 0;">
                             <span class="item-icon"><%= item.isDir ? '📁' : '📄' %></span>
-                            <% if (item.isDir) { %>
-                                <a href="/public/<%= link.token %>?relPath=<%= encodeURIComponent(item.path) %>" class="item-name"><%= item.name %></a>
-                            <% } else { %>
-                                <%
-                                    let viewOrDownloadUrl = `/public/${link.token}?relPath=${encodeURIComponent(item.path)}`;
-                                    // If a specific download route for files within public dirs is preferred:
-                                    // viewOrDownloadUrl = `/public/download/${link.token}?relPath=${encodeURIComponent(item.path)}`;
-                                    // For streaming, a similar logic would apply for video files.
-                                    const fileExt = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
-                                    let isPlayableVideo = ['.mp4', '.webm', '.ogg', '.mov'].includes('.' + fileExt); // Simplified check
-                                    let streamUrl = `/public/stream/${link.token}?relPath=${encodeURIComponent(item.path)}`;
-                                %>
-                                <% if (isPlayableVideo && link.allow_view) { %>
-                                    <a href="<%= streamUrl %>" target="_blank" class="item-name" title="點擊播放 <%= item.name %>"><%= item.name %></a>
-                                <% } else { %>
-                                    <a href="<%= viewOrDownloadUrl %>" class="item-name" <% if (link.allow_download) { %> download="<%= item.name %>" <% } %> title="點擊<%= link.allow_download ? '下載' : '查看' %>"><%= item.name %></a>
-                                <% } %>
-                            <% } %>
+                            <%
+                                const fileExtPublic = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
+                                // Use the passed-in constants from server.js
+                                const isTextViewablePublic = locals.ALLOWED_TEXT_EXTENSIONS_FOR_PUBLIC_VIEW.includes('.' + fileExtPublic);
+                                const isVideoPlayablePublic = locals.ALLOWED_VIDEO_EXTENSIONS_FOR_PUBLIC_VIEW.includes('.' + fileExtPublic);
+                                let itemLinkHref = '#';
+                                let itemLinkTitle = item.name;
+                                let itemLinkTarget = '';
+                                let itemDownloadAttribute = '';
+
+                                if (item.isDir) {
+                                    itemLinkHref = `/public/${link.token}?relPath=${encodeURIComponent(item.path)}`;
+                                    itemLinkTitle = `打開文件夾 ${item.name}`;
+                                } else if (isTextViewablePublic && link.allow_view) {
+                                    itemLinkHref = `/public/${link.token}?relPath=${encodeURIComponent(item.path)}`; 
+                                    itemLinkTitle = `查看文件 ${item.name}`;
+                                    itemLinkTarget = '_blank'; 
+                                } else if (isVideoPlayablePublic && link.allow_view) {
+                                    itemLinkHref = `/public/stream/${link.token}?relPath=${encodeURIComponent(item.path)}`;
+                                    itemLinkTitle = `播放視頻 ${item.name}`;
+                                    itemLinkTarget = '_blank';
+                                } else if (link.allow_download) {
+                                    itemLinkHref = `/public/download/${link.token}?relPath=${encodeURIComponent(item.path)}`;
+                                    itemLinkTitle = `下載文件 ${item.name}`;
+                                    itemDownloadAttribute = `download="${item.name}"`;
+                                } else if (link.allow_view) { 
+                                     itemLinkHref = `/public/${link.token}?relPath=${encodeURIComponent(item.path)}`;
+                                     itemLinkTitle = `嘗試查看 ${item.name}`;
+                                } else {
+                                    itemLinkTitle = '此項目無可用操作';
+                                }
+                            %>
+                            <a href="<%= itemLinkHref %>" class="item-name-link" title="<%= itemLinkTitle %>" <%- itemDownloadAttribute %> <% if(itemLinkTarget){ %>target="<%= itemLinkTarget %>"<% } %>>
+                                <%= item.name %>
+                            </a>
                         </div>
-                        <div class="item-details">
-                            <% if (!item.isDir && item.size !== null) { %>
-                                <span><%= (item.size / 1024).toFixed(1) %> KB</span> |
-                            <% } %>
-                            <span><%= new Date(item.lastModified).toLocaleDateString('zh-CN') %></span>
+                        <div class="item-actions">
+                            <span class="item-details">
+                                <% if (!item.isDir && item.size !== null) { %>
+                                    <span>
+                                        <%
+                                        const bytes = item.size;
+                                        let fileSizeDisplay = '--';
+                                        if (bytes !== undefined && bytes !== null && !isNaN(bytes)) {
+                                            if (bytes === 0) fileSizeDisplay = '0 B';
+                                            else {
+                                                const k = 1024;
+                                                const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+                                                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                                                fileSizeDisplay = parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+                                            }
+                                        }
+                                        %>
+                                        <%= fileSizeDisplay %>
+                                    </span> |
+                                <% } %>
+                                <span>
+                                    <%
+                                    let lastModifiedDisplay = '--';
+                                    if (item.lastModified) {
+                                        try {
+                                            const date = new Date(item.lastModified);
+                                            if (!isNaN(date.getTime())) {
+                                                lastModifiedDisplay = date.toLocaleDateString('zh-CN');
+                                            }
+                                        } catch (e) { /* ignore */ }
+                                    }
+                                    %>
+                                    <%= lastModifiedDisplay %>
+                                </span>
+                            </span>
                             <% if (!item.isDir && link.allow_download) { %>
-                                <a href="/public/<%= link.token %>?relPath=<%= encodeURIComponent(item.path) %>" class="download-action" download="<%= item.name %>">(下載)</a>
-                                <%# Or more specific: <a href="/public/download/<%= link.token %>?relPath=<%= encodeURIComponent(item.path) %>" ... %>
+                                <a href="/public/download/<%= link.token %>?relPath=<%= encodeURIComponent(item.path) %>" class="download-action-btn" download="<%= item.name %>">下載</a>
                             <% } %>
                         </div>
                     </li>
                 <% }); %>
             </ul>
         <% } else { %>
-            <p>此目錄為空。</p>
+            <p class="empty-dir-message">此目錄為空。</p>
         <% } %>
 
         <div class="footer-info">
-            此目錄通過公開連結分享。由 <%= link.owner_username %> 分享於 <%= new Date(link.created_at).toLocaleString('zh-CN') %>。
+            此目錄通過公開連結分享。由 <%= locals.link.owner_username %> 分享於 <%= new Date(locals.link.created_at).toLocaleString('zh-CN') %>。
+            <% if (locals.link.expires_at) { %>
+                此連結將於 <%= new Date(locals.link.expires_at).toLocaleString('zh-CN') %> 過期。
+            <% } %>
         </div>
     </div>
     <script src="/theme.js"></script>
