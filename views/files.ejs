@@ -8,355 +8,418 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        :root {
-            --button-primary-bg-color: #007bff;
-            --button-primary-text-color: #ffffff;
-            --button-primary-border-color: #007bff;
-            --button-secondary-bg-color: #6c757d;
-            --button-secondary-text-color: #ffffff;
-            --button-secondary-border-color: #6c757d;
-            --input-border-color: #ccc;
-            --input-bg-color: #fff;
-            --input-text-color: #333;
-            --modal-bg: #ffffff;
-            --modal-text-color: #333;
-            --modal-border-color: #888;
-            --rename-form-bg: #ffffff;
-            --rename-form-border-color: #cccccc;
-            --video-modal-bg: #1c1c1c;
-            --video-modal-text-color: #f1f1f1;
-            --video-modal-border-color: #333;
-            --video-modal-close-btn-color: #aaa;
-            --video-modal-close-btn-hover-color: #fff;
-            --tab-inactive-bg: #e9ecef;
-            --tab-inactive-text: #495057;
-            --tab-active-bg: #007bff;
-            --tab-active-text: #ffffff;
-            --tab-border: #dee2e6;
-            --link-color: #007bff;
-            --link-hover-color: #0056b3;
-            --public-link-display-bg: #f8f9fa;
-            --public-link-display-border: #ced4da;
-            --action-bar-bg: #f0f0f0;
-            --action-bar-border: #ccc;
-        }
+    :root {
+        --button-primary-bg-color: #007bff;
+        --button-primary-text-color: #ffffff;
+        --button-primary-border-color: #007bff;
+        --button-secondary-bg-color: #6c757d;
+        --button-secondary-text-color: #ffffff;
+        --button-secondary-border-color: #6c757d;
+        --input-border-color: #ccc;
+        --input-bg-color: #fff;
+        --input-text-color: #333;
+        --modal-bg: #ffffff;
+        --modal-text-color: #333;
+        --modal-border-color: #888;
+        --rename-form-bg: #ffffff;
+        --rename-form-border-color: #cccccc;
+        --video-modal-bg: #1c1c1c;
+        --video-modal-text-color: #f1f1f1;
+        --video-modal-border-color: #333;
+        --video-modal-close-btn-color: #aaa;
+        --video-modal-close-btn-hover-color: #fff;
+        --tab-inactive-bg: #e9ecef;
+        --tab-inactive-text: #495057;
+        --tab-active-bg: #007bff;
+        --tab-active-text: #ffffff;
+        --tab-border: #dee2e6;
+        --link-color: #007bff;
+        --link-hover-color: #0056b3;
+        --public-link-display-bg: #f8f9fa;
+        --public-link-display-border: #ced4da;
+        --action-bar-bg: #f0f0f0;
+        --action-bar-border: #ccc;
+        --hover-bg: #f0f0f0; /* Added for directory tree hover */
+    }
 
-        .dark-theme {
-            --button-primary-bg-color: #0056b3;
-            --button-primary-border-color: #0056b3;
-            --button-secondary-bg-color: #5a6268;
-            --button-secondary-border-color: #545b62;
-            --input-border-color: #555;
-            --input-bg-color: #2c2c2c;
-            --input-text-color: #e0e0e0;
-            --modal-bg: #2c2c2c;
-            --modal-text-color: #e0e0e0;
-            --modal-border-color: #555;
-            --rename-form-bg: #3a3a3a;
-            --rename-form-border-color: #555;
-            --video-modal-bg: #2a2a2a;
-            --video-modal-text-color: #e0e0e0;
-            --video-modal-border-color: #444;
-            --video-modal-close-btn-color: #bbb;
-            --video-modal-close-btn-hover-color: #fff;
-            --tab-inactive-bg: #3a3a3a;
-            --tab-inactive-text: #adb5bd;
-            --tab-active-bg: #0056b3;
-            --tab-border: #495057;
-            --link-color: #6cb2eb;
-            --link-hover-color: #8dc9f0;
-            --public-link-display-bg: #2c2c2c;
-            --public-link-display-border: #495057;
-            --action-bar-bg: #252525;
-            --action-bar-border: #444;
-        }
+    .dark-theme {
+        --button-primary-bg-color: #0056b3;
+        --button-primary-border-color: #0056b3;
+        --button-secondary-bg-color: #5a6268;
+        --button-secondary-border-color: #545b62;
+        --input-border-color: #555;
+        --input-bg-color: #2c2c2c;
+        --input-text-color: #e0e0e0;
+        --modal-bg: #2c2c2c;
+        --modal-text-color: #e0e0e0;
+        --modal-border-color: #555;
+        --rename-form-bg: #3a3a3a;
+        --rename-form-border-color: #555;
+        --video-modal-bg: #2a2a2a;
+        --video-modal-text-color: #e0e0e0;
+        --video-modal-border-color: #444;
+        --video-modal-close-btn-color: #bbb;
+        --video-modal-close-btn-hover-color: #fff;
+        --tab-inactive-bg: #3a3a3a;
+        --tab-inactive-text: #adb5bd;
+        --tab-active-bg: #0056b3;
+        --tab-border: #495057;
+        --link-color: #6cb2eb;
+        --link-hover-color: #8dc9f0;
+        --public-link-display-bg: #2c2c2c;
+        --public-link-display-border: #495057;
+        --action-bar-bg: #252525;
+        --action-bar-border: #444;
+        --hover-bg: #4a4a4a; /* Added for directory tree hover in dark mode */
+    }
 
-        .nav-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--tab-border); }
-        .nav-tabs .nav-link { padding: 10px 15px; text-decoration: none; background-color: var(--tab-inactive-bg); color: var(--tab-inactive-text); border: 1px solid var(--tab-border); border-bottom: none; margin-right: 5px; border-radius: 5px 5px 0 0; font-weight: 500; cursor: pointer; }
-        .nav-tabs .nav-link.active { background-color: var(--tab-active-bg); color: var(--tab-active-text); border-color: var(--tab-active-bg); }
-        .nav-tabs .nav-link:hover:not(.active) { opacity: 0.8; }
+    .nav-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--tab-border); }
+    .nav-tabs .nav-link { padding: 10px 15px; text-decoration: none; background-color: var(--tab-inactive-bg); color: var(--tab-inactive-text); border: 1px solid var(--tab-border); border-bottom: none; margin-right: 5px; border-radius: 5px 5px 0 0; font-weight: 500; cursor: pointer; }
+    .nav-tabs .nav-link.active { background-color: var(--tab-active-bg); color: var(--tab-active-text); border-color: var(--tab-active-bg); }
+    .nav-tabs .nav-link:hover:not(.active) { opacity: 0.8; }
 
-        #selection-action-bar, #public-link-selection-action-bar { 
-            padding: 10px; 
-            background-color: var(--action-bar-bg); 
-            border-bottom: 1px solid var(--action-bar-border); 
-            margin-bottom: 15px; 
-            display: none; 
-            flex-wrap: wrap; 
-            gap: 10px; 
-            align-items: center; 
-        }
-        #selection-action-bar button, #public-link-selection-action-bar button { margin: 0; }
-        
-        .item-checkbox, .public-link-checkbox { 
-            display: none; 
-            margin-right: 10px; 
-            width: 18px; 
-            height: 18px; 
-            vertical-align: middle; 
-        }
-        #file-container.multi-select-mode-active .item-checkbox,
-        #file-container.multi-select-mode-active .public-link-checkbox { 
-            display: inline-block; 
-        }
+    #selection-action-bar, #public-link-selection-action-bar {
+        padding: 10px;
+        background-color: var(--action-bar-bg);
+        border-bottom: 1px solid var(--action-bar-border);
+        margin-bottom: 15px;
+        display: none;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+    #selection-action-bar button, #public-link-selection-action-bar button { margin: 0; }
 
+    .item-checkbox, .public-link-checkbox {
+        display: none;
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+        vertical-align: middle;
+    }
+    #file-container.multi-select-mode-active .item-checkbox,
+    #file-container.multi-select-mode-active .public-link-checkbox {
+        display: inline-block;
+    }
 
-        .file-entry-selectable { display: flex; align-items: center; width: 100%; }
-        #file-container.list-view .file-entry-selectable { padding: 5px 0; }
-        #file-container.grid-view .file-entry-selectable { padding: 0; flex-direction: column; height: 100%; }
+    .file-entry-selectable { display: flex; align-items: center; width: 100%; }
+    #file-container.list-view .file-entry-selectable { padding: 5px 0; }
+    #file-container.grid-view .file-entry-selectable { padding: 0; flex-direction: column; height: 100%; }
 
-        .file-content-wrapper { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; cursor: pointer; overflow: hidden; width: 100%; }
-        #file-container.grid-view .file-content-wrapper { flex-direction: column; justify-content: flex-start; text-align: center; }
-        
-        .list-view li { position: relative; }
-        .list-view .file-entry { display: flex; align-items: center; gap: 8px; flex-grow: 1; min-width: 0; }
-        .list-view .file-entry .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 1; }
+    .file-content-wrapper { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; cursor: pointer; overflow: hidden; width: 100%; }
+    #file-container.grid-view .file-content-wrapper { flex-direction: column; justify-content: flex-start; text-align: center; }
 
-        .list-view .file-details { display: flex; align-items: center; gap: 15px; font-size: 0.85em; color: #555; margin-left: auto; padding-left: 10px; white-space: nowrap; flex-shrink: 0; }
-        .dark-theme .list-view .file-details { color: #bbb; }
-        .list-view .file-details .file-size,
-        .list-view .file-details .file-modified,
-        .list-view .file-details .file-public-link, 
-        .list-view .file-details .file-created-at { 
-            min-width: 80px; text-align: right;
-        }
-        .list-view .file-details .file-public-link a { color: var(--link-color); text-decoration: none; }
-        .list-view .file-details .file-public-link a:hover { color: var(--link-hover-color); text-decoration: underline; }
+    .list-view li { position: relative; }
+    .list-view .file-entry { display: flex; align-items: center; gap: 8px; flex-grow: 1; min-width: 0; }
+    .list-view .file-entry .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 1; }
 
-        #file-container.grid-view .file-details { display: none; }
+    .list-view .file-details { display: flex; align-items: center; gap: 15px; font-size: 0.85em; color: #555; margin-left: auto; padding-left: 10px; white-space: nowrap; flex-shrink: 0; }
+    .dark-theme .list-view .file-details { color: #bbb; }
+    .list-view .file-details .file-size,
+    .list-view .file-details .file-modified,
+    .list-view .file-details .file-public-link,
+    .list-view .file-details .file-created-at {
+        min-width: 80px; text-align: right;
+    }
+    .list-view .file-details .file-public-link a { color: var(--link-color); text-decoration: none; }
+    .list-view .file-details .file-public-link a:hover { color: var(--link-hover-color); text-decoration: underline; }
 
-        .list-view .file-actions-placeholder { min-width: 40px; text-align: right; font-size: 0.9em; color: #666; flex-shrink: 0; }
-        .dark-theme .list-view .file-actions-placeholder { color: #aaa; }
-        
-        .list-view li.single-selected-item > .file-entry-selectable,
-        .grid-view li.single-selected-item { background-color: #e9e9e9; border-radius: 4px; }
-        .dark-theme .list-view li.single-selected-item > .file-entry-selectable,
-        .dark-theme .grid-view li.single-selected-item { background-color: #404040; }
+    #file-container.grid-view .file-details { display: none; }
 
-        #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal, #share-modal, #public-link-display-modal, #existing-links-modal {
-            display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: auto; background-color: rgba(0,0,0,0.5); 
-        }
-        .modal-content { background-color: var(--modal-bg) !important; color: var(--modal-text-color); margin: 10% auto; padding: 20px; border: 1px solid var(--modal-border-color); border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .modal-content h3 { margin-top: 0; }
-        .modal-content .form-group { margin-bottom: 15px; }
-        .modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-        .modal-content .form-group input[type="text"],
-        .modal-content .form-group input[type="email"],
-        .modal-content .form-group input[type="url"] {
-            width: 100%; padding: 10px; box-sizing: border-box;
-            border: 1px solid var(--input-border-color); border-radius: 4px;
-            background-color: var(--input-bg-color); color: var(--input-text-color);
-        }
-        .modal-actions { text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
+    .list-view .file-actions-placeholder { min-width: 40px; text-align: right; font-size: 0.9em; color: #666; flex-shrink: 0; }
+    .dark-theme .list-view .file-actions-placeholder { color: #aaa; }
 
-        #video-player-modal .modal-content { background-color: var(--video-modal-bg) !important; color: var(--video-modal-text-color); border-color: var(--video-modal-border-color); max-width: 900px; margin: 5% auto; }
-        #video-player-modal #video-modal-title { color: var(--video-modal-text-color); margin-bottom: 15px; }
-        #video-player-modal .close-modal-btn { color: var(--video-modal-close-btn-color); }
-        #video-player-modal .close-modal-btn:hover,
-        #video-player-modal .close-modal-btn:focus { color: var(--video-modal-close-btn-hover-color); text-decoration: none; cursor: pointer; }
-        #html5-video-player { width: 100%; max-height: 75vh; display: block; margin-top: 10px; background-color: #000; border-radius: 4px; }
+    .list-view li.single-selected-item > .file-entry-selectable,
+    .grid-view li.single-selected-item { background-color: #e9e9e9; border-radius: 4px; }
+    .dark-theme .list-view li.single-selected-item > .file-entry-selectable,
+    .dark-theme .grid-view li.single-selected-item { background-color: #404040; }
 
-        #public-link-display-modal .modal-content, #existing-links-modal .modal-content { max-width: 600px; }
-        #generated-public-link { 
-            width: calc(100% - 85px); 
-            padding: 10px; 
-            border: 1px solid var(--public-link-display-border); 
-            background-color: var(--public-link-display-bg); 
-            border-radius: 4px 0 0 4px; 
-            font-family: monospace;
-            font-size: 0.9em;
-            box-sizing: border-box;
-            color: var(--input-text-color);
-        }
-        #copy-public-link-btn { 
-            padding: 10px 15px; 
-            border-radius: 0 4px 4px 0; 
-            margin-left: -1px; 
-            border: 1px solid var(--button-primary-border-color);
-            background-color: var(--button-primary-bg-color);
-            color: var(--button-primary-text-color);
-            cursor: pointer;
-            box-sizing: border-box;
-            height: calc(20px + 2*10px + 2*1px); 
-        }
-        #copy-public-link-btn:hover { opacity: 0.9; }
-        .public-link-container { display: flex; align-items: center; margin-top: 10px; }
-        #existing-links-list-container ul { list-style-type: none; padding-left: 0; }
-        #existing-links-list-container li { padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .dark-theme #existing-links-list-container li { border-bottom-color: #444; }
-        #existing-links-list-container li:last-child { border-bottom: none; }
-        #existing-links-list-container .link-info { flex-grow: 1; }
-        #existing-links-list-container .link-info a { word-break: break-all; }
-        #existing-links-list-container .link-details { font-size: 0.8em; color: #777; display: block; margin-top: 3px;}
-        .dark-theme #existing-links-list-container .link-details { color: #aaa; }
+    #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal, #share-modal, #public-link-display-modal, #existing-links-modal {
+        display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
+        overflow: auto; background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content { background-color: var(--modal-bg) !important; color: var(--modal-text-color); margin: 10% auto; padding: 20px; border: 1px solid var(--modal-border-color); border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .modal-content h3 { margin-top: 0; }
+    .modal-content .form-group { margin-bottom: 15px; }
+    .modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+    .modal-content .form-group input[type="text"],
+    .modal-content .form-group input[type="email"],
+    .modal-content .form-group input[type="url"] {
+        width: 100%; padding: 10px; box-sizing: border-box;
+        border: 1px solid var(--input-border-color); border-radius: 4px;
+        background-color: var(--input-bg-color); color: var(--input-text-color);
+    }
+    .modal-actions { text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
 
+    #video-player-modal .modal-content { background-color: var(--video-modal-bg) !important; color: var(--video-modal-text-color); border-color: var(--video-modal-border-color); max-width: 900px; margin: 5% auto; }
+    #video-player-modal #video-modal-title { color: var(--video-modal-text-color); margin-bottom: 15px; }
+    #video-player-modal .close-modal-btn { color: var(--video-modal-close-btn-color); }
+    #video-player-modal .close-modal-btn:hover,
+    #video-player-modal .close-modal-btn:focus { color: var(--video-modal-close-btn-hover-color); text-decoration: none; cursor: pointer; }
+    #html5-video-player { width: 100%; max-height: 75vh; display: block; margin-top: 10px; background-color: #000; border-radius: 4px; }
 
-        #directory-tree-container { max-height: 250px; overflow-y: auto; border: 1px solid var(--input-border-color); padding: 10px; margin-bottom: 15px; background-color: var(--input-bg-color); }
-        #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
-        #directory-tree-container li { padding: 5px 0; cursor: pointer; border-bottom: 1px dashed var(--input-border-color); }
-        #directory-tree-container li:last-child { border-bottom: none; }
-        #directory-tree-container li:hover { background-color: var(--hover-bg, #f0f0f0); } 
-        .dark-theme #directory-tree-container li:hover { --hover-bg: #4a4a4a; }
-        .dark-theme #directory-tree-container li.selected-dir { background-color: #0056b3; }
-        #directory-tree-container li.selected-dir { background-color: #007bff; color: white; } 
+    #public-link-display-modal .modal-content, #existing-links-modal .modal-content { max-width: 600px; }
+    #generated-public-link {
+        width: calc(100% - 85px);
+        padding: 10px;
+        border: 1px solid var(--public-link-display-border);
+        background-color: var(--public-link-display-bg);
+        border-radius: 4px 0 0 4px;
+        font-family: monospace;
+        font-size: 0.9em;
+        box-sizing: border-box;
+        color: var(--input-text-color);
+    }
+    #copy-public-link-btn {
+        padding: 10px 15px;
+        border-radius: 0 4px 4px 0;
+        margin-left: -1px;
+        border: 1px solid var(--button-primary-border-color);
+        background-color: var(--button-primary-bg-color);
+        color: var(--button-primary-text-color);
+        cursor: pointer;
+        box-sizing: border-box;
+        height: calc(20px + 2*10px + 2*1px); /* Matches input height */
+    }
+    #copy-public-link-btn:hover { opacity: 0.9; }
+    .public-link-container { display: flex; align-items: center; margin-top: 10px; }
+    #existing-links-list-container ul { list-style-type: none; padding-left: 0; }
+    #existing-links-list-container li { padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    .dark-theme #existing-links-list-container li { border-bottom-color: #444; }
+    #existing-links-list-container li:last-child { border-bottom: none; }
+    #existing-links-list-container .link-info { flex-grow: 1; }
+    #existing-links-list-container .link-info a { word-break: break-all; }
+    #existing-links-list-container .link-details { font-size: 0.8em; color: #777; display: block; margin-top: 3px;}
+    .dark-theme #existing-links-list-container .link-details { color: #aaa; }
 
-        .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
-        
-        #file-container.grid-view ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; list-style-type: none; padding: 0; margin: 0; }
-        #file-container.grid-view li { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px; border-radius: 6px; position: relative; min-height: 130px; background-color: var(--input-bg-color); border: 1px solid var(--input-border-color); }
-        .dark-theme #file-container.grid-view li { background-color: #2c2c2c; border-color: #444; }
-
-        #file-container.grid-view li .file-entry-selectable { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; flex-grow: 1; }
-        
-        .grid-view .file-entry { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 6px; width: 100%; margin-bottom: auto; }
-        .grid-view .file-icon-large { font-size: 3.5em; line-height: 1; display: flex; justify-content: center; align-items: center; min-height: 48px; margin-bottom: 4px; }
-        .grid-view .file-name { font-size: 0.8em; line-height: 1.3; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-        #file-container.grid-view.multi-select-mode-active .item-checkbox,
-        #file-container.grid-view.multi-select-mode-active .public-link-checkbox { 
-            position: absolute; 
-            top: 5px;
-            left: 5px;
-            margin-bottom: 0; 
-        }
-        .grid-view .link-actions-group { 
-            display: flex;
-            justify-content: center; 
-            gap: 5px;
-            width: 100%; 
-            margin-top: 8px; 
-            padding-top: 5px; 
-            flex-wrap: nowrap; 
-        }
-        .grid-view .link-actions-group .action-button-small,
-        .grid-view .link-actions-group .revoke-single-link-form button {
-            font-size: 0.7em; 
-            padding: 3px 6px;
-            white-space: nowrap; 
-        }
-
-        
-        #select-all-container, #select-all-public-links-container { 
-            display: none; 
-            align-items: center; 
-            padding: 5px 10px; 
-            background-color: #f9f9f9; 
-            border-bottom: 1px solid #eee; 
-        }
-        .dark-theme #select-all-container, .dark-theme #select-all-public-links-container { 
-            background-color: #2e2e2e; 
-            border-bottom-color: #444; 
-        }
-        
-        #select-all-container.visible-in-multiselect,
-        #select-all-public-links-container.visible-in-multiselect {
-            display: flex;
-        }
-
-        #select-all-container label, #select-all-public-links-container label { 
-            margin-left: 5px; 
-            font-weight: normal;
-        }
-
-        .rename-form { display: none; position: absolute; left: 25px; right: 5px; top: calc(100% + 2px); background-color: var(--rename-form-bg); padding: 10px; border: 1px solid var(--rename-form-border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 100; border-radius: 6px; max-width: 400px; box-sizing: border-box; }
-        #file-container.grid-view li .rename-form { left: 50%; transform: translateX(-50%); top: 100%; margin-top: 5px; width: calc(100% - 10px); max-width: 180px; right: auto; }
-        .rename-form form.inline-form { display: flex; gap: 8px; align-items: stretch; }
-        .rename-form input[type="text"], .rename-form button { box-sizing: border-box; font-size: 0.9em; line-height: 1.4; padding-top: 6px; padding-bottom: 6px; border-radius: 4px; margin: 0; }
-        .rename-form input[type="text"] { flex-grow: 1; padding-left: 8px; padding-right: 8px; background-color: var(--input-bg-color); color: var(--input-text-color); border: 1px solid var(--input-border-color); }
-        .rename-form button { padding-left: 12px; padding-right: 12px; cursor: pointer; white-space: nowrap; border-width: 1px; border-style: solid; }
-        .rename-form button[type="submit"] { background-color: var(--button-primary-bg-color); color: var(--button-primary-text-color); border-color: var(--button-primary-border-color); }
-        .rename-form button.secondary { background-color: var(--button-secondary-bg-color); color: var(--button-secondary-text-color); border-color: var(--button-secondary-border-color); }
-        
-        #upload-actions-container { display: none; padding: 10px 0; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
-        #upload-actions-container button { margin: 0; }
-        #upload-section { display: none; padding: 20px; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 0; background-color: #f8f9fa; }
-        .dark-theme #upload-section { background-color: #3a3a3a; border-color: #444; }
-        #drop-area { border: 2px dashed #007bff; padding: 20px; text-align: center; border-radius: 5px; background-color: #fff; }
-        .dark-theme #drop-area { border-color: #0056b3; background-color: #2c2c2c; }
-        #drop-area.highlight { border-color: #28a745; background-color: #e9f7ef; }
-        .dark-theme #drop-area.highlight { background-color: #333; }
-        #drop-area p { margin-bottom: 15px; font-size: 1.1em; color: #6c757d; }
-        .dark-theme #drop-area p { color: #adb5bd; }
-        #upload-button { display: none; margin-top: 15px; }
-
-        .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
-        .dark-theme .search-results-info { background-color: #3a3a3a; }
-        .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
-        .dark-theme .file-location-in-search { color: #adb5bd; }
-
-        .file-browser-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
-        .file-browser-controls .actions-group-left { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
-        .file-browser-controls .actions-group-left button, #toggle-multi-select-btn { padding: 8px 12px; font-size: 0.9em; margin: 0; background-color: var(--button-primary-bg-color); color: var(--button-primary-text-color); border: 1px solid var(--button-primary-border-color); border-radius: 4px; cursor: pointer; }
-        .file-browser-controls .actions-group-left button:hover, #toggle-multi-select-btn:hover { opacity: 0.9; }
-        .file-browser-controls .search-form-right { display: flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
-        .file-browser-controls .search-form-right input[type="search"] { width: 180px; padding: 8px 10px; font-size: 0.9em; border: 1px solid var(--input-border-color); background-color: var(--input-bg-color); color: var(--input-text-color); border-radius: 4px; margin: 0; }
-        .file-browser-controls .search-form-right button { padding: 8px 12px; font-size: 0.9em; margin: 0; background-color: var(--button-primary-bg-color); color: var(--button-primary-text-color); border: 1px solid var(--button-primary-border-color); border-radius: 4px; }
-        .file-browser-controls .view-toggle { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
-        .file-browser-controls .view-toggle button { padding: 8px 12px; font-size: 0.9em; margin: 0; background-color: var(--button-secondary-bg-color); color: var(--button-secondary-text-color); border: 1px solid var(--button-secondary-border-color); border-radius: 4px; }
-        .file-browser-controls .view-toggle button.active { background-color: var(--button-primary-bg-color); border-color: var(--button-primary-border-color); }
-        .file-browser-controls:not(:has(.actions-group-left)) .search-form-right { margin-left: 0; flex-grow: 1; }
-        .file-browser-controls:not(:has(.actions-group-left)) .search-form-right input[type="search"] { flex-grow: 1; }
-        .file-browser-controls:not(:has(.actions-group-left)) .view-toggle { margin-left: auto; }
-        
-        .progress-bar-container { width: 100%; background-color: #e9ecef; border-radius: 4px; margin-top: 10px; padding: 2px; display: none; box-sizing: border-box; }
-        .dark-theme .progress-bar-container { background-color: #495057; }
-        .progress-bar { display: block; width: 0%; height: 20px; background-color: #007bff; border: 1px solid #0056b3; border-radius: 2px; text-align: center; line-height: 18px; color: white; font-size: 0.8em; font-weight: bold; transition: width 0.1s ease-in-out; box-sizing: border-box; overflow: hidden; }
-        .dark-theme .progress-bar { background-color: #0056b3; border-color: #003d80; }
-
-        #file-container { max-height: calc(100vh - 360px); overflow-y: auto; padding-right: 5px; box-sizing: border-box; }
-        .action-button-small, a.action-button-small { 
-            padding: 3px 6px; 
-            font-size: 0.8em; 
-            margin-left: 5px; 
-            text-decoration: none;
-            border: 1px solid var(--button-secondary-border-color);
-            background-color: var(--button-secondary-bg-color);
-            color: var(--button-secondary-text-color);
-            border-radius: 3px;
-            display: inline-block; 
-            cursor: pointer;
-            line-height: normal; 
-            vertical-align: middle; 
-        }
-        .action-button-small:hover, a.action-button-small:hover {
-            opacity: 0.9;
-        }
-        .dark-theme .action-button-small, .dark-theme a.action-button-small {
-             border-color: var(--button-secondary-border-color);
-             background-color: var(--button-secondary-bg-color);
-             color: var(--button-secondary-text-color);
-        }
+    #directory-tree-container { max-height: 250px; overflow-y: auto; border: 1px solid var(--input-border-color); padding: 10px; margin-bottom: 15px; background-color: var(--input-bg-color); }
+    #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
+    #directory-tree-container li { padding: 5px 0; cursor: pointer; border-bottom: 1px dashed var(--input-border-color); }
+    #directory-tree-container li:last-child { border-bottom: none; }
+    #directory-tree-container li:hover { background-color: var(--hover-bg); }
+    /* .dark-theme #directory-tree-container li:hover { --hover-bg: #4a4a4a; } */ /* Handled by general var(--hover-bg) in .dark-theme */
+    #directory-tree-container li.selected-dir { background-color: #007bff; color: white; }
+    .dark-theme #directory-tree-container li.selected-dir { background-color: #0056b3; }
 
 
-        #share-modal .form-group label[for="share-allow-download"],
-        #share-modal .form-group label[for="share-allow-view"] {
-            display: inline-block; margin-left: 5px; font-weight: normal;
-        }
-        #share-modal .form-group input[type="checkbox"] {
-            width: auto; vertical-align: middle;
-        }
-        .link-actions-group { 
-            display: flex;
-            gap: 5px; 
-            align-items: center;
-            margin-left: auto; 
-            padding-left: 10px; 
-            flex-shrink: 0; 
-        }
-        #file-container.grid-view .link-actions-group {
-            margin-left: 0; 
-            justify-content: center; 
-            width: 100%;
-            margin-top: auto; 
-            padding-top: 5px; 
-        }
-    </style>
+    .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
+
+    /* === Grid View Styles - MODIFIED START === */
+    #file-container.grid-view ul {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Slightly smaller min width for items */
+        gap: 10px; /* Reduced gap */
+        list-style-type: none; padding: 0; margin: 0;
+    }
+    #file-container.grid-view li {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start; /* Changed from space-between to allow natural height */
+        padding: 8px; /* Reduced padding */
+        border-radius: 6px;
+        position: relative;
+        min-height: auto; /* Changed from 130px to allow content to define height */
+        background-color: var(--input-bg-color);
+        border: 1px solid var(--input-border-color);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Added subtle shadow */
+    }
+    .dark-theme #file-container.grid-view li {
+        background-color: #3a3a3a; /* Adjusted dark theme background for grid items */
+        border-color: #555; /* Adjusted dark theme border for grid items */
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    #file-container.grid-view li .file-entry-selectable { /* Wrapper for checkbox and content-wrapper */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start; /* Changed from center */
+        width: 100%;
+        flex-grow: 1; /* Allow it to take space */
+    }
+
+    /* .file-content-wrapper in grid view is already flex-column, justify-start, align-center */
+
+    .grid-view .file-entry { /* This div contains icon and name */
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Keep content centered vertically within this block */
+        align-items: center;
+        text-align: center;
+        gap: 0px; /* Reduced gap, spacing controlled by icon margin */
+        width: 100%;
+        /* margin-bottom: auto; */ /* Removed, as li justify-content is flex-start */
+    }
+    .grid-view .file-icon-large {
+        font-size: 2.5em; /* Reduced icon size */
+        line-height: 1;
+        display: flex; /* Kept for alignment if needed */
+        justify-content: center;
+        align-items: center;
+        min-height: auto; /* Let font-size and line-height control this */
+        margin-bottom: 2px; /* Reduced space between icon and filename */
+        /* Color for folder/file icons will be applied by specific classes from style.css or EJS logic */
+    }
+    .grid-view .file-name {
+        font-size: 0.8em;
+        line-height: 1.3;
+        word-break: break-all; /* Changed from break-word for better wrapping */
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        min-height: calc(0.8em * 1.3 * 2); /* approx height for 2 lines */
+        margin-bottom: 4px; /* Space before actions if any */
+        color: var(--input-text-color); /* Ensure text color from variable */
+    }
+    .dark-theme .grid-view .file-name {
+        color: var(--input-text-color);
+    }
+
+
+    #file-container.grid-view.multi-select-mode-active .item-checkbox,
+    #file-container.grid-view.multi-select-mode-active .public-link-checkbox {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        margin-bottom: 0;
+    }
+
+    .grid-view .link-actions-group { /* For 'userShares' view items */
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        width: calc(100% - 8px); /* Account for li padding */
+        margin-top: auto; /* Pushes this to the bottom of the li */
+        padding-top: 6px; /* Space above actions */
+        flex-wrap: wrap; /* Allow actions to wrap if too many */
+    }
+    .grid-view .link-actions-group .action-button-small,
+    .grid-view .link-actions-group .revoke-single-link-form button {
+        font-size: 0.7em;
+        padding: 3px 6px;
+        white-space: nowrap;
+    }
+    /* === Grid View Styles - MODIFIED END === */
+
+
+    #select-all-container, #select-all-public-links-container {
+        display: none;
+        align-items: center;
+        padding: 5px 10px;
+        background-color: #f9f9f9;
+        border-bottom: 1px solid #eee;
+    }
+    .dark-theme #select-all-container, .dark-theme #select-all-public-links-container {
+        background-color: #2e2e2e;
+        border-bottom-color: #444;
+    }
+
+    #select-all-container.visible-in-multiselect,
+    #select-all-public-links-container.visible-in-multiselect {
+        display: flex;
+    }
+
+    #select-all-container label, #select-all-public-links-container label {
+        margin-left: 5px;
+        font-weight: normal;
+    }
+
+    .rename-form { display: none; position: absolute; left: 25px; right: 5px; top: calc(100% + 2px); background-color: var(--rename-form-bg); padding: 10px; border: 1px solid var(--rename-form-border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 100; border-radius: 6px; max-width: 400px; box-sizing: border-box; }
+    #file-container.grid-view li .rename-form { left: 50%; transform: translateX(-50%); top: 100%; margin-top: 5px; width: calc(100% - 10px); max-width: 180px; right: auto; }
+    .rename-form form.inline-form { display: flex; gap: 8px; align-items: stretch; }
+    .rename-form input[type="text"], .rename-form button { box-sizing: border-box; font-size: 0.9em; line-height: 1.4; padding-top: 6px; padding-bottom: 6px; border-radius: 4px; margin: 0; }
+    .rename-form input[type="text"] { flex-grow: 1; padding-left: 8px; padding-right: 8px; background-color: var(--input-bg-color); color: var(--input-text-color); border: 1px solid var(--input-border-color); }
+    .rename-form button { padding-left: 12px; padding-right: 12px; cursor: pointer; white-space: nowrap; border-width: 1px; border-style: solid; }
+    .rename-form button[type="submit"] { background-color: var(--button-primary-bg-color); color: var(--button-primary-text-color); border-color: var(--button-primary-border-color); }
+    .rename-form button.secondary { background-color: var(--button-secondary-bg-color); color: var(--button-secondary-text-color); border-color: var(--button-secondary-border-color); }
+
+    #upload-actions-container { display: none; padding: 10px 0; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
+    #upload-actions-container button { margin: 0; }
+    #upload-section { display: none; padding: 20px; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 0; background-color: #f8f9fa; }
+    .dark-theme #upload-section { background-color: #3a3a3a; border-color: #444; }
+    #drop-area { border: 2px dashed #007bff; padding: 20px; text-align: center; border-radius: 5px; background-color: #fff; }
+    .dark-theme #drop-area { border-color: #0056b3; background-color: #2c2c2c; }
+    #drop-area.highlight { border-color: #28a745; background-color: #e9f7ef; }
+    .dark-theme #drop-area.highlight { background-color: #333; }
+    #drop-area p { margin-bottom: 15px; font-size: 1.1em; color: #6c757d; }
+    .dark-theme #drop-area p { color: #adb5bd; }
+    #upload-button { display: none; margin-top: 15px; }
+
+    .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
+    .dark-theme .search-results-info { background-color: #3a3a3a; }
+    .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
+    .dark-theme .file-location-in-search { color: #adb5bd; }
+
+    .file-browser-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .file-browser-controls .actions-group-left { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+    .file-browser-controls .actions-group-left button, #toggle-multi-select-btn { padding: 8px 12px; font-size: 0.9em; margin: 0; background-color: var(--button-primary-bg-color); color: var(--button-primary-text-color); border: 1px solid var(--button-primary-border-color); border-radius: 4px; cursor: pointer; }
+    .file-browser-controls .actions-group-left button:hover, #toggle-multi-select-btn:hover { opacity: 0.9; }
+    .file-browser-controls .search-form-right { display: flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
+    .file-browser-controls .search-form-right input[type="search"] { width: 180px; padding: 8px 10px; font-size: 0.9em; border: 1px solid var(--input-border-color); background-color: var(--input-bg-color); color: var(--input-text-color); border-radius: 4px; margin: 0; }
+    .file-browser-controls .search-form-right button { padding: 8px 12px; font-size: 0.9em; margin: 0; background-color: var(--button-primary-bg-color); color: var(--button-primary-text-color); border: 1px solid var(--button-primary-border-color); border-radius: 4px; }
+    .file-browser-controls .view-toggle { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .file-browser-controls .view-toggle button { padding: 8px 12px; font-size: 0.9em; margin: 0; background-color: var(--button-secondary-bg-color); color: var(--button-secondary-text-color); border: 1px solid var(--button-secondary-border-color); border-radius: 4px; }
+    .file-browser-controls .view-toggle button.active { background-color: var(--button-primary-bg-color); border-color: var(--button-primary-border-color); }
+    .file-browser-controls:not(:has(.actions-group-left)) .search-form-right { margin-left: 0; flex-grow: 1; }
+    .file-browser-controls:not(:has(.actions-group-left)) .search-form-right input[type="search"] { flex-grow: 1; }
+    .file-browser-controls:not(:has(.actions-group-left)) .view-toggle { margin-left: auto; }
+
+    .progress-bar-container { width: 100%; background-color: #e9ecef; border-radius: 4px; margin-top: 10px; padding: 2px; display: none; box-sizing: border-box; }
+    .dark-theme .progress-bar-container { background-color: #495057; }
+    .progress-bar { display: block; width: 0%; height: 20px; background-color: #007bff; border: 1px solid #0056b3; border-radius: 2px; text-align: center; line-height: 18px; color: white; font-size: 0.8em; font-weight: bold; transition: width 0.1s ease-in-out; box-sizing: border-box; overflow: hidden; }
+    .dark-theme .progress-bar { background-color: #0056b3; border-color: #003d80; }
+
+    #file-container { max-height: calc(100vh - 360px); overflow-y: auto; padding-right: 5px; box-sizing: border-box; }
+    .action-button-small, a.action-button-small {
+        padding: 3px 6px;
+        font-size: 0.8em;
+        margin-left: 5px;
+        text-decoration: none;
+        border: 1px solid var(--button-secondary-border-color);
+        background-color: var(--button-secondary-bg-color);
+        color: var(--button-secondary-text-color);
+        border-radius: 3px;
+        display: inline-block;
+        cursor: pointer;
+        line-height: normal;
+        vertical-align: middle;
+    }
+    .action-button-small:hover, a.action-button-small:hover {
+        opacity: 0.9;
+    }
+    .dark-theme .action-button-small, .dark-theme a.action-button-small {
+         border-color: var(--button-secondary-border-color);
+         background-color: var(--button-secondary-bg-color);
+         color: var(--button-secondary-text-color);
+    }
+
+    #share-modal .form-group label[for="share-allow-download"],
+    #share-modal .form-group label[for="share-allow-view"] {
+        display: inline-block; margin-left: 5px; font-weight: normal;
+    }
+    #share-modal .form-group input[type="checkbox"] {
+        width: auto; vertical-align: middle;
+    }
+    .link-actions-group { /* General for list view, grid view has its own more specific one */
+        display: flex;
+        gap: 5px;
+        align-items: center;
+        margin-left: auto;
+        padding-left: 10px;
+        flex-shrink: 0;
+    }
+    /* #file-container.grid-view .link-actions-group is defined above in the modified grid styles */
+</style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>
-                <% 
+                <%
                 let headerTitle = (locals.viewContextUser ? viewContextUser.username : user.username) + ' 的文件';
                 if (locals.isSearchResult && locals.searchQuery) {
                     headerTitle = `有關 "${searchQuery}" 的搜尋結果`;
@@ -389,13 +452,13 @@
         <% if (locals.message) { %>
             <p class="message <%= (locals.messageType === 'error' || (locals.message && (message.includes('失敗') || message.includes('错误') || message.includes('沒有選擇文件') || message.includes('無效的') ))) ? 'error-message' : (locals.messageType === 'success' ? '' : (locals.messageType === 'warning' ? 'warning-message' : '') ) %>"><%= message %></p>
         <% } %>
-        
+
         <div class="nav-tabs">
-            <a href="/files<%= locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewContextUser.username) : '' %>" 
+            <a href="/files<%= locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewContextUser.username) : '' %>"
                class="nav-link <%= (!locals.viewMode || locals.viewMode === 'myfiles') ? 'active' : '' %>" target="_self">
                我的文件
             </a>
-            <a href="/files?viewMode=userShares<%= locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : '' %>" 
+            <a href="/files?viewMode=userShares<%= locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : '' %>"
                class="nav-link <%= locals.viewMode === 'userShares' ? 'active' : '' %>" target="_self">
                我的公開連結
             </a>
@@ -428,14 +491,14 @@
                 <div class="actions-group-left">
                     <button type="button" id="show-create-textfile-modal-btn">新建文本文件</button>
                     <button type="button" id="show-create-folder-modal-btn">創建文件夾</button>
-                    <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button> 
+                    <button type="button" id="toggleUploadActionsBtn" class="upload-button-main">上傳</button>
                 </div>
             <% } %>
             <% if (locals.viewMode !== 'userShares') { %>
                 <button type="button" id="toggle-multi-select-btn">啟用多選</button>
             <% } else if (items.length > 0) { %> <button type="button" id="toggle-multi-select-btn">啟用多選</button>
             <% } %>
-        
+
             <form action="/files" method="GET" class="control-form search-form-right">
                 <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
                     <input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>">
@@ -446,13 +509,13 @@
                 <input type="search" name="q" placeholder="搜索..." value="<%= locals.searchQuery || '' %>">
                 <button type="submit">搜索</button>
             </form>
-        
+
             <div class="view-toggle">
                 <button id="listViewBtn">列表</button>
                 <button id="gridViewBtn">網格</button>
             </div>
         </div>
-        
+
         <% if ((!locals.viewMode || locals.viewMode === 'myfiles') && !locals.isSearchResult && currentPath && currentPath !== '/search-results') { %>
             <div id="upload-actions-container" style="justify-content: flex-start;">
                 <button type="button" id="upload-files-btn">上傳文件</button>
@@ -466,7 +529,7 @@
                         <input type="hidden" name="currentPath" value="<%= currentPath %>">
                         <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>"><% } %>
                         <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                        <input type="file" id="userFiles" name="userFiles" multiple style="display: none;"> 
+                        <input type="file" id="userFiles" name="userFiles" multiple style="display: none;">
                         <p id="drop-area-text">將文件或文件夾拖拽到此處，或點擊上方按鈕選擇</p>
                         <button type="submit" id="upload-button">上傳已選項目</button>
                     </form>
@@ -481,12 +544,12 @@
         <% if (locals.viewMode !== 'userShares') { %>
             <div id="selection-action-bar">
                 <span id="selection-count" style="margin-right: 15px;">已選擇 0 項</span>
-                <button id="action-play-btn" disabled>播放</button> 
+                <button id="action-play-btn" disabled>播放</button>
                 <button id="action-edit-btn" disabled>編輯</button>
                 <button id="action-rename-btn" disabled>重命名</button>
                 <button id="action-move-btn" disabled>移動</button>
                 <button id="action-share-btn" disabled>創建公開連結</button>
-                <button id="action-view-existing-links-btn" disabled style="display:none;">查看已分享連結</button> 
+                <button id="action-view-existing-links-btn" disabled style="display:none;">查看已分享連結</button>
                 <button id="action-download-btn" disabled>下載選中項</button>
                 <button id="action-delete-btn" class="secondary" disabled>删除</button>
             </div>
@@ -496,8 +559,8 @@
                 <button id="action-revoke-selected-links-btn" class="secondary" disabled>撤銷選中連結</button>
             </div>
         <% } %>
-        
-        <% 
+
+        <%
             let pageHeading = '文件列表';
             if (locals.isSearchResult) pageHeading = '搜索結果';
             else if (locals.viewMode === 'userShares') pageHeading = '我創建的公開連結';
@@ -505,18 +568,18 @@
         <h2><%= pageHeading %></h2>
 
         <% if (items.length > 0 && locals.viewMode !== 'userShares') { %>
-            <div id="select-all-container"> 
+            <div id="select-all-container">
                 <input type="checkbox" id="select-all-checkbox">
                 <label for="select-all-checkbox">全選/取消全選</label>
             </div>
         <% } else if (items.length > 0 && locals.viewMode === 'userShares') { %>
-            <div id="select-all-public-links-container"> 
+            <div id="select-all-public-links-container">
                 <input type="checkbox" id="select-all-public-links-checkbox">
                 <label for="select-all-public-links-checkbox">全選/取消全選</label>
             </div>
         <% } %>
 
-        <div id="file-container" class="list-view"> 
+        <div id="file-container" class="list-view">
             <% if (items.length > 0) { %>
                 <% const adminTargetQueryForActions = locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : ''; %>
                 <%
@@ -542,7 +605,7 @@
                 %>
                 <ul>
                     <% items.forEach(item => { %>
-                        <li data-item-path="<%= item.path %>" 
+                        <li data-item-path="<%= item.path %>"
                             <% if (locals.viewMode === 'userShares') { %>data-link-id="<%= item.link_id %>" data-token="<%= item.token %>" data-public-url="<%= item.publicUrl %>"<% } %>
                             >
                             <div class="file-entry-selectable">
@@ -553,8 +616,8 @@
                                        data-name="<%= item.name %>"
                                        data-encoded-name="<%= item.encodedName %>"
                                        data-is-dir="<%= item.isDir %>"
-                                       data-is-playable-video="<%= item.isPlayableVideo || false %>" 
-                                       data-video-type="<%= item.videoType || '' %>" 
+                                       data-is-playable-video="<%= item.isPlayableVideo || false %>"
+                                       data-video-type="<%= item.videoType || '' %>"
                                        data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>"
                                        >
                                 <% } else { %>
@@ -576,7 +639,7 @@
                                                 <span class="file-public-link"><a href="<%= item.publicUrl %>" target="_blank" title="點擊打開公開連結"><%= item.publicUrl %></a></span>
                                                 <span class="file-created-at">創建於: <%= formatDate(item.createdAt) %></span>
                                             <% } else { %>
-                                                <span class="file-size"></span> 
+                                                <span class="file-size"></span>
                                                 <span class="file-modified"><%= formatDate(item.lastModified) %></span>
                                             <% } %>
                                         </div>
@@ -584,10 +647,10 @@
                                         <div class="file-entry">
                                             <%
                                                 const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
-                                                let largeIcon = '📄'; 
+                                                let largeIcon = '📄';
                                                 let isViewableTextFile = false;
                                                 if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
-                                                    isViewableTextFile = true; largeIcon = '📝'; 
+                                                    isViewableTextFile = true; largeIcon = '📝';
                                                 } else if (item.isPlayableVideo) { largeIcon = '🎥'; }
                                                 else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
                                                 else if (['pdf'].includes(ext)) { largeIcon = '📕';}
@@ -596,9 +659,9 @@
                                             <% if (locals.viewMode === 'userShares') { %>
                                                 <span class="file-name"><%= item.name %></span>
                                             <% } else if (item.isPlayableVideo) { %>
-                                                <a href="#" class="file-name video-link" 
-                                                   data-path="<%= item.encodedPath %>" 
-                                                   data-name="<%= item.name %>" 
+                                                <a href="#" class="file-name video-link"
+                                                   data-path="<%= item.encodedPath %>"
+                                                   data-name="<%= item.name %>"
                                                    data-type="<%= item.videoType %>"
                                                    title="點擊播放 <%= item.name %>"><%= item.name %></a>
                                             <% } else if (isViewableTextFile) { %>
@@ -631,7 +694,7 @@
                                             </form>
                                         </div>
                                     <% } else { %>
-                                        <span class="file-actions-placeholder"></span> 
+                                        <span class="file-actions-placeholder"></span>
                                     <% } %>
                                 </div>
                             </div>
@@ -662,7 +725,7 @@
         <div class="modal-content">
             <span class="close-modal-btn" id="close-create-item-modal-btn">&times;</span>
             <h3 id="create-item-modal-title">创建新项目</h3>
-            <form id="create-item-form" method="POST"> 
+            <form id="create-item-form" method="POST">
                 <input type="hidden" name="currentPath" value="<%= currentPath %>">
                 <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
                     <input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>">
@@ -670,7 +733,7 @@
                 <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
                 <div class="form-group">
                     <label for="create-item-name-input" id="create-item-name-label">名称:</label>
-                    <input type="text" id="create-item-name-input" name="" required> 
+                    <input type="text" id="create-item-name-input" name="" required>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="secondary" id="cancel-create-item-btn">取消</button>
@@ -717,11 +780,11 @@
         </div>
     </div>
 
-    <div id="share-modal"> 
+    <div id="share-modal">
         <div class="modal-content">
             <span class="close-modal-btn" id="close-share-modal-btn">&times;</span>
             <h3>創建公開分享連結</h3>
-            <form id="share-form"> 
+            <form id="share-form">
                 <input type="hidden" name="filePathToShare" id="share-file-path-input">
                 <input type="hidden" name="isDirectory" id="share-is-directory-input">
                 <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
@@ -748,8 +811,8 @@
     <div id="public-link-display-modal">
         <div class="modal-content">
             <span class="close-modal-btn" id="close-public-link-display-modal-btn">&times;</span>
-            <h3 id="public-link-modal-title">公開連結</h3> 
-            <p id="public-link-modal-message">您可以複製下面的連結進行分享:</p> 
+            <h3 id="public-link-modal-title">公開連結</h3>
+            <p id="public-link-modal-message">您可以複製下面的連結進行分享:</p>
             <div class="public-link-container">
                 <input type="url" id="generated-public-link" readonly>
                 <button id="copy-public-link-btn">複製</button>
@@ -784,7 +847,7 @@
         const CURRENT_SESSION_USER_USERNAME = "<%= user.username %>";
         const CURRENT_PATH_ON_LOAD = "<%= currentPath %>";
         const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
-        const CURRENT_VIEW_MODE = "<%= locals.viewMode || 'myfiles' %>"; 
+        const CURRENT_VIEW_MODE = "<%= locals.viewMode || 'myfiles' %>";
         const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify((locals.viewMode || 'myfiles') === 'myfiles' && Array.isArray(items) ? items.map(item => item.name.toLowerCase()) : []) %>;
         const HAS_ITEMS_ON_PAGE = <%= items.length > 0 %>;
 
@@ -792,7 +855,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const fileContainer = document.getElementById('file-container');
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
-            const selectAllContainer = document.getElementById('select-all-container'); 
+            const selectAllContainer = document.getElementById('select-all-container');
             const selectionActionBar = document.getElementById('selection-action-bar');
             const selectionCountDisplay = document.getElementById('selection-count');
             const actionPlayBtn = document.getElementById('action-play-btn');
@@ -800,7 +863,7 @@
             const actionRenameBtn = document.getElementById('action-rename-btn');
             const actionMoveBtn = document.getElementById('action-move-btn');
             const actionShareBtn = document.getElementById('action-share-btn');
-            const actionViewExistingLinksBtn = document.getElementById('action-view-existing-links-btn'); 
+            const actionViewExistingLinksBtn = document.getElementById('action-view-existing-links-btn');
             const actionDownloadBtn = document.getElementById('action-download-btn');
             const actionDeleteBtn = document.getElementById('action-delete-btn');
 
@@ -810,7 +873,7 @@
             const publicLinkSelectionActionBar = document.getElementById('public-link-selection-action-bar');
             const publicLinkSelectionCountDisplay = document.getElementById('public-link-selection-count');
             const actionRevokeSelectedLinksBtn = document.getElementById('action-revoke-selected-links-btn');
-            
+
             const moveModal = document.getElementById('move-modal');
             const closeMoveModalBtn = document.getElementById('close-move-modal-btn');
             const directoryTreeContainer = document.getElementById('directory-tree-container');
@@ -831,7 +894,7 @@
             const uploadProgressContainer = document.getElementById('upload-progress-container');
             const uploadProgressBar = document.getElementById('upload-progress-bar');
             const fileListPreview = document.getElementById('file-list-preview');
-            const uploadButton = document.getElementById('upload-button'); 
+            const uploadButton = document.getElementById('upload-button');
             const dropArea = document.getElementById('drop-area');
 
             const overwriteModal = document.getElementById('overwrite-confirm-modal');
@@ -885,7 +948,7 @@
 
             function updateMultiSelectModeUI() {
                 if (!fileContainer || !toggleMultiSelectBtn) return;
-                
+
                 const isUserSharesView = CURRENT_VIEW_MODE === 'userShares';
 
                 if (multiSelectModeActive) {
@@ -902,15 +965,15 @@
                     toggleMultiSelectBtn.textContent = '啟用多選';
                     if (selectAllContainer) selectAllContainer.classList.remove('visible-in-multiselect');
                     if (selectAllPublicLinksContainer) selectAllPublicLinksContainer.classList.remove('visible-in-multiselect');
-                    
+
                     document.querySelectorAll('.item-checkbox:checked, .public-link-checkbox:checked').forEach(cb => cb.checked = false);
                     if (selectAllCheckbox) selectAllCheckbox.checked = false;
                     if (selectAllPublicLinksCheckbox) selectAllPublicLinksCheckbox.checked = false;
                 }
-                updateSelectionActions(); 
-                updatePublicLinkSelectionActions(); 
+                updateSelectionActions();
+                updatePublicLinkSelectionActions();
             }
-            
+
             if (toggleMultiSelectBtn) {
                 toggleMultiSelectBtn.addEventListener('click', () => {
                     multiSelectModeActive = !multiSelectModeActive;
@@ -918,8 +981,8 @@
                 });
             }
 
-            function getCheckboxSelectedItems() { 
-                const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox'); 
+            function getCheckboxSelectedItems() {
+                const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox');
                 const selected = [];
                 currentCheckboxes.forEach((cb) => {
                     if (cb.checked) {
@@ -935,8 +998,8 @@
                 });
                 return selected;
             }
-            
-            function getSelectedPublicLinkIds() { 
+
+            function getSelectedPublicLinkIds() {
                 const selectedIds = [];
                 document.querySelectorAll('#file-container .public-link-checkbox:checked').forEach(cb => {
                     selectedIds.push(cb.dataset.linkId);
@@ -945,17 +1008,17 @@
             }
 
 
-            async function updateSelectionActions() { 
+            async function updateSelectionActions() {
                  if (CURRENT_VIEW_MODE === 'userShares' || !selectionActionBar) {
                     if(selectionActionBar) selectionActionBar.style.display = 'none';
                     return;
                 }
                 let count = 0;
-                let itemsForActions = []; 
+                let itemsForActions = [];
                 let isSingleFileEditable = false;
                 let isSingleFilePlayableVideo = false;
                 let isSingleItemSharable = false;
-                let hasExistingShares = false; 
+                let hasExistingShares = false;
 
 
                 if (multiSelectModeActive) {
@@ -965,16 +1028,16 @@
                     if (count === 1 && itemsForActions[0]) {
                         const item = itemsForActions[0];
                         if (!item.isDir) {
-                             const fileName = item.name;
-                             const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
-                             if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
-                                 isSingleFileEditable = true;
-                             }
-                             if (item.isPlayableVideo) {
+                            const fileName = item.name;
+                            const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
+                            if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
+                                isSingleFileEditable = true;
+                            }
+                            if (item.isPlayableVideo) {
                                 isSingleFilePlayableVideo = true;
-                             }
+                            }
                         }
-                        isSingleItemSharable = true; 
+                        isSingleItemSharable = true;
                         try {
                             let apiUrl = `/api/item-public-links?filePath=${encodeURIComponent(item.path)}`;
                             if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
@@ -1022,7 +1085,7 @@
                 } else {
                     selectionActionBar.style.display = 'none';
                 }
-                
+
                 if(actionPlayBtn) actionPlayBtn.disabled = !(count === 1 && isSingleFilePlayableVideo);
                 if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable);
                 if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
@@ -1036,7 +1099,7 @@
                 if(actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
             }
 
-            function updatePublicLinkSelectionActions() { 
+            function updatePublicLinkSelectionActions() {
                 if (CURRENT_VIEW_MODE !== 'userShares' || !publicLinkSelectionActionBar) {
                     if(publicLinkSelectionActionBar) publicLinkSelectionActionBar.style.display = 'none';
                     return;
@@ -1058,40 +1121,40 @@
             document.querySelectorAll('#file-container .item-checkbox').forEach((checkbox) => {
                 checkbox.addEventListener('change', () => {
                     if (CURRENT_VIEW_MODE === 'userShares') return;
-                    if (multiSelectModeActive) { 
-                        clearSingleSelection(); 
-                        updateSelectionActions(); 
+                    if (multiSelectModeActive) {
+                        clearSingleSelection();
+                        updateSelectionActions();
                     } else {
-                        checkbox.checked = false; 
+                        checkbox.checked = false;
                     }
                 });
             });
-            
+
             document.querySelectorAll('#file-container .public-link-checkbox').forEach((checkbox) => {
                 checkbox.addEventListener('change', () => {
                     if (CURRENT_VIEW_MODE !== 'userShares') return;
                     if (multiSelectModeActive) {
                         updatePublicLinkSelectionActions();
                     } else {
-                        checkbox.checked = false; 
+                        checkbox.checked = false;
                     }
                 });
             });
-            
+
             if (selectAllCheckbox && selectAllContainer) {
                 selectAllCheckbox.addEventListener('change', (e) => {
-                    if (!multiSelectModeActive || CURRENT_VIEW_MODE === 'userShares') return; 
-                    clearSingleSelection(); 
-                    const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox'); 
+                    if (!multiSelectModeActive || CURRENT_VIEW_MODE === 'userShares') return;
+                    clearSingleSelection();
+                    const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox');
                     currentCheckboxes.forEach(cb => {
-                        if (cb.checked !== e.target.checked) { 
+                        if (cb.checked !== e.target.checked) {
                             cb.checked = e.target.checked;
                         }
                     });
-                    updateSelectionActions(); 
+                    updateSelectionActions();
                 });
             }
-            
+
             if (selectAllPublicLinksCheckbox && selectAllPublicLinksContainer) {
                 selectAllPublicLinksCheckbox.addEventListener('change', (e) => {
                     if (!multiSelectModeActive || CURRENT_VIEW_MODE !== 'userShares') return;
@@ -1108,18 +1171,18 @@
 
             if (fileContainer) {
                 fileContainer.querySelectorAll('ul > li .file-entry-selectable').forEach(contentWrapper => {
-                    contentWrapper.addEventListener('click', async (event) => { 
-                        if (CURRENT_VIEW_MODE === 'userShares') { 
+                    contentWrapper.addEventListener('click', async (event) => {
+                        if (CURRENT_VIEW_MODE === 'userShares') {
                             const listItem = contentWrapper.closest('li');
                             if (!listItem) return;
                             const checkbox = listItem.querySelector('.public-link-checkbox');
-                            if (checkbox && event.target !== checkbox && !event.target.closest('form') && !event.target.classList.contains('view-public-link-btn')) { 
+                            if (checkbox && event.target !== checkbox && !event.target.closest('form') && !event.target.classList.contains('view-public-link-btn')) {
                                 if (multiSelectModeActive) {
                                     checkbox.checked = !checkbox.checked;
                                     updatePublicLinkSelectionActions();
                                 }
                             }
-                            return; 
+                            return;
                         }
 
                         const listItem = contentWrapper.closest('li');
@@ -1128,8 +1191,8 @@
                         if (!checkbox) return;
 
                         if (event.target.classList.contains('video-link') || event.target.closest('.video-link') ||
-                            event.target.tagName === 'A' || event.target.closest('a') || 
-                            event.target.classList.contains('item-checkbox') || 
+                            event.target.tagName === 'A' || event.target.closest('a') ||
+                            event.target.classList.contains('item-checkbox') ||
                             event.target.closest('.rename-form')) {
                             return;
                         }
@@ -1140,35 +1203,35 @@
                             isDir: checkbox.dataset.isDir === 'true', rawName: checkbox.dataset.rawName,
                             isPlayableVideo: checkbox.dataset.isPlayableVideo === 'true',
                             videoType: checkbox.dataset.videoType,
-                            element: listItem 
+                            element: listItem
                         };
 
-                        if (multiSelectModeActive) { 
+                        if (multiSelectModeActive) {
                             checkbox.checked = !checkbox.checked;
                             clearSingleSelection();
                         } else {
                             if (currentSingleSelectedItem && currentSingleSelectedItem.element === listItem) {
                                 clearSingleSelection();
                             } else {
-                                clearSingleSelection(); 
+                                clearSingleSelection();
                                 currentSingleSelectedItem = itemData;
                                 listItem.classList.add('single-selected-item');
                             }
                         }
-                        await updateSelectionActions(); 
+                        await updateSelectionActions();
                     });
                 });
-            
-                fileContainer.addEventListener('click', async (event) => { 
+
+                fileContainer.addEventListener('click', async (event) => {
                     if (event.target.closest('li') === null && (event.target.isSameNode(fileContainer) || event.target.tagName === 'UL')) {
-                        if (!multiSelectModeActive && CURRENT_VIEW_MODE !== 'userShares') { 
+                        if (!multiSelectModeActive && CURRENT_VIEW_MODE !== 'userShares') {
                             clearSingleSelection();
-                            await updateSelectionActions(); 
+                            await updateSelectionActions();
                         }
                     }
                 });
             }
-            
+
             document.querySelectorAll('.video-link').forEach(link => {
                 link.addEventListener('click', function(event) {
                     event.preventDefault();
@@ -1178,7 +1241,7 @@
                     openVideoPlayer(encodedPath, videoName, videoType);
                 });
             });
-            
+
             if (actionPlayBtn) {
                 actionPlayBtn.addEventListener('click', () => {
                     if (actionPlayBtn.disabled) return;
@@ -1209,7 +1272,7 @@
                         if (selected.length === 1) itemToEdit = selected[0];
                     }
 
-                    if (itemToEdit && !itemToEdit.isDir) { 
+                    if (itemToEdit && !itemToEdit.isDir) {
                         let url = `/edit?path=${itemToEdit.encodedPath}`;
                         if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
                             url += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
@@ -1234,7 +1297,7 @@
                     }
                 });
             }
-            
+
             if (actionDownloadBtn) {
                 actionDownloadBtn.addEventListener('click', () => {
                     if (actionDownloadBtn.disabled) return;
@@ -1261,7 +1324,7 @@
                         document.body.appendChild(tempLink);
                         tempLink.click();
                         document.body.removeChild(tempLink);
-                    } else { 
+                    } else {
                         const form = document.createElement('form');
                         form.method = 'POST';
                         form.action = '/download-archive';
@@ -1270,8 +1333,8 @@
                         const itemsInput = document.createElement('input');
                         itemsInput.type = 'hidden';
                         itemsInput.name = 'items';
-                        const itemsForPayload = itemsToDownload.map(item => ({ 
-                            path: item.path, name: item.name, isDir: item.isDir 
+                        const itemsForPayload = itemsToDownload.map(item => ({
+                            path: item.path, name: item.name, isDir: item.isDir
                         }));
                         itemsInput.value = JSON.stringify(itemsForPayload);
                         form.appendChild(itemsInput);
@@ -1283,17 +1346,17 @@
                             targetUserInput.value = VIEW_CONTEXT_USER_USERNAME;
                             form.appendChild(targetUserInput);
                         }
-                        if (CSRF_TOKEN) { 
+                        if (CSRF_TOKEN) {
                             const csrfInput = document.createElement('input');
                             csrfInput.type = 'hidden';
-                            csrfInput.name = '_csrf'; 
+                            csrfInput.name = '_csrf';
                             csrfInput.value = CSRF_TOKEN;
                             form.appendChild(csrfInput);
                         }
                         document.body.appendChild(form);
                         try { form.submit(); } catch (e) { console.error("表單提交錯誤:", e); alert("觸發下載時發生錯誤。"); }
                         setTimeout(() => {
-                           if (form.parentNode === document.body) { document.body.removeChild(form); }
+                            if (form.parentNode === document.body) { document.body.removeChild(form); }
                         }, 100);
                     }
                 });
@@ -1323,25 +1386,25 @@
                                 if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
                                     deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
                                 }
-                                const response = await fetch(deleteUrl, { 
-                                    method: 'GET', 
+                                const response = await fetch(deleteUrl, {
+                                    method: 'GET',
                                 });
 
                                 if (response.ok) {
                                     if (response.redirected || (response.headers.get("Content-Type") && response.headers.get("Content-Type").includes("application/json"))) {
                                         try {
-                                            const result = await response.json(); 
+                                            const result = await response.json();
                                             if (result.success) {
                                                 reloadPage = true;
                                             } else {
                                                 allSucceeded = false;
                                                 errors.push(result.message || `刪除 ${item.name} 失敗`);
                                             }
-                                        } catch (e) { 
-                                            reloadPage = true; 
+                                        } catch (e) {
+                                            reloadPage = true;
                                         }
-                                    } else { 
-                                        reloadPage = true; 
+                                    } else {
+                                        reloadPage = true;
                                     }
                                 } else {
                                     allSucceeded = false;
@@ -1364,19 +1427,19 @@
                         } else if (allSucceeded) {
                             alert("選中項目已成功刪除。");
                         }
-                        
-                        if (reloadPage || !allSucceeded) { 
+
+                        if (reloadPage || !allSucceeded) {
                             window.location.reload();
-                        } else { 
-                             clearSingleSelection(); 
-                            if(selectAllCheckbox) selectAllCheckbox.checked = false; 
-                            document.querySelectorAll('#file-container .item-checkbox').forEach(cb => cb.checked = false); 
+                        } else {
+                             clearSingleSelection();
+                            if(selectAllCheckbox) selectAllCheckbox.checked = false;
+                            document.querySelectorAll('#file-container .item-checkbox').forEach(cb => cb.checked = false);
                             updateSelectionActions();
                         }
                     }
                 });
             }
-            
+
             if (actionMoveBtn) {
                 actionMoveBtn.addEventListener('click', async () => {
                     if (actionMoveBtn.disabled) return;
@@ -1396,7 +1459,7 @@
                         if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
                              queryParams.push(`targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`);
                         }
-                        
+
                         const pathsToExclude = itemsToMove.flatMap(item => {
                             if (item.isDir) {
                                 return [item.path];
@@ -1404,9 +1467,9 @@
                             return [];
                         });
                         if (pathsToExclude.length > 0) queryParams.push(`excludePaths=${encodeURIComponent(pathsToExclude.join(','))}`);
-                        
+
                         if (queryParams.length > 0) fetchUrl += `?${queryParams.join('&')}`;
-                        
+
                         const response = await fetch(fetchUrl);
                         if (!response.ok) throw new Error(`無法獲取目錄列表: ${response.statusText}`);
                         currentDirectoryTree = await response.json();
@@ -1419,47 +1482,47 @@
             }
             function renderDirectoryTree(nodes, container, itemsBeingMoved) {
                 container.innerHTML = ''; const ul = document.createElement('ul');
-                const rootLi = document.createElement('li'); 
+                const rootLi = document.createElement('li');
                 rootLi.textContent = '根目錄 (/)';
-                rootLi.dataset.path = '/'; 
-                
-                let isRootInvalid = itemsBeingMoved.some(item => item.path.substring(0, item.path.lastIndexOf('/')) === '' && item.path !== '/'); 
+                rootLi.dataset.path = '/';
+
+                let isRootInvalid = itemsBeingMoved.some(item => item.path.substring(0, item.path.lastIndexOf('/')) === '' && item.path !== '/');
 
                 rootLi.addEventListener('click', (e) => selectDestination(e.target, '/'));
                 ul.appendChild(rootLi);
 
                 function buildTree(dirItems, parentUl, currentParentPath) {
                     dirItems.forEach(dirNode => {
-                        const isMovingThisDirOrChild = itemsBeingMoved.some(movedItem => 
+                        const isMovingThisDirOrChild = itemsBeingMoved.some(movedItem =>
                             movedItem.isDir && (dirNode.path === movedItem.path || dirNode.path.startsWith(movedItem.path + '/'))
                         );
-                        const isCurrentParent = itemsBeingMoved.every(movedItem => { 
+                        const isCurrentParent = itemsBeingMoved.every(movedItem => {
                             const movedItemParentPath = movedItem.path.substring(0, movedItem.path.lastIndexOf('/')) || '/';
                             return movedItemParentPath === dirNode.path;
                         });
 
                         if (isMovingThisDirOrChild) {
-                            return; 
+                            return;
                         }
 
-                        const li = document.createElement('li'); 
-                        li.textContent = dirNode.name; 
+                        const li = document.createElement('li');
+                        li.textContent = dirNode.name;
                         li.dataset.path = dirNode.path;
-                        if (isCurrentParent && itemsBeingMoved.length === 1) { 
-                            li.style.opacity = "0.5"; 
-                            li.style.pointerEvents = "none"; 
+                        if (isCurrentParent && itemsBeingMoved.length === 1) {
+                            li.style.opacity = "0.5";
+                            li.style.pointerEvents = "none";
                         } else {
                            li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, dirNode.path); });
                         }
                         parentUl.appendChild(li);
                         if (dirNode.children && dirNode.children.length > 0) {
-                            const nestedUl = document.createElement('ul'); 
+                            const nestedUl = document.createElement('ul');
                             li.appendChild(nestedUl);
                             buildTree(dirNode.children, nestedUl, dirNode.path);
                         }
                     });
                 }
-                buildTree(nodes, ul, '/'); 
+                buildTree(nodes, ul, '/');
                 container.appendChild(ul);
             }
             function selectDestination(targetElement, path) {
@@ -1470,7 +1533,7 @@
             }
             if (closeMoveModalBtn) closeMoveModalBtn.onclick = () => moveModal.style.display = 'none';
             if (cancelMoveBtn) cancelMoveBtn.onclick = () => moveModal.style.display = 'none';
-            
+
             if (confirmMoveBtn) {
                 confirmMoveBtn.addEventListener('click', async () => {
                     let selectedToMove = [];
@@ -1481,8 +1544,8 @@
                     }
 
                     const destinationPath = moveDestinationInput.value;
-                    if (selectedToMove.length === 0 || (destinationPath === null || destinationPath === undefined) ) { 
-                        alert('請選擇要移動的項目和目標文件夾。'); return; 
+                    if (selectedToMove.length === 0 || (destinationPath === null || destinationPath === undefined) ) {
+                        alert('請選擇要移動的項目和目標文件夾。'); return;
                     }
 
                     for (const item of selectedToMove) {
@@ -1496,35 +1559,35 @@
                         }
                     }
                     try {
-                        const payload = { 
-                            sourcePaths: selectedToMove.map(item => item.path), 
-                            destinationPath: destinationPath, 
+                        const payload = {
+                            sourcePaths: selectedToMove.map(item => item.path),
+                            destinationPath: destinationPath,
                         };
                         if (CSRF_TOKEN) payload._csrf = CSRF_TOKEN;
                         if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
                             payload.targetUsername = VIEW_CONTEXT_USER_USERNAME;
                         }
-                        
-                        const response = await fetch('/move-items', { 
+
+                        const response = await fetch('/move-items', {
                             method: 'POST', headers: { 'Content-Type': 'application/json', },
                             body: JSON.stringify(payload)
                         });
-                        const result = await response.json(); 
-                        if (response.ok && result.success) { 
-                            alert(result.message || '項目移動成功！'); 
-                            window.location.href = result.redirectUrl || window.location.pathname + window.location.search; 
+                        const result = await response.json();
+                        if (response.ok && result.success) {
+                            alert(result.message || '項目移動成功！');
+                            window.location.href = result.redirectUrl || window.location.pathname + window.location.search;
                         } else {
                              alert(`移動失敗: ${result.message || '伺服器發生未知錯誤。'}`);
                         }
-                    } catch (error) { 
-                        console.error('移動項目時出錯:', error); 
+                    } catch (error) {
+                        console.error('移動項目時出錯:', error);
                         let errorMsg = `移動項目時發生客戶端錯誤。`;
-                        if (error instanceof SyntaxError) { 
+                        if (error instanceof SyntaxError) {
                             errorMsg += " 伺服器可能返回了非預期的回應格式。";
                         } else if (error.message) {
                             errorMsg += ` ${error.message}`;
                         }
-                        alert(errorMsg); 
+                        alert(errorMsg);
                     }
                     moveModal.style.display = 'none';
                 });
@@ -1578,11 +1641,11 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
                         });
-                        
+
                         if (!response.ok) {
                             let serverErrorMessage = `伺服器錯誤，狀態碼: ${response.status}`;
                             try {
-                                const errorText = await response.text(); 
+                                const errorText = await response.text();
                                 if (response.headers.get("content-type")?.includes("application/json")) {
                                     const jsonData = JSON.parse(errorText);
                                     serverErrorMessage = jsonData.message || errorText;
@@ -1590,10 +1653,10 @@
                                      serverErrorMessage = errorText.length > 200 ? errorText.substring(0, 200) + "..." : errorText;
                                 }
                             } catch (e) { /* Failed to parse error response body */ }
-                            throw new Error(serverErrorMessage); 
+                            throw new Error(serverErrorMessage);
                         }
-                        const result = await response.json(); 
-                        
+                        const result = await response.json();
+
                         if (result.success) {
                             shareModal.style.display = 'none';
                             if (publicLinkModalTitle) publicLinkModalTitle.textContent = '公開連結已創建';
@@ -1605,8 +1668,8 @@
                         } else {
                             alert(`創建公開連結失敗: ${result.message || '未知錯誤'}`);
                         }
-                    } catch (error) { 
-                        console.error('創建公開連結時出錯:', error); 
+                    } catch (error) {
+                        console.error('創建公開連結時出錯:', error);
                         alert(`創建公開連結時發生客戶端錯誤。\n詳細信息: ${error.message}`);
                     }
                 });
@@ -1615,7 +1678,7 @@
             if (copyPublicLinkBtn && generatedPublicLinkInput) {
                 copyPublicLinkBtn.addEventListener('click', () => {
                     generatedPublicLinkInput.select();
-                    generatedPublicLinkInput.setSelectionRange(0, 99999); 
+                    generatedPublicLinkInput.setSelectionRange(0, 99999);
                     try {
                         const successful = document.execCommand('copy');
                         const msg = successful ? '連結已複製到剪貼簿！' : '複製失敗。';
@@ -1664,7 +1727,7 @@
                     }
                 });
             }
-            
+
             // View Existing Links Modal Logic
             if (actionViewExistingLinksBtn && existingLinksModal && closeExistingLinksModalBtn && doneExistingLinksBtn && existingLinksItemNameSpan && existingLinksListContainer) {
                 actionViewExistingLinksBtn.addEventListener('click', async () => {
@@ -1704,7 +1767,7 @@
                                         linkUrl.href = link.publicUrl;
                                         linkUrl.textContent = link.publicUrl;
                                         linkUrl.target = '_blank';
-                                        
+
                                         const createdAt = new Date(link.created_at).toLocaleString('zh-CN');
                                         const details = document.createElement('span');
                                         details.textContent = ` (創建於: ${createdAt}, ${link.allow_download ? '允許下載' : '禁止下載'}, ${link.allow_view ? '允許預覽' : '禁止預覽'}, 訪問: ${link.visit_count} 次)`;
@@ -1738,8 +1801,8 @@
                                                             alert('撤銷連結時發生錯誤。');
                                                         }
                                                     }
-                                                    existingLinksModal.style.display = 'none'; 
-                                                    window.location.reload(); 
+                                                    existingLinksModal.style.display = 'none';
+                                                    window.location.reload();
                                                 } catch (e) {
                                                     console.error("撤銷連結時出錯:", e);
                                                     alert('撤銷連結時發生客戶端錯誤。');
@@ -1768,14 +1831,14 @@
                 if(closeExistingLinksModalBtn) closeExistingLinksModalBtn.onclick = () => existingLinksModal.style.display = 'none';
                 if(doneExistingLinksBtn) doneExistingLinksBtn.onclick = () => existingLinksModal.style.display = 'none';
             }
-            
+
             // Event listener for "View" buttons in the "My Public Links" section
             document.querySelectorAll('.view-public-link-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const publicUrl = this.dataset.url;
                     if (publicLinkDisplayModal && generatedPublicLinkInput && publicLinkModalTitle && publicLinkModalMessage) {
-                        publicLinkModalTitle.textContent = '查看公開連結'; 
-                        publicLinkModalMessage.textContent = '連結地址:';     
+                        publicLinkModalTitle.textContent = '查看公開連結';
+                        publicLinkModalMessage.textContent = '連結地址:';
                         generatedPublicLinkInput.value = publicUrl;
                         publicLinkDisplayModal.style.display = 'block';
                     }
@@ -1786,7 +1849,7 @@
             function showOverwriteConfirmationModal(itemName) {
                 return new Promise((resolve) => {
                     if (!overwriteModal || !overwriteMessage || !overwriteConfirmBtn || !overwriteAbandonBtn || !closeOverwriteModalBtn) {
-                        resolve('abandon'); 
+                        resolve('abandon');
                         return;
                     }
                     overwriteMessage.textContent = `一個名為 "${itemName}" 的項目已存在於當前目錄。您要覆蓋它嗎？`;
@@ -1813,15 +1876,15 @@
                 toggleUploadActionsBtn.addEventListener('click', () => {
                     const isActionsHidden = uploadActionsContainer.style.display === 'none' || uploadActionsContainer.style.display === '';
                     uploadActionsContainer.style.display = isActionsHidden ? 'flex' : 'none';
-                    if (!isActionsHidden) { 
-                        uploadSection.style.display = 'none'; 
+                    if (!isActionsHidden) {
+                        uploadSection.style.display = 'none';
                         toggleUploadActionsBtn.textContent = '上傳';
                         if(userFilesInput) userFilesInput.value = null;
                         if(fileListPreview) fileListPreview.innerHTML = '';
                         if(uploadButton) uploadButton.style.display = 'none';
                         if(uploadProgressContainer) uploadProgressContainer.style.display = 'none';
 
-                    } else { 
+                    } else {
                         toggleUploadActionsBtn.textContent = '取消上傳操作';
                     }
                 });
@@ -1838,10 +1901,10 @@
                     if (!uploadActionsContainer || uploadActionsContainer.style.display === 'none') {
                         if(uploadActionsContainer) uploadActionsContainer.style.display = 'flex';
                     }
-                    userFilesInput.value = null; 
-                    fileListPreview.innerHTML = ''; 
-                    uploadButton.style.display = 'none'; 
-                    userFilesInput.click(); 
+                    userFilesInput.value = null;
+                    fileListPreview.innerHTML = '';
+                    uploadButton.style.display = 'none';
+                    userFilesInput.click();
                 });
             }
 
@@ -1849,38 +1912,38 @@
                 uploadFolderBtn.addEventListener('click', () => {
                     userFilesInput.setAttribute('webkitdirectory', '');
                     userFilesInput.setAttribute('directory', '');
-                    userFilesInput.removeAttribute('multiple'); 
+                    userFilesInput.removeAttribute('multiple');
                     if (dropAreaText) dropAreaText.textContent = '將文件夾拖拽到此處進行上傳，或點擊選擇文件夾。';
                     uploadSection.style.display = 'block';
                     if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
                      if (!uploadActionsContainer || uploadActionsContainer.style.display === 'none') {
                         if(uploadActionsContainer) uploadActionsContainer.style.display = 'flex';
                     }
-                    userFilesInput.value = null; 
-                    fileListPreview.innerHTML = ''; 
+                    userFilesInput.value = null;
+                    fileListPreview.innerHTML = '';
                     uploadButton.style.display = 'none';
-                    userFilesInput.click(); 
+                    userFilesInput.click();
                 });
             }
-            
+
             if (uploadForm && userFilesInput) {
-                uploadForm.addEventListener('submit', async function(event) { 
-                    event.preventDefault(); 
+                uploadForm.addEventListener('submit', async function(event) {
+                    event.preventDefault();
                     if (userFilesInput.files.length === 0) {
                         alert('請選擇要上傳的文件或文件夾。');
                         return;
                     }
 
                     const originalFiles = Array.from(userFilesInput.files);
-                    let finalFilesToUpload = []; 
-                    let processedTopLevelItems = new Set(); 
+                    let finalFilesToUpload = [];
+                    let processedTopLevelItems = new Set();
 
                     for (const file of originalFiles) {
                         let nameToCheck = file.name;
                         let isTopLevelItem = true;
                         if (file.webkitRelativePath) {
                             const pathParts = file.webkitRelativePath.split('/');
-                            nameToCheck = pathParts[0]; 
+                            nameToCheck = pathParts[0];
                             if (pathParts.length > 1) isTopLevelItem = false;
                         }
 
@@ -1898,7 +1961,7 @@
                             }
                         } else if (!EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase())) {
                             if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
-                             if(isTopLevelItem) processedTopLevelItems.add(nameToCheck.toLowerCase()); 
+                             if(isTopLevelItem) processedTopLevelItems.add(nameToCheck.toLowerCase());
                         } else if (processedTopLevelItems.has(nameToCheck.toLowerCase()) && finalFilesToUpload.some(f => (f.webkitRelativePath || f.name).startsWith(nameToCheck))) {
                             if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
                         }
@@ -1914,10 +1977,10 @@
                         return;
                     }
 
-                    const formData = new FormData(); 
+                    const formData = new FormData();
                     const currentPathInput = uploadForm.querySelector('input[name="currentPath"]');
                     if (currentPathInput) formData.append('currentPath', currentPathInput.value);
-                    
+
                     const targetUsernameInput = uploadForm.querySelector('input[name="targetUsername"]');
                     if (targetUsernameInput && targetUsernameInput.value) formData.append('targetUsername', targetUsernameInput.value);
 
@@ -1946,19 +2009,19 @@
                     };
                     xhr.onload = function() {
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                        if (xhr.status >= 200 && xhr.status < 300) { 
+                        if (xhr.status >= 200 && xhr.status < 300) {
                             let responseData = null;
                             try { responseData = JSON.parse(xhr.responseText); } catch (e) { /* Ignore */ }
 
                             if (responseData && responseData.redirectUrl) {
                                 window.location.href = responseData.redirectUrl;
-                            } else if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) { 
-                                window.location.href = xhr.responseURL; 
+                            } else if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) {
+                                window.location.href = xhr.responseURL;
                             } else {
                                 alert( (responseData && responseData.message) || '上傳成功！頁面將刷新。');
-                                window.location.reload(); 
+                                window.location.reload();
                             }
-                        } else { 
+                        } else {
                             let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
                             try {
                                 const responseJson = JSON.parse(xhr.responseText);
@@ -1966,50 +2029,50 @@
                                     errorMessage = responseJson.message;
                                 }
                             } catch (e) {
-                                if(xhr.responseText && xhr.responseText.length < 500) errorMessage = xhr.responseText; 
+                                if(xhr.responseText && xhr.responseText.length < 500) errorMessage = xhr.responseText;
                             }
                             alert(errorMessage);
                             console.error('Upload failed:', xhr.status, xhr.responseText);
                         }
                     };
-                    xhr.onerror = function(e) { 
+                    xhr.onerror = function(e) {
                         if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
                         alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
                         console.error('Upload network error:', e);
                     };
-                    xhr.openUrl = uploadForm.action; 
+                    xhr.openUrl = uploadForm.action;
                     xhr.send(formData);
                 });
             }
 
-            if (dropArea && userFilesInput && fileListPreview && uploadSection && dropAreaText && uploadActionsContainer && toggleUploadActionsBtn) { 
+            if (dropArea && userFilesInput && fileListPreview && uploadSection && dropAreaText && uploadActionsContainer && toggleUploadActionsBtn) {
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dropArea.addEventListener(eventName, preventDefaults, false);
-                    document.body.addEventListener(eventName, preventDefaults, false); 
+                    document.body.addEventListener(eventName, preventDefaults, false);
                 });
                 function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-                
+
                 dropArea.addEventListener('dragenter', () => dropArea.classList.add('highlight'), false);
-                dropArea.addEventListener('dragover', () => dropArea.classList.add('highlight'), false); 
+                dropArea.addEventListener('dragover', () => dropArea.classList.add('highlight'), false);
                 dropArea.addEventListener('dragleave', (e) => {
                     if (e.relatedTarget === null || !dropArea.contains(e.relatedTarget)) {
                         dropArea.classList.remove('highlight');
                     }
                 }, false);
-                
+
                 dropArea.addEventListener('drop', (e) => {
-                    preventDefaults(e); 
+                    preventDefaults(e);
                     dropArea.classList.remove('highlight');
                     const dt = e.dataTransfer;
                     const files = dt.files;
-                    
+
                     let isLikelyFolderDrop = false;
                     if (dt.items && dt.items.length > 0 && typeof dt.items[0].webkitGetAsEntry === 'function') {
                         const entry = dt.items[0].webkitGetAsEntry();
                         if (entry && entry.isDirectory) {
                             isLikelyFolderDrop = true;
                         }
-                    } else if (files.length > 0 && files[0].webkitRelativePath) { 
+                    } else if (files.length > 0 && files[0].webkitRelativePath) {
                         const firstFileRelativePath = files[0].webkitRelativePath;
                         if (firstFileRelativePath && firstFileRelativePath.includes('/')) {
                              isLikelyFolderDrop = true;
@@ -2031,25 +2094,25 @@
                         if(dropAreaText) dropAreaText.textContent = '已拖入文件，準備上傳。';
                     }
 
-                    userFilesInput.files = files; 
-                    updateFileListPreviewOnDrop(); 
-                    uploadSection.style.display = 'block'; 
+                    userFilesInput.files = files;
+                    updateFileListPreviewOnDrop();
+                    uploadSection.style.display = 'block';
                     if (uploadActionsContainer.style.display === 'none') {
-                         uploadActionsContainer.style.display = 'flex'; 
+                         uploadActionsContainer.style.display = 'flex';
                     }
                     if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
                 }, false);
 
-                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop); 
+                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop);
 
-                function updateFileListPreviewOnDrop() { 
+                function updateFileListPreviewOnDrop() {
                     if (!fileListPreview || !userFilesInput || !uploadButton) return;
-                    fileListPreview.innerHTML = ''; 
+                    fileListPreview.innerHTML = '';
                     const files = userFilesInput.files;
                     if (files.length > 0) {
                         const list = document.createElement('ul');
                         list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
-                        
+
                         let isDirectoryUpload = false;
                         if (userFilesInput.hasAttribute('webkitdirectory') || (files[0] && files[0].webkitRelativePath && files[0].webkitRelativePath.includes('/'))) {
                             isDirectoryUpload = true;
@@ -2062,7 +2125,7 @@
                             listItem.textContent = `文件夾: ${folderName} (${files.length} 個文件)`;
                             listItem.style.fontSize = '0.9em'; listItem.style.fontWeight = 'bold';
                             list.appendChild(listItem);
-                        } else { 
+                        } else {
                             for (let i = 0; i < files.length; i++) {
                                 const listItem = document.createElement('li');
                                 listItem.textContent = files[i].name + (files[i].size ? ` (${(files[i].size / 1024).toFixed(1)} KB)` : '');
@@ -2083,31 +2146,31 @@
 
             const listViewBtn = document.getElementById('listViewBtn');
             const gridViewBtn = document.getElementById('gridViewBtn');
-            if (fileContainer && listViewBtn && gridViewBtn) { 
+            if (fileContainer && listViewBtn && gridViewBtn) {
                 function toggleView(viewType) {
                     const isCurrentlyMultiSelect = fileContainer.classList.contains('multi-select-mode-active');
                     fileContainer.classList.remove('list-view', 'grid-view');
 
                     if (viewType === 'grid') {
-                        fileContainer.classList.add('grid-view'); 
+                        fileContainer.classList.add('grid-view');
                         gridViewBtn.classList.add('active');
                         listViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'grid');
-                    } else { 
-                        fileContainer.classList.add('list-view'); 
+                    } else {
+                        fileContainer.classList.add('list-view');
                         listViewBtn.classList.add('active');
                         gridViewBtn.classList.remove('active');
                         localStorage.setItem('fileView', 'list');
                     }
-                    if (isCurrentlyMultiSelect) { 
+                    if (isCurrentlyMultiSelect) {
                         fileContainer.classList.add('multi-select-mode-active');
                     }
-                    clearSingleSelection(); 
-                    updateSelectionActions(); 
+                    clearSingleSelection();
+                    updateSelectionActions();
                     updatePublicLinkSelectionActions();
                 }
-                const preferredView = localStorage.getItem('fileView') || 'list'; 
-                toggleView(preferredView); 
+                const preferredView = localStorage.getItem('fileView') || 'list';
+                toggleView(preferredView);
                 listViewBtn.addEventListener('click', () => toggleView('list'));
                 gridViewBtn.addEventListener('click', () => toggleView('grid'));
             }
@@ -2124,8 +2187,8 @@
 
             function openCreateItemModal(type) {
                 if (!createItemModal || !createItemForm || !createItemModalTitle || !createItemNameLabel || !createItemNameInput) return;
-                createItemForm.reset(); 
-                
+                createItemForm.reset();
+
                 const currentPathForCreation = IS_SEARCH_RESULT_VIEW ? '/' : CURRENT_PATH_ON_LOAD;
                 const currentPathInputInForm = createItemForm.querySelector('input[name="currentPath"]');
                 if (currentPathInputInForm) currentPathInputInForm.value = currentPathForCreation;
@@ -2144,13 +2207,13 @@
                     createItemNameInput.placeholder = '例如: 我的文档';
                     createItemForm.action = '/create-folder';
                 }
-                
+
                 const targetUsernameHiddenInput = createItemForm.querySelector('input[name="targetUsername"]');
-                if (targetUsernameHiddenInput) { 
+                if (targetUsernameHiddenInput) {
                     if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
                         targetUsernameHiddenInput.value = VIEW_CONTEXT_USER_USERNAME;
                     } else {
-                        targetUsernameHiddenInput.value = ''; 
+                        targetUsernameHiddenInput.value = '';
                     }
                 }
                 createItemModal.style.display = 'block';
@@ -2161,17 +2224,17 @@
             if (showCreateFolderModalBtn) showCreateFolderModalBtn.addEventListener('click', () => openCreateItemModal('folder'));
             if (closeCreateItemModalBtn) closeCreateItemModalBtn.onclick = () => createItemModal.style.display = 'none';
             if (cancelCreateItemBtn) cancelCreateItemBtn.onclick = () => createItemModal.style.display = 'none';
-            
+
             function openVideoPlayer(encodedPath, videoName, videoType) {
                 if (!videoPlayerModal || !html5VideoPlayer || !videoSourceElement || !videoModalTitle) return;
-                
+
                 let videoSrc = `/stream/${encodedPath}`;
                 const queryParams = new URLSearchParams();
 
                 if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
                     queryParams.set('targetUsername', VIEW_CONTEXT_USER_USERNAME);
                 }
-                
+
                 if (Array.from(queryParams).length > 0) {
                     videoSrc += `?${queryParams.toString()}`;
                 }
@@ -2192,19 +2255,19 @@
                 closeVideoModalBtn.onclick = () => {
                     if (videoPlayerModal) videoPlayerModal.style.display = 'none';
                     if (html5VideoPlayer) {
-                        html5VideoPlayer.pause(); 
-                        videoSourceElement.setAttribute('src', ''); 
+                        html5VideoPlayer.pause();
+                        videoSourceElement.setAttribute('src', '');
                     }
                 };
             }
 
 
-            window.addEventListener('click', (event) => { 
+            window.addEventListener('click', (event) => {
                 if (event.target == createItemModal) createItemModal.style.display = 'none';
-                if (event.target == moveModal) moveModal.style.display = 'none'; 
-                if (event.target == overwriteModal) { 
+                if (event.target == moveModal) moveModal.style.display = 'none';
+                if (event.target == overwriteModal) {
                     const abandonButton = overwriteModal.querySelector('#overwrite-abandon-btn');
-                    if (abandonButton) abandonButton.click(); 
+                    if (abandonButton) abandonButton.click();
                 }
                 if (event.target == videoPlayerModal) {
                      if (videoPlayerModal) videoPlayerModal.style.display = 'none';
@@ -2218,13 +2281,13 @@
                 if (event.target == existingLinksModal) existingLinksModal.style.display = 'none';
             });
 
-            updateMultiSelectModeUI(); 
-            updateSelectionActions(); 
+            updateMultiSelectModeUI();
+            updateSelectionActions();
             updatePublicLinkSelectionActions();
 
-        }); 
+        });
 
-        function showRenameForm(encodedName, currentName, isDir) { 
+        function showRenameForm(encodedName, currentName, isDir) {
             document.querySelectorAll('.rename-form').forEach(form => {
                 if (form.id !== 'rename-form-' + encodedName) {
                     form.style.display = 'none';
@@ -2235,12 +2298,12 @@
             if (formContainer) {
                 const isCurrentlyVisible = formContainer.style.display === 'block';
                 formContainer.style.display = isCurrentlyVisible ? 'none' : 'block';
-                
-                if (!isCurrentlyVisible) { 
+
+                if (!isCurrentlyVisible) {
                     const inputField = formContainer.querySelector('input[name="newName"]');
                     if (inputField) {
-                        inputField.value = currentName; 
-                        inputField.focus(); 
+                        inputField.value = currentName;
+                        inputField.focus();
                         if (!isDir && currentName.includes('.')) {
                             const dotIndex = currentName.lastIndexOf('.');
                             inputField.setSelectionRange(0, dotIndex);
@@ -2253,13 +2316,13 @@
                     if (currentPathInput && oldPathInput && IS_SEARCH_RESULT_VIEW) {
                          const itemOriginalPath = oldPathInput.value;
                          currentPathInput.value = itemOriginalPath.substring(0, itemOriginalPath.lastIndexOf('/')) || '/';
-                    } else if (currentPathInput) { 
+                    } else if (currentPathInput) {
                         currentPathInput.value = CURRENT_PATH_ON_LOAD;
                     }
                 }
             }
         }
-        function hideRenameForm(encodedName) { 
+        function hideRenameForm(encodedName) {
             const form = document.getElementById('rename-form-' + encodedName);
             if (form) form.style.display = 'none';
         }
