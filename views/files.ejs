@@ -21,8 +21,8 @@
         --modal-bg: #ffffff;
         --modal-text-color: #333;
         --modal-border-color: #888;
-        --rename-form-bg: #ffffff;
-        --rename-form-border-color: #cccccc;
+        /* --rename-form-bg: #ffffff; */ /* Removed as rename form is now a modal */
+        /* --rename-form-border-color: #cccccc; */ /* Removed */
         --video-modal-bg: #1c1c1c;
         --video-modal-text-color: #f1f1f1;
         --video-modal-border-color: #333;
@@ -39,7 +39,7 @@
         --public-link-display-border: #ced4da;
         --action-bar-bg: #f0f0f0;
         --action-bar-border: #ccc;
-        --hover-bg: #f0f0f0; /* Added for directory tree hover */
+        --hover-bg: #f0f0f0;
     }
 
     .dark-theme {
@@ -53,8 +53,8 @@
         --modal-bg: #2c2c2c;
         --modal-text-color: #e0e0e0;
         --modal-border-color: #555;
-        --rename-form-bg: #3a3a3a;
-        --rename-form-border-color: #555;
+        /* --rename-form-bg: #3a3a3a; */ /* Removed */
+        /* --rename-form-border-color: #555; */ /* Removed */
         --video-modal-bg: #2a2a2a;
         --video-modal-text-color: #e0e0e0;
         --video-modal-border-color: #444;
@@ -70,7 +70,7 @@
         --public-link-display-border: #495057;
         --action-bar-bg: #252525;
         --action-bar-border: #444;
-        --hover-bg: #4a4a4a; /* Added for directory tree hover in dark mode */
+        --hover-bg: #4a4a4a;
     }
 
     .nav-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--tab-border); }
@@ -134,9 +134,13 @@
     .dark-theme .list-view li.single-selected-item > .file-entry-selectable,
     .dark-theme .grid-view li.single-selected-item { background-color: #404040; }
 
-    #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal, #share-modal, #public-link-display-modal, #existing-links-modal {
+    /* General Modal Styles (used by rename modal too) */
+    .modal { /* Added a general .modal class */
         display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
         overflow: auto; background-color: rgba(0,0,0,0.5);
+    }
+    #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal, #share-modal, #public-link-display-modal, #existing-links-modal, #rename-item-modal { /* Added #rename-item-modal */
+        /* Inherits .modal styles now */
     }
     .modal-content { background-color: var(--modal-bg) !important; color: var(--modal-text-color); margin: 10% auto; padding: 20px; border: 1px solid var(--modal-border-color); border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     .modal-content h3 { margin-top: 0; }
@@ -206,7 +210,7 @@
     /* === Grid View Styles - REFINED START === */
     #file-container.grid-view ul {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); /* Can make items a bit narrower */
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
         gap: 10px;
         list-style-type: none; padding: 0; margin: 0;
     }
@@ -215,19 +219,16 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center; /* Center content vertically */
+        justify-content: center;
         text-align: center;
-        padding: 8px; /* Controls space from content to border */
+        padding: 8px;
         border-radius: 6px;
         position: relative;
-        /* aspect-ratio: 1 / 1; /* Enforces squareness, content might overflow */
-        /* Instead of aspect-ratio, let's use min-height and careful content sizing */
-        min-height: 110px; /* Adjust this to be close to the minmax width for a square feel */
-        /* max-width: 120px; /* Optional: if you want to cap width even more */
+        min-height: 110px;
         background-color: var(--input-bg-color);
         border: 1px solid var(--input-border-color);
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        overflow: hidden; /* Important if content could exceed box size */
+        overflow: hidden;
     }
 
     .dark-theme #file-container.grid-view li {
@@ -240,41 +241,41 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center; /* Vertically center icon and name within this wrapper */
+        justify-content: center;
         width: 100%;
-        height: 100%; /* Ensure it tries to fill the li */
+        height: 100%;
     }
 
-    .grid-view .file-entry { /* Contains icon and name */
+    .grid-view .file-entry {
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        gap: 0; /* Use margins on children for spacing */
+        gap: 0;
         width: 100%;
-        flex-grow: 1; /* Allow this to take available space if li is taller */
-        padding-top: 4px; /* Small space at the top of this block */
+        flex-grow: 1;
+        padding-top: 4px;
     }
 
     .grid-view .file-icon-large {
-        font-size: 3.5em; /* Maintained original icon size */
+        font-size: 3.5em;
         line-height: 1;
-        margin-bottom: 4px; /* Space between icon and filename */
-        flex-shrink: 0; /* Prevent icon from shrinking */
+        margin-bottom: 4px;
+        flex-shrink: 0;
     }
 
     .grid-view .file-name {
         font-size: 0.8em;
-        line-height: 1.25; /* Slightly adjusted for 2 lines */
+        line-height: 1.25;
         word-break: break-all;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: calc(100% - 4px); /* Prevent touching edges */
-        min-height: calc(0.8em * 1.25 * 2); /* Approx height for 2 lines */
-        margin-bottom: 6px; /* Space before actions */
+        max-width: calc(100% - 4px);
+        min-height: calc(0.8em * 1.25 * 2);
+        margin-bottom: 6px;
         color: var(--input-text-color);
         flex-shrink: 0;
     }
@@ -290,22 +291,22 @@
         margin-bottom: 0;
     }
 
-    .grid-view .link-actions-group { /* For 'userShares' view items */
+    .grid-view .link-actions-group {
         display: flex;
         justify-content: center;
-        align-items: center; /* Vertically align buttons if they wrap */
+        align-items: center;
         gap: 4px;
         width: 100%;
-        margin-top: auto; /* Pushes this to the bottom of the li */
+        margin-top: auto;
         padding-top: 4px;
-        padding-bottom: 2px; /* Small space at the very bottom */
+        padding-bottom: 2px;
         flex-wrap: wrap;
         flex-shrink: 0;
     }
     .grid-view .link-actions-group .action-button-small,
     .grid-view .link-actions-group .revoke-single-link-form button {
         font-size: 0.7em;
-        padding: 3px 5px; /* Slightly adjusted padding */
+        padding: 3px 5px;
         white-space: nowrap;
     }
     /* === Grid View Styles - REFINED END === */
@@ -333,14 +334,8 @@
         font-weight: normal;
     }
 
-    .rename-form { display: none; position: absolute; left: 25px; right: 5px; top: calc(100% + 2px); background-color: var(--rename-form-bg); padding: 10px; border: 1px solid var(--rename-form-border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 100; border-radius: 6px; max-width: 400px; box-sizing: border-box; }
-    #file-container.grid-view li .rename-form { left: 50%; transform: translateX(-50%); top: 100%; margin-top: 5px; width: calc(100% - 10px); max-width: 180px; right: auto; }
-    .rename-form form.inline-form { display: flex; gap: 8px; align-items: stretch; }
-    .rename-form input[type="text"], .rename-form button { box-sizing: border-box; font-size: 0.9em; line-height: 1.4; padding-top: 6px; padding-bottom: 6px; border-radius: 4px; margin: 0; }
-    .rename-form input[type="text"] { flex-grow: 1; padding-left: 8px; padding-right: 8px; background-color: var(--input-bg-color); color: var(--input-text-color); border: 1px solid var(--input-border-color); }
-    .rename-form button { padding-left: 12px; padding-right: 12px; cursor: pointer; white-space: nowrap; border-width: 1px; border-style: solid; }
-    .rename-form button[type="submit"] { background-color: var(--button-primary-bg-color); color: var(--button-primary-text-color); border-color: var(--button-primary-border-color); }
-    .rename-form button.secondary { background-color: var(--button-secondary-bg-color); color: var(--button-secondary-text-color); border-color: var(--button-secondary-border-color); }
+    /* Removed old .rename-form styles that were absolutely positioned on items */
+    /* New styles for the rename modal are covered by .modal and .modal-content */
 
     #upload-actions-container { display: none; padding: 10px 0; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
     #upload-actions-container button { margin: 0; }
@@ -409,7 +404,7 @@
     #share-modal .form-group input[type="checkbox"] {
         width: auto; vertical-align: middle;
     }
-    .link-actions-group { /* General for list view, grid view has its own more specific one */
+    .link-actions-group {
         display: flex;
         gap: 5px;
         align-items: center;
@@ -417,7 +412,6 @@
         padding-left: 10px;
         flex-shrink: 0;
     }
-    /* #file-container.grid-view .link-actions-group is defined above in the refined grid styles */
 </style>
 </head>
 <body>
@@ -667,7 +661,6 @@
                                                 } else if (['pdf'].includes(ext)) {
                                                     largeIcon = '📕'; iconClass = 'pdf-file-icon';
                                                 }
-                                                // Add more specific icons/classes as needed
                                             %>
                                             <span class="file-icon-large <%= iconClass %>"><%= largeIcon %></span>
                                             <% if (locals.viewMode === 'userShares') { %>
@@ -712,20 +705,7 @@
                                     <% } %>
                                 </div>
                             </div>
-                            <% if (locals.viewMode !== 'userShares') { %>
-                             <div class="rename-form" id="rename-form-<%= item.encodedName %>">
-                                <form action="/rename" method="POST" class="control-form inline-form">
-                                    <input type="hidden" name="currentPath" value="<%= locals.isSearchResult ? (item.path.substring(0, item.path.lastIndexOf('/')) || '/') : currentPath %>">
-                                    <input type="hidden" name="oldPath" value="<%= item.path %>">
-                                    <input type="hidden" name="isDir" value="<%= item.isDir %>">
-                                    <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %><input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>"><% } %>
-                                    <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                                    <input type="text" name="newName" placeholder="新名稱" value="<%= item.name %>" required>
-                                    <button type="submit">確認</button>
-                                    <button type="button" class="secondary" onclick="hideRenameForm('<%= item.encodedName %>'); return false;">取消</button>
-                                </form>
-                            </div>
-                            <% } %>
+                            <%# Removed the inline rename form from here %>
                         </li>
                     <% }) %>
                 </ul>
@@ -735,7 +715,7 @@
         </div>
     </div>
 
-    <div id="create-item-modal">
+    <div id="create-item-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal-btn" id="close-create-item-modal-btn">&times;</span>
             <h3 id="create-item-modal-title">创建新项目</h3>
@@ -757,7 +737,34 @@
         </div>
     </div>
 
-    <div id="move-modal">
+    <div id="rename-item-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="close-rename-item-modal-btn">&times;</span>
+            <h3>重命名項目</h3>
+            <form id="rename-item-form" action="/rename" method="POST">
+                <input type="hidden" name="currentPath" id="rename-current-path-input">
+                <input type="hidden" name="oldPath" id="rename-old-path-input">
+                <input type="hidden" name="isDir" id="rename-is-dir-input">
+                <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
+                    <input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>" id="rename-target-username-input">
+                <% } else { %>
+                    <input type="hidden" name="targetUsername" value="" id="rename-target-username-input">
+                <% } %>
+                <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
+                <div class="form-group">
+                    <label for="rename-new-name-input">新名稱:</label>
+                    <input type="text" id="rename-new-name-input" name="newName" placeholder="新名稱" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="secondary" id="cancel-rename-item-btn">取消</button>
+                    <button type="submit" id="confirm-rename-item-btn">確認</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="move-modal" class="modal">
         <div class="modal-content"> <span class="close-modal-btn" id="close-move-modal-btn">&times;</span>
             <h3>移動選中項目到:</h3>
             <div id="directory-tree-container">
@@ -771,7 +778,7 @@
         </div>
     </div>
 
-    <div id="overwrite-confirm-modal" class="modal" style="display:none; z-index: 1002;">
+    <div id="overwrite-confirm-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal-btn" id="close-overwrite-modal-btn">&times;</span>
             <h3>確認操作</h3>
@@ -783,7 +790,7 @@
         </div>
     </div>
 
-    <div id="video-player-modal">
+    <div id="video-player-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal-btn" id="close-video-modal-btn">&times;</span>
             <h3 id="video-modal-title" style="margin-bottom: 15px;">播放視頻</h3>
@@ -794,7 +801,7 @@
         </div>
     </div>
 
-    <div id="share-modal">
+    <div id="share-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal-btn" id="close-share-modal-btn">&times;</span>
             <h3>創建公開分享連結</h3>
@@ -822,7 +829,7 @@
         </div>
     </div>
 
-    <div id="public-link-display-modal">
+    <div id="public-link-display-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal-btn" id="close-public-link-display-modal-btn">&times;</span>
             <h3 id="public-link-modal-title">公開連結</h3>
@@ -837,7 +844,7 @@
         </div>
     </div>
 
-    <div id="existing-links-modal" style="display:none;">
+    <div id="existing-links-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal-btn" id="close-existing-links-modal-btn">&times;</span>
             <h3>項目 "<span id="existing-links-item-name"></span>" 的已分享連結</h3>
@@ -853,7 +860,7 @@
 
     <script src="/theme.js"></script>
     <script>
-        // All JavaScript remains the same as your provided version
+        // --- Constants and Global Variables (remains mostly the same) ---
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
         const ALLOWED_VIDEO_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_VIDEO_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
@@ -868,6 +875,7 @@
 
 
         document.addEventListener('DOMContentLoaded', () => {
+            // --- Existing DOM Element selections (remains mostly the same) ---
             const fileContainer = document.getElementById('file-container');
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const selectAllContainer = document.getElementById('select-all-container');
@@ -875,14 +883,13 @@
             const selectionCountDisplay = document.getElementById('selection-count');
             const actionPlayBtn = document.getElementById('action-play-btn');
             const actionEditBtn = document.getElementById('action-edit-btn');
-            const actionRenameBtn = document.getElementById('action-rename-btn');
+            const actionRenameBtn = document.getElementById('action-rename-btn'); // This button will now open the modal
             const actionMoveBtn = document.getElementById('action-move-btn');
             const actionShareBtn = document.getElementById('action-share-btn');
             const actionViewExistingLinksBtn = document.getElementById('action-view-existing-links-btn');
             const actionDownloadBtn = document.getElementById('action-download-btn');
             const actionDeleteBtn = document.getElementById('action-delete-btn');
 
-            // For Public Links View
             const selectAllPublicLinksCheckbox = document.getElementById('select-all-public-links-checkbox');
             const selectAllPublicLinksContainer = document.getElementById('select-all-public-links-container');
             const publicLinkSelectionActionBar = document.getElementById('public-link-selection-action-bar');
@@ -946,14 +953,25 @@
             const publicLinkModalTitle = document.getElementById('public-link-modal-title');
             const publicLinkModalMessage = document.getElementById('public-link-modal-message');
 
-
             const existingLinksModal = document.getElementById('existing-links-modal');
             const closeExistingLinksModalBtn = document.getElementById('close-existing-links-modal-btn');
             const doneExistingLinksBtn = document.getElementById('done-existing-links-btn');
             const existingLinksItemNameSpan = document.getElementById('existing-links-item-name');
             const existingLinksListContainer = document.getElementById('existing-links-list-container');
 
+            // --- NEW: Rename Modal Elements ---
+            const renameItemModal = document.getElementById('rename-item-modal');
+            const closeRenameItemModalBtn = document.getElementById('close-rename-item-modal-btn');
+            const cancelRenameItemBtn = document.getElementById('cancel-rename-item-btn');
+            const renameItemForm = document.getElementById('rename-item-form');
+            const renameNewNameInput = document.getElementById('rename-new-name-input');
+            const renameOldPathInput = document.getElementById('rename-old-path-input');
+            const renameCurrentPathInput = document.getElementById('rename-current-path-input');
+            const renameIsDirInput = document.getElementById('rename-is-dir-input');
+            const renameTargetUsernameInput = document.getElementById('rename-target-username-input'); // For admin context
 
+
+            // --- Functions (clearSingleSelection, updateMultiSelectModeUI, etc. remain mostly the same) ---
             function clearSingleSelection() {
                 if (currentSingleSelectedItem && currentSingleSelectedItem.element) {
                     currentSingleSelectedItem.element.classList.remove('single-selected-item');
@@ -963,9 +981,7 @@
 
             function updateMultiSelectModeUI() {
                 if (!fileContainer || !toggleMultiSelectBtn) return;
-
                 const isUserSharesView = CURRENT_VIEW_MODE === 'userShares';
-
                 if (multiSelectModeActive) {
                     clearSingleSelection();
                     fileContainer.classList.add('multi-select-mode-active');
@@ -980,7 +996,6 @@
                     toggleMultiSelectBtn.textContent = '啟用多選';
                     if (selectAllContainer) selectAllContainer.classList.remove('visible-in-multiselect');
                     if (selectAllPublicLinksContainer) selectAllPublicLinksContainer.classList.remove('visible-in-multiselect');
-
                     document.querySelectorAll('.item-checkbox:checked, .public-link-checkbox:checked').forEach(cb => cb.checked = false);
                     if (selectAllCheckbox) selectAllCheckbox.checked = false;
                     if (selectAllPublicLinksCheckbox) selectAllPublicLinksCheckbox.checked = false;
@@ -1022,7 +1037,6 @@
                 return selectedIds;
             }
 
-
             async function updateSelectionActions() {
                  if (CURRENT_VIEW_MODE === 'userShares' || !selectionActionBar) {
                     if(selectionActionBar) selectionActionBar.style.display = 'none';
@@ -1034,7 +1048,6 @@
                 let isSingleFilePlayableVideo = false;
                 let isSingleItemSharable = false;
                 let hasExistingShares = false;
-
 
                 if (multiSelectModeActive) {
                     const checkboxSelectedItems = getCheckboxSelectedItems();
@@ -1064,7 +1077,6 @@
                                 hasExistingShares = true;
                             }
                         } catch (e) { /* Error checking existing shares, button remains hidden/disabled */ }
-
                     }
                 } else if (currentSingleSelectedItem) {
                     count = 1;
@@ -1103,7 +1115,7 @@
 
                 if(actionPlayBtn) actionPlayBtn.disabled = !(count === 1 && isSingleFilePlayableVideo);
                 if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable);
-                if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
+                if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1); // Rename button logic will change
                 if(actionMoveBtn) actionMoveBtn.disabled = !(count > 0);
                 if(actionShareBtn) actionShareBtn.disabled = !(count === 1 && isSingleItemSharable);
                 if(actionViewExistingLinksBtn) {
@@ -1131,7 +1143,6 @@
                     if(actionRevokeSelectedLinksBtn) actionRevokeSelectedLinksBtn.disabled = true;
                 }
             }
-
 
             document.querySelectorAll('#file-container .item-checkbox').forEach((checkbox) => {
                 checkbox.addEventListener('change', () => {
@@ -1183,7 +1194,6 @@
                 });
             }
 
-
             if (fileContainer) {
                 fileContainer.querySelectorAll('ul > li .file-entry-selectable').forEach(contentWrapper => {
                     contentWrapper.addEventListener('click', async (event) => {
@@ -1205,10 +1215,12 @@
                         const checkbox = listItem.querySelector('.item-checkbox');
                         if (!checkbox) return;
 
+                        // Prevent selection if clicking on links, video links, or the checkbox itself
                         if (event.target.classList.contains('video-link') || event.target.closest('.video-link') ||
                             event.target.tagName === 'A' || event.target.closest('a') ||
-                            event.target.classList.contains('item-checkbox') ||
-                            event.target.closest('.rename-form')) {
+                            event.target.classList.contains('item-checkbox')
+                            /* Removed: || event.target.closest('.rename-form') */ // No longer applicable
+                            ) {
                             return;
                         }
 
@@ -1246,6 +1258,66 @@
                     }
                 });
             }
+
+            // --- RENAME MODAL LOGIC ---
+            function openRenameModal(item) {
+                if (!renameItemModal || !renameItemForm || !renameNewNameInput || !renameOldPathInput || !renameCurrentPathInput || !renameIsDirInput) return;
+
+                renameOldPathInput.value = item.path;
+                renameNewNameInput.value = item.name; // Use raw name for editing
+                renameIsDirInput.value = item.isDir;
+
+                if (IS_SEARCH_RESULT_VIEW) {
+                    renameCurrentPathInput.value = item.path.substring(0, item.path.lastIndexOf('/')) || '/';
+                } else {
+                    renameCurrentPathInput.value = CURRENT_PATH_ON_LOAD;
+                }
+
+                if (renameTargetUsernameInput) { // Handle admin context
+                     renameTargetUsernameInput.value = (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) ? VIEW_CONTEXT_USER_USERNAME : '';
+                }
+
+
+                renameItemModal.style.display = 'block';
+                renameNewNameInput.focus();
+                if (!item.isDir && item.name.includes('.')) {
+                    const dotIndex = item.name.lastIndexOf('.');
+                    renameNewNameInput.setSelectionRange(0, dotIndex);
+                } else {
+                    renameNewNameInput.select();
+                }
+            }
+
+            if (actionRenameBtn) {
+                actionRenameBtn.addEventListener('click', () => {
+                    if (actionRenameBtn.disabled) return;
+                    let itemToRename = null;
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemToRename = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1) itemToRename = selected[0];
+                    }
+                    if (itemToRename) {
+                        openRenameModal(itemToRename);
+                    }
+                });
+            }
+
+            if (closeRenameItemModalBtn) {
+                closeRenameItemModalBtn.onclick = () => {
+                    if (renameItemModal) renameItemModal.style.display = 'none';
+                };
+            }
+            if (cancelRenameItemBtn) {
+                cancelRenameItemBtn.onclick = () => {
+                    if (renameItemModal) renameItemModal.style.display = 'none';
+                };
+            }
+            // The renameItemForm submission will be handled by its default form submission behavior.
+
+            // --- Other event listeners and functions (video player, share, delete, move, upload etc.) remain largely the same ---
+            // (Make sure to remove or adapt the old showRenameForm and hideRenameForm functions if they exist)
 
             document.querySelectorAll('.video-link').forEach(link => {
                 link.addEventListener('click', function(event) {
@@ -1293,22 +1365,6 @@
                             url += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
                         }
                         window.location.href = url;
-                    }
-                });
-            }
-
-            if (actionRenameBtn) {
-                actionRenameBtn.addEventListener('click', () => {
-                    if (actionRenameBtn.disabled) return;
-                    let itemToRename = null;
-                     if (!multiSelectModeActive && currentSingleSelectedItem) {
-                        itemToRename = currentSingleSelectedItem;
-                    } else if (multiSelectModeActive) {
-                        const selected = getCheckboxSelectedItems();
-                        if (selected.length === 1) itemToRename = selected[0];
-                    }
-                    if (itemToRename) {
-                        showRenameForm(itemToRename.encodedName, itemToRename.name, itemToRename.isDir);
                     }
                 });
             }
@@ -1847,7 +1903,6 @@
                 if(doneExistingLinksBtn) doneExistingLinksBtn.onclick = () => existingLinksModal.style.display = 'none';
             }
 
-            // Event listener for "View" buttons in the "My Public Links" section
             document.querySelectorAll('.view-public-link-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const publicUrl = this.dataset.url;
@@ -2279,6 +2334,7 @@
 
             window.addEventListener('click', (event) => {
                 if (event.target == createItemModal) createItemModal.style.display = 'none';
+                if (event.target == renameItemModal) renameItemModal.style.display = 'none'; // Close rename modal on outside click
                 if (event.target == moveModal) moveModal.style.display = 'none';
                 if (event.target == overwriteModal) {
                     const abandonButton = overwriteModal.querySelector('#overwrite-abandon-btn');
@@ -2302,45 +2358,8 @@
 
         });
 
-        function showRenameForm(encodedName, currentName, isDir) {
-            document.querySelectorAll('.rename-form').forEach(form => {
-                if (form.id !== 'rename-form-' + encodedName) {
-                    form.style.display = 'none';
-                }
-            });
-
-            const formContainer = document.getElementById('rename-form-' + encodedName);
-            if (formContainer) {
-                const isCurrentlyVisible = formContainer.style.display === 'block';
-                formContainer.style.display = isCurrentlyVisible ? 'none' : 'block';
-
-                if (!isCurrentlyVisible) {
-                    const inputField = formContainer.querySelector('input[name="newName"]');
-                    if (inputField) {
-                        inputField.value = currentName;
-                        inputField.focus();
-                        if (!isDir && currentName.includes('.')) {
-                            const dotIndex = currentName.lastIndexOf('.');
-                            inputField.setSelectionRange(0, dotIndex);
-                        } else {
-                            inputField.select();
-                        }
-                    }
-                    const currentPathInput = formContainer.querySelector('input[name="currentPath"]');
-                    const oldPathInput = formContainer.querySelector('input[name="oldPath"]');
-                    if (currentPathInput && oldPathInput && IS_SEARCH_RESULT_VIEW) {
-                         const itemOriginalPath = oldPathInput.value;
-                         currentPathInput.value = itemOriginalPath.substring(0, itemOriginalPath.lastIndexOf('/')) || '/';
-                    } else if (currentPathInput) {
-                        currentPathInput.value = CURRENT_PATH_ON_LOAD;
-                    }
-                }
-            }
-        }
-        function hideRenameForm(encodedName) {
-            const form = document.getElementById('rename-form-' + encodedName);
-            if (form) form.style.display = 'none';
-        }
+        // Removed old showRenameForm and hideRenameForm functions
+        // The logic is now in openRenameModal and the modal's own close buttons
     </script>
 </body>
 </html>
