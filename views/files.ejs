@@ -197,113 +197,118 @@
     #directory-tree-container li { padding: 5px 0; cursor: pointer; border-bottom: 1px dashed var(--input-border-color); }
     #directory-tree-container li:last-child { border-bottom: none; }
     #directory-tree-container li:hover { background-color: var(--hover-bg); }
-    /* .dark-theme #directory-tree-container li:hover { --hover-bg: #4a4a4a; } */ /* Handled by general var(--hover-bg) in .dark-theme */
     #directory-tree-container li.selected-dir { background-color: #007bff; color: white; }
     .dark-theme #directory-tree-container li.selected-dir { background-color: #0056b3; }
 
 
     .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
 
-    /* === Grid View Styles - MODIFIED START === */
+    /* === Grid View Styles - REFINED START === */
     #file-container.grid-view ul {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Slightly smaller min width for items */
-        gap: 10px; /* Reduced gap */
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); /* Can make items a bit narrower */
+        gap: 10px;
         list-style-type: none; padding: 0; margin: 0;
     }
+
     #file-container.grid-view li {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start; /* Changed from space-between to allow natural height */
-        padding: 8px; /* Reduced padding */
+        justify-content: center; /* Center content vertically */
+        text-align: center;
+        padding: 8px; /* Controls space from content to border */
         border-radius: 6px;
         position: relative;
-        min-height: auto; /* Changed from 130px to allow content to define height */
+        /* aspect-ratio: 1 / 1; /* Enforces squareness, content might overflow */
+        /* Instead of aspect-ratio, let's use min-height and careful content sizing */
+        min-height: 110px; /* Adjust this to be close to the minmax width for a square feel */
+        /* max-width: 120px; /* Optional: if you want to cap width even more */
         background-color: var(--input-bg-color);
         border: 1px solid var(--input-border-color);
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Added subtle shadow */
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        overflow: hidden; /* Important if content could exceed box size */
     }
+
     .dark-theme #file-container.grid-view li {
-        background-color: #3a3a3a; /* Adjusted dark theme background for grid items */
-        border-color: #555; /* Adjusted dark theme border for grid items */
+        background-color: #3a3a3a;
+        border-color: #555;
         box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
 
-    #file-container.grid-view li .file-entry-selectable { /* Wrapper for checkbox and content-wrapper */
+    #file-container.grid-view li .file-entry-selectable {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start; /* Changed from center */
+        justify-content: center; /* Vertically center icon and name within this wrapper */
         width: 100%;
-        flex-grow: 1; /* Allow it to take space */
+        height: 100%; /* Ensure it tries to fill the li */
     }
 
-    /* .file-content-wrapper in grid view is already flex-column, justify-start, align-center */
-
-    .grid-view .file-entry { /* This div contains icon and name */
+    .grid-view .file-entry { /* Contains icon and name */
         display: flex;
         flex-direction: column;
-        justify-content: center; /* Keep content centered vertically within this block */
-        align-items: center;
-        text-align: center;
-        gap: 0px; /* Reduced gap, spacing controlled by icon margin */
-        width: 100%;
-        /* margin-bottom: auto; */ /* Removed, as li justify-content is flex-start */
-    }
-    .grid-view .file-icon-large {
-        font-size: 2.5em; /* Reduced icon size */
-        line-height: 1;
-        display: flex; /* Kept for alignment if needed */
         justify-content: center;
         align-items: center;
-        min-height: auto; /* Let font-size and line-height control this */
-        margin-bottom: 2px; /* Reduced space between icon and filename */
-        /* Color for folder/file icons will be applied by specific classes from style.css or EJS logic */
+        gap: 0; /* Use margins on children for spacing */
+        width: 100%;
+        flex-grow: 1; /* Allow this to take available space if li is taller */
+        padding-top: 4px; /* Small space at the top of this block */
     }
+
+    .grid-view .file-icon-large {
+        font-size: 3.5em; /* Maintained original icon size */
+        line-height: 1;
+        margin-bottom: 4px; /* Space between icon and filename */
+        flex-shrink: 0; /* Prevent icon from shrinking */
+    }
+
     .grid-view .file-name {
         font-size: 0.8em;
-        line-height: 1.3;
-        word-break: break-all; /* Changed from break-word for better wrapping */
+        line-height: 1.25; /* Slightly adjusted for 2 lines */
+        word-break: break-all;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 100%;
-        min-height: calc(0.8em * 1.3 * 2); /* approx height for 2 lines */
-        margin-bottom: 4px; /* Space before actions if any */
-        color: var(--input-text-color); /* Ensure text color from variable */
+        max-width: calc(100% - 4px); /* Prevent touching edges */
+        min-height: calc(0.8em * 1.25 * 2); /* Approx height for 2 lines */
+        margin-bottom: 6px; /* Space before actions */
+        color: var(--input-text-color);
+        flex-shrink: 0;
     }
     .dark-theme .grid-view .file-name {
         color: var(--input-text-color);
     }
 
-
     #file-container.grid-view.multi-select-mode-active .item-checkbox,
     #file-container.grid-view.multi-select-mode-active .public-link-checkbox {
         position: absolute;
-        top: 5px;
-        left: 5px;
+        top: 6px;
+        left: 6px;
         margin-bottom: 0;
     }
 
     .grid-view .link-actions-group { /* For 'userShares' view items */
         display: flex;
         justify-content: center;
-        gap: 5px;
-        width: calc(100% - 8px); /* Account for li padding */
+        align-items: center; /* Vertically align buttons if they wrap */
+        gap: 4px;
+        width: 100%;
         margin-top: auto; /* Pushes this to the bottom of the li */
-        padding-top: 6px; /* Space above actions */
-        flex-wrap: wrap; /* Allow actions to wrap if too many */
+        padding-top: 4px;
+        padding-bottom: 2px; /* Small space at the very bottom */
+        flex-wrap: wrap;
+        flex-shrink: 0;
     }
     .grid-view .link-actions-group .action-button-small,
     .grid-view .link-actions-group .revoke-single-link-form button {
         font-size: 0.7em;
-        padding: 3px 6px;
+        padding: 3px 5px; /* Slightly adjusted padding */
         white-space: nowrap;
     }
-    /* === Grid View Styles - MODIFIED END === */
+    /* === Grid View Styles - REFINED END === */
 
 
     #select-all-container, #select-all-public-links-container {
@@ -412,7 +417,7 @@
         padding-left: 10px;
         flex-shrink: 0;
     }
-    /* #file-container.grid-view .link-actions-group is defined above in the modified grid styles */
+    /* #file-container.grid-view .link-actions-group is defined above in the refined grid styles */
 </style>
 </head>
 <body>
@@ -647,15 +652,24 @@
                                         <div class="file-entry">
                                             <%
                                                 const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
-                                                let largeIcon = '📄';
-                                                let isViewableTextFile = false;
-                                                if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
-                                                    isViewableTextFile = true; largeIcon = '📝';
-                                                } else if (item.isPlayableVideo) { largeIcon = '🎥'; }
-                                                else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) { largeIcon = '🖼️'; }
-                                                else if (['pdf'].includes(ext)) { largeIcon = '📕';}
+                                                let largeIcon = '📄'; // Default icon
+                                                let iconClass = 'file-icon'; // Default class for general files
+
+                                                if (item.isDir) { // This case is handled above, but for completeness
+                                                    largeIcon = '📁';
+                                                    iconClass = 'folder-icon';
+                                                } else if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
+                                                    largeIcon = '📝'; iconClass = 'text-file-icon';
+                                                } else if (item.isPlayableVideo) {
+                                                    largeIcon = '🎥'; iconClass = 'video-file-icon';
+                                                } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) {
+                                                    largeIcon = '🖼️'; iconClass = 'image-file-icon';
+                                                } else if (['pdf'].includes(ext)) {
+                                                    largeIcon = '📕'; iconClass = 'pdf-file-icon';
+                                                }
+                                                // Add more specific icons/classes as needed
                                             %>
-                                            <span class="file-icon-large"><%= largeIcon %></span>
+                                            <span class="file-icon-large <%= iconClass %>"><%= largeIcon %></span>
                                             <% if (locals.viewMode === 'userShares') { %>
                                                 <span class="file-name"><%= item.name %></span>
                                             <% } else if (item.isPlayableVideo) { %>
@@ -664,7 +678,7 @@
                                                    data-name="<%= item.name %>"
                                                    data-type="<%= item.videoType %>"
                                                    title="點擊播放 <%= item.name %>"><%= item.name %></a>
-                                            <% } else if (isViewableTextFile) { %>
+                                            <% } else if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) { %>
                                                 <a href="/view?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name" title="點擊查看"><%= item.name %></a>
                                             <% } else { %>
                                                 <span class="file-name"><%= item.name %></span>
@@ -839,6 +853,7 @@
 
     <script src="/theme.js"></script>
     <script>
+        // All JavaScript remains the same as your provided version
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
         const ALLOWED_VIDEO_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_VIDEO_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
