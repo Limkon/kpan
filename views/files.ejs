@@ -21,8 +21,6 @@
         --modal-bg: #ffffff;
         --modal-text-color: #333;
         --modal-border-color: #888;
-        /* --rename-form-bg: #ffffff; */ /* Removed as rename form is now a modal */
-        /* --rename-form-border-color: #cccccc; */ /* Removed */
         --video-modal-bg: #1c1c1c;
         --video-modal-text-color: #f1f1f1;
         --video-modal-border-color: #333;
@@ -53,8 +51,6 @@
         --modal-bg: #2c2c2c;
         --modal-text-color: #e0e0e0;
         --modal-border-color: #555;
-        /* --rename-form-bg: #3a3a3a; */ /* Removed */
-        /* --rename-form-border-color: #555; */ /* Removed */
         --video-modal-bg: #2a2a2a;
         --video-modal-text-color: #e0e0e0;
         --video-modal-border-color: #444;
@@ -134,13 +130,12 @@
     .dark-theme .list-view li.single-selected-item > .file-entry-selectable,
     .dark-theme .grid-view li.single-selected-item { background-color: #404040; }
 
-    /* General Modal Styles (used by rename modal too) */
-    .modal { /* Added a general .modal class */
+    .modal {
         display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
         overflow: auto; background-color: rgba(0,0,0,0.5);
     }
-    #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal, #share-modal, #public-link-display-modal, #existing-links-modal, #rename-item-modal { /* Added #rename-item-modal */
-        /* Inherits .modal styles now */
+    #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal, #share-modal, #public-link-display-modal, #existing-links-modal, #rename-item-modal {
+        /* Inherits .modal styles */
     }
     .modal-content { background-color: var(--modal-bg) !important; color: var(--modal-text-color); margin: 10% auto; padding: 20px; border: 1px solid var(--modal-border-color); border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     .modal-content h3 { margin-top: 0; }
@@ -183,7 +178,7 @@
         color: var(--button-primary-text-color);
         cursor: pointer;
         box-sizing: border-box;
-        height: calc(20px + 2*10px + 2*1px); /* Matches input height */
+        height: calc(20px + 2*10px + 2*1px);
     }
     #copy-public-link-btn:hover { opacity: 0.9; }
     .public-link-container { display: flex; align-items: center; margin-top: 10px; }
@@ -291,24 +286,33 @@
         margin-bottom: 0;
     }
 
-    .grid-view .link-actions-group {
+    .grid-view .link-actions-group { /* For 'userShares' view items */
         display: flex;
-        justify-content: center;
+        justify-content: center; /* Center the buttons horizontally */
         align-items: center;
-        gap: 4px;
-        width: 100%;
+        gap: 5px; /* Space between buttons */
+        width: 100%; /* Take full width to allow centering */
         margin-top: auto;
         padding-top: 4px;
-        padding-bottom: 2px;
-        flex-wrap: wrap;
+        padding-bottom: 4px; /* Added padding at the bottom */
+        flex-wrap: nowrap; /* Prevent buttons from wrapping to ensure they stay in one line */
         flex-shrink: 0;
+        box-sizing: border-box; /* Include padding in width calculation */
     }
     .grid-view .link-actions-group .action-button-small,
+    .grid-view .link-actions-group .revoke-single-link-form, /* Target the form for flex properties */
     .grid-view .link-actions-group .revoke-single-link-form button {
         font-size: 0.7em;
-        padding: 3px 5px;
+        padding: 4px 8px; /* Increased padding for better touch target and appearance */
         white-space: nowrap;
+        flex-grow: 0; /* Prevent buttons from growing */
+        flex-shrink: 0; /* Prevent buttons from shrinking excessively */
+        margin: 0 2px; /* Small margin between items if needed */
     }
+    .grid-view .link-actions-group .revoke-single-link-form {
+        display: inline-flex; /* Make form behave like a button for flex layout */
+    }
+
     /* === Grid View Styles - REFINED END === */
 
 
@@ -333,9 +337,6 @@
         margin-left: 5px;
         font-weight: normal;
     }
-
-    /* Removed old .rename-form styles that were absolutely positioned on items */
-    /* New styles for the rename modal are covered by .modal and .modal-content */
 
     #upload-actions-container { display: none; padding: 10px 0; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
     #upload-actions-container button { margin: 0; }
@@ -404,7 +405,7 @@
     #share-modal .form-group input[type="checkbox"] {
         width: auto; vertical-align: middle;
     }
-    .link-actions-group {
+    .link-actions-group { /* General for list view */
         display: flex;
         gap: 5px;
         align-items: center;
@@ -646,10 +647,10 @@
                                         <div class="file-entry">
                                             <%
                                                 const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
-                                                let largeIcon = '📄'; // Default icon
-                                                let iconClass = 'file-icon'; // Default class for general files
+                                                let largeIcon = '📄';
+                                                let iconClass = 'file-icon';
 
-                                                if (item.isDir) { // This case is handled above, but for completeness
+                                                if (item.isDir) {
                                                     largeIcon = '📁';
                                                     iconClass = 'folder-icon';
                                                 } else if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
@@ -705,7 +706,6 @@
                                     <% } %>
                                 </div>
                             </div>
-                            <%# Removed the inline rename form from here %>
                         </li>
                     <% }) %>
                 </ul>
@@ -860,7 +860,8 @@
 
     <script src="/theme.js"></script>
     <script>
-        // --- Constants and Global Variables (remains mostly the same) ---
+        // JavaScript code remains the same as in your previous version
+        // Ensure the new rename modal elements are selected and handled correctly
         const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
         const ALLOWED_VIDEO_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_VIDEO_EXTENSIONS || []) %>;
         const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
@@ -875,7 +876,6 @@
 
 
         document.addEventListener('DOMContentLoaded', () => {
-            // --- Existing DOM Element selections (remains mostly the same) ---
             const fileContainer = document.getElementById('file-container');
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const selectAllContainer = document.getElementById('select-all-container');
@@ -883,7 +883,7 @@
             const selectionCountDisplay = document.getElementById('selection-count');
             const actionPlayBtn = document.getElementById('action-play-btn');
             const actionEditBtn = document.getElementById('action-edit-btn');
-            const actionRenameBtn = document.getElementById('action-rename-btn'); // This button will now open the modal
+            const actionRenameBtn = document.getElementById('action-rename-btn');
             const actionMoveBtn = document.getElementById('action-move-btn');
             const actionShareBtn = document.getElementById('action-share-btn');
             const actionViewExistingLinksBtn = document.getElementById('action-view-existing-links-btn');
@@ -959,7 +959,6 @@
             const existingLinksItemNameSpan = document.getElementById('existing-links-item-name');
             const existingLinksListContainer = document.getElementById('existing-links-list-container');
 
-            // --- NEW: Rename Modal Elements ---
             const renameItemModal = document.getElementById('rename-item-modal');
             const closeRenameItemModalBtn = document.getElementById('close-rename-item-modal-btn');
             const cancelRenameItemBtn = document.getElementById('cancel-rename-item-btn');
@@ -968,10 +967,9 @@
             const renameOldPathInput = document.getElementById('rename-old-path-input');
             const renameCurrentPathInput = document.getElementById('rename-current-path-input');
             const renameIsDirInput = document.getElementById('rename-is-dir-input');
-            const renameTargetUsernameInput = document.getElementById('rename-target-username-input'); // For admin context
+            const renameTargetUsernameInput = document.getElementById('rename-target-username-input');
 
 
-            // --- Functions (clearSingleSelection, updateMultiSelectModeUI, etc. remain mostly the same) ---
             function clearSingleSelection() {
                 if (currentSingleSelectedItem && currentSingleSelectedItem.element) {
                     currentSingleSelectedItem.element.classList.remove('single-selected-item');
@@ -1115,7 +1113,7 @@
 
                 if(actionPlayBtn) actionPlayBtn.disabled = !(count === 1 && isSingleFilePlayableVideo);
                 if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable);
-                if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1); // Rename button logic will change
+                if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
                 if(actionMoveBtn) actionMoveBtn.disabled = !(count > 0);
                 if(actionShareBtn) actionShareBtn.disabled = !(count === 1 && isSingleItemSharable);
                 if(actionViewExistingLinksBtn) {
@@ -1215,11 +1213,9 @@
                         const checkbox = listItem.querySelector('.item-checkbox');
                         if (!checkbox) return;
 
-                        // Prevent selection if clicking on links, video links, or the checkbox itself
                         if (event.target.classList.contains('video-link') || event.target.closest('.video-link') ||
                             event.target.tagName === 'A' || event.target.closest('a') ||
                             event.target.classList.contains('item-checkbox')
-                            /* Removed: || event.target.closest('.rename-form') */ // No longer applicable
                             ) {
                             return;
                         }
@@ -1259,12 +1255,11 @@
                 });
             }
 
-            // --- RENAME MODAL LOGIC ---
             function openRenameModal(item) {
                 if (!renameItemModal || !renameItemForm || !renameNewNameInput || !renameOldPathInput || !renameCurrentPathInput || !renameIsDirInput) return;
 
                 renameOldPathInput.value = item.path;
-                renameNewNameInput.value = item.name; // Use raw name for editing
+                renameNewNameInput.value = item.name;
                 renameIsDirInput.value = item.isDir;
 
                 if (IS_SEARCH_RESULT_VIEW) {
@@ -1273,10 +1268,9 @@
                     renameCurrentPathInput.value = CURRENT_PATH_ON_LOAD;
                 }
 
-                if (renameTargetUsernameInput) { // Handle admin context
+                if (renameTargetUsernameInput) {
                      renameTargetUsernameInput.value = (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) ? VIEW_CONTEXT_USER_USERNAME : '';
                 }
-
 
                 renameItemModal.style.display = 'block';
                 renameNewNameInput.focus();
@@ -1310,14 +1304,12 @@
                 };
             }
             if (cancelRenameItemBtn) {
-                cancelRenameItemBtn.onclick = () => {
+                cancelRenameItemBtn.onclick = (e) => { // Added event parameter
+                    e.preventDefault(); // Prevent form submission if it's a button inside a form
                     if (renameItemModal) renameItemModal.style.display = 'none';
                 };
             }
-            // The renameItemForm submission will be handled by its default form submission behavior.
 
-            // --- Other event listeners and functions (video player, share, delete, move, upload etc.) remain largely the same ---
-            // (Make sure to remove or adapt the old showRenameForm and hideRenameForm functions if they exist)
 
             document.querySelectorAll('.video-link').forEach(link => {
                 link.addEventListener('click', function(event) {
@@ -2334,7 +2326,7 @@
 
             window.addEventListener('click', (event) => {
                 if (event.target == createItemModal) createItemModal.style.display = 'none';
-                if (event.target == renameItemModal) renameItemModal.style.display = 'none'; // Close rename modal on outside click
+                if (event.target == renameItemModal) renameItemModal.style.display = 'none';
                 if (event.target == moveModal) moveModal.style.display = 'none';
                 if (event.target == overwriteModal) {
                     const abandonButton = overwriteModal.querySelector('#overwrite-abandon-btn');
@@ -2357,9 +2349,6 @@
             updatePublicLinkSelectionActions();
 
         });
-
-        // Removed old showRenameForm and hideRenameForm functions
-        // The logic is now in openRenameModal and the modal's own close buttons
     </script>
 </body>
 </html>
