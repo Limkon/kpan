@@ -1821,28 +1821,34 @@ app.get('/admin/delete/:userId', isAuthenticated, isAdmin, async (req, res) => {
 app.use((req, res, next) => { 
     res.status(404).render('error', { user: req.session.user, message: '找不到頁面 (404)。', csrfToken: res.locals.csrfToken });
 });
-app.use((err, req, res, next) => { 
-    const usernameForLog = req.session.user ? req.session.user.username : '未認證用戶';
-    console.error(`[${usernameForLog}] 全局錯誤處理: ${req.method} ${req.originalUrl}`, err.stack || err.message || err);
-
-    let publicMessage = '伺服器內部錯誤 (500)。';
-    if (process.env.NODE_ENV !== 'production' && err.message) publicMessage = err.message; 
-    if (err.publicMessage) publicMessage = err.publicMessage; 
-
-    if (err instanceof actualMulter.MulterError) { 
-        publicMessage = `上傳錯誤: ${err.message}`;
-        if (err.code === 'LIMIT_FILE_SIZE') publicMessage = '文件大小超過限制。';
-        if (err.code === 'LIMIT_UNEXPECTED_FILE') publicMessage = '上傳了非預期的文件欄位。';
-    } else if (err.code === 'USER_QUOTA_EXCEEDED' || err.code === 'QUOTA_CHECK_ERROR' || err.code === 'INVALID_TARGET_USERNAME_UPLOAD') {
-        publicMessage = err.message; 
-    }
-
-    if (res.headersSent) return next(err); 
-    res.status(err.status || 500).render('error', {
-        user: req.session.user, message: publicMessage, csrfToken: res.locals.csrfToken
-    });
+app.use((req, res, next) => {
+    // 404 處理器中也需要安全地訪問 req.session.user
+    res.status(404).render('error', { user: req.session?.user, message: '找不到頁面 (404)。', csrfToken: res.locals.csrfToken });
 });
 
+app.use((err, req, res, next) => {
+    // 使用可選鏈 (?.) 安全地訪問 req.session 和 req.session.user
+    const usernameForLog = req.session?.user?.username || '未認證用戶';
+    console.error(`[${usernameForLog}] 全局錯誤處理: ${req.method} ${req.originalUrl}`, err.stack || err.message || err);
+
+    let publicMessage = '伺服器內部錯誤 (500)。';
+    if (process.env.NODE_ENV !== 'production' && err.message) publicMessage = err.message;
+    if (err.publicMessage) publicMessage = err.publicMessage;
+
+    if (err instanceof actualMulter.MulterError) {
+        publicMessage = `上傳錯誤: ${err.message}`;
+        if (err.code === 'LIMIT_FILE_SIZE') publicMessage = '文件大小超過限制。';
+        if (err.code === 'LIMIT_UNEXPECTED_FILE') publicMessage = '上傳了非預期的文件欄位。';
+    } else if (err.code === 'USER_QUOTA_EXCEEDED' || err.code === 'QUOTA_CHECK_ERROR' || err.code === 'INVALID_TARGET_USERNAME_UPLOAD') {
+        publicMessage = err.message;
+    }
+
+    if (res.headersSent) return next(err);
+    res.status(err.status || 500).render('error', {
+        // 在渲染錯誤頁面時，同樣需要安全地傳遞 user 對象
+        user: req.session?.user, message: publicMessage, csrfToken: res.locals.csrfToken
+    });
+});
 app.listen(port, () => {
     console.log(`伺服器運行在 http://localhost:${port}`);
     console.log("注意: 資料庫遷移邏輯會在首次查詢或操作 'public_links' 表之前異步執行。");
