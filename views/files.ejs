@@ -393,9 +393,9 @@
         opacity: 0.9;
     }
     .dark-theme .action-button-small, .dark-theme a.action-button-small {
-         border-color: var(--button-secondary-border-color);
-         background-color: var(--button-secondary-bg-color);
-         color: var(--button-secondary-text-color);
+          border-color: var(--button-secondary-border-color);
+          background-color: var(--button-secondary-bg-color);
+          color: var(--button-secondary-text-color);
     }
 
     #share-modal .form-group label[for="share-allow-download"],
@@ -456,11 +456,11 @@
         <div class="nav-tabs">
             <a href="/files<%= locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '?targetUsername=' + encodeURIComponent(viewContextUser.username) : '' %>"
                class="nav-link <%= (!locals.viewMode || locals.viewMode === 'myfiles') ? 'active' : '' %>" target="_self">
-               我的文件
+                我的文件
             </a>
             <a href="/files?viewMode=userShares<%= locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : '' %>"
                class="nav-link <%= locals.viewMode === 'userShares' ? 'active' : '' %>" target="_self">
-               我的公開連結
+                我的公開連結
             </a>
         </div>
 
@@ -1495,9 +1495,9 @@
                             window.location.reload();
                         } else {
                              clearSingleSelection();
-                            if(selectAllCheckbox) selectAllCheckbox.checked = false;
-                            document.querySelectorAll('#file-container .item-checkbox').forEach(cb => cb.checked = false);
-                            updateSelectionActions();
+                             if(selectAllCheckbox) selectAllCheckbox.checked = false;
+                             document.querySelectorAll('#file-container .item-checkbox').forEach(cb => cb.checked = false);
+                             updateSelectionActions();
                         }
                     }
                 });
@@ -1559,25 +1559,35 @@
                         const isMovingThisDirOrChild = itemsBeingMoved.some(movedItem =>
                             movedItem.isDir && (dirNode.path === movedItem.path || dirNode.path.startsWith(movedItem.path + '/'))
                         );
-                        const isCurrentParent = itemsBeingMoved.every(movedItem => {
+                        
+                        if (isMovingThisDirOrChild) {
+                            return;
+                        }
+                        
+                        const isTheCurrentParentOfAllItems = itemsBeingMoved.every(movedItem => {
                             const movedItemParentPath = movedItem.path.substring(0, movedItem.path.lastIndexOf('/')) || '/';
                             return movedItemParentPath === dirNode.path;
                         });
 
-                        if (isMovingThisDirOrChild) {
-                            return;
-                        }
-
                         const li = document.createElement('li');
                         li.textContent = dirNode.name;
                         li.dataset.path = dirNode.path;
-                        if (isCurrentParent && itemsBeingMoved.length === 1) {
+                        
+                        // --- FIX START ---
+                        // The original code used 'pointer-events: none', which disabled clicks on children.
+                        // This new logic makes the current parent directory visually distinct and un-selectable,
+                        // but allows clicks to reach its children.
+                        if (isTheCurrentParentOfAllItems) {
                             li.style.opacity = "0.5";
-                            li.style.pointerEvents = "none";
+                            li.style.cursor = "not-allowed";
+                            // Do not add a click listener, making it an unselectable header.
                         } else {
                            li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, dirNode.path); });
                         }
+                        // --- FIX END ---
+                        
                         parentUl.appendChild(li);
+                        
                         if (dirNode.children && dirNode.children.length > 0) {
                             const nestedUl = document.createElement('ul');
                             li.appendChild(nestedUl);
@@ -1845,8 +1855,8 @@
                                             if (confirm(`確定要撤銷連結 ${link.publicUrl} 嗎？`)) {
                                                 const revokePayload = { link_id: link.link_id, _csrf: CSRF_TOKEN };
                                                  if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
-                                                    revokePayload.contextUsername = VIEW_CONTEXT_USER_USERNAME;
-                                                }
+                                                     revokePayload.contextUsername = VIEW_CONTEXT_USER_USERNAME;
+                                                 }
                                                 try {
                                                     const revokeResponse = await fetch('/actions/revoke-public-link', {
                                                         method: 'POST',
