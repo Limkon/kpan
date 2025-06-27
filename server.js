@@ -302,7 +302,15 @@ async function getDirectoryTreeRecursive(directoryToScan, userUploadRoot, curren
             if (entry.isDirectory()) {
                 if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
                 const entryRelativePath = path.posix.join(currentRelativePath, entry.name);
-                if (pathsToExclude.some(excludePath => entryRelativePath === excludePath || entryRelativePath.startsWith(excludePath + '/'))) continue;
+                
+                // --- FIX STARTS HERE ---
+                // The original logic was too aggressive. It excluded a directory AND all its children.
+                // The new logic only excludes the exact directory path specified, allowing its children to be valid destinations.
+                // The actual prevention of moving a folder into itself is handled correctly in the '/move-items' endpoint.
+                if (pathsToExclude.includes(entryRelativePath)) {
+                    continue;
+                }
+                // --- FIX ENDS HERE ---
 
                 const children = await getDirectoryTreeRecursive(path.join(directoryToScan, entry.name), userUploadRoot, entryRelativePath, pathsToExclude);
                 tree.push({ name: entry.name, path: entryRelativePath, children: children });
@@ -1823,31 +1831,31 @@ app.use((req, res, next) => {
 });
 app.use((req, res, next) => {
     // 404 處理器中也需要安全地訪問 req.session.user
-    res.status(404).render('error', { user: req.session?.user, message: '找不到頁面 (404)。', csrfToken: res.locals.csrfToken });
+    res.status(404).render('error', { user: req.session?.user, message: '找不到頁面 (404)。', csrfToken: res.locals.csrfToken });
 });
 
 app.use((err, req, res, next) => {
     // 使用可選鏈 (?.) 安全地訪問 req.session 和 req.session.user
-    const usernameForLog = req.session?.user?.username || '未認證用戶';
-    console.error(`[${usernameForLog}] 全局錯誤處理: ${req.method} ${req.originalUrl}`, err.stack || err.message || err);
+    const usernameForLog = req.session?.user?.username || '未認證用戶';
+    console.error(`[${usernameForLog}] 全局錯誤處理: ${req.method} ${req.originalUrl}`, err.stack || err.message || err);
 
-    let publicMessage = '伺服器內部錯誤 (500)。';
-    if (process.env.NODE_ENV !== 'production' && err.message) publicMessage = err.message;
-    if (err.publicMessage) publicMessage = err.publicMessage;
+    let publicMessage = '伺服器內部錯誤 (500)。';
+    if (process.env.NODE_ENV !== 'production' && err.message) publicMessage = err.message;
+    if (err.publicMessage) publicMessage = err.publicMessage;
 
-    if (err instanceof actualMulter.MulterError) {
-        publicMessage = `上傳錯誤: ${err.message}`;
-        if (err.code === 'LIMIT_FILE_SIZE') publicMessage = '文件大小超過限制。';
-        if (err.code === 'LIMIT_UNEXPECTED_FILE') publicMessage = '上傳了非預期的文件欄位。';
-    } else if (err.code === 'USER_QUOTA_EXCEEDED' || err.code === 'QUOTA_CHECK_ERROR' || err.code === 'INVALID_TARGET_USERNAME_UPLOAD') {
-        publicMessage = err.message;
-    }
+    if (err instanceof actualMulter.MulterError) {
+        publicMessage = `上傳錯誤: ${err.message}`;
+        if (err.code === 'LIMIT_FILE_SIZE') publicMessage = '文件大小超過限制。';
+        if (err.code === 'LIMIT_UNEXPECTED_FILE') publicMessage = '上傳了非預期的文件欄位。';
+    } else if (err.code === 'USER_QUOTA_EXCEEDED' || err.code === 'QUOTA_CHECK_ERROR' || err.code === 'INVALID_TARGET_USERNAME_UPLOAD') {
+        publicMessage = err.message;
+    }
 
-    if (res.headersSent) return next(err);
-    res.status(err.status || 500).render('error', {
+    if (res.headersSent) return next(err);
+    res.status(err.status || 500).render('error', {
         // 在渲染錯誤頁面時，同樣需要安全地傳遞 user 對象
-        user: req.session?.user, message: publicMessage, csrfToken: res.locals.csrfToken
-    });
+        user: req.session?.user, message: publicMessage, csrfToken: res.locals.csrfToken
+    });
 });
 app.listen(port, () => {
     console.log(`伺服器運行在 http://localhost:${port}`);
@@ -1863,4 +1871,3 @@ process.on('SIGINT', () => {
         process.exit(0);
     });
 });
-
