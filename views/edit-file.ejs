@@ -29,7 +29,7 @@
             font-size: 0.95em;
             line-height: 1.5;
             border: 1px solid #ced4da; 
-            border-radius: 5px;      
+            border-radius: 5px;   
             padding: 10px;
             margin-bottom: 15px; 
             resize: vertical; 
@@ -55,6 +55,7 @@
             <div class="header-controls"> 
                 <nav>
                     <%
+                        // 计算返回文件列表的路径
                         let backPath = "/files";
                         if (locals.currentPath && typeof locals.currentPath === 'string') {
                             const parentDirOfFile = currentPath.includes('/') ? currentPath.substring(0, currentPath.lastIndexOf('/')) || '/' : '/';
@@ -64,7 +65,13 @@
                                 backPath = `/files?path=${encodeURIComponent(parentDirOfFile)}`;
                             }
                         } else if (locals.viewTargetUsername && user.role === 'admin') {
-                             backPath = `/files?targetUsername=${encodeURIComponent(viewTargetUsername)}`;
+                            backPath = `/files?targetUsername=${encodeURIComponent(viewTargetUsername)}`;
+                        }
+
+                        // 【新增】计算返回浏览当前文件的路径
+                        let viewPath = `/view/${encodeURIComponent(locals.currentPath || '')}`;
+                        if (locals.viewTargetUsername && user.role === 'admin') {
+                            viewPath += `?targetUsername=${encodeURIComponent(viewTargetUsername)}`;
                         }
                     %>
                     <a href="<%= backPath %>">返回文件列表</a>
@@ -89,7 +96,7 @@
                 <textarea id="fileContent" name="fileContent" required><%= content %></textarea>
                 <div class="editor-actions">
                     <button type="button" class="secondary" onclick="window.location.href='<%= backPath %>'">取消</button>
-                    <button type="submit">保存更改</button>
+                    <button type="button" onclick="window.location.href='<%= viewPath %>'">返回浏览当前这个文件</button>
                 </div>
             </form>
         </div>
