@@ -1,3 +1,4 @@
+<%# views/edit-file.ejs %>
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -20,7 +21,7 @@
             display: flex;
             flex-direction: column;
             padding: 15px;
-            max-width: 1200px; /* 可以适当加宽以适应编码 */
+            max-width: 1200px;
             width: 100%;
             margin-left: auto;
             margin-right: auto;
@@ -49,6 +50,9 @@
             margin-top: 15px;
             text-align: right;
             flex-shrink: 0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
         }
     </style>
 </head>
@@ -77,7 +81,10 @@
 
             <div class="editor-actions">
                 <button type="submit">保存更改</button>
-                 <a href="/view?path=<%= encodeURIComponent(currentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">取消</a>
+                
+                <%# MODIFIED: Changed the "Cancel" link to a real button for style consistency %>
+                <% const viewUrl = `/view?path=${encodeURIComponent(currentPath)}${viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''}`; %>
+                <button type="button" onclick="window.location.href='<%= viewUrl %>'">取消</button>
             </div>
         </form>
     </div>
