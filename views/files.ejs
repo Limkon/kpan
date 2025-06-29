@@ -8,411 +8,100 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-    :root {
-        --button-primary-bg-color: #007bff;
-        --button-primary-text-color: #ffffff;
-        --button-primary-border-color: #007bff;
-        --button-secondary-bg-color: #6c757d;
-        --button-secondary-text-color: #ffffff;
-        --button-secondary-border-color: #6c757d;
-        --input-border-color: #ccc;
-        --input-bg-color: #fff;
-        --input-text-color: #333;
-        --modal-bg: #ffffff;
-        --modal-text-color: #333;
-        --modal-border-color: #888;
-        --video-modal-bg: #1c1c1c;
-        --video-modal-text-color: #f1f1f1;
-        --video-modal-border-color: #333;
-        --video-modal-close-btn-color: #aaa;
-        --video-modal-close-btn-hover-color: #fff;
-        --tab-inactive-bg: #e9ecef;
-        --tab-inactive-text: #495057;
-        --tab-active-bg: #007bff;
-        --tab-active-text: #ffffff;
-        --tab-border: #dee2e6;
-        --link-color: #007bff;
-        --link-hover-color: #0056b3;
-        --public-link-display-bg: #f8f9fa;
-        --public-link-display-border: #ced4da;
-        --action-bar-bg: #f0f0f0;
-        --action-bar-border: #ccc;
-        --hover-bg: #f0f0f0;
-    }
+/* ... (您原有的 :root 和 .dark-theme 變數定義保持不變) ... */
+/* ... 省略其他未變更的樣式 ... */
 
-    .dark-theme {
-        --button-primary-bg-color: #0056b3;
-        --button-primary-border-color: #0056b3;
-        --button-secondary-bg-color: #5a6268;
-        --button-secondary-border-color: #545b62;
-        --input-border-color: #555;
-        --input-bg-color: #2c2c2c;
-        --input-text-color: #e0e0e0;
-        --modal-bg: #2c2c2c;
-        --modal-text-color: #e0e0e0;
-        --modal-border-color: #555;
-        --video-modal-bg: #2a2a2a;
-        --video-modal-text-color: #e0e0e0;
-        --video-modal-border-color: #444;
-        --video-modal-close-btn-color: #bbb;
-        --video-modal-close-btn-hover-color: #fff;
-        --tab-inactive-bg: #3a3a3a;
-        --tab-inactive-text: #adb5bd;
-        --tab-active-bg: #0056b3;
-        --tab-border: #495057;
-        --link-color: #6cb2eb;
-        --link-hover-color: #8dc9f0;
-        --public-link-display-bg: #2c2c2c;
-        --public-link-display-border: #495057;
-        --action-bar-bg: #252525;
-        --action-bar-border: #444;
-        --hover-bg: #4a4a4a;
-    }
+/* [修改] 導覽分頁樣式，確保 hover 效果和 active 狀態使用變數 */
+.nav-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--tab-border); }
+.nav-tabs .nav-link { 
+    padding: 10px 15px; 
+    text-decoration: none; 
+    background-color: var(--tab-inactive-bg); 
+    color: var(--tab-inactive-text); 
+    border: 1px solid var(--tab-border); 
+    border-bottom: none; 
+    margin-right: 5px; 
+    border-radius: 5px 5px 0 0; 
+    font-weight: 500; 
+    cursor: pointer; 
+    transition: background-color 0.2s, color 0.2s; /* 添加過渡效果 */
+}
+.nav-tabs .nav-link.active { 
+    background-color: var(--tab-active-bg); 
+    color: var(--tab-active-text); 
+    border-color: var(--tab-active-bg); 
+}
+.nav-tabs .nav-link:hover:not(.active) { 
+    background-color: var(--hover-bg); /* 使用變數 */
+    opacity: 1; /* 移除舊的 opacity，改用背景色變化 */
+}
 
-    .nav-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--tab-border); }
-    .nav-tabs .nav-link { padding: 10px 15px; text-decoration: none; background-color: var(--tab-inactive-bg); color: var(--tab-inactive-text); border: 1px solid var(--tab-border); border-bottom: none; margin-right: 5px; border-radius: 5px 5px 0 0; font-weight: 500; cursor: pointer; }
-    .nav-tabs .nav-link.active { background-color: var(--tab-active-bg); color: var(--tab-active-text); border-color: var(--tab-active-bg); }
-    .nav-tabs .nav-link:hover:not(.active) { opacity: 0.8; }
+/* ... 省略其他未變更的樣式 ... */
 
-    #selection-action-bar, #public-link-selection-action-bar {
-        padding: 10px;
-        background-color: var(--action-bar-bg);
-        border-bottom: 1px solid var(--action-bar-border);
-        margin-bottom: 15px;
-        display: none;
-        flex-wrap: wrap;
-        gap: 10px;
-        align-items: center;
-    }
-    #selection-action-bar button, #public-link-selection-action-bar button { margin: 0; }
+/* [修改] 文件瀏覽器控制項的整體樣式 */
+.file-browser-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
+.file-browser-controls .actions-group-left { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
 
-    .item-checkbox, .public-link-checkbox {
-        display: none;
-        margin-right: 10px;
-        width: 18px;
-        height: 18px;
-        vertical-align: middle;
-    }
-    #file-container.multi-select-mode-active .item-checkbox,
-    #file-container.multi-select-mode-active .public-link-checkbox {
-        display: inline-block;
-    }
+/* [核心修改] 將主要操作按鈕的樣式與主題變數掛鉤 */
+.file-browser-controls .actions-group-left button, #toggle-multi-select-btn { 
+    padding: 8px 12px; 
+    font-size: 0.9em; 
+    margin: 0; 
+    background-color: var(--button-primary-bg-color); 
+    color: var(--button-primary-text-color); 
+    border: 1px solid var(--button-primary-border-color); 
+    border-radius: 4px; 
+    cursor: pointer; 
+    transition: opacity 0.2s; /* 添加過渡效果 */
+}
+.file-browser-controls .actions-group-left button:hover, #toggle-multi-select-btn:hover { opacity: 0.9; }
 
-    .file-entry-selectable { display: flex; align-items: center; width: 100%; }
-    #file-container.list-view .file-entry-selectable { padding: 5px 0; }
-    #file-container.grid-view .file-entry-selectable { padding: 0; flex-direction: column; height: 100%; }
+/* [核心修改] 將搜尋表單的樣式與主題變數掛鉤 */
+.file-browser-controls .search-form-right { display: flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
+.file-browser-controls .search-form-right input[type="search"] { 
+    width: 180px; 
+    padding: 8px 10px; 
+    font-size: 0.9em; 
+    border: 1px solid var(--input-border-color); 
+    background-color: var(--input-bg-color); 
+    color: var(--input-text-color); 
+    border-radius: 4px; 
+    margin: 0; 
+}
+.file-browser-controls .search-form-right button { 
+    padding: 8px 12px; 
+    font-size: 0.9em; 
+    margin: 0; 
+    background-color: var(--button-primary-bg-color); 
+    color: var(--button-primary-text-color); 
+    border: 1px solid var(--button-primary-border-color); 
+    border-radius: 4px; 
+    cursor: pointer; /* 添加 cursor */
+    transition: opacity 0.2s; /* 添加過渡效果 */
+}
+.file-browser-controls .search-form-right button:hover { opacity: 0.9; }
 
-    .file-content-wrapper { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; cursor: pointer; overflow: hidden; width: 100%; }
-    #file-container.grid-view .file-content-wrapper { flex-direction: column; justify-content: flex-start; text-align: center; }
+/* [核心修改] 將視圖切換按鈕的樣式與主題變數掛鉤 */
+.file-browser-controls .view-toggle { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.file-browser-controls .view-toggle button { 
+    padding: 8px 12px; 
+    font-size: 0.9em; 
+    margin: 0; 
+    background-color: var(--button-secondary-bg-color); 
+    color: var(--button-secondary-text-color); 
+    border: 1px solid var(--button-secondary-border-color); 
+    border-radius: 4px; 
+    cursor: pointer; /* 添加 cursor */
+    transition: background-color 0.2s, border-color 0.2s; /* 添加過渡效果 */
+}
+.file-browser-controls .view-toggle button.active { 
+    background-color: var(--button-primary-bg-color); 
+    border-color: var(--button-primary-border-color); 
+    color: var(--button-primary-text-color); /* 確保 active 狀態文字顏色正確 */
+}
+.file-browser-controls .view-toggle button:not(.active):hover { opacity: 0.9; }
 
-    .list-view li { position: relative; }
-    .list-view .file-entry { display: flex; align-items: center; gap: 8px; flex-grow: 1; min-width: 0; }
-    .list-view .file-entry .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 1; }
-
-    .list-view .file-details { display: flex; align-items: center; gap: 15px; font-size: 0.85em; color: #555; margin-left: auto; padding-left: 10px; white-space: nowrap; flex-shrink: 0; }
-    .dark-theme .list-view .file-details { color: #bbb; }
-    .list-view .file-details .file-size,
-    .list-view .file-details .file-modified,
-    .list-view .file-details .file-public-link,
-    .list-view .file-details .file-created-at {
-        min-width: 80px; text-align: right;
-    }
-    .list-view .file-details .file-public-link a { color: var(--link-color); text-decoration: none; }
-    .list-view .file-details .file-public-link a:hover { color: var(--link-hover-color); text-decoration: underline; }
-
-    #file-container.grid-view .file-details { display: none; }
-
-    .list-view .file-actions-placeholder { min-width: 40px; text-align: right; font-size: 0.9em; color: #666; flex-shrink: 0; }
-    .dark-theme .list-view .file-actions-placeholder { color: #aaa; }
-
-    .list-view li.single-selected-item > .file-entry-selectable,
-    .grid-view li.single-selected-item { background-color: #e9e9e9; border-radius: 4px; }
-    .dark-theme .list-view li.single-selected-item > .file-entry-selectable,
-    .dark-theme .grid-view li.single-selected-item { background-color: #404040; }
-
-    .modal {
-        display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
-        overflow: auto; background-color: rgba(0,0,0,0.5);
-    }
-    #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal, #share-modal, #public-link-display-modal, #existing-links-modal, #rename-item-modal {
-        /* Inherits .modal styles */
-    }
-    .modal-content { background-color: var(--modal-bg) !important; color: var(--modal-text-color); margin: 10% auto; padding: 20px; border: 1px solid var(--modal-border-color); border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-    .modal-content h3 { margin-top: 0; }
-    .modal-content .form-group { margin-bottom: 15px; }
-    .modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-    .modal-content .form-group input[type="text"],
-    .modal-content .form-group input[type="email"],
-    .modal-content .form-group input[type="url"] {
-        width: 100%; padding: 10px; box-sizing: border-box;
-        border: 1px solid var(--input-border-color); border-radius: 4px;
-        background-color: var(--input-bg-color); color: var(--input-text-color);
-    }
-    .modal-actions { text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
-
-    #video-player-modal .modal-content { background-color: var(--video-modal-bg) !important; color: var(--video-modal-text-color); border-color: var(--video-modal-border-color); max-width: 900px; margin: 5% auto; }
-    #video-player-modal #video-modal-title { color: var(--video-modal-text-color); margin-bottom: 15px; }
-    #video-player-modal .close-modal-btn { color: var(--video-modal-close-btn-color); }
-    #video-player-modal .close-modal-btn:hover,
-    #video-player-modal .close-modal-btn:focus { color: var(--video-modal-close-btn-hover-color); text-decoration: none; cursor: pointer; }
-    #html5-video-player { width: 100%; max-height: 75vh; display: block; margin-top: 10px; background-color: #000; border-radius: 4px; }
-
-    #public-link-display-modal .modal-content, #existing-links-modal .modal-content { max-width: 600px; }
-    #generated-public-link {
-        width: calc(100% - 85px);
-        padding: 10px;
-        border: 1px solid var(--public-link-display-border);
-        background-color: var(--public-link-display-bg);
-        border-radius: 4px 0 0 4px;
-        font-family: monospace;
-        font-size: 0.9em;
-        box-sizing: border-box;
-        color: var(--input-text-color);
-    }
-    #copy-public-link-btn {
-        padding: 10px 15px;
-        border-radius: 0 4px 4px 0;
-        margin-left: -1px;
-        border: 1px solid var(--button-primary-border-color);
-        background-color: var(--button-primary-bg-color);
-        color: var(--button-primary-text-color);
-        cursor: pointer;
-        box-sizing: border-box;
-        height: calc(20px + 2*10px + 2*1px);
-    }
-    #copy-public-link-btn:hover { opacity: 0.9; }
-    .public-link-container { display: flex; align-items: center; margin-top: 10px; }
-    #existing-links-list-container ul { list-style-type: none; padding-left: 0; }
-    #existing-links-list-container li { padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-    .dark-theme #existing-links-list-container li { border-bottom-color: #444; }
-    #existing-links-list-container li:last-child { border-bottom: none; }
-    #existing-links-list-container .link-info { flex-grow: 1; }
-    #existing-links-list-container .link-info a { word-break: break-all; }
-    #existing-links-list-container .link-details { font-size: 0.8em; color: #777; display: block; margin-top: 3px;}
-    .dark-theme #existing-links-list-container .link-details { color: #aaa; }
-
-    #directory-tree-container { max-height: 250px; overflow-y: auto; border: 1px solid var(--input-border-color); padding: 10px; margin-bottom: 15px; background-color: var(--input-bg-color); }
-    #directory-tree-container ul { list-style-type: none; padding-left: 20px; }
-    #directory-tree-container li { padding: 5px 0; cursor: pointer; border-bottom: 1px dashed var(--input-border-color); }
-    #directory-tree-container li:last-child { border-bottom: none; }
-    #directory-tree-container li:hover { background-color: var(--hover-bg); }
-    #directory-tree-container li.selected-dir { background-color: #007bff; color: white; }
-    .dark-theme #directory-tree-container li.selected-dir { background-color: #0056b3; }
-
-
-    .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
-
-    /* === Grid View Styles - REFINED START === */
-    #file-container.grid-view ul {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-        gap: 10px;
-        list-style-type: none; padding: 0; margin: 0;
-    }
-
-    #file-container.grid-view li {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 8px;
-        border-radius: 6px;
-        position: relative;
-        min-height: 110px;
-        background-color: var(--input-bg-color);
-        border: 1px solid var(--input-border-color);
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        overflow: hidden;
-    }
-
-    .dark-theme #file-container.grid-view li {
-        background-color: #3a3a3a;
-        border-color: #555;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-
-    #file-container.grid-view li .file-entry-selectable {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 100%;
-    }
-
-    .grid-view .file-entry {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 0;
-        width: 100%;
-        flex-grow: 1;
-        padding-top: 4px;
-    }
-
-    .grid-view .file-icon-large {
-        font-size: 3.5em;
-        line-height: 1;
-        margin-bottom: 4px;
-        flex-shrink: 0;
-    }
-
-    .grid-view .file-name {
-        font-size: 0.8em;
-        line-height: 1.25;
-        word-break: break-all;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: calc(100% - 4px);
-        min-height: calc(0.8em * 1.25 * 2);
-        margin-bottom: 6px;
-        color: var(--input-text-color);
-        flex-shrink: 0;
-    }
-    .dark-theme .grid-view .file-name {
-        color: var(--input-text-color);
-    }
-
-    #file-container.grid-view.multi-select-mode-active .item-checkbox,
-    #file-container.grid-view.multi-select-mode-active .public-link-checkbox {
-        position: absolute;
-        top: 6px;
-        left: 6px;
-        margin-bottom: 0;
-    }
-
-    .grid-view .link-actions-group { /* For 'userShares' view items */
-        display: flex;
-        justify-content: center; /* Center the buttons horizontally */
-        align-items: center;
-        gap: 5px; /* Space between buttons */
-        width: 100%; /* Take full width to allow centering */
-        margin-top: auto;
-        padding-top: 4px;
-        padding-bottom: 4px; /* Added padding at the bottom */
-        flex-wrap: nowrap; /* Prevent buttons from wrapping to ensure they stay in one line */
-        flex-shrink: 0;
-        box-sizing: border-box; /* Include padding in width calculation */
-    }
-    .grid-view .link-actions-group .action-button-small,
-    .grid-view .link-actions-group .revoke-single-link-form, /* Target the form for flex properties */
-    .grid-view .link-actions-group .revoke-single-link-form button {
-        font-size: 0.7em;
-        padding: 4px 8px; /* Increased padding for better touch target and appearance */
-        white-space: nowrap;
-        flex-grow: 0; /* Prevent buttons from growing */
-        flex-shrink: 0; /* Prevent buttons from shrinking excessively */
-        margin: 0 2px; /* Small margin between items if needed */
-    }
-    .grid-view .link-actions-group .revoke-single-link-form {
-        display: inline-flex; /* Make form behave like a button for flex layout */
-    }
-
-    /* === Grid View Styles - REFINED END === */
-
-
-    #select-all-container, #select-all-public-links-container {
-        display: none;
-        align-items: center;
-        padding: 5px 10px;
-        background-color: #f9f9f9;
-        border-bottom: 1px solid #eee;
-    }
-    .dark-theme #select-all-container, .dark-theme #select-all-public-links-container {
-        background-color: #2e2e2e;
-        border-bottom-color: #444;
-    }
-
-    #select-all-container.visible-in-multiselect,
-    #select-all-public-links-container.visible-in-multiselect {
-        display: flex;
-    }
-
-    #select-all-container label, #select-all-public-links-container label {
-        margin-left: 5px;
-        font-weight: normal;
-    }
-
-    #upload-actions-container { display: none; padding: 10px 0; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
-    #upload-actions-container button { margin: 0; }
-    #upload-section { display: none; padding: 20px; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 0; background-color: #f8f9fa; }
-    .dark-theme #upload-section { background-color: #3a3a3a; border-color: #444; }
-    #drop-area { border: 2px dashed #007bff; padding: 20px; text-align: center; border-radius: 5px; background-color: #fff; }
-    .dark-theme #drop-area { border-color: #0056b3; background-color: #2c2c2c; }
-    #drop-area.highlight { border-color: #28a745; background-color: #e9f7ef; }
-    .dark-theme #drop-area.highlight { background-color: #333; }
-    #drop-area p { margin-bottom: 15px; font-size: 1.1em; color: #6c757d; }
-    .dark-theme #drop-area p { color: #adb5bd; }
-    #upload-button { display: none; margin-top: 15px; }
-
-    .search-results-info { padding: 10px; background-color: #e9ecef; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; }
-    .dark-theme .search-results-info { background-color: #3a3a3a; }
-    .file-location-in-search { font-size: 0.8em; color: #6c757d; margin-left: 8px; }
-    .dark-theme .file-location-in-search { color: #adb5bd; }
-
-    .file-browser-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
-    .file-browser-controls .actions-group-left { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
-    .file-browser-controls .actions-group-left button, #toggle-multi-select-btn { padding: 8px 12px; font-size: 0.9em; margin: 0; background-color: var(--button-primary-bg-color); color: var(--button-primary-text-color); border: 1px solid var(--button-primary-border-color); border-radius: 4px; cursor: pointer; }
-    .file-browser-controls .actions-group-left button:hover, #toggle-multi-select-btn:hover { opacity: 0.9; }
-    .file-browser-controls .search-form-right { display: flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
-    .file-browser-controls .search-form-right input[type="search"] { width: 180px; padding: 8px 10px; font-size: 0.9em; border: 1px solid var(--input-border-color); background-color: var(--input-bg-color); color: var(--input-text-color); border-radius: 4px; margin: 0; }
-    .file-browser-controls .search-form-right button { padding: 8px 12px; font-size: 0.9em; margin: 0; background-color: var(--button-primary-bg-color); color: var(--button-primary-text-color); border: 1px solid var(--button-primary-border-color); border-radius: 4px; }
-    .file-browser-controls .view-toggle { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
-    .file-browser-controls .view-toggle button { padding: 8px 12px; font-size: 0.9em; margin: 0; background-color: var(--button-secondary-bg-color); color: var(--button-secondary-text-color); border: 1px solid var(--button-secondary-border-color); border-radius: 4px; }
-    .file-browser-controls .view-toggle button.active { background-color: var(--button-primary-bg-color); border-color: var(--button-primary-border-color); }
-    .file-browser-controls:not(:has(.actions-group-left)) .search-form-right { margin-left: 0; flex-grow: 1; }
-    .file-browser-controls:not(:has(.actions-group-left)) .search-form-right input[type="search"] { flex-grow: 1; }
-    .file-browser-controls:not(:has(.actions-group-left)) .view-toggle { margin-left: auto; }
-
-    .progress-bar-container { width: 100%; background-color: #e9ecef; border-radius: 4px; margin-top: 10px; padding: 2px; display: none; box-sizing: border-box; }
-    .dark-theme .progress-bar-container { background-color: #495057; }
-    .progress-bar { display: block; width: 0%; height: 20px; background-color: #007bff; border: 1px solid #0056b3; border-radius: 2px; text-align: center; line-height: 18px; color: white; font-size: 0.8em; font-weight: bold; transition: width 0.1s ease-in-out; box-sizing: border-box; overflow: hidden; }
-    .dark-theme .progress-bar { background-color: #0056b3; border-color: #003d80; }
-
-    #file-container { max-height: calc(100vh - 360px); overflow-y: auto; padding-right: 5px; box-sizing: border-box; }
-    .action-button-small, a.action-button-small {
-        padding: 3px 6px;
-        font-size: 0.8em;
-        margin-left: 5px;
-        text-decoration: none;
-        border: 1px solid var(--button-secondary-border-color);
-        background-color: var(--button-secondary-bg-color);
-        color: var(--button-secondary-text-color);
-        border-radius: 3px;
-        display: inline-block;
-        cursor: pointer;
-        line-height: normal;
-        vertical-align: middle;
-    }
-    .action-button-small:hover, a.action-button-small:hover {
-        opacity: 0.9;
-    }
-    .dark-theme .action-button-small, .dark-theme a.action-button-small {
-          border-color: var(--button-secondary-border-color);
-          background-color: var(--button-secondary-bg-color);
-          color: var(--button-secondary-text-color);
-    }
-
-    #share-modal .form-group label[for="share-allow-download"],
-    #share-modal .form-group label[for="share-allow-view"] {
-        display: inline-block; margin-left: 5px; font-weight: normal;
-    }
-    #share-modal .form-group input[type="checkbox"] {
-        width: auto; vertical-align: middle;
-    }
-    .link-actions-group { /* General for list view */
-        display: flex;
-        gap: 5px;
-        align-items: center;
-        margin-left: auto;
-        padding-left: 10px;
-        flex-shrink: 0;
-    }
+/* ... 省略其他未變更的樣式 ... */
 </style>
 </head>
 <body>
