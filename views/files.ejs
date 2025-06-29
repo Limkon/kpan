@@ -857,6 +857,45 @@
         </div>
     </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 找到文件容器
+    const fileContainer = document.getElementById('file-container');
+    if (fileContainer) {
+        // 為容器內的每個文件項添加點擊事件監聽
+        fileContainer.addEventListener('click', (event) => {
+            // 尋找被點擊的文件項 (li 元素)
+            const item = event.target.closest('li');
+            if (!item) return; // 如果點擊的不是文件項，則不做任何事
+
+            // 阻止點擊文件項中的鏈接或按鈕時觸發選中效果
+            if (event.target.tagName === 'A' || event.target.tagName === 'BUTTON' || event.target.closest('.action-link')) {
+                return;
+            }
+
+            // 切換 .selected 樣式
+            item.classList.toggle('selected');
+
+            // 同步更新與該文件項關聯的多選框 (checkbox) 的狀態
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = item.classList.contains('selected');
+            }
+        });
+
+        // 當多選框的狀態改變時，也同步更新文件項的 .selected 樣式
+        fileContainer.addEventListener('change', (event) => {
+            if (event.target.type === 'checkbox') {
+                const item = event.target.closest('li');
+                if (item) {
+                    item.classList.toggle('selected', event.target.checked);
+                }
+            }
+        });
+    }
+});
+</script>
+
 
     <script src="/theme.js"></script>
     <script>
