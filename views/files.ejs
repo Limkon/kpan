@@ -130,6 +130,31 @@
     .dark-theme .list-view li.single-selected-item > .file-entry-selectable,
     .dark-theme .grid-view li.single-selected-item { background-color: #404040; }
 
+    /* [FIX] Add visual highlight for multi-selected items */
+    /* Grid view multi-select highlight */
+    #file-container.grid-view.multi-select-mode-active li:has(.item-checkbox:checked),
+    #file-container.grid-view.multi-select-mode-active li:has(.public-link-checkbox:checked) {
+        background-color: #e0e7ff; /* Light indigo highlight */
+        border-color: #c7d2fe;
+    }
+    .dark-theme #file-container.grid-view.multi-select-mode-active li:has(.item-checkbox:checked),
+    .dark-theme #file-container.grid-view.multi-select-mode-active li:has(.public-link-checkbox:checked) {
+        background-color: #3730a3; /* Dark indigo highlight */
+        border-color: #4338ca;
+    }
+
+    /* List view multi-select highlight */
+    #file-container.list-view.multi-select-mode-active li:has(.item-checkbox:checked) > .file-entry-selectable,
+    #file-container.list-view.multi-select-mode-active li:has(.public-link-checkbox:checked) > .file-entry-selectable {
+        background-color: #e0e7ff; /* Light indigo highlight */
+        border-radius: 4px;
+    }
+    .dark-theme #file-container.list-view.multi-select-mode-active li:has(.item-checkbox:checked) > .file-entry-selectable,
+    .dark-theme #file-container.list-view.multi-select-mode-active li:has(.public-link-checkbox:checked) > .file-entry-selectable {
+        background-color: #3730a3; /* Dark indigo highlight */
+        border-radius: 4px;
+    }
+
     .modal {
         display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
         overflow: auto; background-color: rgba(0,0,0,0.5);
