@@ -9,15 +9,17 @@
     <style>
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
         .modal-content { background-color: var(--container-background, #fefefe); margin: 10% auto; padding: 20px; border: 1px solid var(--border-color, #888); width: 80%; max-width: 500px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
-        .close-button:hover, .close-button:focus { color: var(--text-color, black); text-decoration: none; cursor: pointer; }
-        .list-view li.selected, .grid-view li.selected { background-color: var(--primary-color-translucent, rgba(0, 123, 255, 0.15)); border-left: 4px solid var(--primary-color, #007bff); }
-        .grid-view li.selected { border: 2px solid var(--primary-color, #007bff); }
+        .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .list-view li.selected, .grid-view li.selected { background-color: var(--primary-color-translucent, rgba(0, 123, 255, 0.15)); }
+        .grid-view li.selected { border: 2px solid var(--primary-color, #007bff); padding: 6px; }
         #directory-tree ul { list-style-type: none; padding-left: 20px; }
         #directory-tree li { padding: 5px; cursor: pointer; border-radius: 4px; }
         #directory-tree li:hover { background-color: var(--primary-color-translucent, rgba(0, 123, 255, 0.1)); }
         #directory-tree li.selected { background-color: var(--primary-color); color: var(--text-on-primary); }
         .rename-form { display: none; margin-top: 10px; }
+        .file-actions { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+        .file-info { font-size: 0.8em; color: var(--secondary-color); margin-top: 4px; }
+        .list-view .file-info { margin-left: auto; text-align: right; }
     </style>
 </head>
 <body>
@@ -48,52 +50,31 @@
                     <%= message %>
                 </div>
             <% } %>
-
+            
             <div class="view-mode-tabs">
-                <% let queryParams = new URLSearchParams(); %>
-                <% if (isAdminViewingOther) queryParams.set('targetUsername', viewContextUser.username); %>
-                <% const myFilesLink = '/files?' + queryParams.toString(); %>
-                <% queryParams.set('viewMode', 'userShares'); %>
-                <% const sharesLink = '/files?' + queryParams.toString(); %>
-                <a href="<%= myFilesLink %>" class="button <%= viewMode === 'myfiles' ? 'active' : 'secondary' %>">我的文件</a>
-                <a href="<%= sharesLink %>" class="button <%= viewMode === 'userShares' ? 'active' : 'secondary' %>">我的公開連結</a>
+                <% let myFilesBaseUrl = '/files' + (isAdminViewingOther ? '?targetUsername=' + encodeURIComponent(viewContextUser.username) : ''); %>
+                <% let sharesBaseUrl = '/files?viewMode=userShares' + (isAdminViewingOther ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : ''); %>
+                <a href="<%= myFilesBaseUrl %>" class="button <%= viewMode === 'myfiles' ? 'active' : 'secondary' %>">我的文件</a>
+                <a href="<%= sharesBaseUrl %>" class="button <%= viewMode === 'userShares' ? 'active' : 'secondary' %>">我的公開連結</a>
             </div>
 
             <% if (viewMode === 'myfiles') { %>
-                <!-- My Files View -->
+                <!-- My Files Content -->
                 <div class="current-path">
-                    路徑: 
-                    <a href="<%= myFilesLink.split('?')[0] + (isAdminViewingOther ? '?targetUsername=' + viewContextUser.username : '') %>">/</a>
+                     路徑: 
+                    <a href="<%= myFilesBaseUrl.split('?')[0] + (isAdminViewingOther ? '?targetUsername=' + viewContextUser.username : '') %>">/</a>
                     <% let pathSegments = actualRelativePath.split('/').filter(p => p); %>
                     <% let currentDisplay = ''; %>
                     <% pathSegments.forEach(segment => { %>
                         <% currentDisplay += '/' + segment; %>
-                        <a href="<%= myFilesLink + '&path=' + encodeURIComponent(currentDisplay) %>"><%= segment %></a> /
+                        <a href="<%= myFilesBaseUrl + '&path=' + encodeURIComponent(currentDisplay) %>"><%= segment %></a> /
                     <% }); %>
                     <% if (isSearchResult) { %>
                         (在 <%= viewContextUser.username %> 的檔案中搜尋 "<%= searchQuery %>" 的結果)
                     <% } %>
                 </div>
-
+                
                 <div class="file-browser-controls">
-                    <div class="control-group">
-                        <button id="upload-toggle-button" class="button">上傳</button>
-                        <button id="multi-select-toggle" class="button secondary">啟用多選</button>
-                        <div id="multi-select-actions" style="display: none;">
-                             <button id="download-selected" class="button">打包下載</button>
-                             <button id="move-selected" class="button">移動</button>
-                             <button id="delete-selected" class="button danger">刪除</button>
-                        </div>
-                    </div>
-                     <div class="control-group search-group">
-                        <form action="/files" method="GET" class="control-form">
-                             <% if (isAdminViewingOther) { %><input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>"><% } %>
-                            <input type="text" name="q" placeholder="搜索..." value="<%= searchQuery || '' %>">
-                            <button type="submit" class="button">搜索</button>
-                        </form>
-                    </div>
-                </div>
-                 <div class="file-creation-controls">
                     <form action="/create-text-file" method="POST" class="control-form">
                         <input type="hidden" name="currentPath" value="<%= actualRelativePath %>">
                         <% if (isAdminViewingOther) { %><input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>"><% } %>
@@ -101,13 +82,34 @@
                         <button type="submit" class="button">新建文本文件</button>
                     </form>
                     <form action="/create-folder" method="POST" class="control-form">
-                        <input type="hidden" name="currentPath" value="<%= actualRelativePath %>">
+                         <input type="hidden" name="currentPath" value="<%= actualRelativePath %>">
                         <% if (isAdminViewingOther) { %><input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>"><% } %>
                         <input type="text" name="folderName" placeholder="新文件夾名" required>
                         <button type="submit" class="button">創建文件夾</button>
                     </form>
+                    <button id="upload-toggle-button" class="button">上傳</button>
+                    <button id="multi-select-toggle" class="button secondary">啟用多選</button>
+                    <div class="view-toggle">
+                        <% const listViewLink = new URLSearchParams(); if(isAdminViewingOther) listViewLink.set('targetUsername', viewContextUser.username); if(searchQuery) listViewLink.set('q', searchQuery); if(actualRelativePath !== '/') listViewLink.set('path', actualRelativePath); %>
+                        <% const gridViewLink = new URLSearchParams(listViewLink.toString()); gridViewLink.set('grid', 'true'); %>
+                        <a href="?<%= listViewLink.toString() %>" class="button <%= !isGridView ? 'active' : 'secondary' %>">列表</a>
+                        <a href="?<%= gridViewLink.toString() %>" class="button <%= isGridView ? 'active' : 'secondary' %>">網格</a>
+                    </div>
+                </div>
+                 <div class="search-controls">
+                     <form action="/files" method="GET" class="control-form">
+                        <% if (isAdminViewingOther) { %><input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>"><% } %>
+                        <input type="text" name="q" placeholder="搜索..." value="<%= searchQuery || '' %>" style="flex-grow: 1;">
+                        <button type="submit" class="button">搜索</button>
+                    </form>
                  </div>
 
+                <div id="multi-select-actions" style="display: none;">
+                    <button id="download-selected" class="button">打包下載</button>
+                    <button id="move-selected" class="button">移動</button>
+                    <button id="delete-selected" class="button danger">刪除</button>
+                </div>
+                
                 <section id="upload-section" style="display:none;">
                     <h2>上傳文件或文件夾</h2>
                     <form action="/upload" method="POST" enctype="multipart/form-data" id="upload-form">
@@ -129,13 +131,13 @@
                      <% if (isAdminViewingOther) { %><input type="hidden" name="targetUsername" value="<%= viewContextUser.username %>"><% } %>
                 </form>
 
-                <div id="file-container" class="<%= items.length === 0 ? 'empty' : '' %>">
+                <div id="file-container" class="<%- items.length === 0 ? 'empty' : '' %>">
                     <% if (items.length === 0 && !isSearchResult) { %>
                         <p class="empty-folder-message">這個文件夾是空的。</p>
                     <% } else if (items.length === 0 && isSearchResult) { %>
                         <p class="empty-folder-message">找不到符合條件的項目。</p>
                     <% } else { %>
-                        <ul class="<%- req.query.grid ? 'grid-view' : 'list-view' %>">
+                        <ul class="<%- isGridView ? 'grid-view' : 'list-view' %>">
                             <% items.forEach(item => { %>
                                 <li data-path="<%= item.path %>" data-name="<%= item.name %>" data-isdir="<%= item.isDir %>">
                                     <div class="file-entry">
@@ -152,11 +154,9 @@
                                         <span class="file-date"><%= new Date(item.lastModified).toLocaleString() %></span>
                                     </div>
                                     <div class="file-actions">
-                                        <% if (!item.isDir) { %>
-                                            <% if (ALLOWED_TEXT_EXTENSIONS.includes(require('path').extname(item.name).toLowerCase())) { %>
-                                                <a href="/view?path=<%= encodeURIComponent(item.path) %><% if (isAdminViewingOther) { %>&targetUsername=<%= encodeURIComponent(viewContextUser.username) %><% } %>" class="button secondary">查看</a>
-                                                <a href="/edit?path=<%= encodeURIComponent(item.path) %><% if (isAdminViewingOther) { %>&targetUsername=<%= encodeURIComponent(viewContextUser.username) %><% } %>" class="button secondary">編輯</a>
-                                            <% } %>
+                                        <% if (!item.isDir && ALLOWED_TEXT_EXTENSIONS.includes(require('path').extname(item.name).toLowerCase())) { %>
+                                            <a href="/view?path=<%= encodeURIComponent(item.path) %><% if (isAdminViewingOther) { %>&targetUsername=<%= encodeURIComponent(viewContextUser.username) %><% } %>" class="button secondary">查看</a>
+                                            <a href="/edit?path=<%= encodeURIComponent(item.path) %><% if (isAdminViewingOther) { %>&targetUsername=<%= encodeURIComponent(viewContextUser.username) %><% } %>" class="button secondary">編輯</a>
                                         <% } %>
                                         <button class="button secondary rename-btn">重命名</button>
                                         <a href="/download?path=<%= encodeURIComponent(item.path) %><% if (isAdminViewingOther) { %>&targetUsername=<%= encodeURIComponent(viewContextUser.username) %><% } %>" class="button secondary">下載</a>
@@ -177,9 +177,10 @@
                         </ul>
                     <% } %>
                 </div>
-            <% } else if (viewMode === 'userShares') { %>
-                <!-- Public Shares View -->
-                <div class="table-container">
+
+            <% } else { %>
+                <!-- Public Shares Content -->
+                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
@@ -269,20 +270,328 @@
 
     <script src="/theme.js"></script>
     <script>
-    // All client-side javascript from original file + new refactored logic
-    // This is a simplified representation. The actual script is much longer.
-    document.addEventListener('DOMContentLoaded', function() {
-        // All event listeners for buttons, modals, multi-select, etc.
-        // This includes logic for:
-        // - Toggling upload section
-        // - Toggling multi-select mode
-        // - Handling batch actions (delete, download, move)
-        // - Opening/closing modals (move, share)
-        // - Fetching directory tree for move modal
-        // - Creating and revoking share links
-        // - Toggling rename forms
-        // - Copying share links to clipboard
-    });
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- BASIC UI TOGGLES ---
+            const uploadToggleButton = document.getElementById('upload-toggle-button');
+            if (uploadToggleButton) {
+                uploadToggleButton.addEventListener('click', () => {
+                    const uploadSection = document.getElementById('upload-section');
+                    if (uploadSection) {
+                        uploadSection.style.display = uploadSection.style.display === 'none' ? 'block' : 'none';
+                    }
+                });
+            }
+
+            document.querySelectorAll('.rename-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const listItem = this.closest('li');
+                    const renameForm = listItem.querySelector('.rename-form');
+                    if (renameForm) {
+                        renameForm.style.display = renameForm.style.display === 'none' ? 'block' : 'none';
+                    }
+                });
+            });
+
+            // --- MULTI-SELECT LOGIC ---
+            const multiSelectToggle = document.getElementById('multi-select-toggle');
+            const multiSelectActions = document.getElementById('multi-select-actions');
+            const checkboxes = document.querySelectorAll('.multi-select-checkbox');
+
+            if (multiSelectToggle) {
+                multiSelectToggle.addEventListener('click', () => {
+                    const isEnabling = multiSelectActions.style.display === 'none';
+                    multiSelectActions.style.display = isEnabling ? 'flex' : 'none';
+                    multiSelectToggle.textContent = isEnabling ? '取消多選' : '啟用多選';
+                    multiSelectToggle.classList.toggle('active', isEnabling);
+
+                    checkboxes.forEach(cb => {
+                        cb.style.display = isEnabling ? 'inline-block' : 'none';
+                        if (!isEnabling) {
+                            cb.checked = false;
+                            cb.closest('li').classList.remove('selected');
+                        }
+                    });
+                });
+            }
+
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    e.target.closest('li').classList.toggle('selected', e.target.checked);
+                });
+            });
+
+            function getSelectedItemsData() {
+                const selected = [];
+                document.querySelectorAll('.multi-select-checkbox:checked').forEach(cb => {
+                    const li = cb.closest('li');
+                    selected.push({
+                        path: li.dataset.path,
+                        name: li.dataset.name,
+                        isDir: li.dataset.isdir === 'true'
+                    });
+                });
+                return selected;
+            }
+            
+            const multiActionForm = document.getElementById('multi-action-form');
+            const multiActionItemsInput = document.getElementById('multi-action-items');
+            const multiActionDestinationInput = document.getElementById('multi-action-destination');
+
+            const downloadSelectedBtn = document.getElementById('download-selected');
+            if(downloadSelectedBtn){
+                downloadSelectedBtn.addEventListener('click', () => {
+                    const selectedItems = getSelectedItemsData();
+                    if (selectedItems.length === 0) return alert('請至少選擇一個項目。');
+                    multiActionForm.action = '/download-archive';
+                    multiActionItemsInput.value = JSON.stringify(selectedItems);
+                    multiActionForm.submit();
+                });
+            }
+
+            const deleteSelectedBtn = document.getElementById('delete-selected');
+            if(deleteSelectedBtn){
+                deleteSelectedBtn.addEventListener('click', () => {
+                    const selectedItems = getSelectedItemsData();
+                    if (selectedItems.length === 0) return alert('請至少選擇一個項目。');
+                    if (confirm(`確定要刪除選中的 ${selectedItems.length} 個項目嗎？`)) {
+                        multiActionForm.action = '/delete-items-batch';
+                        multiActionItemsInput.value = JSON.stringify(selectedItems);
+                        multiActionForm.submit();
+                    }
+                });
+            }
+
+            // --- MOVE MODAL LOGIC ---
+            const moveModal = document.getElementById('move-modal');
+            const moveSelectedBtn = document.getElementById('move-selected');
+            const confirmMoveBtn = document.getElementById('confirm-move');
+            const cancelMoveBtn = moveModal.querySelector('#cancel-move');
+            const dirTreeContainer = document.getElementById('directory-tree');
+            let selectedDestination = null;
+            
+            if(moveSelectedBtn){
+                moveSelectedBtn.addEventListener('click', async () => {
+                    const selectedItems = getSelectedItemsData();
+                    if (selectedItems.length === 0) return alert('請至少選擇一個項目。');
+                    
+                    dirTreeContainer.innerHTML = '載入目錄中...';
+                    moveModal.style.display = 'block';
+
+                    const excludePaths = selectedItems.filter(i => i.isDir).map(i => i.path).join(',');
+                    const targetUsername = new URLSearchParams(window.location.search).get('targetUsername') || '';
+                    
+                    try {
+                        const response = await fetch(`/api/directories?excludePaths=${encodeURIComponent(excludePaths)}&targetUsername=${encodeURIComponent(targetUsername)}`);
+                        if (!response.ok) throw new Error('無法獲取目錄列表。');
+                        
+                        const treeData = await response.json();
+
+                        function buildTree(nodes, container) {
+                            const ul = document.createElement('ul');
+                            nodes.forEach(node => {
+                                const li = document.createElement('li');
+                                li.textContent = node.name;
+                                li.dataset.path = node.path;
+                                li.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    document.querySelectorAll('#directory-tree li').forEach(el => el.classList.remove('selected'));
+                                    li.classList.add('selected');
+                                    selectedDestination = node.path;
+                                });
+                                if (node.children && node.children.length > 0) {
+                                    buildTree(node.children, li);
+                                }
+                                ul.appendChild(li);
+                            });
+                            container.appendChild(ul);
+                        }
+                        dirTreeContainer.innerHTML = '';
+                        const root = document.createElement('li');
+                        root.textContent = '/ (根目錄)';
+                        root.dataset.path = '/';
+                        root.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            document.querySelectorAll('#directory-tree li').forEach(el => el.classList.remove('selected'));
+                            root.classList.add('selected');
+                            selectedDestination = '/';
+                        });
+                        dirTreeContainer.appendChild(root);
+                        buildTree(treeData, dirTreeContainer);
+
+                    } catch(error) {
+                        dirTreeContainer.innerHTML = `<span class="error-message">${error.message}</span>`;
+                    }
+                });
+            }
+
+            if(confirmMoveBtn){
+                confirmMoveBtn.addEventListener('click', () => {
+                    const selectedItems = getSelectedItemsData();
+                    if (!selectedDestination) return alert('請選擇一個目標文件夾。');
+                    
+                    multiActionForm.action = '/move-items';
+                    multiActionItemsInput.value = JSON.stringify(selectedItems.map(i => i.path));
+                    multiActionDestinationInput.value = selectedDestination;
+                    multiActionForm.submit();
+                });
+            }
+
+            function closeModal(modal) {
+                if(modal) modal.style.display = 'none';
+            }
+            
+            if (moveModal) {
+                moveModal.querySelector('.close-button').onclick = () => closeModal(moveModal);
+                cancelMoveBtn.onclick = () => closeModal(moveModal);
+            }
+
+            // --- SHARE MODAL LOGIC ---
+            const shareModal = document.getElementById('share-modal');
+            if(shareModal){
+                const shareModalName = document.getElementById('share-item-name');
+                const existingLinksContainer = document.getElementById('existing-links');
+                const createLinkForm = document.getElementById('create-link-form');
+                let currentShareData = {};
+
+                document.querySelectorAll('.share-btn').forEach(button => {
+                    button.addEventListener('click', async function() {
+                        const li = this.closest('li');
+                        currentShareData = {
+                            path: li.dataset.path,
+                            name: li.dataset.name,
+                            isDir: li.dataset.isdir === 'true'
+                        };
+
+                        shareModalName.textContent = currentShareData.name;
+                        existingLinksContainer.innerHTML = '正在載入現有連結...';
+                        shareModal.style.display = 'block';
+                        
+                        const targetUsername = new URLSearchParams(window.location.search).get('targetUsername') || '';
+                        const response = await fetch(`/api/item-public-links?filePath=${encodeURIComponent(currentShareData.path)}&targetUsername=${encodeURIComponent(targetUsername)}`);
+                        const data = await response.json();
+                        
+                        if (data.success && data.links) {
+                            if(data.links.length === 0){
+                                existingLinksContainer.innerHTML = '<p>此項目沒有公開連結。</p>';
+                            } else {
+                                existingLinksContainer.innerHTML = '<h4>現有連結:</h4>';
+                                const ul = document.createElement('ul');
+                                data.links.forEach(link => {
+                                   const li = document.createElement('li');
+                                   li.innerHTML = `<a href="${link.publicUrl}" target="_blank">${link.publicUrl}</a> <button class="button danger small revoke-link-btn" data-link-id="${link.link_id}">撤銷</button>`;
+                                   ul.appendChild(li);
+                                });
+                                existingLinksContainer.appendChild(ul);
+                            }
+                        } else {
+                             existingLinksContainer.innerHTML = `<p class="error-message">${data.message || '無法載入連結。'}</p>`;
+                        }
+                    });
+                });
+
+                createLinkForm.addEventListener('submit', async function(e){
+                    e.preventDefault();
+                    const formData = new FormData(this);
+                    const targetUsername = new URLSearchParams(window.location.search).get('targetUsername') || '';
+                    
+                    const response = await fetch('/actions/create-public-link', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            filePathToShare: currentShareData.path,
+                            isDirectory: currentShareData.isDir,
+                            expiresAt: formData.get('expiresAt'),
+                            allowDownload: formData.get('allowDownload') === 'on',
+                            allowView: formData.get('allowView') === 'on',
+                            targetUsername: targetUsername
+                        })
+                    });
+                    const result = await response.json();
+                    if(result.success){
+                        alert(result.message);
+                        closeModal(shareModal);
+                    } else {
+                        alert(`創建失敗: ${result.message}`);
+                    }
+                });
+
+                shareModal.querySelector('.close-button').onclick = () => closeModal(shareModal);
+            }
+            
+            // --- BATCH REVOKE SHARES LOGIC ---
+            const revokeSelectedBtn = document.getElementById('revoke-selected-shares');
+            if(revokeSelectedBtn){
+                revokeSelectedBtn.addEventListener('click', async () => {
+                    const selectedIds = [];
+                    document.querySelectorAll('.share-checkbox:checked').forEach(cb => selectedIds.push(cb.value));
+
+                    if(selectedIds.length === 0) return alert('請選擇要撤銷的連結。');
+                    if(!confirm(`確定要撤銷選中的 ${selectedIds.length} 個分享連結嗎？`)) return;
+
+                    const targetUsername = new URLSearchParams(window.location.search).get('targetUsername') || '';
+                    const response = await fetch('/actions/revoke-public-links-batch', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ link_ids: selectedIds, contextUsername: targetUsername })
+                    });
+                    const result = await response.json();
+                    alert(result.message);
+                    if(result.success) window.location.reload();
+                });
+                
+                const selectAllCheckbox = document.getElementById('share-select-all');
+                if(selectAllCheckbox){
+                    selectAllCheckbox.addEventListener('change', function(){
+                        document.querySelectorAll('.share-checkbox').forEach(cb => cb.checked = this.checked);
+                    });
+                }
+            }
+            
+            // --- UPLOAD DRAG & DROP ---
+            const dropArea = document.getElementById('drop-area');
+            if (dropArea) {
+                const fileInput = document.getElementById('file-input');
+                const folderInput = document.getElementById('folder-input');
+                const previewList = document.querySelector('#file-list-preview ul');
+
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+                });
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
+                });
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
+                });
+                dropArea.addEventListener('drop', e => {
+                    fileInput.files = e.dataTransfer.files;
+                    updatePreview();
+                });
+                
+                fileInput.addEventListener('change', updatePreview);
+                folderInput.addEventListener('change', updatePreview);
+
+                function updatePreview() {
+                    previewList.innerHTML = '';
+                    const allFiles = [...fileInput.files, ...folderInput.files];
+                    const uniqueFiles = Array.from(new Set(allFiles.map(f => (f.webkitRelativePath || f.name) + f.size)))
+                        .map(key => allFiles.find(f => (f.webkitRelativePath || f.name) + f.size === key));
+                        
+                    if (uniqueFiles.length > 0) {
+                        uniqueFiles.forEach(file => {
+                            const li = document.createElement('li');
+                            li.textContent = file.webkitRelativePath || file.name;
+                            previewList.appendChild(li);
+                        });
+                    }
+                }
+            }
+             // General close modal logic
+            window.onclick = function(event) {
+                if (event.target == moveModal) closeModal(moveModal);
+                if (event.target == shareModal) closeModal(shareModal);
+            }
+        });
     </script>
 </body>
 </html>
