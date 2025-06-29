@@ -605,6 +605,9 @@
                 %>
                 <ul>
                     <% items.forEach(item => { %>
+                         <li class="<%= item.isDir ? 'dir-item' : 'file-item' %>" data-path="<%= item.path %>" data-name="<%= item.name %>" data-is-dir="<%= item.isDir %>">
+                              </li>
+                     <% }) %>
                         <li data-item-path="<%= item.path %>"
                             <% if (locals.viewMode === 'userShares') { %>data-link-id="<%= item.link_id %>" data-token="<%= item.token %>" data-public-url="<%= item.publicUrl %>"<% } %>
                             >
@@ -2399,5 +2402,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
         });
     </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 獲取文件容器元素
+    const fileContainer = document.getElementById('file-container');
+
+    // 為文件容器添加點擊事件監聽器 (使用事件委派)
+    fileContainer.addEventListener('click', (event) => {
+        // 尋找被點擊的 li 元素，無論點擊的是 li 的哪個子元素
+        const clickedItem = event.target.closest('li.file-item, li.dir-item');
+
+        // 如果沒有點擊到 li 元素，則不執行任何操作
+        if (!clickedItem) {
+            return;
+        }
+        
+        // 查找當前所有被選中的項目
+        const currentlySelected = fileContainer.querySelectorAll('li.selected');
+
+        // 移除所有已選中項目的 'selected' class
+        currentlySelected.forEach(item => {
+            item.classList.remove('selected');
+        });
+
+        // 為當前點擊的項目添加 'selected' class
+        clickedItem.classList.add('selected');
+    });
+
+    // 點擊容器空白處取消所有選中
+    fileContainer.addEventListener('click', (event) => {
+        // 如果點擊事件的目標是容器本身 (而不是裡面的項目)
+        if (event.target === fileContainer || event.target.tagName.toLowerCase() === 'ul') {
+            const currentlySelected = fileContainer.querySelectorAll('li.selected');
+            currentlySelected.forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+    });
+});
+</script>
+
+</body>
+</html>
 </body>
 </html>
