@@ -9,16 +9,22 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
+        /* MODIFIED: Styles for the new header layout */
         .viewer-header { 
+            display: flex;
+            justify-content: space-between; /* Aligns children to opposite ends */
+            align-items: center; /* Vertically centers the items */
             margin-bottom: 15px;
         }
-        .viewer-actions { 
-            display: flex; 
-            gap: 10px; 
-            margin-top: 15px;
-            margin-bottom: 15px; 
-            align-items: center;
+        .header-actions {
+            display: flex;
+            gap: 10px; /* Space between Edit and Download buttons */
         }
+        /* Keep h2 separate for clean layout */
+        .viewer-title {
+             margin-bottom: 15px;
+        }
+
         pre {
             background-color: #f8f9fa;
             border: 1px solid #dee2e6;
@@ -45,19 +51,22 @@
         <% } %>
 
         <div class="viewer-header">
-             <% const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/'; %>
-             <a href="/files?path=<%= encodeURIComponent(parentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">&larr; 返回文件列表</a>
+            <% const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/'; %>
+            <a href="/files?path=<%= encodeURIComponent(parentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">&larr; 返回文件列表</a>
+            
+            <div class="header-actions">
+                <% if (ALLOWED_TEXT_EXTENSIONS.includes(fileExtension)) { %>
+                    <a href="/edit?path=<%= encodeURIComponent(currentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">編輯文件</a>
+                <% } %>
+                <a href="/download?path=<%= encodeURIComponent(currentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link" download>下載文件</a>
+            </div>
+        </div>
+
+        <div class="viewer-title">
             <h2>正在查看: <%= filename %></h2>
         </div>
 
-        <div class="viewer-actions">
-            <% if (ALLOWED_TEXT_EXTENSIONS.includes(fileExtension)) { %>
-                <a href="/edit?path=<%= encodeURIComponent(currentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">編輯文件</a>
-            <% } %>
-            <a href="/download?path=<%= encodeURIComponent(currentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link" download>下載文件</a>
-        </div>
-
-        <pre><%- content %></pre>
+        <pre><%= content %></pre>
     </div>
     <script src="/theme.js"></script>
 </body>
