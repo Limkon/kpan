@@ -888,46 +888,6 @@
         </div>
     </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // 找到文件容器
-    const fileContainer = document.getElementById('file-container');
-    if (fileContainer) {
-        // 為容器內的每個文件項添加點擊事件監聽
-        fileContainer.addEventListener('click', (event) => {
-            // 尋找被點擊的文件項 (li 元素)
-            const item = event.target.closest('li');
-            if (!item) return; // 如果點擊的不是文件項，則不做任何事
-
-            // 阻止點擊文件項中的鏈接或按鈕時觸發選中效果
-            if (event.target.tagName === 'A' || event.target.tagName === 'BUTTON' || event.target.closest('.action-link')) {
-                return;
-            }
-
-            // 切換 .selected 樣式
-            item.classList.toggle('selected');
-
-            // 同步更新與該文件項關聯的多選框 (checkbox) 的狀態
-            const checkbox = item.querySelector('input[type="checkbox"]');
-            if (checkbox) {
-                checkbox.checked = item.classList.contains('selected');
-            }
-        });
-
-        // 當多選框的狀態改變時，也同步更新文件項的 .selected 樣式
-        fileContainer.addEventListener('change', (event) => {
-            if (event.target.type === 'checkbox') {
-                const item = event.target.closest('li');
-                if (item) {
-                    item.classList.toggle('selected', event.target.checked);
-                }
-            }
-        });
-    }
-});
-</script>
-
-
     <script src="/theme.js"></script>
     <script>
         // JavaScript code remains the same as in your previous version
@@ -2430,45 +2390,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         });
     </script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // 獲取文件容器元素
-    const fileContainer = document.getElementById('file-container');
-
-    // 為文件容器添加點擊事件監聽器 (使用事件委派)
-    fileContainer.addEventListener('click', (event) => {
-        // 尋找被點擊的 li 元素，無論點擊的是 li 的哪個子元素
-        const clickedItem = event.target.closest('li.file-item, li.dir-item');
-
-        // 如果沒有點擊到 li 元素，則不執行任何操作
-        if (!clickedItem) {
-            return;
-        }
-        
-        // 查找當前所有被選中的項目
-        const currentlySelected = fileContainer.querySelectorAll('li.selected');
-
-        // 移除所有已選中項目的 'selected' class
-        currentlySelected.forEach(item => {
-            item.classList.remove('selected');
-        });
-
-        // 為當前點擊的項目添加 'selected' class
-        clickedItem.classList.add('selected');
-    });
-
-    // 點擊容器空白處取消所有選中
-    fileContainer.addEventListener('click', (event) => {
-        // 如果點擊事件的目標是容器本身 (而不是裡面的項目)
-        if (event.target === fileContainer || event.target.tagName.toLowerCase() === 'ul') {
-            const currentlySelected = fileContainer.querySelectorAll('li.selected');
-            currentlySelected.forEach(item => {
-                item.classList.remove('selected');
-            });
-        }
-    });
-});
-</script>
 
 </body>
 </html>
