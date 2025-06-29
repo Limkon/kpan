@@ -37,33 +37,41 @@
             flex-direction: column;
         }
 
-        /* --- [FIX] Header Layout --- */
+        /* --- GitHub-Style Header --- */
         .editor-header {
             margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: nowrap; /* Prevent wrapping */
+            flex-wrap: nowrap;
             gap: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #d0d7de;
         }
         
         .editor-header h2 {
             margin: 0;
+            font-size: 1.25em;
+            font-weight: 600;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            min-width: 0; /* Important for ellipsis in flexbox */
-            flex-grow: 1; /* Allow title to take available space */
+            min-width: 0;
+            flex-grow: 1;
         }
         
         .editor-header .button-link {
-            flex-shrink: 0; /* Prevent button from shrinking */
+            flex-shrink: 0;
+            background-color: #f6f8fa;
+            border: 1px solid rgba(27, 31, 36, 0.15);
+            color: #24292f;
         }
-
+        .editor-header .button-link:hover {
+            background-color: #f3f4f6;
+        }
 
         .editor-actions {
             margin-top: 15px;
-            text-align: right;
             flex-shrink: 0;
             display: flex;
             justify-content: flex-end;
@@ -72,16 +80,13 @@
         
         .button-link {
             display: inline-block;
-            padding: 8px 12px;
-            background-color: #6c757d;
-            color: white;
+            padding: 8px 16px;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 0.9em;
+            font-weight: 500;
             white-space: nowrap;
-        }
-        .button-link:hover {
-            background-color: #5a6268;
+            cursor: pointer;
         }
 
         /* --- Custom Code Editor --- */
@@ -89,8 +94,8 @@
             position: relative;
             flex-grow: 1;
             display: flex;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
             overflow: hidden;
             background-color: #ffffff;
         }
@@ -102,9 +107,9 @@
             font-size: 14px;
             line-height: 1.5;
             color: #888;
-            background-color: #f7f7f7;
+            background-color: #f6f8fa;
             text-align: right;
-            border-right: 1px solid #ddd;
+            border-right: 1px solid #d0d7de;
             user-select: none;
             overflow: hidden;
         }
@@ -112,7 +117,7 @@
         .editor-main {
             position: relative;
             flex-grow: 1;
-            overflow: auto; /* Required for scroll syncing */
+            overflow: auto;
         }
         
         .editor-main textarea,
@@ -132,20 +137,20 @@
             white-space: pre;
             word-wrap: normal;
             overflow-wrap: normal;
-            background: transparent; /* Both are transparent */
+            background: transparent;
         }
 
         .editor-main textarea {
             z-index: 1;
-            color: transparent; /* Makes the textarea text invisible */
-            caret-color: #333; /* But keeps the caret visible */
+            color: transparent;
+            caret-color: #24292f;
             resize: none;
             outline: none;
         }
 
         .editor-main pre {
             z-index: 0;
-            pointer-events: none; /* Allows clicks to go through to the textarea */
+            pointer-events: none;
             overflow: hidden; 
         }
         
@@ -153,14 +158,14 @@
             display: block;
         }
 
-        /* --- Syntax Highlighting Styles --- */
+        /* --- Syntax Highlighting Styles (VSCode-like) --- */
         pre .token-comment { color: #6a9955; }
         pre .token-string { color: #ce9178; }
-        pre .token-keyword { color: #569cd6; font-weight: bold; }
+        pre .token-keyword { color: #c586c0; }
         pre .token-number { color: #b5cea8; }
         pre .token-boolean { color: #569cd6; }
         pre .token-function { color: #dcdcaa; }
-        pre .token-tag { color: #4ec9b0; }
+        pre .token-tag { color: #569cd6; }
         pre .token-attribute { color: #9cdcfe; }
         pre .token-value { color: #ce9178; }
         pre .token-operator { color: #d4d4d4; }
@@ -170,36 +175,33 @@
 
         /* --- Dark Theme Adjustments --- */
         body.dark-theme {
-            background-color: #1e1e1e;
-            color: #d4d4d4;
+            background-color: #0d1117;
+            color: #c9d1d9;
         }
-        .dark-theme .button-link {
-            background-color: #5a6268;
-            color: #e0e0e0;
+        .dark-theme .editor-header {
+            border-bottom: 1px solid #30363d;
         }
-        .dark-theme .button-link:hover {
-             background-color: #6c757d;
+        .dark-theme .editor-header .button-link {
+            background-color: #21262d;
+            border-color: rgba(240, 246, 252, 0.1);
+            color: #c9d1d9;
+        }
+        .dark-theme .editor-header .button-link:hover {
+            background-color: #30363d;
+            border-color: #8b949e;
         }
         .dark-theme .code-editor-wrapper {
-            border-color: #555;
-            background-color: #1e1e1e;
+            border-color: #30363d;
+            background-color: #0d1117;
         }
         .dark-theme .line-numbers {
-            background-color: #252526;
-            color: #858585;
-            border-right: 1px solid #333;
+            background-color: #161b22;
+            color: #8b949e;
+            border-right: 1px solid #30363d;
         }
         .dark-theme .editor-main textarea {
-            caret-color: #aeafad;
+            caret-color: #c9d1d9;
         }
-        
-        .dark-theme pre .token-operator,
-        .dark-theme pre .token-punctuation {
-            color: #d4d4d4;
-        }
-        .dark-theme pre .token-tag { color: #4ec9b0; }
-        .dark-theme pre .token-attribute { color: #9cdcfe; }
-        .dark-theme pre .token-string { color: #ce9178; }
     </style>
 </head>
 <body class="<%= locals.theme === 'dark' ? 'dark-theme' : '' %>">
@@ -212,7 +214,7 @@
         <% } %>
 
         <div class="editor-header">
-             <h2>正在编辑: <%= filename %></h2>
+             <h2><%= filename %></h2>
               <% const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/'; %>
               <a href="/files?path=<%= encodeURIComponent(parentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">&larr; 返回文件列表</a>
         </div>
@@ -226,7 +228,7 @@
             <div class="code-editor-wrapper">
                 <div class="line-numbers" id="line-numbers-display">1</div>
                 <div class="editor-main">
-                    <textarea id="fileContent" name="fileContent" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"><%- content %></textarea>
+                    <textarea id="fileContent" name="fileContent" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"><%= content %></textarea>
                     <pre id="highlight-output" aria-hidden="true"><code></code></pre>
                 </div>
             </div>
@@ -248,14 +250,9 @@
         const lineNumbersDisplay = document.getElementById('line-numbers-display');
         const filename = "<%= filename %>";
 
+        // This function ensures that HTML entities are properly escaped.
         const escapeHtml = (text) => {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
             return text.replace(/[&<>"']/g, m => map[m]);
         };
 
@@ -264,7 +261,7 @@
             if (['js', 'mjs', 'cjs', 'json'].includes(ext)) return 'javascript';
             if (['css'].includes(ext)) return 'css';
             if (['html', 'htm', 'xml'].includes(ext)) return 'html';
-            return 'plaintext'; // Default
+            return 'plaintext';
         };
         
         const language = getLanguageFromFilename(filename);
@@ -273,90 +270,60 @@
             if (lang === 'plaintext') {
                 return escapeHtml(text);
             }
-
-            let escapedText = escapeHtml(text);
             
-            // This is a very basic highlighter, not a full parser.
+            // A simplified, non-blocking highlighter.
+            // This is NOT a full parser and will have limitations.
+            let html = escapeHtml(text);
             const rules = {
                 javascript: [
-                    { type: 'comment', regex: /(\/\/.*|\/\*[\s\S]*?\*\/)/g },
-                    { type: 'string', regex: /(".*?"|'.*?'|`.*?`)/gs },
-                    { type: 'keyword', regex: /\b(const|let|var|if|else|for|while|return|function|class|import|export|from|async|await|new|this|typeof|instanceof)\b/g },
-                    { type: 'boolean', regex: /\b(true|false|null|undefined)\b/g },
-                    { type: 'number', regex: /\b(\d+(\.\d+)?)\b/g },
-                    { type: 'function', regex: /(\w+)(?=\s*\()/g },
-                    { type: 'operator', regex: /([+\-*/%=&|<>!^~?:])/g },
-                    { type: 'punctuation', regex: /([{}()[\].,;])/g }
+                    { t: 'comment', r: /(\/\/.*|\/\*[\s\S]*?\*\/)/g },
+                    { t: 'string', r: /(".*?"|'.*?'|`.*?`)/gs },
+                    { t: 'keyword', r: /\b(const|let|var|if|else|for|while|return|function|class|import|export|from|async|await|new|this|typeof|instanceof|switch|case|default|break|continue)\b/g },
+                    { t: 'boolean', r: /\b(true|false|null|undefined)\b/g },
+                    { t: 'number', r: /\b(\d+(\.\d+)?)\b/g },
+                    { t: 'function', r: /(\w+)(?=\s*\()/g },
+                    { t: 'punctuation', r: /([{}()[\].,;])/g }
                 ],
                 html: [
-                    { type: 'comment', regex: /(&lt;!--[\s\S]*?--&gt;)/g },
-                    { type: 'tag', regex: /(&lt;\/?[\w\d-]+|&gt;)/g },
-                    { type: 'attribute', regex: /(\s+[\w\d-]+)(?=\s*=)/g },
-                    { type: 'string', regex: /(".*?"|'.*?')/g }
+                    { t: 'comment', r: /(&lt;!--[\s\S]*?--&gt;)/g },
+                    { t: 'tag', r: /(&lt;\/?[\w\d-]+|&gt;)/g },
+                    { t: 'attribute', r: /(?<=\s)([\w\d-]+)(?==)/g },
                 ],
                 css: [
-                    { type: 'comment', regex: /(\/\*[\s\S]*?\*\/)/g },
-                    { type: 'string', regex: /(".*?")/g },
-                    { type: 'selector', regex: /(^|[\s,}{])([.#&]?[a-zA-Z0-9\-_*:]+)(?=[^}]*\{)/g },
-                    { type: 'property', regex: /([\w-]+)(?=\s*:)/g },
-                    { type: 'number', regex: /(-?\d*\.?\d+)(px|%|em|rem|vw|vh|s)?/g },
+                    { t: 'comment', r: /(\/\*[\s\S]*?\*\/)/g },
+                    { t: 'selector', r: /([^\{\}\s][^\{\}]*)(?=\s*\{)/g },
+                    { t: 'property', r: /([\w-]+)(?=\s*:)/g },
+                    { t: 'number', r: /(-?\d*\.?\d+)(px|%|em|rem|vw|vh|s)?/g },
+                    { t: 'string', r: /(".*?")/g },
                 ]
             };
-            
-            const langRules = rules[lang] || [];
-            if (langRules.length === 0) return escapedText;
 
-            // This approach is simplified and may not be perfect, but avoids complex lookaheads.
-            // It replaces text outside of existing spans.
-            let result = '';
-            let lastIndex = 0;
-            const combinedRegex = new RegExp(langRules.map(r => r.regex.source).join('|'), 'g');
-            
-            escapedText.replace(combinedRegex, (match, ...args) => {
-                const offset = args[args.length - 2];
-                // Find which rule matched
-                let ruleType = 'unknown';
-                for(let i = 0; i < langRules.length; i++){
-                    // Re-test the match with each rule's regex
-                     if(new RegExp(`^${langRules[i].regex.source}$`).test(match)){
-                        ruleType = langRules[i].type;
-                        break;
-                     }
-                }
-                 // Add the text before the match
-                result += escapedText.substring(lastIndex, offset);
-                // Add the highlighted match
-                result += `<span class="token-${ruleType}">${match}</span>`;
-                // Update the last index
-                lastIndex = offset + match.length;
+            const langRules = rules[lang] || [];
+            langRules.forEach(rule => {
+                html = html.replace(rule.r, `<span class="token-${rule.t}">$&</span>`);
             });
 
-            // Add any remaining text
-            result += escapedText.substring(lastIndex);
-            
-            return result;
+            return html;
         };
 
         const updateEditor = () => {
             const code = textarea.value;
-            
-            const highlightedCode = highlight(code, language);
-            highlightCodeEl.innerHTML = highlightedCode + '\n'; // Add trailing newline for better rendering of last line
+            highlightCodeEl.innerHTML = highlight(code, language) + '\n';
 
-            // Update line numbers
             const lineCount = code.split('\n').length || 1;
             const lines = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n');
             lineNumbersDisplay.textContent = lines;
-
-            // Sync scrolling
+            
             syncScroll();
         };
 
         const syncScroll = () => {
             if(!textarea || !highlightOutput || !lineNumbersDisplay) return;
-            highlightOutput.scrollTop = textarea.scrollTop;
-            highlightOutput.scrollLeft = textarea.scrollLeft;
-            lineNumbersDisplay.style.transform = `translateY(-${textarea.scrollTop}px)`;
+            requestAnimationFrame(() => {
+                highlightOutput.scrollTop = textarea.scrollTop;
+                highlightOutput.scrollLeft = textarea.scrollLeft;
+                lineNumbersDisplay.scrollTop = textarea.scrollTop;
+            });
         };
 
         const handleTab = (e) => {
@@ -364,21 +331,21 @@
                 e.preventDefault();
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
-                
-                const tabCharacter = '  '; // 2 spaces for tab
-                
-                // For multi-line selection
-                if (start !== end && textarea.value.substring(start, end).includes('\n')) {
-                    const selectedLines = textarea.value.substring(start, end).split('\n');
-                    const indentedText = selectedLines.map(line => e.shiftKey ? line.startsWith(tabCharacter) ? line.substring(2) : line : tabCharacter + line).join('\n');
-                    textarea.value = textarea.value.substring(0, start) + indentedText + textarea.value.substring(end);
-                    textarea.selectionStart = start;
-                    textarea.selectionEnd = start + indentedText.length;
-                } else {
-                    // Single line or no selection
-                    textarea.value = textarea.value.substring(0, start) + tabCharacter + textarea.value.substring(end);
-                    textarea.selectionStart = textarea.selectionEnd = start + tabCharacter.length;
+                const tabCharacter = '  ';
+
+                if (e.shiftKey) { // Shift + Tab for outdent
+                     const before = textarea.value.substring(0, start);
+                     const lastLineStart = before.lastIndexOf('\n') + 1;
+                     if (textarea.value.substring(lastLineStart, lastLineStart + 2) === tabCharacter) {
+                        textarea.value = textarea.value.substring(0, lastLineStart) + textarea.value.substring(lastLineStart + 2);
+                        textarea.selectionStart = start - 2;
+                        textarea.selectionEnd = end - 2;
+                     }
+                } else { // Normal Tab for indent
+                     textarea.value = textarea.value.substring(0, start) + tabCharacter + textarea.value.substring(end);
+                     textarea.selectionStart = textarea.selectionEnd = start + tabCharacter.length;
                 }
+                
                 updateEditor();
             }
         };
