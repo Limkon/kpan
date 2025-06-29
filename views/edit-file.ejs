@@ -8,29 +8,71 @@
     <title>编辑文件: <%= filename %></title>
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
+
     <style>
-        body, html { height: 100%; margin: 0; display: flex; flex-direction: column; }
-        .container { flex-grow: 1; display: flex; flex-direction: column; padding: 15px; max-width: 95%; width: 100%; margin-left: auto; margin-right: auto; }
-        form { flex-grow: 1; display: flex; flex-direction: column; }
-        .editor-header { margin-bottom: 15px; }
-        .editor-actions { margin-top: 15px; text-align: right; flex-shrink: 0; display: flex; justify-content: flex-end; gap: 10px; }
-        .cm-editor { flex-grow: 1; height: 100%; border: 1px solid #ced4da; border-radius: 5px; }
-        body.dark-theme .cm-editor { border-color: #555; }
+        /* 整體佈局樣式 */
+        body, html {
+            height: 100%; margin: 0; display: flex; flex-direction: column;
+        }
+        .container {
+            flex-grow: 1; display: flex; flex-direction: column; padding: 15px;
+            max-width: 95%; width: 100%; margin-left: auto; margin-right: auto;
+        }
+        form {
+            flex-grow: 1; display: flex; flex-direction: column;
+        }
+        .editor-header {
+            margin-bottom: 15px;
+        }
+        .editor-actions {
+            margin-top: 15px; text-align: right; flex-shrink: 0;
+            display: flex; justify-content: flex-end; gap: 10px;
+        }
+
+        /* 簡化樣式，只修改字體 */
+        textarea#fileContent {
+            flex-grow: 1;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 1rem;
+            line-height: 1.6;
+            font-family: 'SimSun', '宋体', 'STSong', serif;
+        }
+
+        /* 優化暗色主題下的樣式 */
+        body.dark-theme textarea#fileContent {
+            border-color: #555;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <% if (message) { %><div class="message <%= messageType === 'error' ? 'error-message' : '' %>"><%= message %></div><% } %>
+        <% if (message) { %>
+            <div class="message <%= messageType === 'error' ? 'error-message' : '' %>">
+                <%= message %>
+            </div>
+        <% } %>
+
         <div class="editor-header">
-            <% const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/'; %>
-            <a href="/files?path=<%= encodeURIComponent(parentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">&larr; 返回文件列表</a>
+             <% const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/'; %>
+             <a href="/files?path=<%= encodeURIComponent(parentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">&larr; 返回文件列表</a>
             <h2>正在编辑: <%= filename %></h2>
         </div>
-        <form action="/save/<%= encodeURIComponent(currentPath) %>" method="post" id="editForm">
+
+        <form action="/save/<%= encodeURIComponent(currentPath) %>" method="post">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <% if (viewTargetUsername) { %><input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>"><% } %>
-            <div id="editor"></div>
-            <textarea id="fileContent" name="fileContent" style="display: none;"><%= content %></textarea>
+            <% if (viewTargetUsername) { %>
+                <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+            <% } %>
+            
+            <textarea id="fileContent" name="fileContent"><%= content %></textarea>
+
             <div class="editor-actions">
                 <button type="submit">保存更改</button>
                 <% const viewUrl = `/view?path=${encodeURIComponent(currentPath)}${viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''}`; %>
@@ -40,92 +82,6 @@
     </div>
     
     <script src="/theme.js"></script>
-
-    <script type="module">
-        // 1. 導入所有需要的模塊
-        import { EditorState } from "/codemirror/state/dist/index.js";
-        import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightSpecialChars, drawSelection, dropCursor, rectangularSelection, crosshairCursor, highlightActiveLine } from "/codemirror/view/dist/index.js";
-        import { defaultKeymap, history, historyKeymap } from "/codemirror/commands/dist/index.js";
-        import { syntaxHighlighting, defaultHighlightStyle, bracketMatching, foldGutter, foldKeymap, indentOnInput } from "/codemirror/language/dist/index.js";
-
-        // 2. 定義輔助函數 (只定義一次)
-        async function getLanguageSupport(filename) {
-            const extension = "." + filename.split('.').pop();
-            switch (extension) {
-                case '.js': case '.mjs': case '.cjs':
-                    return (await import("/codemirror/lang-javascript/dist/index.js")).javascript({ jsx: true, typescript: true });
-                case '.css':
-                    return (await import("/codemirror/lang-css/dist/index.js")).css();
-                case '.html':
-                    return (await import("/codemirror/lang-html/dist/index.js")).html();
-                case '.json':
-                    return (await import("/codemirror/lang-json/dist/index.js")).json();
-                case '.md':
-                    return (await import("/codemirror/lang-markdown/dist/index.js")).markdown();
-                default:
-                    return null;
-            }
-        }
-
-        // 3. 執行主邏輯 (立即執行的異步函數 IIFE)
-        (async () => {
-            let oneDarkTheme = []; // 默認為空主題（亮色）
-            try {
-                const { oneDark } = await import("/codemirror/theme-one-dark/dist/index.js");
-                oneDarkTheme = oneDark;
-                console.log("Dark theme loaded successfully.");
-            } catch (error) {
-                console.error("Could not load CodeMirror dark theme. Falling back to default light theme.", error);
-            }
-
-            const fileContentElement = document.getElementById('fileContent');
-            const updateListener = EditorView.updateListener.of(update => {
-                if (update.docChanged) { fileContentElement.value = update.state.doc.toString(); }
-            });
-            const basicSetup = [
-                lineNumbers(),
-                highlightActiveLineGutter(),
-                history(),
-                foldGutter(),
-                drawSelection(),
-                indentOnInput(),
-                bracketMatching(),
-                keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap])
-            ];
-
-            const isDark = document.body.classList.contains('dark-theme');
-            const themeExtensions = [
-                isDark ? oneDarkTheme : [], 
-                syntaxHighlighting(defaultHighlightStyle, { fallback: true })
-            ];
-
-            // 在這裡調用我們上面定義好的函數
-            const languageSupport = await getLanguageSupport('<%= filename %>');
-            const languageExtension = languageSupport ? [languageSupport] : [];
-
-            const state = EditorState.create({
-                doc: fileContentElement.value,
-                extensions: [
-                    basicSetup,
-                    themeExtensions,
-                    languageExtension,
-                    updateListener
-                ]
-            });
-
-            const view = new EditorView({ state, parent: document.getElementById('editor') });
-            
-            const themeSwitcher = document.getElementById('theme-switcher');
-            if (themeSwitcher) {
-                const observer = new MutationObserver(() => {
-                    const isDarkNow = document.documentElement.getAttribute('data-theme') === 'dark';
-                    view.dispatch({
-                        effects: EditorView.theme.reconfigure(isDarkNow ? oneDarkTheme : [])
-                    });
-                });
-                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-            }
-        })();
-    </script>
+    
 </body>
 </html>
