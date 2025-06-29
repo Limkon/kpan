@@ -37,13 +37,14 @@
             flex-direction: column;
         }
 
+        /* --- [FIX] Header Layout --- */
         .editor-header {
             margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
+            flex-wrap: nowrap; /* Prevent wrapping */
+            gap: 20px;
         }
         
         .editor-header h2 {
@@ -51,9 +52,14 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            min-width: 100px;
-            flex-shrink: 1;
+            min-width: 0; /* Important for ellipsis in flexbox */
+            flex-shrink: 1; /* Allow title to shrink if needed */
         }
+        
+        .editor-header .button-link {
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+
 
         .editor-actions {
             margin-top: 15px;
@@ -72,6 +78,7 @@
             text-decoration: none;
             border-radius: 4px;
             font-size: 0.9em;
+            white-space: nowrap;
         }
         .button-link:hover {
             background-color: #5a6268;
@@ -217,7 +224,7 @@
                 <div class="line-numbers" id="line-numbers-display">1</div>
                 <div class="editor-main">
                     <textarea id="fileContent" name="fileContent" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"><%= content %></textarea>
-                    <pre id="highlight-output" aria-hidden="true"><code><%= content %></code></pre>
+                    <pre id="highlight-output" aria-hidden="true"><code><%- content %></code></pre>
                 </div>
             </div>
 
@@ -234,8 +241,13 @@
     document.addEventListener('DOMContentLoaded', () => {
         const textarea = document.getElementById('fileContent');
         const highlightOutput = document.getElementById('highlight-output');
+        const highlightCodeEl = highlightOutput.querySelector('code');
         const lineNumbersDisplay = document.getElementById('line-numbers-display');
         const filename = "<%= filename %>";
+
+        const escapeHtml = (text) => {
+            return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        };
 
         const getLanguageFromFilename = (name) => {
             const ext = name.split('.').pop().toLowerCase();
@@ -249,52 +261,50 @@
 
         const highlight = (text, lang) => {
             if (lang === 'plaintext') {
-                return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return escapeHtml(text);
             }
 
-            let highlightedText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            let highlightedText = escapeHtml(text);
             
-            const commonKeywords = ['if', 'else', 'for', 'while', 'return', 'function', 'const', 'let', 'var', 'class', 'import', 'export', 'from'];
-            const cssProperties = ['color', 'background-color', 'font-size', 'padding', 'margin', 'border', 'width', 'height', 'display'];
-            
-            // Simple regex for highlighting, not a full parser
+            // This is a very basic highlighter, not a full parser.
+            // It applies rules sequentially. More specific rules should come first.
             const rules = {
-                'comment': /(\/\/.*|\/\*[\s\S]*?\*\/)/g,
-                'string': /(".*?"|'.*?'|`.*?`)/g,
-                'number': /\b(\d+)\b/g,
-                'keyword': new RegExp(`\\b(${commonKeywords.join('|')})\\b`, 'g'),
-                'boolean': /\b(true|false)\b/g,
-                'function': /(\w+)\s*(?=\()/g,
-                'operator': /([+\-*/%=&|<>!]+)/g,
-                'punctuation': /([{}()[\].,:;])/g
+                javascript: [
+                    { type: 'comment', regex: /(\/\/.*|\/\*[\s\S]*?\*\/)/g },
+                    { type: 'string', regex: /(".*?"|'.*?'|`.*?`)/g },
+                    { type: 'keyword', regex: /\b(const|let|var|if|else|for|while|return|function|class|import|export|from|async|await|new|this)\b/g },
+                    { type: 'boolean', regex: /\b(true|false|null|undefined)\b/g },
+                    { type: 'number', regex: /\b(\d+(\.\d+)?)\b/g },
+                    { type: 'function', regex: /(\w+)(?=\s*\()/g },
+                    { type: 'operator', regex: /([+\-*/%=&|<>!^~?:]+)/g },
+                    { type: 'punctuation', regex: /([{}()[\].,;])/g }
+                ],
+                html: [
+                    { type: 'comment', regex: /(&lt;!--[\s\S]*?--&gt;)/g },
+                    { type: 'tag', regex: /(&lt;\/?[\w\d-]+)/g },
+                    { type: 'attribute', regex: /(\s+[\w\d-]+)(?=\s*=)/g },
+                    { type: 'string', regex: /(".*?"|'.*?')/g }
+                ],
+                css: [
+                    { type: 'comment', regex: /(\/\*[\s\S]*?\*\/)/g },
+                    { type: 'string', regex: /(".*?")/g },
+                    { type: 'selector', regex: /(^|[\s,}{])([.#&]?[a-zA-Z0-9\-_*:]+)(?=[^}]*{)/g },
+                    { type: 'property', regex: /([\w-]+)(?=\s*:)/g },
+                    { type: 'number', regex: /(-?\d*\.?\d+)(px|%|em|rem|vw|vh|s)?/g },
+                ]
             };
-
-            if (lang === 'css') {
-                 Object.assign(rules, {
-                    'selector': /(^|[\s,}{])([.#&]?[a-zA-Z0-9\-_*:]+)/g,
-                    'property': new RegExp(`\\b(${cssProperties.join('|')})\\b`, 'g'),
-                    'comment': /(\/\*[\s\S]*?\*\/)/g,
-                 });
-                 delete rules.keyword;
-            } else if (lang === 'html') {
-                 Object.assign(rules, {
-                    'tag': /(&lt;\/?[\w\d-]+\s*|&gt;)/g,
-                    'attribute': /(\s+[\w\d-]+)(?==)/g,
-                 });
-            }
-
-            // Apply rules. Order matters.
-            highlightedText = highlightedText.replace(rules.comment, '<span class="token-comment">$1</span>');
-            highlightedText = highlightedText.replace(rules.string, '<span class="token-string">$1</span>');
-             if (lang === 'html') {
-                highlightedText = highlightedText.replace(rules.tag, '<span class="token-tag">$1</span>');
-                highlightedText = highlightedText.replace(rules.attribute, '<span class="token-attribute">$1</span>');
-            }
-            highlightedText = highlightedText.replace(rules.keyword, '<span class="token-keyword">$1</span>');
-            if(rules.property) highlightedText = highlightedText.replace(rules.property, '<span class="token-property">$1</span>');
-            highlightedText = highlightedText.replace(rules.boolean, '<span class="token-boolean">$1</span>');
-            highlightedText = highlightedText.replace(rules.number, '<span class="token-number">$1</span>');
             
+            const langRules = rules[lang] || [];
+
+            langRules.forEach(rule => {
+                highlightedText = highlightedText.replace(rule.regex, (match, ...args) => {
+                    // This logic is to avoid re-wrapping already wrapped tokens
+                    if (match.startsWith('<span')) return match;
+                    let content = lang === 'css' && rule.type === 'selector' ? args[1] + `<span class="token-${rule.type}">${args[2]}</span>` : `<span class="token-${rule.type}">${match}</span>`;
+                    return content;
+                });
+            });
+
             return highlightedText;
         };
 
@@ -302,11 +312,10 @@
             const code = textarea.value;
             
             // Update highlighted content
-            const highlightedCode = highlight(code, language);
-            highlightOutput.innerHTML = `<code>${highlightedCode}</code>`;
+            highlightCodeEl.innerHTML = highlight(code, language);
             
             // Update line numbers
-            const lineCount = code.split('\n').length;
+            const lineCount = code.split('\n').length || 1;
             const lines = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n');
             lineNumbersDisplay.textContent = lines;
 
