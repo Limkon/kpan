@@ -42,68 +42,13 @@
     <script src="/theme.js"></script>
 
     <script type="module">
-        // 靜態導入所有一定會存在的核心文件
+        // 1. 導入所有需要的模塊
         import { EditorState } from "/codemirror/state/dist/index.js";
         import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightSpecialChars, drawSelection, dropCursor, rectangularSelection, crosshairCursor, highlightActiveLine } from "/codemirror/view/dist/index.js";
         import { defaultKeymap, history, historyKeymap } from "/codemirror/commands/dist/index.js";
         import { syntaxHighlighting, defaultHighlightStyle, bracketMatching, foldGutter, foldKeymap, indentOnInput } from "/codemirror/language/dist/index.js";
-        
-        // 異步函數，用於動態加載語言包
-        async function getLanguageSupport(filename) { /* ... 此函數內容不變 ... */ }
 
-        // --- 這是修改後的核心邏輯 ---
-        (async () => {
-            // 首先，嘗試動態加載 oneDark 主題
-            let oneDarkTheme = []; // 默認為空，即亮色主題
-            try {
-                // 使用動態 import()，它返回一個 Promise
-                const { oneDark } = await import("/codemirror/theme-one-dark/dist/index.js");
-                oneDarkTheme = oneDark; // 如果成功，賦值給 oneDarkTheme
-                console.log("Dark theme loaded successfully.");
-            } catch (error) {
-                // 如果加載失敗（比如404），捕獲錯誤，程序不會崩潰
-                console.error("Could not load CodeMirror dark theme. Falling back to default light theme.", error);
-            }
-
-            // --- 後續代碼和之前類似，但更安全 ---
-            const fileContentElement = document.getElementById('fileContent');
-            const updateListener = EditorView.updateListener.of(update => {
-                if (update.docChanged) { fileContentElement.value = update.state.doc.toString(); }
-            });
-            const basicSetup = [
-                lineNumbers(), highlightActiveLineGutter(), history(), foldGutter(), drawSelection(), indentOnInput(), bracketMatching(),
-                keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap])
-            ];
-
-            const isDark = document.body.classList.contains('dark-theme');
-            // 這裡使用我們安全加載的 oneDarkTheme 變量
-            const themeExtensions = [isDark ? oneDarkTheme : [], syntaxHighlighting(defaultHighlightStyle, { fallback: true })];
-
-            const languageSupport = await getLanguageSupport('<%= filename %>');
-            const languageExtension = languageSupport ? [languageSupport] : [];
-
-            const state = EditorState.create({
-                doc: fileContentElement.value,
-                extensions: [basicSetup, themeExtensions, languageExtension, updateListener]
-            });
-
-            const view = new EditorView({ state, parent: document.getElementById('editor') });
-
-            // 主題切換的邏輯也更安全了
-            const themeSwitcher = document.getElementById('theme-switcher');
-            if (themeSwitcher) {
-                const observer = new MutationObserver(() => {
-                    const isDarkNow = document.documentElement.getAttribute('data-theme') === 'dark';
-                    view.dispatch({
-                        // 如果 oneDarkTheme 是 oneDark 本身，就切換；如果是空數組，就等於切換到亮色
-                        effects: EditorView.theme.reconfigure(isDarkNow ? oneDarkTheme : [])
-                    });
-                });
-                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-            }
-        })();
-
-        // 語言支持函數（保持不變，為簡潔折疊）
+        // 2. 定義輔助函數 (只定義一次)
         async function getLanguageSupport(filename) {
             const extension = "." + filename.split('.').pop();
             switch (extension) {
@@ -121,6 +66,66 @@
                     return null;
             }
         }
+
+        // 3. 執行主邏輯 (立即執行的異步函數 IIFE)
+        (async () => {
+            let oneDarkTheme = []; // 默認為空主題（亮色）
+            try {
+                const { oneDark } = await import("/codemirror/theme-one-dark/dist/index.js");
+                oneDarkTheme = oneDark;
+                console.log("Dark theme loaded successfully.");
+            } catch (error) {
+                console.error("Could not load CodeMirror dark theme. Falling back to default light theme.", error);
+            }
+
+            const fileContentElement = document.getElementById('fileContent');
+            const updateListener = EditorView.updateListener.of(update => {
+                if (update.docChanged) { fileContentElement.value = update.state.doc.toString(); }
+            });
+            const basicSetup = [
+                lineNumbers(),
+                highlightActiveLineGutter(),
+                history(),
+                foldGutter(),
+                drawSelection(),
+                indentOnInput(),
+                bracketMatching(),
+                keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap])
+            ];
+
+            const isDark = document.body.classList.contains('dark-theme');
+            const themeExtensions = [
+                isDark ? oneDarkTheme : [], 
+                syntaxHighlighting(defaultHighlightStyle, { fallback: true })
+            ];
+
+            // 在這裡調用我們上面定義好的函數
+            const languageSupport = await getLanguageSupport('<%= filename %>');
+            const languageExtension = languageSupport ? [languageSupport] : [];
+
+            const state = EditorState.create({
+                doc: fileContentElement.value,
+                extensions: [
+                    basicSetup,
+                    themeExtensions,
+                    languageExtension,
+                    updateListener
+                ]
+            });
+
+            const view = new EditorView({ state, parent: document.getElementById('editor') });
+            
+            const themeSwitcher = document.getElementById('theme-switcher');
+            if (themeSwitcher) {
+                const observer = new MutationObserver(() => {
+                    const isDarkNow = document.documentElement.getAttribute('data-theme') === 'dark';
+                    view.dispatch({
+                        effects: EditorView.theme.reconfigure(isDarkNow ? oneDarkTheme : [])
+                    });
+                });
+                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+            }
+        })();
     </script>
 </body>
 </html>
