@@ -37,7 +37,7 @@
             flex-direction: column;
         }
 
-        /* --- [FIX] Header Layout --- */
+        /* --- Header Layout --- */
         .editor-header {
             margin-bottom: 15px;
             display: flex;
@@ -130,13 +130,13 @@
             font-size: 14px;
             line-height: 1.5;
             white-space: pre;
-            word-wrap: normal; /* Use 'pre-wrap' for line wrapping */
+            word-wrap: normal;
             overflow-wrap: normal;
+            background: transparent; /* Both are transparent */
         }
 
         .editor-main textarea {
             z-index: 1;
-            background: transparent;
             color: transparent; /* Makes the textarea text invisible */
             caret-color: #333; /* But keeps the caret visible */
             resize: none;
@@ -146,7 +146,7 @@
         .editor-main pre {
             z-index: 0;
             pointer-events: none; /* Allows clicks to go through to the textarea */
-            overflow: hidden; /* Managed by JS */
+            overflow: hidden; 
         }
         
         .editor-main pre code {
@@ -224,7 +224,7 @@
                 <div class="line-numbers" id="line-numbers-display">1</div>
                 <div class="editor-main">
                     <textarea id="fileContent" name="fileContent" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"><%= content %></textarea>
-                    <pre id="highlight-output" aria-hidden="true"><code><%- content %></code></pre>
+                    <pre id="highlight-output" aria-hidden="true"><code><%= content %></code></pre>
                 </div>
             </div>
 
@@ -296,24 +296,53 @@
             
             const langRules = rules[lang] || [];
 
-            langRules.forEach(rule => {
-                highlightedText = highlightedText.replace(rule.regex, (match, ...args) => {
-                    // This logic is to avoid re-wrapping already wrapped tokens
-                    if (match.startsWith('<span')) return match;
-                    let content = lang === 'css' && rule.type === 'selector' ? args[1] + `<span class="token-${rule.type}">${args[2]}</span>` : `<span class="token-${rule.type}">${match}</span>`;
-                    return content;
+            // A simple state machine to prevent nested highlighting
+            const tokens = [];
+            let lastIndex = 0;
+            highlightedText.replace(/<span.*?<\/span>|./gs, (match, index) => {
+                if (match.startsWith('<span')) {
+                    // This part is already tokenized, just push it
+                    if (index > lastIndex) {
+                        tokens.push(highlightedText.substring(lastIndex, index));
+                    }
+                    tokens.push(match);
+                    lastIndex = index + match.length;
+                }
+            });
+            if (lastIndex < highlightedText.length) {
+                tokens.push(highlightedText.substring(lastIndex));
+            }
+
+            let finalHtml = '';
+            tokens.forEach(token => {
+                if (token.startsWith('<span')) {
+                    finalHtml += token;
+                    return;
+                }
+                
+                let processedToken = token;
+                langRules.forEach(rule => {
+                    processedToken = processedToken.replace(rule.regex, (match, ...args) => {
+                         // Extra check to avoid re-wrapping
+                        if (match.includes('<span')) return match;
+                        let content = lang === 'css' && rule.type === 'selector' ? args[1] + `<span class="token-${rule.type}">${args[2]}</span>` : `<span class="token-${rule.type}">${match}</span>`;
+                        return content;
+                    });
                 });
+                finalHtml += processedToken;
             });
 
-            return highlightedText;
+
+            return finalHtml;
         };
 
         const updateEditor = () => {
             const code = textarea.value;
             
-            // Update highlighted content
-            highlightCodeEl.innerHTML = highlight(code, language);
-            
+            // [FIX] Use the highlighter which correctly handles escaped HTML
+            const highlightedCode = highlight(code, language);
+            highlightCodeEl.innerHTML = highlightedCode + '<br>'; // Add a trailing newline to ensure the last line is rendered
+
             // Update line numbers
             const lineCount = code.split('\n').length || 1;
             const lines = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n');
@@ -324,6 +353,7 @@
         };
 
         const syncScroll = () => {
+            if(!textarea || !highlightOutput || !lineNumbersDisplay) return;
             highlightOutput.scrollTop = textarea.scrollTop;
             highlightOutput.scrollLeft = textarea.scrollLeft;
             lineNumbersDisplay.style.transform = `translateY(-${textarea.scrollTop}px)`;
