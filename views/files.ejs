@@ -137,10 +137,7 @@
     #move-modal, #create-item-modal, #overwrite-confirm-modal, #video-player-modal, #share-modal, #public-link-display-modal, #existing-links-modal, #rename-item-modal {
         /* Inherits .modal styles */
     }
-    div.modal .modal-content {
-        background-color: var(--modal-bg);
-        color: var(--modal-text-color); margin: 10% auto; padding: 20px; border: 1px solid var(--modal-border-color); border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
+    .modal-content { background-color: var(--modal-bg) !important; color: var(--modal-text-color); margin: 10% auto; padding: 20px; border: 1px solid var(--modal-border-color); border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     .modal-content h3 { margin-top: 0; }
     .modal-content .form-group { margin-bottom: 15px; }
     .modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
@@ -202,6 +199,7 @@
     #directory-tree-container li.selected-dir { background-color: #007bff; color: white; }
     .dark-theme #directory-tree-container li.selected-dir { background-color: #0056b3; }
 
+
     .close-modal-btn { float: right; font-size: 1.5em; font-weight: bold; cursor: pointer; line-height: 1; padding: 0 5px;}
 
     /* === Grid View Styles - REFINED START === */
@@ -211,6 +209,7 @@
         gap: 10px;
         list-style-type: none; padding: 0; margin: 0;
     }
+
     #file-container.grid-view li {
         display: flex;
         flex-direction: column;
@@ -226,11 +225,13 @@
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         overflow: hidden;
     }
+
     .dark-theme #file-container.grid-view li {
         background-color: #3a3a3a;
         border-color: #555;
         box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
+
     #file-container.grid-view li .file-entry-selectable {
         display: flex;
         flex-direction: column;
@@ -239,6 +240,7 @@
         width: 100%;
         height: 100%;
     }
+
     .grid-view .file-entry {
         display: flex;
         flex-direction: column;
@@ -249,12 +251,14 @@
         flex-grow: 1;
         padding-top: 4px;
     }
+
     .grid-view .file-icon-large {
         font-size: 3.5em;
         line-height: 1;
         margin-bottom: 4px;
         flex-shrink: 0;
     }
+
     .grid-view .file-name {
         font-size: 0.8em;
         line-height: 1.25;
@@ -273,6 +277,7 @@
     .dark-theme .grid-view .file-name {
         color: var(--input-text-color);
     }
+
     #file-container.grid-view.multi-select-mode-active .item-checkbox,
     #file-container.grid-view.multi-select-mode-active .public-link-checkbox {
         position: absolute;
@@ -280,6 +285,7 @@
         left: 6px;
         margin-bottom: 0;
     }
+
     .grid-view .link-actions-group { /* For 'userShares' view items */
         display: flex;
         justify-content: center; /* Center the buttons horizontally */
@@ -306,7 +312,9 @@
     .grid-view .link-actions-group .revoke-single-link-form {
         display: inline-flex; /* Make form behave like a button for flex layout */
     }
+
     /* === Grid View Styles - REFINED END === */
+
 
     #select-all-container, #select-all-public-links-container {
         display: none;
@@ -319,10 +327,12 @@
         background-color: #2e2e2e;
         border-bottom-color: #444;
     }
+
     #select-all-container.visible-in-multiselect,
     #select-all-public-links-container.visible-in-multiselect {
         display: flex;
     }
+
     #select-all-container label, #select-all-public-links-container label {
         margin-left: 5px;
         font-weight: normal;
@@ -383,9 +393,9 @@
         opacity: 0.9;
     }
     .dark-theme .action-button-small, .dark-theme a.action-button-small {
-            border-color: var(--button-secondary-border-color);
-            background-color: var(--button-secondary-bg-color);
-            color: var(--button-secondary-text-color);
+          border-color: var(--button-secondary-border-color);
+          background-color: var(--button-secondary-bg-color);
+          color: var(--button-secondary-text-color);
     }
 
     #share-modal .form-group label[for="share-allow-download"],
@@ -403,7 +413,7 @@
         padding-left: 10px;
         flex-shrink: 0;
     }
-    </style>
+</style>
 </head>
 <body>
     <div class="container">
@@ -572,6 +582,27 @@
         <div id="file-container" class="list-view">
             <% if (items.length > 0) { %>
                 <% const adminTargetQueryForActions = locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : ''; %>
+                <%
+                    const formatFileSize = (bytes) => {
+                        if (bytes === undefined || bytes === null || isNaN(bytes)) return '--';
+                        if (bytes === 0) return '0 B';
+                        const k = 1024;
+                        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+                        const i = Math.floor(Math.log(bytes) / Math.log(k));
+                        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+                    };
+                    const formatDate = (dateString) => {
+                        if (!dateString) return '--';
+                        try {
+                            const date = new Date(dateString);
+                            if (isNaN(date.getTime())) return '--';
+                            return date.toLocaleDateString('zh-CN', {
+                                year: 'numeric', month: '2-digit', day: '2-digit',
+                                hour: '2-digit', minute: '2-digit'
+                            });
+                        } catch (e) { return '--'; }
+                    };
+                %>
                 <ul>
                     <% items.forEach(item => { %>
                         <li data-item-path="<%= item.path %>"
@@ -606,10 +637,10 @@
                                         <div class="file-details">
                                             <% if (locals.viewMode === 'userShares') { %>
                                                 <span class="file-public-link"><a href="<%= item.publicUrl %>" target="_blank" title="點擊打開公開連結"><%= item.publicUrl %></a></span>
-                                                <span class="file-created-at" data-date="<%= item.createdAt %>"></span>
+                                                <span class="file-created-at">創建於: <%= formatDate(item.createdAt) %></span>
                                             <% } else { %>
                                                 <span class="file-size"></span>
-                                                <span class="file-modified" data-date="<%= item.lastModified %>"></span>
+                                                <span class="file-modified"><%= formatDate(item.lastModified) %></span>
                                             <% } %>
                                         </div>
                                     <% } else { // It's a file %>
@@ -651,10 +682,10 @@
                                         <div class="file-details">
                                             <% if (locals.viewMode === 'userShares') { %>
                                                 <span class="file-public-link"><a href="<%= item.publicUrl %>" target="_blank" title="點擊打開公開連結"><%= item.publicUrl %></a></span>
-                                                <span class="file-created-at" data-date="<%= item.createdAt %>"></span>
+                                                <span class="file-created-at">創建於: <%= formatDate(item.createdAt) %></span>
                                             <% } else { %>
-                                                <span class="file-size" title="<%= item.size %> bytes" data-size="<%= item.size %>"></span>
-                                                <span class="file-modified" data-date="<%= item.lastModified %>"></span>
+                                                <span class="file-size" title="<%= item.size %> bytes"><%= formatFileSize(item.size) %></span>
+                                                <span class="file-modified"><%= formatDate(item.lastModified) %></span>
                                             <% } %>
                                         </div>
                                     <% } %>
@@ -826,145 +857,177 @@
         </div>
     </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 找到文件容器
+    const fileContainer = document.getElementById('file-container');
+    if (fileContainer) {
+        // 為容器內的每個文件項添加點擊事件監聽
+        fileContainer.addEventListener('click', (event) => {
+            // 尋找被點擊的文件項 (li 元素)
+            const item = event.target.closest('li');
+            if (!item) return; // 如果點擊的不是文件項，則不做任何事
+
+            // 阻止點擊文件項中的鏈接或按鈕時觸發選中效果
+            if (event.target.tagName === 'A' || event.target.tagName === 'BUTTON' || event.target.closest('.action-link')) {
+                return;
+            }
+
+            // 切換 .selected 樣式
+            item.classList.toggle('selected');
+
+            // 同步更新與該文件項關聯的多選框 (checkbox) 的狀態
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = item.classList.contains('selected');
+            }
+        });
+
+        // 當多選框的狀態改變時，也同步更新文件項的 .selected 樣式
+        fileContainer.addEventListener('change', (event) => {
+            if (event.target.type === 'checkbox') {
+                const item = event.target.closest('li');
+                if (item) {
+                    item.classList.toggle('selected', event.target.checked);
+                }
+            }
+        });
+    }
+});
+</script>
+
+
     <script src="/theme.js"></script>
     <script>
-        // --- App Structure Definition ---
-        const App = {
-            config: {
-                ALLOWED_TEXT_EXTENSIONS: <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>,
-                CSRF_TOKEN: "<%= locals.csrfToken || '' %>",
-                VIEW_CONTEXT_USER_USERNAME: "<%= locals.viewContextUser ? locals.viewContextUser.username : '' %>",
-                CURRENT_SESSION_USER_ROLE: "<%= user.role %>",
-                CURRENT_SESSION_USER_USERNAME: "<%= user.username %>",
-                CURRENT_PATH_ON_LOAD: "<%= currentPath %>",
-                IS_SEARCH_RESULT_VIEW: <%= locals.isSearchResult || false %>,
-                CURRENT_VIEW_MODE: "<%= locals.viewMode || 'myfiles' %>",
-                EXISTING_ITEM_NAMES_ON_PAGE: <%- JSON.stringify((locals.viewMode || 'myfiles') === 'myfiles' && Array.isArray(items) ? items.map(item => item.name.toLowerCase()) : []) %>,
-                HAS_ITEMS_ON_PAGE: <%= items.length > 0 %>,
-            },
-            state: {
-                multiSelectModeActive: false,
-                currentSingleSelectedItem: null,
-                currentDirectoryTree: [],
-            },
-            elements: {},
-            helpers: {
-                formatFileSize: (bytes) => {
-                    if (bytes === undefined || bytes === null || isNaN(bytes)) return '--';
-                    if (bytes === 0) return '0 B';
-                    const k = 1024;
-                    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-                    const i = Math.floor(Math.log(bytes) / Math.log(k));
-                    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-                },
-                formatDate: (dateString) => {
-                    if (!dateString) return '--';
-                    try {
-                        const date = new Date(dateString);
-                        if (isNaN(date.getTime())) return '--';
-                        return date.toLocaleDateString('zh-CN', {
-                            year: 'numeric', month: '2-digit', day: '2-digit',
-                            hour: '2-digit', minute: '2-digit'
-                        });
-                    } catch (e) { return '--'; }
-                },
-                getItemData: (liElement) => {
-                    if (!liElement) return null;
-                    const checkbox = liElement.querySelector('.item-checkbox');
-                    if (!checkbox) return null;
-                    return {
-                        path: checkbox.dataset.path, encodedPath: checkbox.dataset.encodedPath,
-                        name: checkbox.dataset.name, encodedName: checkbox.dataset.encodedName,
-                        isDir: checkbox.dataset.isDir === 'true', rawName: checkbox.dataset.rawName,
-                        isPlayableVideo: checkbox.dataset.isPlayableVideo === 'true',
-                        videoType: checkbox.dataset.videoType, element: liElement
-                    };
-                },
-                preventDefaults: (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                },
-            },
-            init() {
-                const ids = [
-                    'file-container', 'selection-action-bar', 'selection-count', 'action-play-btn',
-                    'action-edit-btn', 'action-rename-btn', 'action-move-btn', 'action-share-btn',
-                    'action-view-existing-links-btn', 'action-download-btn', 'action-delete-btn',
-                    'public-link-selection-action-bar', 'public-link-selection-count',
-                    'action-revoke-selected-links-btn', 'select-all-container', 'select-all-checkbox',
-                    'select-all-public-links-container', 'select-all-public-links-checkbox',
-                    'toggle-multi-select-btn', 'listViewBtn', 'gridViewBtn',
-                    'move-modal', 'close-move-modal-btn', 'directory-tree-container', 'confirm-move-btn',
-                    'cancel-move-btn', 'selected-destination-path', 'move-destination-input',
-                    'rename-item-modal', 'close-rename-item-modal-btn', 'cancel-rename-item-btn',
-                    'rename-item-form', 'rename-new-name-input', 'rename-old-path-input',
-                    'rename-current-path-input', 'rename-is-dir-input', 'rename-target-username-input',
-                    'create-item-modal', 'close-create-item-modal-btn', 'cancel-create-item-btn',
-                    'create-item-form', 'create-item-modal-title', 'create-item-name-input', 'create-item-name-label',
-                    'show-create-textfile-modal-btn', 'show-create-folder-modal-btn',
-                    'upload-actions-container', 'toggleUploadActionsBtn', 'upload-section',
-                    'upload-files-btn', 'upload-folder-btn', 'userFiles', 'drop-area', 'drop-area-text',
-                    'upload-form', 'upload-button', 'file-list-preview', 'upload-progress-container', 'upload-progress-bar',
-                    'overwrite-confirm-modal', 'close-overwrite-modal-btn', 'overwrite-message', 'overwrite-confirm-btn', 'overwrite-abandon-btn',
-                    'video-player-modal', 'close-video-modal-btn', 'html5-video-player', 'video-source', 'video-modal-title',
-                    'share-modal', 'close-share-modal-btn', 'cancel-share-btn', 'confirm-share-btn',
-                    'share-item-name-display', 'share-file-path-input', 'share-is-directory-input',
-                    'share-allow-download', 'share-allow-view',
-                    'public-link-display-modal', 'close-public-link-display-modal-btn', 'ok-public-link-display-btn',
-                    'generated-public-link', 'copy-public-link-btn', 'public-link-modal-title', 'public-link-modal-message',
-                    'existing-links-modal', 'close-existing-links-modal-btn', 'done-existing-links-btn',
-                    'existing-links-item-name', 'existing-links-list-container'
-                ];
-                ids.forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) App.elements[id] = el;
-                });
-                const preferredView = localStorage.getItem('fileView') || 'list';
-                App.ui.toggleView(preferredView);
-                App.ui.formatDatesAndSizesOnPage();
-                App.events.setup();
-                App.ui.updateMultiSelectModeUI();
-                App.ui.updateSelectionActions();
-                App.ui.updatePublicLinkSelectionActions();
-            },
-            ui: {},
-            events: {},
-            api: {},
-        };
+        // JavaScript code remains the same as in your previous version
+        // Ensure the new rename modal elements are selected and handled correctly
+        const ALLOWED_TEXT_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_TEXT_EXTENSIONS || []) %>;
+        const ALLOWED_VIDEO_EXTENSIONS = <%- JSON.stringify(locals.ALLOWED_VIDEO_EXTENSIONS || []) %>;
+        const CSRF_TOKEN = "<%= locals.csrfToken || '' %>";
+        const VIEW_CONTEXT_USER_USERNAME = "<%= locals.viewContextUser ? locals.viewContextUser.username : '' %>";
+        const CURRENT_SESSION_USER_ROLE = "<%= user.role %>";
+        const CURRENT_SESSION_USER_USERNAME = "<%= user.username %>";
+        const CURRENT_PATH_ON_LOAD = "<%= currentPath %>";
+        const IS_SEARCH_RESULT_VIEW = <%= locals.isSearchResult || false %>;
+        const CURRENT_VIEW_MODE = "<%= locals.viewMode || 'myfiles' %>";
+        const EXISTING_ITEM_NAMES_ON_PAGE = <%- JSON.stringify((locals.viewMode || 'myfiles') === 'myfiles' && Array.isArray(items) ? items.map(item => item.name.toLowerCase()) : []) %>;
+        const HAS_ITEMS_ON_PAGE = <%= items.length > 0 %>;
 
-        // --- All Functions Go Here ---
-        Object.assign(App.ui, {
-            toggleView(viewType) {
-                const { fileContainer, gridViewBtn, listViewBtn } = App.elements;
-                if (!fileContainer || !gridViewBtn || !listViewBtn) return;
-                const isCurrentlyMultiSelect = fileContainer.classList.contains('multi-select-mode-active');
-                fileContainer.classList.remove('list-view', 'grid-view');
-                if (viewType === 'grid') {
-                    fileContainer.classList.add('grid-view');
-                    gridViewBtn.classList.add('active');
-                    listViewBtn.classList.remove('active');
-                    localStorage.setItem('fileView', 'grid');
-                } else {
-                    fileContainer.classList.add('list-view');
-                    listViewBtn.classList.add('active');
-                    gridViewBtn.classList.remove('active');
-                    localStorage.setItem('fileView', 'list');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const fileContainer = document.getElementById('file-container');
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const selectAllContainer = document.getElementById('select-all-container');
+            const selectionActionBar = document.getElementById('selection-action-bar');
+            const selectionCountDisplay = document.getElementById('selection-count');
+            const actionPlayBtn = document.getElementById('action-play-btn');
+            const actionEditBtn = document.getElementById('action-edit-btn');
+            const actionRenameBtn = document.getElementById('action-rename-btn');
+            const actionMoveBtn = document.getElementById('action-move-btn');
+            const actionShareBtn = document.getElementById('action-share-btn');
+            const actionViewExistingLinksBtn = document.getElementById('action-view-existing-links-btn');
+            const actionDownloadBtn = document.getElementById('action-download-btn');
+            const actionDeleteBtn = document.getElementById('action-delete-btn');
+
+            const selectAllPublicLinksCheckbox = document.getElementById('select-all-public-links-checkbox');
+            const selectAllPublicLinksContainer = document.getElementById('select-all-public-links-container');
+            const publicLinkSelectionActionBar = document.getElementById('public-link-selection-action-bar');
+            const publicLinkSelectionCountDisplay = document.getElementById('public-link-selection-count');
+            const actionRevokeSelectedLinksBtn = document.getElementById('action-revoke-selected-links-btn');
+
+            const moveModal = document.getElementById('move-modal');
+            const closeMoveModalBtn = document.getElementById('close-move-modal-btn');
+            const directoryTreeContainer = document.getElementById('directory-tree-container');
+            const confirmMoveBtn = document.getElementById('confirm-move-btn');
+            const cancelMoveBtn = document.getElementById('cancel-move-btn');
+            const selectedDestinationPathDisplay = document.getElementById('selected-destination-path');
+            const moveDestinationInput = document.getElementById('move-destination-input');
+            let currentDirectoryTree = [];
+
+            const toggleUploadActionsBtn = document.getElementById('toggleUploadActionsBtn');
+            const uploadActionsContainer = document.getElementById('upload-actions-container');
+            const uploadFilesBtn = document.getElementById('upload-files-btn');
+            const uploadFolderBtn = document.getElementById('upload-folder-btn');
+            const uploadSection = document.getElementById('upload-section');
+            const userFilesInput = document.getElementById('userFiles');
+            const dropAreaText = document.getElementById('drop-area-text');
+            const uploadForm = document.getElementById('upload-form');
+            const uploadProgressContainer = document.getElementById('upload-progress-container');
+            const uploadProgressBar = document.getElementById('upload-progress-bar');
+            const fileListPreview = document.getElementById('file-list-preview');
+            const uploadButton = document.getElementById('upload-button');
+            const dropArea = document.getElementById('drop-area');
+
+            const overwriteModal = document.getElementById('overwrite-confirm-modal');
+            const overwriteMessage = document.getElementById('overwrite-message');
+            const overwriteConfirmBtn = document.getElementById('overwrite-confirm-btn');
+            const overwriteAbandonBtn = document.getElementById('overwrite-abandon-btn');
+            const closeOverwriteModalBtn = document.getElementById('close-overwrite-modal-btn');
+
+            const toggleMultiSelectBtn = document.getElementById('toggle-multi-select-btn');
+            let multiSelectModeActive = false;
+            let currentSingleSelectedItem = null;
+
+            const videoPlayerModal = document.getElementById('video-player-modal');
+            const html5VideoPlayer = document.getElementById('html5-video-player');
+            const videoSourceElement = document.getElementById('video-source');
+            const videoModalTitle = document.getElementById('video-modal-title');
+            const closeVideoModalBtn = document.getElementById('close-video-modal-btn');
+
+            const shareModal = document.getElementById('share-modal');
+            const closeShareModalBtn = document.getElementById('close-share-modal-btn');
+            const cancelShareBtn = document.getElementById('cancel-share-btn');
+            const confirmShareBtn = document.getElementById('confirm-share-btn');
+            const shareItemNameDisplay = document.getElementById('share-item-name-display');
+            const shareFilePathInput = document.getElementById('share-file-path-input');
+            const shareIsDirectoryInput = document.getElementById('share-is-directory-input');
+            const shareAllowDownloadCheckbox = document.getElementById('share-allow-download');
+            const shareAllowViewCheckbox = document.getElementById('share-allow-view');
+
+            const publicLinkDisplayModal = document.getElementById('public-link-display-modal');
+            const generatedPublicLinkInput = document.getElementById('generated-public-link');
+            const copyPublicLinkBtn = document.getElementById('copy-public-link-btn');
+            const closePublicLinkDisplayModalBtn = document.getElementById('close-public-link-display-modal-btn');
+            const okPublicLinkDisplayBtn = document.getElementById('ok-public-link-display-btn');
+            const publicLinkModalTitle = document.getElementById('public-link-modal-title');
+            const publicLinkModalMessage = document.getElementById('public-link-modal-message');
+
+            const existingLinksModal = document.getElementById('existing-links-modal');
+            const closeExistingLinksModalBtn = document.getElementById('close-existing-links-modal-btn');
+            const doneExistingLinksBtn = document.getElementById('done-existing-links-btn');
+            const existingLinksItemNameSpan = document.getElementById('existing-links-item-name');
+            const existingLinksListContainer = document.getElementById('existing-links-list-container');
+
+            const renameItemModal = document.getElementById('rename-item-modal');
+            const closeRenameItemModalBtn = document.getElementById('close-rename-item-modal-btn');
+            const cancelRenameItemBtn = document.getElementById('cancel-rename-item-btn');
+            const renameItemForm = document.getElementById('rename-item-form');
+            const renameNewNameInput = document.getElementById('rename-new-name-input');
+            const renameOldPathInput = document.getElementById('rename-old-path-input');
+            const renameCurrentPathInput = document.getElementById('rename-current-path-input');
+            const renameIsDirInput = document.getElementById('rename-is-dir-input');
+            const renameTargetUsernameInput = document.getElementById('rename-target-username-input');
+
+
+            function clearSingleSelection() {
+                if (currentSingleSelectedItem && currentSingleSelectedItem.element) {
+                    currentSingleSelectedItem.element.classList.remove('single-selected-item');
                 }
-                if (isCurrentlyMultiSelect) fileContainer.classList.add('multi-select-mode-active');
-                this.clearSingleSelection();
-                this.updateSelectionActions();
-                this.updatePublicLinkSelectionActions();
-            },
-            updateMultiSelectModeUI() {
-                const { fileContainer, toggleMultiSelectBtn, selectAllContainer, selectAllPublicLinksContainer, selectAllCheckbox, selectAllPublicLinksCheckbox } = App.elements;
+                currentSingleSelectedItem = null;
+            }
+
+            function updateMultiSelectModeUI() {
                 if (!fileContainer || !toggleMultiSelectBtn) return;
-                const isUserSharesView = App.config.CURRENT_VIEW_MODE === 'userShares';
-                if (App.state.multiSelectModeActive) {
-                    this.clearSingleSelection();
+                const isUserSharesView = CURRENT_VIEW_MODE === 'userShares';
+                if (multiSelectModeActive) {
+                    clearSingleSelection();
                     fileContainer.classList.add('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '取消多選';
-                    const containerToShow = isUserSharesView ? selectAllPublicLinksContainer : selectAllContainer;
-                    if (containerToShow && App.config.HAS_ITEMS_ON_PAGE) containerToShow.classList.add('visible-in-multiselect');
+                    if (isUserSharesView && selectAllPublicLinksContainer && HAS_ITEMS_ON_PAGE) {
+                        selectAllPublicLinksContainer.classList.add('visible-in-multiselect');
+                    } else if (!isUserSharesView && selectAllContainer && HAS_ITEMS_ON_PAGE) {
+                        selectAllContainer.classList.add('visible-in-multiselect');
+                    }
                 } else {
                     fileContainer.classList.remove('multi-select-mode-active');
                     toggleMultiSelectBtn.textContent = '啟用多選';
@@ -974,642 +1037,1367 @@
                     if (selectAllCheckbox) selectAllCheckbox.checked = false;
                     if (selectAllPublicLinksCheckbox) selectAllPublicLinksCheckbox.checked = false;
                 }
-                this.updateSelectionActions();
-                this.updatePublicLinkSelectionActions();
-            },
-            getCheckboxSelectedItems: () => document.querySelectorAll('#file-container .item-checkbox:checked').length > 0 ? Array.from(document.querySelectorAll('#file-container .item-checkbox:checked')).map(cb => App.helpers.getItemData(cb.closest('li'))) : [],
-            getSelectedPublicLinkIds: () => Array.from(document.querySelectorAll('#file-container .public-link-checkbox:checked')).map(cb => cb.dataset.linkId),
-            clearSingleSelection() {
-                if (App.state.currentSingleSelectedItem?.element) {
-                    App.state.currentSingleSelectedItem.element.classList.remove('single-selected-item');
-                }
-                App.state.currentSingleSelectedItem = null;
-            },
-            async updateSelectionActions() {
-                const { selectionActionBar, selectionCount, actionPlayBtn, actionEditBtn, actionRenameBtn, actionMoveBtn, actionShareBtn, actionViewExistingLinksBtn, actionDownloadBtn, actionDeleteBtn } = App.elements;
-                if (App.config.CURRENT_VIEW_MODE === 'userShares' || !selectionActionBar) {
-                    if (selectionActionBar) selectionActionBar.style.display = 'none';
+                updateSelectionActions();
+                updatePublicLinkSelectionActions();
+            }
+
+            if (toggleMultiSelectBtn) {
+                toggleMultiSelectBtn.addEventListener('click', () => {
+                    multiSelectModeActive = !multiSelectModeActive;
+                    updateMultiSelectModeUI();
+                });
+            }
+
+            function getCheckboxSelectedItems() {
+                const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox');
+                const selected = [];
+                currentCheckboxes.forEach((cb) => {
+                    if (cb.checked) {
+                        selected.push({
+                            path: cb.dataset.path, encodedPath: cb.dataset.encodedPath,
+                            name: cb.dataset.name, encodedName: cb.dataset.encodedName,
+                            isDir: cb.dataset.isDir === 'true', rawName: cb.dataset.rawName,
+                            isPlayableVideo: cb.dataset.isPlayableVideo === 'true',
+                            videoType: cb.dataset.videoType,
+                            element: cb.closest('li')
+                        });
+                    }
+                });
+                return selected;
+            }
+
+            function getSelectedPublicLinkIds() {
+                const selectedIds = [];
+                document.querySelectorAll('#file-container .public-link-checkbox:checked').forEach(cb => {
+                    selectedIds.push(cb.dataset.linkId);
+                });
+                return selectedIds;
+            }
+
+            async function updateSelectionActions() {
+                 if (CURRENT_VIEW_MODE === 'userShares' || !selectionActionBar) {
+                    if(selectionActionBar) selectionActionBar.style.display = 'none';
                     return;
                 }
-                let itemsForActions = App.state.multiSelectModeActive ? this.getCheckboxSelectedItems() : (App.state.currentSingleSelectedItem ? [App.state.currentSingleSelectedItem] : []);
-                const count = itemsForActions.length;
-                let isSingleItem = count === 1;
-                let isSingleFileEditable = false, isSingleFilePlayableVideo = false, hasExistingShares = false;
+                let count = 0;
+                let itemsForActions = [];
+                let isSingleFileEditable = false;
+                let isSingleFilePlayableVideo = false;
+                let isSingleItemSharable = false;
+                let hasExistingShares = false;
 
-                if (isSingleItem) {
-                    const item = itemsForActions[0];
-                    if (!item.isDir) {
-                        const fileExt = item.name.includes('.') ? '.' + item.name.split('.').pop().toLowerCase() : '';
-                        if (App.config.ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) isSingleFileEditable = true;
-                        if (item.isPlayableVideo) isSingleFilePlayableVideo = true;
+                if (multiSelectModeActive) {
+                    const checkboxSelectedItems = getCheckboxSelectedItems();
+                    count = checkboxSelectedItems.length;
+                    itemsForActions = checkboxSelectedItems;
+                    if (count === 1 && itemsForActions[0]) {
+                        const item = itemsForActions[0];
+                        if (!item.isDir) {
+                            const fileName = item.name;
+                            const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
+                            if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
+                                isSingleFileEditable = true;
+                            }
+                            if (item.isPlayableVideo) {
+                                isSingleFilePlayableVideo = true;
+                            }
+                        }
+                        isSingleItemSharable = true;
+                        try {
+                            let apiUrl = `/api/item-public-links?filePath=${encodeURIComponent(item.path)}`;
+                            if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                                apiUrl += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
+                            }
+                            const response = await fetch(apiUrl);
+                            const data = await response.json();
+                            if (data.success && data.links && data.links.length > 0) {
+                                hasExistingShares = true;
+                            }
+                        } catch (e) { /* Error checking existing shares, button remains hidden/disabled */ }
                     }
+                } else if (currentSingleSelectedItem) {
+                    count = 1;
+                    itemsForActions.push(currentSingleSelectedItem);
+                    const item = currentSingleSelectedItem;
+                    if (!item.isDir) {
+                        const fileName = item.name;
+                        const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase() : '';
+                         if (ALLOWED_TEXT_EXTENSIONS.includes('.' + fileExt) || ALLOWED_TEXT_EXTENSIONS.includes(fileExt)) {
+                            isSingleFileEditable = true;
+                        }
+                        if (item.isPlayableVideo) {
+                            isSingleFilePlayableVideo = true;
+                        }
+                    }
+                    isSingleItemSharable = true;
                     try {
-                        const data = await App.api.fetchItemPublicLinks(item.path);
-                        if (data.success && data.links?.length > 0) hasExistingShares = true;
-                    } catch (e) { console.error("Error checking existing shares", e); }
+                        let apiUrl = `/api/item-public-links?filePath=${encodeURIComponent(item.path)}`;
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                            apiUrl += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
+                        }
+                        const response = await fetch(apiUrl);
+                        const data = await response.json();
+                        if (data.success && data.links && data.links.length > 0) {
+                            hasExistingShares = true;
+                        }
+                    } catch (e) { /* Error checking existing shares, button remains hidden/disabled */ }
                 }
 
-                selectionActionBar.style.display = count > 0 ? 'flex' : 'none';
-                if (count > 0) selectionCount.textContent = `已選擇 ${count} 項`;
+                if (count > 0) {
+                    selectionActionBar.style.display = 'flex';
+                    selectionCountDisplay.textContent = `已選擇 ${count} 項`;
+                } else {
+                    selectionActionBar.style.display = 'none';
+                }
 
-                if(actionPlayBtn) actionPlayBtn.disabled = !(isSingleItem && isSingleFilePlayableVideo);
-                if(actionEditBtn) actionEditBtn.disabled = !(isSingleItem && isSingleFileEditable);
-                if(actionRenameBtn) actionRenameBtn.disabled = !isSingleItem;
+                if(actionPlayBtn) actionPlayBtn.disabled = !(count === 1 && isSingleFilePlayableVideo);
+                if(actionEditBtn) actionEditBtn.disabled = !(count === 1 && isSingleFileEditable);
+                if(actionRenameBtn) actionRenameBtn.disabled = !(count === 1);
                 if(actionMoveBtn) actionMoveBtn.disabled = !(count > 0);
-                if(actionShareBtn) actionShareBtn.disabled = !isSingleItem;
+                if(actionShareBtn) actionShareBtn.disabled = !(count === 1 && isSingleItemSharable);
                 if(actionViewExistingLinksBtn) {
-                    actionViewExistingLinksBtn.disabled = !(isSingleItem && hasExistingShares);
-                    actionViewExistingLinksBtn.style.display = (isSingleItem && hasExistingShares) ? 'inline-block' : 'none';
+                    actionViewExistingLinksBtn.disabled = !(count === 1 && hasExistingShares);
+                    actionViewExistingLinksBtn.style.display = (count === 1 && hasExistingShares) ? 'inline-block' : 'none';
                 }
                 if(actionDownloadBtn) actionDownloadBtn.disabled = !(count > 0);
                 if(actionDeleteBtn) actionDeleteBtn.disabled = !(count > 0);
-            },
-            updatePublicLinkSelectionActions() {
-                const { publicLinkSelectionActionBar, publicLinkSelectionCount, actionRevokeSelectedLinksBtn } = App.elements;
-                if (App.config.CURRENT_VIEW_MODE !== 'userShares' || !publicLinkSelectionActionBar) {
-                    if (publicLinkSelectionActionBar) publicLinkSelectionActionBar.style.display = 'none';
+            }
+
+            function updatePublicLinkSelectionActions() {
+                if (CURRENT_VIEW_MODE !== 'userShares' || !publicLinkSelectionActionBar) {
+                    if(publicLinkSelectionActionBar) publicLinkSelectionActionBar.style.display = 'none';
                     return;
                 }
-                const count = this.getSelectedPublicLinkIds().length;
-                publicLinkSelectionActionBar.style.display = count > 0 ? 'flex' : 'none';
-                if (actionRevokeSelectedLinksBtn) actionRevokeSelectedLinksBtn.disabled = (count === 0);
-                if (publicLinkSelectionCount) publicLinkSelectionCount.textContent = `已選擇 ${count} 個連結`;
-            },
-            openModal: (modal) => { if(modal) modal.style.display = 'block'; },
-            closeModal: (modal) => { if(modal) modal.style.display = 'none'; },
-            openRenameModal(item) {
-                const { renameItemModal, renameNewNameInput, renameOldPathInput, renameCurrentPathInput, renameIsDirInput, renameTargetUsernameInput } = App.elements;
-                if (!renameItemModal || !item) return;
+                const selectedLinkIds = getSelectedPublicLinkIds();
+                const count = selectedLinkIds.length;
+
+                if (count > 0) {
+                    publicLinkSelectionActionBar.style.display = 'flex';
+                    if(publicLinkSelectionCountDisplay) publicLinkSelectionCountDisplay.textContent = `已選擇 ${count} 個連結`;
+                    if(actionRevokeSelectedLinksBtn) actionRevokeSelectedLinksBtn.disabled = false;
+                } else {
+                    publicLinkSelectionActionBar.style.display = 'none';
+                    if(actionRevokeSelectedLinksBtn) actionRevokeSelectedLinksBtn.disabled = true;
+                }
+            }
+
+            document.querySelectorAll('#file-container .item-checkbox').forEach((checkbox) => {
+                checkbox.addEventListener('change', () => {
+                    if (CURRENT_VIEW_MODE === 'userShares') return;
+                    if (multiSelectModeActive) {
+                        clearSingleSelection();
+                        updateSelectionActions();
+                    } else {
+                        checkbox.checked = false;
+                    }
+                });
+            });
+
+            document.querySelectorAll('#file-container .public-link-checkbox').forEach((checkbox) => {
+                checkbox.addEventListener('change', () => {
+                    if (CURRENT_VIEW_MODE !== 'userShares') return;
+                    if (multiSelectModeActive) {
+                        updatePublicLinkSelectionActions();
+                    } else {
+                        checkbox.checked = false;
+                    }
+                });
+            });
+
+            if (selectAllCheckbox && selectAllContainer) {
+                selectAllCheckbox.addEventListener('change', (e) => {
+                    if (!multiSelectModeActive || CURRENT_VIEW_MODE === 'userShares') return;
+                    clearSingleSelection();
+                    const currentCheckboxes = document.querySelectorAll('#file-container .item-checkbox');
+                    currentCheckboxes.forEach(cb => {
+                        if (cb.checked !== e.target.checked) {
+                            cb.checked = e.target.checked;
+                        }
+                    });
+                    updateSelectionActions();
+                });
+            }
+
+            if (selectAllPublicLinksCheckbox && selectAllPublicLinksContainer) {
+                selectAllPublicLinksCheckbox.addEventListener('change', (e) => {
+                    if (!multiSelectModeActive || CURRENT_VIEW_MODE !== 'userShares') return;
+                    const currentCheckboxes = document.querySelectorAll('#file-container .public-link-checkbox');
+                    currentCheckboxes.forEach(cb => {
+                        if (cb.checked !== e.target.checked) {
+                            cb.checked = e.target.checked;
+                        }
+                    });
+                    updatePublicLinkSelectionActions();
+                });
+            }
+
+            if (fileContainer) {
+                fileContainer.querySelectorAll('ul > li .file-entry-selectable').forEach(contentWrapper => {
+                    contentWrapper.addEventListener('click', async (event) => {
+                        if (CURRENT_VIEW_MODE === 'userShares') {
+                            const listItem = contentWrapper.closest('li');
+                            if (!listItem) return;
+                            const checkbox = listItem.querySelector('.public-link-checkbox');
+                            if (checkbox && event.target !== checkbox && !event.target.closest('form') && !event.target.classList.contains('view-public-link-btn')) {
+                                if (multiSelectModeActive) {
+                                    checkbox.checked = !checkbox.checked;
+                                    updatePublicLinkSelectionActions();
+                                }
+                            }
+                            return;
+                        }
+
+                        const listItem = contentWrapper.closest('li');
+                        if (!listItem) return;
+                        const checkbox = listItem.querySelector('.item-checkbox');
+                        if (!checkbox) return;
+
+                        if (event.target.classList.contains('video-link') || event.target.closest('.video-link') ||
+                            event.target.tagName === 'A' || event.target.closest('a') ||
+                            event.target.classList.contains('item-checkbox')
+                            ) {
+                            return;
+                        }
+
+                        const itemData = {
+                            path: checkbox.dataset.path, encodedPath: checkbox.dataset.encodedPath,
+                            name: checkbox.dataset.name, encodedName: checkbox.dataset.encodedName,
+                            isDir: checkbox.dataset.isDir === 'true', rawName: checkbox.dataset.rawName,
+                            isPlayableVideo: checkbox.dataset.isPlayableVideo === 'true',
+                            videoType: checkbox.dataset.videoType,
+                            element: listItem
+                        };
+
+                        if (multiSelectModeActive) {
+                            checkbox.checked = !checkbox.checked;
+                            clearSingleSelection();
+                        } else {
+                            if (currentSingleSelectedItem && currentSingleSelectedItem.element === listItem) {
+                                clearSingleSelection();
+                            } else {
+                                clearSingleSelection();
+                                currentSingleSelectedItem = itemData;
+                                listItem.classList.add('single-selected-item');
+                            }
+                        }
+                        await updateSelectionActions();
+                    });
+                });
+
+                fileContainer.addEventListener('click', async (event) => {
+                    if (event.target.closest('li') === null && (event.target.isSameNode(fileContainer) || event.target.tagName === 'UL')) {
+                        if (!multiSelectModeActive && CURRENT_VIEW_MODE !== 'userShares') {
+                            clearSingleSelection();
+                            await updateSelectionActions();
+                        }
+                    }
+                });
+            }
+
+            function openRenameModal(item) {
+                if (!renameItemModal || !renameItemForm || !renameNewNameInput || !renameOldPathInput || !renameCurrentPathInput || !renameIsDirInput) return;
+
                 renameOldPathInput.value = item.path;
                 renameNewNameInput.value = item.name;
                 renameIsDirInput.value = item.isDir;
-                renameCurrentPathInput.value = App.config.IS_SEARCH_RESULT_VIEW ? (item.path.substring(0, item.path.lastIndexOf('/')) || '/') : App.config.CURRENT_PATH_ON_LOAD;
-                if (renameTargetUsernameInput) renameTargetUsernameInput.value = (App.config.VIEW_CONTEXT_USER_USERNAME && App.config.CURRENT_SESSION_USER_ROLE === 'admin' && App.config.VIEW_CONTEXT_USER_USERNAME !== App.config.CURRENT_SESSION_USER_USERNAME) ? App.config.VIEW_CONTEXT_USER_USERNAME : '';
-                this.openModal(renameItemModal);
-                renameNewNameInput.focus();
-                const dotIndex = !item.isDir && item.name.includes('.') ? item.name.lastIndexOf('.') : -1;
-                if(dotIndex > -1) renameNewNameInput.setSelectionRange(0, dotIndex);
-                else renameNewNameInput.select();
-            },
-            openCreateItemModal(type) {
-                const { createItemModal, createItemForm, createItemModalTitle, createItemNameLabel, createItemNameInput } = App.elements;
-                if (!createItemModal) return;
-                createItemForm.reset();
-                createItemForm.querySelector('input[name="currentPath"]').value = App.config.IS_SEARCH_RESULT_VIEW ? '/' : App.config.CURRENT_PATH_ON_LOAD;
-                if (type === 'textfile') {
-                    createItemModalTitle.textContent = '新建文本文件';
-                    createItemNameLabel.textContent = '文件名 (例如: mydoc.txt):';
-                    createItemNameInput.name = 'newFileName';
-                    createItemForm.action = '/create-text-file';
-                } else {
-                    createItemModalTitle.textContent = '创建新文件夹';
-                    createItemNameLabel.textContent = '文件夹名称:';
-                    createItemNameInput.name = 'folderName';
-                    createItemForm.action = '/create-folder';
-                }
-                this.openModal(createItemModal);
-                createItemNameInput.focus();
-            },
-            openVideoPlayer(encodedPath, name, type) {
-                const { videoPlayerModal, html5VideoPlayer, videoSource, videoModalTitle } = App.elements;
-                if (!videoPlayerModal) return;
-                let src = `/stream/${encodedPath}`;
-                const params = new URLSearchParams();
-                if (App.config.VIEW_CONTEXT_USER_USERNAME && App.config.CURRENT_SESSION_USER_ROLE === 'admin' && App.config.VIEW_CONTEXT_USER_USERNAME !== App.config.CURRENT_SESSION_USER_USERNAME) {
-                    params.set('targetUsername', App.config.VIEW_CONTEXT_USER_USERNAME);
-                }
-                if (params.toString()) src += `?${params.toString()}`;
-                videoModalTitle.textContent = name || '播放視頻';
-                videoSource.src = src;
-                if (type) videoSource.type = type; else videoSource.removeAttribute('type');
-                html5VideoPlayer.load();
-                this.openModal(videoPlayerModal);
-            },
-            closeVideoPlayer() {
-                const { videoPlayerModal, html5VideoPlayer } = App.elements;
-                this.closeModal(videoPlayerModal);
-                if (html5VideoPlayer) {
-                    html5VideoPlayer.pause();
-                    html5VideoPlayer.querySelector('source').src = '';
-                }
-            },
-            updateFileListPreview() {
-                const { fileListPreview, userFiles, uploadButton } = App.elements;
-                if (!fileListPreview || !userFiles || !uploadButton) return;
-                fileListPreview.innerHTML = '';
-                const files = userFiles.files;
-                if (files.length > 0) {
-                    const list = document.createElement('ul');
-                    list.style.cssText = 'list-style-type: none; padding-left: 0;';
-                    let isDirectoryUpload = userFiles.hasAttribute('webkitdirectory') || (files[0]?.webkitRelativePath?.includes('/'));
-                    if (isDirectoryUpload) {
-                        const folderName = files[0].webkitRelativePath.split('/')[0];
-                        list.innerHTML = `<li style="font-size: 0.9em; font-weight: bold;">文件夾: ${folderName} (${files.length} 個文件)</li>`;
-                    } else {
-                        list.innerHTML = Array.from(files).map(f => `<li style="font-size: 0.9em;">${f.name} (${App.helpers.formatFileSize(f.size)})</li>`).join('');
-                    }
-                    fileListPreview.appendChild(list);
-                    uploadButton.style.display = 'inline-block';
-                } else {
-                    uploadButton.style.display = 'none';
-                }
-            },
-            formatDatesAndSizesOnPage() {
-                document.querySelectorAll('[data-date]').forEach(el => el.textContent = App.helpers.formatDate(el.dataset.date));
-                document.querySelectorAll('[data-size]').forEach(el => el.textContent = App.helpers.formatFileSize(parseInt(el.dataset.size, 10)));
-            },
-            renderDirectoryTree(nodes, container, itemsBeingMoved) {
-                container.innerHTML = '';
-                const ul = document.createElement('ul');
-                ul.innerHTML = '<li data-path="/">根目錄 (/)</li>';
-                ul.querySelector('li').addEventListener('click', (e) => App.events.handleDirectorySelect(e.target, '/'));
 
-                function buildTree(dirItems, parentUl) {
+                if (IS_SEARCH_RESULT_VIEW) {
+                    renameCurrentPathInput.value = item.path.substring(0, item.path.lastIndexOf('/')) || '/';
+                } else {
+                    renameCurrentPathInput.value = CURRENT_PATH_ON_LOAD;
+                }
+
+                if (renameTargetUsernameInput) {
+                     renameTargetUsernameInput.value = (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) ? VIEW_CONTEXT_USER_USERNAME : '';
+                }
+
+                renameItemModal.style.display = 'block';
+                renameNewNameInput.focus();
+                if (!item.isDir && item.name.includes('.')) {
+                    const dotIndex = item.name.lastIndexOf('.');
+                    renameNewNameInput.setSelectionRange(0, dotIndex);
+                } else {
+                    renameNewNameInput.select();
+                }
+            }
+
+            if (actionRenameBtn) {
+                actionRenameBtn.addEventListener('click', () => {
+                    if (actionRenameBtn.disabled) return;
+                    let itemToRename = null;
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemToRename = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1) itemToRename = selected[0];
+                    }
+                    if (itemToRename) {
+                        openRenameModal(itemToRename);
+                    }
+                });
+            }
+
+            if (closeRenameItemModalBtn) {
+                closeRenameItemModalBtn.onclick = () => {
+                    if (renameItemModal) renameItemModal.style.display = 'none';
+                };
+            }
+            if (cancelRenameItemBtn) {
+                cancelRenameItemBtn.onclick = (e) => { // Added event parameter
+                    e.preventDefault(); // Prevent form submission if it's a button inside a form
+                    if (renameItemModal) renameItemModal.style.display = 'none';
+                };
+            }
+
+
+            document.querySelectorAll('.video-link').forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const encodedPath = this.dataset.path;
+                    const videoName = this.dataset.name;
+                    const videoType = this.dataset.type;
+                    openVideoPlayer(encodedPath, videoName, videoType);
+                });
+            });
+
+            if (actionPlayBtn) {
+                actionPlayBtn.addEventListener('click', () => {
+                    if (actionPlayBtn.disabled) return;
+                    let itemToPlay = null;
+                    if (!multiSelectModeActive && currentSingleSelectedItem && currentSingleSelectedItem.isPlayableVideo) {
+                        itemToPlay = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1 && selected[0].isPlayableVideo) {
+                            itemToPlay = selected[0];
+                        }
+                    }
+                    if (itemToPlay) {
+                        openVideoPlayer(itemToPlay.encodedPath, itemToPlay.name, itemToPlay.videoType);
+                    }
+                });
+            }
+
+
+             if (actionEditBtn) {
+                actionEditBtn.addEventListener('click', () => {
+                    if (actionEditBtn.disabled) return;
+                    let itemToEdit = null;
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemToEdit = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1) itemToEdit = selected[0];
+                    }
+
+                    if (itemToEdit && !itemToEdit.isDir) {
+                        let url = `/edit?path=${itemToEdit.encodedPath}`;
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                            url += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
+                        }
+                        window.location.href = url;
+                    }
+                });
+            }
+
+            if (actionDownloadBtn) {
+                actionDownloadBtn.addEventListener('click', () => {
+                    if (actionDownloadBtn.disabled) return;
+                    let itemsToDownload = [];
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemsToDownload.push(currentSingleSelectedItem);
+                    } else if (multiSelectModeActive) {
+                        itemsToDownload = getCheckboxSelectedItems();
+                    }
+
+                    if (itemsToDownload.length === 0) {
+                        alert("請選擇要下載的項目。"); return;
+                    }
+
+                    if (itemsToDownload.length === 1 && !itemsToDownload[0].isDir) {
+                        let url = `/download?path=${itemsToDownload[0].encodedPath}`;
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                            url += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
+                        }
+                        const tempLink = document.createElement('a');
+                        tempLink.href = url;
+                        tempLink.setAttribute('download', itemsToDownload[0].name);
+                        tempLink.style.display = 'none';
+                        document.body.appendChild(tempLink);
+                        tempLink.click();
+                        document.body.removeChild(tempLink);
+                    } else {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '/download-archive';
+                        form.style.display = 'none';
+
+                        const itemsInput = document.createElement('input');
+                        itemsInput.type = 'hidden';
+                        itemsInput.name = 'items';
+                        const itemsForPayload = itemsToDownload.map(item => ({
+                            path: item.path, name: item.name, isDir: item.isDir
+                        }));
+                        itemsInput.value = JSON.stringify(itemsForPayload);
+                        form.appendChild(itemsInput);
+
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                            const targetUserInput = document.createElement('input');
+                            targetUserInput.type = 'hidden';
+                            targetUserInput.name = 'targetUsername';
+                            targetUserInput.value = VIEW_CONTEXT_USER_USERNAME;
+                            form.appendChild(targetUserInput);
+                        }
+                        if (CSRF_TOKEN) {
+                            const csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = '_csrf';
+                            csrfInput.value = CSRF_TOKEN;
+                            form.appendChild(csrfInput);
+                        }
+                        document.body.appendChild(form);
+                        try { form.submit(); } catch (e) { console.error("表單提交錯誤:", e); alert("觸發下載時發生錯誤。"); }
+                        setTimeout(() => {
+                            if (form.parentNode === document.body) { document.body.removeChild(form); }
+                        }, 100);
+                    }
+                });
+            }
+
+            if (actionDeleteBtn) {
+                actionDeleteBtn.addEventListener('click', async () => {
+                    if (actionDeleteBtn.disabled) return;
+                    let itemsToDelete = [];
+                     if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemsToDelete.push(currentSingleSelectedItem);
+                    } else if (multiSelectModeActive) {
+                        itemsToDelete = getCheckboxSelectedItems();
+                    }
+
+                    if (itemsToDelete.length === 0) return;
+
+                    const itemNames = itemsToDelete.map(item => item.rawName).join(', ');
+                    if (confirm(`確定要刪除選中的 ${itemsToDelete.length} 個項目 (${itemNames}) 嗎？此操作不可恢復！`)) {
+                        let allSucceeded = true;
+                        let reloadPage = false;
+                        let errors = [];
+
+                        for (const item of itemsToDelete) {
+                            try {
+                                let deleteUrl = `/delete?path=${item.encodedPath}&isDir=${item.isDir}`;
+                                if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                                    deleteUrl += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
+                                }
+                                const response = await fetch(deleteUrl, {
+                                    method: 'GET',
+                                });
+
+                                if (response.ok) {
+                                    if (response.redirected || (response.headers.get("Content-Type") && response.headers.get("Content-Type").includes("application/json"))) {
+                                        try {
+                                            const result = await response.json();
+                                            if (result.success) {
+                                                reloadPage = true;
+                                            } else {
+                                                allSucceeded = false;
+                                                errors.push(result.message || `刪除 ${item.name} 失敗`);
+                                            }
+                                        } catch (e) {
+                                            reloadPage = true;
+                                        }
+                                    } else {
+                                        reloadPage = true;
+                                    }
+                                } else {
+                                    allSucceeded = false;
+                                    let errorMsg = `刪除 ${item.name} 失敗 (狀態: ${response.status})`;
+                                    try {
+                                        const errResult = await response.json();
+                                        if(errResult.message) errorMsg = errResult.message;
+                                    } catch(e) { /* ignore if not json */ }
+                                    errors.push(errorMsg);
+                                }
+                            } catch (error) {
+                                allSucceeded = false;
+                                errors.push(`刪除 ${item.name} 時發生客戶端錯誤`);
+                                console.error('刪除項目時出錯:', item.name, error);
+                            }
+                        }
+
+                        if (errors.length > 0) {
+                            alert("部分或全部項目刪除失敗：\n" + errors.join("\n"));
+                        } else if (allSucceeded) {
+                            alert("選中項目已成功刪除。");
+                        }
+
+                        if (reloadPage || !allSucceeded) {
+                            window.location.reload();
+                        } else {
+                             clearSingleSelection();
+                             if(selectAllCheckbox) selectAllCheckbox.checked = false;
+                             document.querySelectorAll('#file-container .item-checkbox').forEach(cb => cb.checked = false);
+                             updateSelectionActions();
+                        }
+                    }
+                });
+            }
+
+            if (actionMoveBtn) {
+                actionMoveBtn.addEventListener('click', async () => {
+                    if (actionMoveBtn.disabled) return;
+                    let itemsToMove = [];
+                     if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemsToMove.push(currentSingleSelectedItem);
+                    } else if (multiSelectModeActive) {
+                        itemsToMove = getCheckboxSelectedItems();
+                    }
+                    if (itemsToMove.length === 0) return;
+
+                    moveDestinationInput.value = ''; selectedDestinationPathDisplay.textContent = '無';
+                    confirmMoveBtn.disabled = true; directoryTreeContainer.innerHTML = '<p>正在加載目錄...</p>';
+                    moveModal.style.display = 'block';
+                    try {
+                        let fetchUrl = '/api/directories'; let queryParams = [];
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                             queryParams.push(`targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`);
+                        }
+
+                        const pathsToExclude = itemsToMove.flatMap(item => {
+                            if (item.isDir) {
+                                return [item.path];
+                            }
+                            return [];
+                        });
+                        if (pathsToExclude.length > 0) queryParams.push(`excludePaths=${encodeURIComponent(pathsToExclude.join(','))}`);
+
+                        if (queryParams.length > 0) fetchUrl += `?${queryParams.join('&')}`;
+
+                        const response = await fetch(fetchUrl);
+                        if (!response.ok) throw new Error(`無法獲取目錄列表: ${response.statusText}`);
+                        currentDirectoryTree = await response.json();
+                        renderDirectoryTree(currentDirectoryTree, directoryTreeContainer, itemsToMove);
+                    } catch (error) {
+                        console.error('獲取目錄樹時出錯:', error);
+                        directoryTreeContainer.innerHTML = `<p style="color:red;">加載目錄失敗: ${error.message}</p>`;
+                    }
+                });
+            }
+            function renderDirectoryTree(nodes, container, itemsBeingMoved) {
+                container.innerHTML = ''; const ul = document.createElement('ul');
+                const rootLi = document.createElement('li');
+                rootLi.textContent = '根目錄 (/)';
+                rootLi.dataset.path = '/';
+
+                let isRootInvalid = itemsBeingMoved.some(item => item.path.substring(0, item.path.lastIndexOf('/')) === '' && item.path !== '/');
+
+                rootLi.addEventListener('click', (e) => selectDestination(e.target, '/'));
+                ul.appendChild(rootLi);
+
+                function buildTree(dirItems, parentUl, currentParentPath) {
                     dirItems.forEach(dirNode => {
-                        const isMovingThisDirOrChild = itemsBeingMoved.some(item => item.isDir && (dirNode.path === item.path || dirNode.path.startsWith(item.path + '/')));
-                        if (isMovingThisDirOrChild) return;
-                        const isCurrentParent = itemsBeingMoved.every(item => (item.path.substring(0, item.path.lastIndexOf('/')) || '/') === dirNode.path);
+                        const isMovingThisDirOrChild = itemsBeingMoved.some(movedItem =>
+                            movedItem.isDir && (dirNode.path === movedItem.path || dirNode.path.startsWith(movedItem.path + '/'))
+                        );
+                        
+                        if (isMovingThisDirOrChild) {
+                            return;
+                        }
+                        
+                        const isTheCurrentParentOfAllItems = itemsBeingMoved.every(movedItem => {
+                            const movedItemParentPath = movedItem.path.substring(0, movedItem.path.lastIndexOf('/')) || '/';
+                            return movedItemParentPath === dirNode.path;
+                        });
+
                         const li = document.createElement('li');
                         li.textContent = dirNode.name;
                         li.dataset.path = dirNode.path;
-                        if (isCurrentParent) {
-                            li.style.cssText = "opacity: 0.5; cursor: not-allowed;";
+                        
+                        // --- FIX START ---
+                        // The original code used 'pointer-events: none', which disabled clicks on children.
+                        // This new logic makes the current parent directory visually distinct and un-selectable,
+                        // but allows clicks to reach its children.
+                        if (isTheCurrentParentOfAllItems) {
+                            li.style.opacity = "0.5";
+                            li.style.cursor = "not-allowed";
+                            // Do not add a click listener, making it an unselectable header.
                         } else {
-                            li.addEventListener('click', (e) => { e.stopPropagation(); App.events.handleDirectorySelect(e.target, dirNode.path); });
+                           li.addEventListener('click', (e) => { e.stopPropagation(); selectDestination(e.target, dirNode.path); });
                         }
-                        if (dirNode.children?.length > 0) {
+                        // --- FIX END ---
+                        
+                        parentUl.appendChild(li);
+                        
+                        if (dirNode.children && dirNode.children.length > 0) {
                             const nestedUl = document.createElement('ul');
                             li.appendChild(nestedUl);
-                            buildTree(dirNode.children, nestedUl);
+                            buildTree(dirNode.children, nestedUl, dirNode.path);
                         }
-                        parentUl.appendChild(li);
                     });
                 }
-                buildTree(nodes, ul);
+                buildTree(nodes, ul, '/');
                 container.appendChild(ul);
-            },
-            async showOverwriteConfirmation(itemName) {
-                const { overwriteModal, overwriteMessage, overwriteConfirmBtn, overwriteAbandonBtn, closeOverwriteModalBtn } = App.elements;
-                overwriteMessage.textContent = `一個名為 "${itemName}" 的項目已存在。您要覆蓋它嗎？`;
-                this.openModal(overwriteModal);
-                return new Promise(resolve => {
-                    const handleConfirm = () => cleanupAndResolve('overwrite');
-                    const handleAbandon = () => cleanupAndResolve('abandon');
-                    const cleanupAndResolve = (decision) => {
-                        this.closeModal(overwriteModal);
+            }
+            function selectDestination(targetElement, path) {
+                document.querySelectorAll('#directory-tree-container li.selected-dir').forEach(el => el.classList.remove('selected-dir'));
+                targetElement.classList.add('selected-dir');
+                selectedDestinationPathDisplay.textContent = path; moveDestinationInput.value = path;
+                confirmMoveBtn.disabled = false;
+            }
+            if (closeMoveModalBtn) closeMoveModalBtn.onclick = () => moveModal.style.display = 'none';
+            if (cancelMoveBtn) cancelMoveBtn.onclick = () => moveModal.style.display = 'none';
+
+            if (confirmMoveBtn) {
+                confirmMoveBtn.addEventListener('click', async () => {
+                    let selectedToMove = [];
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        selectedToMove.push(currentSingleSelectedItem);
+                    } else if (multiSelectModeActive) {
+                        selectedToMove = getCheckboxSelectedItems();
+                    }
+
+                    const destinationPath = moveDestinationInput.value;
+                    if (selectedToMove.length === 0 || (destinationPath === null || destinationPath === undefined) ) {
+                        alert('請選擇要移動的項目和目標文件夾。'); return;
+                    }
+
+                    for (const item of selectedToMove) {
+                        const itemParentPath = item.path.substring(0, item.path.lastIndexOf('/')) || '/';
+                        if (itemParentPath === destinationPath) {
+                            alert(`項目 "${item.name}" 已經在目標文件夾 "${destinationPath === '/' ? '根目錄' : destinationPath}" 中。`);
+                            return;
+                        }
+                        if (item.isDir && (destinationPath === item.path || destinationPath.startsWith(item.path + '/'))) {
+                            alert(`不能將文件夾 "${item.name}" 移動到其自身或其子文件夾中。`); return;
+                        }
+                    }
+                    try {
+                        const payload = {
+                            sourcePaths: selectedToMove.map(item => item.path),
+                            destinationPath: destinationPath,
+                        };
+                        if (CSRF_TOKEN) payload._csrf = CSRF_TOKEN;
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                            payload.targetUsername = VIEW_CONTEXT_USER_USERNAME;
+                        }
+
+                        const response = await fetch('/move-items', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json', },
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await response.json();
+                        if (response.ok && result.success) {
+                            alert(result.message || '項目移動成功！');
+                            window.location.href = result.redirectUrl || window.location.pathname + window.location.search;
+                        } else {
+                             alert(`移動失敗: ${result.message || '伺服器發生未知錯誤。'}`);
+                        }
+                    } catch (error) {
+                        console.error('移動項目時出錯:', error);
+                        let errorMsg = `移動項目時發生客戶端錯誤。`;
+                        if (error instanceof SyntaxError) {
+                            errorMsg += " 伺服器可能返回了非預期的回應格式。";
+                        } else if (error.message) {
+                            errorMsg += ` ${error.message}`;
+                        }
+                        alert(errorMsg);
+                    }
+                    moveModal.style.display = 'none';
+                });
+            }
+
+            if (actionShareBtn) {
+                actionShareBtn.addEventListener('click', () => {
+                    if (actionShareBtn.disabled) return;
+                    let itemToShare = null;
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        itemToShare = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1) itemToShare = selected[0];
+                    }
+
+                    if (itemToShare && shareModal && shareItemNameDisplay && shareFilePathInput && shareIsDirectoryInput) {
+                        shareItemNameDisplay.textContent = itemToShare.name;
+                        shareFilePathInput.value = itemToShare.path;
+                        shareIsDirectoryInput.value = itemToShare.isDir;
+                        if(shareAllowDownloadCheckbox) shareAllowDownloadCheckbox.checked = true;
+                        if(shareAllowViewCheckbox) shareAllowViewCheckbox.checked = true;
+                        shareModal.style.display = 'block';
+                    }
+                });
+            }
+            if(closeShareModalBtn) closeShareModalBtn.onclick = () => shareModal.style.display = 'none';
+            if(cancelShareBtn) cancelShareBtn.onclick = () => shareModal.style.display = 'none';
+
+            if (confirmShareBtn) {
+                confirmShareBtn.addEventListener('click', async () => {
+                    const filePath = shareFilePathInput.value;
+                    const isDirectory = shareIsDirectoryInput.value === 'true';
+                    const allowDownload = shareAllowDownloadCheckbox ? shareAllowDownloadCheckbox.checked : true;
+                    const allowView = shareAllowViewCheckbox ? shareAllowViewCheckbox.checked : true;
+
+                    const payload = {
+                        filePathToShare: filePath,
+                        isDirectory: isDirectory,
+                        allowDownload: allowDownload,
+                        allowView: allowView,
+                        _csrf: CSRF_TOKEN
+                    };
+                    if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                        payload.targetUsername = VIEW_CONTEXT_USER_USERNAME;
+                    }
+
+                    try {
+                        const response = await fetch('/actions/create-public-link', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!response.ok) {
+                            let serverErrorMessage = `伺服器錯誤，狀態碼: ${response.status}`;
+                            try {
+                                const errorText = await response.text();
+                                if (response.headers.get("content-type")?.includes("application/json")) {
+                                    const jsonData = JSON.parse(errorText);
+                                    serverErrorMessage = jsonData.message || errorText;
+                                } else {
+                                     serverErrorMessage = errorText.length > 200 ? errorText.substring(0, 200) + "..." : errorText;
+                                }
+                            } catch (e) { /* Failed to parse error response body */ }
+                            throw new Error(serverErrorMessage);
+                        }
+                        const result = await response.json();
+
+                        if (result.success) {
+                            shareModal.style.display = 'none';
+                            if (publicLinkModalTitle) publicLinkModalTitle.textContent = '公開連結已創建';
+                            if (publicLinkModalMessage) publicLinkModalMessage.textContent = '您可以複製下面的連結進行分享:';
+                            if (generatedPublicLinkInput) generatedPublicLinkInput.value = result.publicUrl;
+                            if (publicLinkDisplayModal) publicLinkDisplayModal.style.display = 'block';
+                            if (CURRENT_VIEW_MODE === 'userShares') window.location.reload();
+
+                        } else {
+                            alert(`創建公開連結失敗: ${result.message || '未知錯誤'}`);
+                        }
+                    } catch (error) {
+                        console.error('創建公開連結時出錯:', error);
+                        alert(`創建公開連結時發生客戶端錯誤。\n詳細信息: ${error.message}`);
+                    }
+                });
+            }
+
+            if (copyPublicLinkBtn && generatedPublicLinkInput) {
+                copyPublicLinkBtn.addEventListener('click', () => {
+                    generatedPublicLinkInput.select();
+                    generatedPublicLinkInput.setSelectionRange(0, 99999);
+                    try {
+                        const successful = document.execCommand('copy');
+                        const msg = successful ? '連結已複製到剪貼簿！' : '複製失敗。';
+                        alert(msg);
+                    } catch (err) {
+                        alert('複製失敗，您的瀏覽器可能不支持此操作。');
+                        console.error('無法複製文本: ', err);
+                    }
+                });
+            }
+            if(closePublicLinkDisplayModalBtn) closePublicLinkDisplayModalBtn.onclick = () => publicLinkDisplayModal.style.display = 'none';
+            if(okPublicLinkDisplayBtn) okPublicLinkDisplayBtn.onclick = () => publicLinkDisplayModal.style.display = 'none';
+
+
+            // Batch revoke for public links
+            if (actionRevokeSelectedLinksBtn) {
+                actionRevokeSelectedLinksBtn.addEventListener('click', async () => {
+                    const selectedLinkIds = getSelectedPublicLinkIds();
+                    if (selectedLinkIds.length === 0) {
+                        alert('請選擇要撤銷的公開連結。');
+                        return;
+                    }
+                    if (confirm(`確定要撤銷選中的 ${selectedLinkIds.length} 個公開連結嗎？`)) {
+                        const payload = {
+                            link_ids: selectedLinkIds,
+                            _csrf: CSRF_TOKEN
+                        };
+                        if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                            payload.contextUsername = VIEW_CONTEXT_USER_USERNAME;
+                        }
+                        try {
+                            const response = await fetch('/actions/revoke-public-links-batch', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                            const result = await response.json();
+                            alert(result.message || (result.success ? '連結已撤銷。' : '操作失敗。'));
+                            if (result.success) {
+                                window.location.reload();
+                            }
+                        } catch (error) {
+                            console.error('批量撤銷連結時出錯:', error);
+                            alert('批量撤銷連結時發生客戶端錯誤。');
+                        }
+                    }
+                });
+            }
+
+            // View Existing Links Modal Logic
+            if (actionViewExistingLinksBtn && existingLinksModal && closeExistingLinksModalBtn && doneExistingLinksBtn && existingLinksItemNameSpan && existingLinksListContainer) {
+                actionViewExistingLinksBtn.addEventListener('click', async () => {
+                    if (actionViewExistingLinksBtn.disabled) return;
+                    let selectedItem = null;
+                    if (!multiSelectModeActive && currentSingleSelectedItem) {
+                        selectedItem = currentSingleSelectedItem;
+                    } else if (multiSelectModeActive) {
+                        const selected = getCheckboxSelectedItems();
+                        if (selected.length === 1) selectedItem = selected[0];
+                    }
+
+                    if (selectedItem) {
+                        existingLinksItemNameSpan.textContent = selectedItem.name;
+                        existingLinksListContainer.innerHTML = '<p>正在加載連結...</p>';
+                        existingLinksModal.style.display = 'block';
+
+                        try {
+                            let apiUrl = `/api/item-public-links?filePath=${encodeURIComponent(selectedItem.path)}`;
+                            if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                                apiUrl += `&targetUsername=${encodeURIComponent(VIEW_CONTEXT_USER_USERNAME)}`;
+                            }
+                            const response = await fetch(apiUrl);
+                            const data = await response.json();
+
+                            if (data.success && data.links) {
+                                if (data.links.length > 0) {
+                                    const ul = document.createElement('ul');
+                                    ul.style.listStyleType = 'none';
+                                    ul.style.paddingLeft = '0';
+                                    data.links.forEach(link => {
+                                        const li = document.createElement('li');
+                                        li.style.padding = '8px 0';
+                                        li.style.borderBottom = '1px solid #eee';
+
+                                        const linkUrl = document.createElement('a');
+                                        linkUrl.href = link.publicUrl;
+                                        linkUrl.textContent = link.publicUrl;
+                                        linkUrl.target = '_blank';
+
+                                        const createdAt = new Date(link.created_at).toLocaleString('zh-CN');
+                                        const details = document.createElement('span');
+                                        details.textContent = ` (創建於: ${createdAt}, ${link.allow_download ? '允許下載' : '禁止下載'}, ${link.allow_view ? '允許預覽' : '禁止預覽'}, 訪問: ${link.visit_count} 次)`;
+                                        details.style.fontSize = '0.8em';
+                                        details.style.color = '#777';
+
+                                        const revokeBtn = document.createElement('button');
+                                        revokeBtn.textContent = '撤銷此連結';
+                                        revokeBtn.className = 'secondary action-button-small';
+                                        revokeBtn.style.marginLeft = '10px';
+                                        revokeBtn.onclick = async () => {
+                                            if (confirm(`確定要撤銷連結 ${link.publicUrl} 嗎？`)) {
+                                                const revokePayload = { link_id: link.link_id, _csrf: CSRF_TOKEN };
+                                                 if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                                                     revokePayload.contextUsername = VIEW_CONTEXT_USER_USERNAME;
+                                                 }
+                                                try {
+                                                    const revokeResponse = await fetch('/actions/revoke-public-link', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify(revokePayload)
+                                                    });
+                                                    const contentType = revokeResponse.headers.get("content-type");
+                                                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                                                        const revokeResult = await revokeResponse.json();
+                                                        alert(revokeResult.message || (revokeResult.success ? '連結已撤銷。' : '操作失敗。'));
+                                                    } else {
+                                                        if(revokeResponse.ok || revokeResponse.redirected) {
+                                                            alert('連結已撤銷。頁面將刷新。');
+                                                        } else {
+                                                            alert('撤銷連結時發生錯誤。');
+                                                        }
+                                                    }
+                                                    existingLinksModal.style.display = 'none';
+                                                    window.location.reload();
+                                                } catch (e) {
+                                                    console.error("撤銷連結時出錯:", e);
+                                                    alert('撤銷連結時發生客戶端錯誤。');
+                                                }
+                                            }
+                                        };
+
+                                        li.appendChild(linkUrl);
+                                        li.appendChild(details);
+                                        li.appendChild(revokeBtn);
+                                        ul.appendChild(li);
+                                    });
+                                    existingLinksListContainer.innerHTML = '';
+                                    existingLinksListContainer.appendChild(ul);
+                                } else {
+                                    existingLinksListContainer.innerHTML = '<p>此項目沒有已分享的公開連結。</p>';
+                                }
+                            } else {
+                                existingLinksListContainer.innerHTML = `<p style="color:red;">獲取連結列表失敗: ${data.message || '未知錯誤'}</p>`;
+                            }
+                        } catch (error) {
+                            existingLinksListContainer.innerHTML = `<p style="color:red;">獲取連結列表時發生客戶端錯誤。</p>`;
+                        }
+                    }
+                });
+                if(closeExistingLinksModalBtn) closeExistingLinksModalBtn.onclick = () => existingLinksModal.style.display = 'none';
+                if(doneExistingLinksBtn) doneExistingLinksBtn.onclick = () => existingLinksModal.style.display = 'none';
+            }
+
+            document.querySelectorAll('.view-public-link-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const publicUrl = this.dataset.url;
+                    if (publicLinkDisplayModal && generatedPublicLinkInput && publicLinkModalTitle && publicLinkModalMessage) {
+                        publicLinkModalTitle.textContent = '查看公開連結';
+                        publicLinkModalMessage.textContent = '連結地址:';
+                        generatedPublicLinkInput.value = publicUrl;
+                        publicLinkDisplayModal.style.display = 'block';
+                    }
+                });
+            });
+
+
+            function showOverwriteConfirmationModal(itemName) {
+                return new Promise((resolve) => {
+                    if (!overwriteModal || !overwriteMessage || !overwriteConfirmBtn || !overwriteAbandonBtn || !closeOverwriteModalBtn) {
+                        resolve('abandon');
+                        return;
+                    }
+                    overwriteMessage.textContent = `一個名為 "${itemName}" 的項目已存在於當前目錄。您要覆蓋它嗎？`;
+                    overwriteModal.style.display = 'block';
+
+                    const handleConfirm = () => { cleanupAndResolve('overwrite'); };
+                    const handleAbandon = () => { cleanupAndResolve('abandon'); };
+
+                    function cleanupAndResolve(decision) {
+                        overwriteModal.style.display = 'none';
                         overwriteConfirmBtn.removeEventListener('click', handleConfirm);
                         overwriteAbandonBtn.removeEventListener('click', handleAbandon);
                         closeOverwriteModalBtn.removeEventListener('click', handleAbandon);
                         resolve(decision);
                     }
+
                     overwriteConfirmBtn.addEventListener('click', handleConfirm, { once: true });
                     overwriteAbandonBtn.addEventListener('click', handleAbandon, { once: true });
                     closeOverwriteModalBtn.addEventListener('click', handleAbandon, { once: true });
                 });
-            },
-        });
-        Object.assign(App.events, {
-            setup() {
-                document.body.addEventListener('click', this.handleBodyClick);
-                const { uploadForm, dropArea, userFiles } = App.elements;
-                if(uploadForm) uploadForm.addEventListener('submit', this.handleUploadSubmit);
-                if (dropArea) {
-                    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
-                        dropArea.addEventListener(evt, App.helpers.preventDefaults, false);
-                        document.body.addEventListener(evt, App.helpers.preventDefaults, false);
-                    });
-                    dropArea.addEventListener('dragenter', () => dropArea.classList.add('highlight'));
-                    dropArea.addEventListener('dragleave', () => dropArea.classList.remove('highlight'));
-                    dropArea.addEventListener('drop', this.handleFileDrop);
-                }
-                if(userFiles) userFiles.addEventListener('change', App.ui.updateFileListPreview);
-            },
-            async handleBodyClick(e) {
-                const target = e.target;
-                const id = target.id;
-                const modal = target.closest('.modal');
-                if (target.matches('.close-modal-btn, #cancel-create-item-btn, #cancel-rename-item-btn, #cancel-move-btn, #ok-public-link-display-btn, #done-existing-links-btn, #cancel-share-btn') || (modal && target === modal)) {
-                    if (modal?.id === 'video-player-modal') App.ui.closeVideoPlayer();
-                    else if (modal) App.ui.closeModal(modal);
-                    return;
-                }
-                const handlers = {
-                    'toggle-multi-select-btn': () => { App.state.multiSelectModeActive = !App.state.multiSelectModeActive; App.ui.updateMultiSelectModeUI(); },
-                    'listViewBtn': () => App.ui.toggleView('list'),
-                    'gridViewBtn': () => App.ui.toggleView('grid'),
-                    'show-create-textfile-modal-btn': () => App.ui.openCreateItemModal('textfile'),
-                    'show-create-folder-modal-btn': () => App.ui.openCreateItemModal('folder'),
-                    'toggleUploadActionsBtn': () => {
-                        const { uploadActionsContainer, uploadSection } = App.elements;
-                        const isHidden = uploadActionsContainer.style.display === 'none' || !uploadActionsContainer.style.display;
-                        uploadActionsContainer.style.display = isHidden ? 'flex' : 'none';
-                        if (!isHidden) uploadSection.style.display = 'none';
-                        target.textContent = isHidden ? '取消上傳操作' : '上傳';
-                    },
-                    'upload-files-btn': () => App.events.handleUploadButton(false),
-                    'upload-folder-btn': () => App.events.handleUploadButton(true),
-                    'action-play-btn': App.events.handleActionPlay,
-                    'action-edit-btn': App.events.handleActionEdit,
-                    'action-rename-btn': App.events.handleActionRename,
-                    'action-download-btn': App.events.handleActionDownload,
-                    'action-delete-btn': App.events.handleActionDelete,
-                    'action-move-btn': App.events.handleActionMove,
-                    'action-share-btn': App.events.handleActionShare,
-                    'action-view-existing-links-btn': App.events.handleActionViewLinks,
-                    'action-revoke-selected-links-btn': App.events.handleActionRevokeBatch,
-                    'select-all-checkbox': () => App.events.handleSelectAll(target, false),
-                    'select-all-public-links-checkbox': () => App.events.handleSelectAll(target, true),
-                    'confirm-move-btn': App.events.handleConfirmMove,
-                    'confirm-share-btn': App.events.handleConfirmShare,
-                    'copy-public-link-btn': App.events.handleCopyLink,
-                };
-                if (handlers[id]) {
-                    e.preventDefault();
-                    handlers[id]();
-                    return;
-                }
-                const fileListItem = target.closest('#file-container li');
-                if (fileListItem) App.events.handleItemClick(e, fileListItem);
-                else if (target.closest('#file-container')) {
-                    if (!App.state.multiSelectModeActive && App.config.CURRENT_VIEW_MODE !== 'userShares') {
-                        App.ui.clearSingleSelection();
-                        await App.ui.updateSelectionActions();
-                    }
-                }
-            },
-            handleUploadButton(isFolder) {
-                const { userFiles, dropAreaText, uploadSection, toggleUploadActionsBtn } = App.elements;
-                userFiles.toggleAttribute('webkitdirectory', isFolder);
-                userFiles.toggleAttribute('directory', isFolder);
-                userFiles.toggleAttribute('multiple', !isFolder);
-                dropAreaText.textContent = isFolder ? '將文件夾拖拽到此處...' : '將文件拖拽到此處...';
-                uploadSection.style.display = 'block';
-                toggleUploadActionsBtn.textContent = '取消上傳操作';
-                userFiles.value = null;
-                App.ui.updateFileListPreview();
-                userFiles.click();
-            },
-            async handleItemClick(event, listItem) {
-                const target = event.target;
-                if (target.tagName === 'A' || target.tagName === 'BUTTON' || target.closest('form')) {
-                    if (target.matches('.video-link')) {
-                        event.preventDefault();
-                        App.ui.openVideoPlayer(target.dataset.path, target.dataset.name, target.dataset.type);
-                    } else if (target.matches('.view-public-link-btn')) {
-                        const { publicLinkDisplayModal, generatedPublicLink } = App.elements;
-                        generatedPublicLink.value = target.dataset.url;
-                        App.ui.openModal(publicLinkDisplayModal);
-                    }
-                    return;
-                }
-                const isUserSharesView = App.config.CURRENT_VIEW_MODE === 'userShares';
-                const checkbox = listItem.querySelector(isUserSharesView ? '.public-link-checkbox' : '.item-checkbox');
-                if (!checkbox || target === checkbox) return;
-                if (App.state.multiSelectModeActive) {
-                    checkbox.checked = !checkbox.checked;
-                    App.ui.clearSingleSelection();
-                } else if (!isUserSharesView) {
-                    if (App.state.currentSingleSelectedItem?.element === listItem) {
-                        App.ui.clearSingleSelection();
-                    } else {
-                        App.ui.clearSingleSelection();
-                        App.state.currentSingleSelectedItem = App.helpers.getItemData(listItem);
-                        listItem.classList.add('single-selected-item');
-                    }
-                }
-                if (isUserSharesView) App.ui.updatePublicLinkSelectionActions();
-                else await App.ui.updateSelectionActions();
-            },
-            handleSelectAll(checkbox, isPublic) {
-                if (!App.state.multiSelectModeActive) return;
-                const selector = isPublic ? '.public-link-checkbox' : '.item-checkbox';
-                document.querySelectorAll(`#file-container ${selector}`).forEach(cb => cb.checked = checkbox.checked);
-                if (isPublic) App.ui.updatePublicLinkSelectionActions(); else App.ui.updateSelectionActions();
-            },
-            async handleUploadSubmit(event) {
-                event.preventDefault();
-                const { userFiles, uploadProgressContainer, uploadButton, fileListPreview } = App.elements;
-                if (userFiles.files.length === 0) return alert('請選擇要上傳的文件或文件夾。');
-                
-                let finalFilesToUpload = [];
-                let processedTopLevelItems = new Set();
-                for (const file of Array.from(userFiles.files)) {
-                    let nameToCheck = file.webkitRelativePath ? file.webkitRelativePath.split('/')[0] : file.name;
-                    if (App.config.EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase()) && !processedTopLevelItems.has(nameToCheck.toLowerCase())) {
-                        processedTopLevelItems.add(nameToCheck.toLowerCase());
-                        const userDecision = await App.ui.showOverwriteConfirmation(nameToCheck);
-                        if (userDecision === 'overwrite') {
-                            finalFilesToUpload.push(...Array.from(userFiles.files).filter(f => (f.webkitRelativePath || f.name).startsWith(nameToCheck)));
-                        }
-                    } else {
-                        finalFilesToUpload.push(file);
-                    }
-                }
-                finalFilesToUpload = [...new Set(finalFilesToUpload)]; // Remove duplicates
-                
-                if (finalFilesToUpload.length === 0) {
-                    alert('沒有文件準備上傳（可能所有衝突的文件都已被放棄）。');
-                    return;
-                }
-                
-                const formData = new FormData(App.elements.uploadForm);
-                formData.delete('userFiles');
-                finalFilesToUpload.forEach(file => formData.append('userFiles', file, file.webkitRelativePath || file.name));
-                App.api.uploadFiles(formData);
-            },
-            handleFileDrop(e) {
-                const { dropArea, userFiles, uploadSection, toggleUploadActionsBtn } = App.elements;
-                dropArea.classList.remove('highlight');
-                userFiles.files = e.dataTransfer.files;
-                App.ui.updateFileListPreview();
-                uploadSection.style.display = 'block';
-                toggleUploadActionsBtn.textContent = '取消上傳操作';
-            },
-            handleDirectorySelect(target, path) {
-                const { selectedDestinationPath, moveDestinationInput, confirmMoveBtn } = App.elements;
-                document.querySelectorAll('#directory-tree-container li.selected-dir').forEach(el => el.classList.remove('selected-dir'));
-                target.classList.add('selected-dir');
-                selectedDestinationPath.textContent = path;
-                moveDestinationInput.value = path;
-                confirmMoveBtn.disabled = false;
-            },
-            // --- ACTION HANDLERS ---
-            handleActionPlay() {
-                if(App.elements.actionPlayBtn.disabled) return;
-                const items = App.state.multiSelectModeActive ? App.ui.getCheckboxSelectedItems() : [App.state.currentSingleSelectedItem];
-                if (items.length === 1 && items[0]?.isPlayableVideo) App.ui.openVideoPlayer(items[0].encodedPath, items[0].name, items[0].videoType);
-            },
-            handleActionEdit() {
-                if(App.elements.actionEditBtn.disabled) return;
-                const items = App.state.multiSelectModeActive ? App.ui.getCheckboxSelectedItems() : [App.state.currentSingleSelectedItem];
-                if (items.length === 1 && !items[0].isDir) {
-                    let url = `/edit?path=${items[0].encodedPath}`;
-                    if (App.config.VIEW_CONTEXT_USER_USERNAME && App.config.CURRENT_SESSION_USER_ROLE === 'admin' && App.config.VIEW_CONTEXT_USER_USERNAME !== App.config.CURRENT_SESSION_USER_USERNAME) {
-                        url += `&targetUsername=${encodeURIComponent(App.config.VIEW_CONTEXT_USER_USERNAME)}`;
-                    }
-                    window.location.href = url;
-                }
-            },
-            handleActionRename() {
-                if(App.elements.actionRenameBtn.disabled) return;
-                const items = App.state.multiSelectModeActive ? App.ui.getCheckboxSelectedItems() : [App.state.currentSingleSelectedItem];
-                if (items.length === 1) App.ui.openRenameModal(items[0]);
-            },
-            async handleActionDelete() {
-                if(App.elements.actionDeleteBtn.disabled) return;
-                const itemsToDelete = App.state.multiSelectModeActive ? App.ui.getCheckboxSelectedItems() : [App.state.currentSingleSelectedItem];
-                if (itemsToDelete.length === 0) return;
-                if (confirm(`確定要刪除選中的 ${itemsToDelete.length} 個項目嗎？此操作不可恢復！`)) {
-                    const { success, message } = await App.api.deleteItems(itemsToDelete);
-                    alert(message);
-                    if (success) window.location.reload();
-                }
-            },
-            async handleActionMove() {
-                if(App.elements.actionMoveBtn.disabled) return;
-                const itemsToMove = App.state.multiSelectModeActive ? App.ui.getCheckboxSelectedItems() : [App.state.currentSingleSelectedItem];
-                if (itemsToMove.length === 0) return;
-                const { moveDestinationInput, selectedDestinationPath, confirmMoveBtn, directoryTreeContainer, moveModal } = App.elements;
-                moveDestinationInput.value = '';
-                selectedDestinationPath.textContent = '無';
-                confirmMoveBtn.disabled = true;
-                directoryTreeContainer.innerHTML = '<p>正在加載目錄...</p>';
-                App.ui.openModal(moveModal);
-                try {
-                    const tree = await App.api.fetchDirectoryTree(itemsToMove.filter(i => i.isDir).map(i => i.path));
-                    App.state.currentDirectoryTree = tree;
-                    App.ui.renderDirectoryTree(tree, directoryTreeContainer, itemsToMove);
-                } catch (error) {
-                    directoryTreeContainer.innerHTML = `<p style="color:red;">加載目錄失敗: ${error.message}</p>`;
-                }
-            },
-            async handleConfirmMove() {
-                if(App.elements.confirmMoveBtn.disabled) return;
-                const itemsToMove = App.state.multiSelectModeActive ? App.ui.getCheckboxSelectedItems() : [App.state.currentSingleSelectedItem];
-                const destinationPath = App.elements.moveDestinationInput.value;
-                if (!itemsToMove.length || destinationPath === null || destinationPath === undefined) return alert('請選擇項目和目標。');
-                for (const item of itemsToMove) {
-                    const itemParentPath = item.path.substring(0, item.path.lastIndexOf('/')) || '/';
-                    if (itemParentPath === destinationPath) return alert(`項目 "${item.name}" 已在目標文件夾中。`);
-                    if (item.isDir && (destinationPath === item.path || destinationPath.startsWith(item.path + '/'))) return alert(`不能將文件夾 "${item.name}" 移動到其自身或其子文件夾中。`);
-                }
-                const { success, message, redirectUrl } = await App.api.moveItems(itemsToMove.map(i => i.path), destinationPath);
-                alert(message);
-                if (success) window.location.href = redirectUrl || window.location.href;
-            },
-            handleActionDownload() {
-                if(App.elements.actionDownloadBtn.disabled) return;
-                const itemsToDownload = App.state.multiSelectModeActive ? App.ui.getCheckboxSelectedItems() : [App.state.currentSingleSelectedItem];
-                if (itemsToDownload.length === 0) return alert("請選擇要下載的項目。");
-                
-                const targetUsername = (App.config.VIEW_CONTEXT_USER_USERNAME && App.config.CURRENT_SESSION_USER_ROLE === 'admin' && App.config.VIEW_CONTEXT_USER_USERNAME !== App.config.CURRENT_SESSION_USER_USERNAME) ? App.config.VIEW_CONTEXT_USER_USERNAME : '';
+            }
 
-                if (itemsToDownload.length === 1 && !itemsToDownload[0].isDir) {
-                    let url = `/download?path=${itemsToDownload[0].encodedPath}`;
-                    if (targetUsername) url += `&targetUsername=${encodeURIComponent(targetUsername)}`;
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = itemsToDownload[0].name;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                } else {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/download-archive';
-                    const itemsPayload = itemsToDownload.map(item => ({ path: item.path, name: item.name, isDir: item.isDir }));
-                    form.innerHTML = `
-                        <input type="hidden" name="items" value='${JSON.stringify(itemsPayload)}'>
-                        <input type="hidden" name="_csrf" value="${App.config.CSRF_TOKEN}">
-                        ${targetUsername ? `<input type="hidden" name="targetUsername" value="${targetUsername}">` : ''}
-                    `;
-                    document.body.appendChild(form);
-                    form.submit();
-                    document.body.removeChild(form);
-                }
-            },
-            handleActionShare() {
-                if(App.elements.actionShareBtn.disabled) return;
-                const items = App.state.multiSelectModeActive ? App.ui.getCheckboxSelectedItems() : [App.state.currentSingleSelectedItem];
-                if (items.length === 1) {
-                    const item = items[0];
-                    const { shareModal, shareItemNameDisplay, shareFilePathInput, shareIsDirectoryInput, shareAllowDownload, shareAllowView } = App.elements;
-                    shareItemNameDisplay.textContent = item.name;
-                    shareFilePathInput.value = item.path;
-                    shareIsDirectoryInput.value = item.isDir;
-                    shareAllowDownload.checked = true;
-                    shareAllowView.checked = true;
-                    App.ui.openModal(shareModal);
-                }
-            },
-            async handleConfirmShare() {
-                const { shareFilePathInput, shareIsDirectoryInput, shareAllowDownload, shareAllowView, shareModal, publicLinkDisplayModal, generatedPublicLink } = App.elements;
-                const payload = {
-                    filePathToShare: shareFilePathInput.value,
-                    isDirectory: shareIsDirectoryInput.value === 'true',
-                    allowDownload: shareAllowDownload.checked,
-                    allowView: shareAllowView.checked,
-                };
-                const { success, publicUrl, message } = await App.api.createPublicLink(payload);
-                if (success) {
-                    App.ui.closeModal(shareModal);
-                    generatedPublicLink.value = publicUrl;
-                    App.ui.openModal(publicLinkDisplayModal);
-                    if (App.config.CURRENT_VIEW_MODE === 'userShares') window.location.reload();
-                } else {
-                    alert(`創建失敗: ${message || '未知錯誤'}`);
-                }
-            },
-            async handleActionViewLinks() {
-                if(App.elements.actionViewExistingLinksBtn.disabled) return;
-                const items = App.state.multiSelectModeActive ? App.ui.getCheckboxSelectedItems() : [App.state.currentSingleSelectedItem];
-                if (items.length === 1) {
-                    const item = items[0];
-                    const { existingLinksModal, existingLinksItemName, existingLinksListContainer } = App.elements;
-                    existingLinksItemName.textContent = item.name;
-                    existingLinksListContainer.innerHTML = '<p>正在加載連結...</p>';
-                    App.ui.openModal(existingLinksModal);
-                    try {
-                        const { success, links, message } = await App.api.fetchItemPublicLinks(item.path);
-                        if (success && links?.length > 0) {
-                            existingLinksListContainer.innerHTML = `<ul>${links.map(link => `
-                                <li>
-                                    <div class="link-info">
-                                        <a href="${link.publicUrl}" target="_blank">${link.publicUrl}</a>
-                                        <span class="link-details">
-                                            創建於: ${App.helpers.formatDate(link.created_at)}, 
-                                            訪問: ${link.visit_count} 次
-                                        </span>
-                                    </div>
-                                    <button class="secondary action-button-small revoke-link-btn" data-link-id="${link.link_id}">撤銷</button>
-                                </li>`).join('')}</ul>`;
-                            existingLinksListContainer.querySelectorAll('.revoke-link-btn').forEach(btn => {
-                                btn.addEventListener('click', async e => {
-                                    if(confirm('確定要撤銷此連結嗎？')) {
-                                        const { success, message } = await App.api.revokePublicLink(e.target.dataset.linkId);
-                                        alert(message);
-                                        if(success) window.location.reload();
+            if (toggleUploadActionsBtn && uploadActionsContainer && uploadSection) {
+                toggleUploadActionsBtn.addEventListener('click', () => {
+                    const isActionsHidden = uploadActionsContainer.style.display === 'none' || uploadActionsContainer.style.display === '';
+                    uploadActionsContainer.style.display = isActionsHidden ? 'flex' : 'none';
+                    if (!isActionsHidden) {
+                        uploadSection.style.display = 'none';
+                        toggleUploadActionsBtn.textContent = '上傳';
+                        if(userFilesInput) userFilesInput.value = null;
+                        if(fileListPreview) fileListPreview.innerHTML = '';
+                        if(uploadButton) uploadButton.style.display = 'none';
+                        if(uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+
+                    } else {
+                        toggleUploadActionsBtn.textContent = '取消上傳操作';
+                    }
+                });
+            }
+
+            if (uploadFilesBtn && uploadSection && userFilesInput && dropAreaText && fileListPreview && uploadButton) {
+                uploadFilesBtn.addEventListener('click', () => {
+                    userFilesInput.removeAttribute('webkitdirectory');
+                    userFilesInput.removeAttribute('directory');
+                    userFilesInput.setAttribute('multiple', '');
+                    if (dropAreaText) dropAreaText.textContent = '將文件拖拽到此處進行上傳，或點擊選擇文件。';
+                    uploadSection.style.display = 'block';
+                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
+                    if (!uploadActionsContainer || uploadActionsContainer.style.display === 'none') {
+                        if(uploadActionsContainer) uploadActionsContainer.style.display = 'flex';
+                    }
+                    userFilesInput.value = null;
+                    fileListPreview.innerHTML = '';
+                    uploadButton.style.display = 'none';
+                    userFilesInput.click();
+                });
+            }
+
+            if (uploadFolderBtn && uploadSection && userFilesInput && dropAreaText && fileListPreview && uploadButton) {
+                uploadFolderBtn.addEventListener('click', () => {
+                    userFilesInput.setAttribute('webkitdirectory', '');
+                    userFilesInput.setAttribute('directory', '');
+                    userFilesInput.removeAttribute('multiple');
+                    if (dropAreaText) dropAreaText.textContent = '將文件夾拖拽到此處進行上傳，或點擊選擇文件夾。';
+                    uploadSection.style.display = 'block';
+                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
+                     if (!uploadActionsContainer || uploadActionsContainer.style.display === 'none') {
+                        if(uploadActionsContainer) uploadActionsContainer.style.display = 'flex';
+                    }
+                    userFilesInput.value = null;
+                    fileListPreview.innerHTML = '';
+                    uploadButton.style.display = 'none';
+                    userFilesInput.click();
+                });
+            }
+
+            if (uploadForm && userFilesInput) {
+                uploadForm.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    if (userFilesInput.files.length === 0) {
+                        alert('請選擇要上傳的文件或文件夾。');
+                        return;
+                    }
+
+                    const originalFiles = Array.from(userFilesInput.files);
+                    let finalFilesToUpload = [];
+                    let processedTopLevelItems = new Set();
+
+                    for (const file of originalFiles) {
+                        let nameToCheck = file.name;
+                        let isTopLevelItem = true;
+                        if (file.webkitRelativePath) {
+                            const pathParts = file.webkitRelativePath.split('/');
+                            nameToCheck = pathParts[0];
+                            if (pathParts.length > 1) isTopLevelItem = false;
+                        }
+
+                        if (EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase()) && !processedTopLevelItems.has(nameToCheck.toLowerCase())) {
+                            processedTopLevelItems.add(nameToCheck.toLowerCase());
+                            const userDecision = await showOverwriteConfirmationModal(nameToCheck);
+                            if (userDecision === 'overwrite') {
+                                originalFiles.forEach(f => {
+                                    if ((f.webkitRelativePath && f.webkitRelativePath.startsWith(nameToCheck + '/')) || f.name === nameToCheck) {
+                                        if (!finalFilesToUpload.includes(f)) finalFilesToUpload.push(f);
                                     }
                                 });
-                            });
+                            } else {
+                                // console.log(`Skipping ${nameToCheck} and its contents due to user choice.`);
+                            }
+                        } else if (!EXISTING_ITEM_NAMES_ON_PAGE.includes(nameToCheck.toLowerCase())) {
+                            if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
+                             if(isTopLevelItem) processedTopLevelItems.add(nameToCheck.toLowerCase());
+                        } else if (processedTopLevelItems.has(nameToCheck.toLowerCase()) && finalFilesToUpload.some(f => (f.webkitRelativePath || f.name).startsWith(nameToCheck))) {
+                            if (!finalFilesToUpload.includes(file)) finalFilesToUpload.push(file);
+                        }
+                    }
+
+
+                    if (finalFilesToUpload.length === 0) {
+                        alert('沒有文件準備上傳（可能所有衝突的文件都已被放棄）。');
+                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                        if (uploadButton) uploadButton.style.display = 'none';
+                        if (fileListPreview) fileListPreview.innerHTML = '';
+                        if (userFilesInput) userFilesInput.value = null;
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    const currentPathInput = uploadForm.querySelector('input[name="currentPath"]');
+                    if (currentPathInput) formData.append('currentPath', currentPathInput.value);
+
+                    const targetUsernameInput = uploadForm.querySelector('input[name="targetUsername"]');
+                    if (targetUsernameInput && targetUsernameInput.value) formData.append('targetUsername', targetUsernameInput.value);
+
+                    const csrfInput = uploadForm.querySelector('input[name="_csrf"]');
+                    if (csrfInput) formData.append('_csrf', csrfInput.value);
+
+                    for (const file of finalFilesToUpload) {
+                        formData.append('userFiles', file, file.webkitRelativePath || file.name);
+                    }
+
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', uploadForm.action, true);
+                    if (uploadProgressContainer && uploadProgressBar) {
+                        uploadProgressContainer.style.display = 'block';
+                        uploadProgressBar.style.width = '0%';
+                        uploadProgressBar.textContent = '0%';
+                    }
+                    xhr.upload.onprogress = function(event) {
+                        if (event.lengthComputable) {
+                            const percentComplete = Math.round((event.loaded / event.total) * 100);
+                            if (uploadProgressBar) {
+                                uploadProgressBar.style.width = percentComplete + '%';
+                                uploadProgressBar.textContent = percentComplete + '%';
+                            }
+                        }
+                    };
+                    xhr.onload = function() {
+                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            let responseData = null;
+                            try { responseData = JSON.parse(xhr.responseText); } catch (e) { /* Ignore */ }
+
+                            if (responseData && responseData.redirectUrl) {
+                                window.location.href = responseData.redirectUrl;
+                            } else if (xhr.responseURL && xhr.responseURL !== xhr.openUrl && xhr.responseURL.includes('/files')) {
+                                window.location.href = xhr.responseURL;
+                            } else {
+                                alert( (responseData && responseData.message) || '上傳成功！頁面將刷新。');
+                                window.location.reload();
+                            }
                         } else {
-                            existingLinksListContainer.innerHTML = `<p>${success ? '此項目沒有已分享的公開連結。' : `獲取列表失敗: ${message}`}</p>`;
+                            let errorMessage = `上傳失敗。伺服器響應: ${xhr.status}`;
+                            try {
+                                const responseJson = JSON.parse(xhr.responseText);
+                                if (responseJson && responseJson.message) {
+                                    errorMessage = responseJson.message;
+                                }
+                            } catch (e) {
+                                if(xhr.responseText && xhr.responseText.length < 500) errorMessage = xhr.responseText;
+                            }
+                            alert(errorMessage);
+                            console.error('Upload failed:', xhr.status, xhr.responseText);
                         }
-                    } catch (e) {
-                        existingLinksListContainer.innerHTML = `<p style="color:red;">獲取連結列表時發生客戶端錯誤。</p>`;
+                    };
+                    xhr.onerror = function(e) {
+                        if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
+                        alert('上傳過程中發生網絡錯誤。請檢查網絡連接和服務器狀態。');
+                        console.error('Upload network error:', e);
+                    };
+                    xhr.openUrl = uploadForm.action;
+                    xhr.send(formData);
+                });
+            }
+
+            if (dropArea && userFilesInput && fileListPreview && uploadSection && dropAreaText && uploadActionsContainer && toggleUploadActionsBtn) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false);
+                });
+                function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+                dropArea.addEventListener('dragenter', () => dropArea.classList.add('highlight'), false);
+                dropArea.addEventListener('dragover', () => dropArea.classList.add('highlight'), false);
+                dropArea.addEventListener('dragleave', (e) => {
+                    if (e.relatedTarget === null || !dropArea.contains(e.relatedTarget)) {
+                        dropArea.classList.remove('highlight');
                     }
-                }
-            },
-            async handleActionRevokeBatch() {
-                const linkIds = App.ui.getSelectedPublicLinkIds();
-                if (linkIds.length === 0) return alert('請選擇要撤銷的連結。');
-                if (confirm(`確定要撤銷選中的 ${linkIds.length} 個公開連結嗎？`)) {
-                    const { success, message } = await App.api.revokePublicLinksBatch(linkIds);
-                    alert(message);
-                    if (success) window.location.reload();
-                }
-            },
-            handleCopyLink() {
-                const { generatedPublicLink } = App.elements;
-                generatedPublicLink.select();
-                try {
-                    document.execCommand('copy');
-                    alert('連結已複製到剪貼簿！');
-                } catch (err) {
-                    alert('複製失敗。');
-                }
-            },
-        });
-        Object.assign(App.api, {
-            async fetchDirectoryTree(excludePaths = []) {
-                const params = new URLSearchParams();
-                if (App.config.VIEW_CONTEXT_USER_USERNAME && App.config.CURRENT_SESSION_USER_ROLE === 'admin') params.set('targetUsername', App.config.VIEW_CONTEXT_USER_USERNAME);
-                if (excludePaths.length > 0) params.set('excludePaths', excludePaths.join(','));
-                const response = await fetch(`/api/directories?${params.toString()}`);
-                if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
-                return response.json();
-            },
-            async deleteItems(items) {
-                const body = { paths: items.map(i => i.path), _csrf: App.config.CSRF_TOKEN };
-                if (App.config.VIEW_CONTEXT_USER_USERNAME && App.config.CURRENT_SESSION_USER_ROLE === 'admin') body.targetUsername = App.config.VIEW_CONTEXT_USER_USERNAME;
-                const response = await fetch('/delete-items', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-                });
-                return response.json();
-            },
-            async moveItems(sourcePaths, destinationPath) {
-                const body = { sourcePaths, destinationPath, _csrf: App.config.CSRF_TOKEN };
-                if (App.config.VIEW_CONTEXT_USER_USERNAME && App.config.CURRENT_SESSION_USER_ROLE === 'admin') body.targetUsername = App.config.VIEW_CONTEXT_USER_USERNAME;
-                const response = await fetch('/move-items', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-                });
-                return response.json();
-            },
-            async fetchItemPublicLinks(filePath) {
-                const params = new URLSearchParams({ filePath });
-                if (App.config.VIEW_CONTEXT_USER_USERNAME && App.config.CURRENT_SESSION_USER_ROLE === 'admin') params.set('targetUsername', App.config.VIEW_CONTEXT_USER_USERNAME);
-                const response = await fetch(`/api/item-public-links?${params.toString()}`);
-                return response.json();
-            },
-            async createPublicLink(payload) {
-                payload._csrf = App.config.CSRF_TOKEN;
-                if (App.config.VIEW_CONTEXT_USER_USERNAME && App.config.CURRENT_SESSION_USER_ROLE === 'admin') payload.targetUsername = App.config.VIEW_CONTEXT_USER_USERNAME;
-                const response = await fetch('/actions/create-public-link', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-                });
-                return response.json();
-            },
-            async revokePublicLink(link_id) {
-                const body = { link_id, _csrf: App.config.CSRF_TOKEN };
-                if (App.config.VIEW_CONTEXT_USER_USERNAME && App.config.CURRENT_SESSION_USER_ROLE === 'admin') body.contextUsername = App.config.VIEW_CONTEXT_USER_USERNAME;
-                const response = await fetch('/actions/revoke-public-link', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-                });
-                if(response.redirected) return { success: true, message: "連結已撤銷" };
-                return response.json();
-            },
-            async revokePublicLinksBatch(link_ids) {
-                const body = { link_ids, _csrf: App.config.CSRF_TOKEN };
-                if (App.config.VIEW_CONTEXT_USER_USERNAME && App.config.CURRENT_SESSION_USER_ROLE === 'admin') body.contextUsername = App.config.VIEW_CONTEXT_USER_USERNAME;
-                const response = await fetch('/actions/revoke-public-links-batch', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-                });
-                return response.json();
-            },
-             uploadFiles(formData) {
-                const { uploadForm, uploadProgressContainer, uploadProgressBar } = App.elements;
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', uploadForm.action, true);
-                if (uploadProgressContainer) uploadProgressContainer.style.display = 'block';
-                xhr.upload.onprogress = (event) => {
-                    if (event.lengthComputable) {
-                        const percent = Math.round((event.loaded / event.total) * 100);
-                        if (uploadProgressBar) {
-                            uploadProgressBar.style.width = percent + '%';
-                            uploadProgressBar.textContent = percent + '%';
+                }, false);
+
+                dropArea.addEventListener('drop', (e) => {
+                    preventDefaults(e);
+                    dropArea.classList.remove('highlight');
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+
+                    let isLikelyFolderDrop = false;
+                    if (dt.items && dt.items.length > 0 && typeof dt.items[0].webkitGetAsEntry === 'function') {
+                        const entry = dt.items[0].webkitGetAsEntry();
+                        if (entry && entry.isDirectory) {
+                            isLikelyFolderDrop = true;
+                        }
+                    } else if (files.length > 0 && files[0].webkitRelativePath) {
+                        const firstFileRelativePath = files[0].webkitRelativePath;
+                        if (firstFileRelativePath && firstFileRelativePath.includes('/')) {
+                             isLikelyFolderDrop = true;
+                        } else if (files.length > 1 && Array.from(files).every(f => f.webkitRelativePath.startsWith(firstFileRelativePath.split('/')[0]))) {
+                            isLikelyFolderDrop = true;
                         }
                     }
-                };
-                xhr.onload = () => {
-                    if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                    let res; try { res = JSON.parse(xhr.responseText); } catch(e){}
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        if (res?.redirectUrl) window.location.href = res.redirectUrl;
-                        else { alert(res?.message || '上傳成功！'); window.location.reload(); }
+
+
+                    if (isLikelyFolderDrop) {
+                        userFilesInput.setAttribute('webkitdirectory', '');
+                        userFilesInput.setAttribute('directory', '');
+                        userFilesInput.removeAttribute('multiple');
+                        if(dropAreaText) dropAreaText.textContent = '已拖入文件夾，準備上傳。';
                     } else {
-                        alert(`上傳失敗: ${res?.message || xhr.statusText}`);
+                        userFilesInput.removeAttribute('webkitdirectory');
+                        userFilesInput.removeAttribute('directory');
+                        userFilesInput.setAttribute('multiple', '');
+                        if(dropAreaText) dropAreaText.textContent = '已拖入文件，準備上傳。';
+                    }
+
+                    userFilesInput.files = files;
+                    updateFileListPreviewOnDrop();
+                    uploadSection.style.display = 'block';
+                    if (uploadActionsContainer.style.display === 'none') {
+                         uploadActionsContainer.style.display = 'flex';
+                    }
+                    if (toggleUploadActionsBtn) toggleUploadActionsBtn.textContent = '取消上傳操作';
+                }, false);
+
+                userFilesInput.addEventListener('change', updateFileListPreviewOnDrop);
+
+                function updateFileListPreviewOnDrop() {
+                    if (!fileListPreview || !userFilesInput || !uploadButton) return;
+                    fileListPreview.innerHTML = '';
+                    const files = userFilesInput.files;
+                    if (files.length > 0) {
+                        const list = document.createElement('ul');
+                        list.style.listStyleType = 'none'; list.style.paddingLeft = '0';
+
+                        let isDirectoryUpload = false;
+                        if (userFilesInput.hasAttribute('webkitdirectory') || (files[0] && files[0].webkitRelativePath && files[0].webkitRelativePath.includes('/'))) {
+                            isDirectoryUpload = true;
+                        }
+
+
+                        if (isDirectoryUpload) {
+                            const folderName = files[0].webkitRelativePath.split('/')[0];
+                            const listItem = document.createElement('li');
+                            listItem.textContent = `文件夾: ${folderName} (${files.length} 個文件)`;
+                            listItem.style.fontSize = '0.9em'; listItem.style.fontWeight = 'bold';
+                            list.appendChild(listItem);
+                        } else {
+                            for (let i = 0; i < files.length; i++) {
+                                const listItem = document.createElement('li');
+                                listItem.textContent = files[i].name + (files[i].size ? ` (${(files[i].size / 1024).toFixed(1)} KB)` : '');
+                                listItem.style.fontSize = '0.9em';
+                                list.appendChild(listItem);
+                            }
+                        }
+                        fileListPreview.appendChild(list);
+                        uploadButton.style.display = 'inline-block';
+                    } else {
+                        uploadButton.style.display = 'none';
+                    }
+                }
+                if (userFilesInput && uploadButton && userFilesInput.files.length === 0) {
+                     uploadButton.style.display = 'none';
+                }
+            }
+
+            const listViewBtn = document.getElementById('listViewBtn');
+            const gridViewBtn = document.getElementById('gridViewBtn');
+            if (fileContainer && listViewBtn && gridViewBtn) {
+                function toggleView(viewType) {
+                    const isCurrentlyMultiSelect = fileContainer.classList.contains('multi-select-mode-active');
+                    fileContainer.classList.remove('list-view', 'grid-view');
+
+                    if (viewType === 'grid') {
+                        fileContainer.classList.add('grid-view');
+                        gridViewBtn.classList.add('active');
+                        listViewBtn.classList.remove('active');
+                        localStorage.setItem('fileView', 'grid');
+                    } else {
+                        fileContainer.classList.add('list-view');
+                        listViewBtn.classList.add('active');
+                        gridViewBtn.classList.remove('active');
+                        localStorage.setItem('fileView', 'list');
+                    }
+                    if (isCurrentlyMultiSelect) {
+                        fileContainer.classList.add('multi-select-mode-active');
+                    }
+                    clearSingleSelection();
+                    updateSelectionActions();
+                    updatePublicLinkSelectionActions();
+                }
+                const preferredView = localStorage.getItem('fileView') || 'list';
+                toggleView(preferredView);
+                listViewBtn.addEventListener('click', () => toggleView('list'));
+                gridViewBtn.addEventListener('click', () => toggleView('grid'));
+            }
+
+            const createItemModal = document.getElementById('create-item-modal');
+            const closeCreateItemModalBtn = document.getElementById('close-create-item-modal-btn');
+            const cancelCreateItemBtn = document.getElementById('cancel-create-item-btn');
+            const createItemForm = document.getElementById('create-item-form');
+            const createItemModalTitle = document.getElementById('create-item-modal-title');
+            const createItemNameInput = document.getElementById('create-item-name-input');
+            const createItemNameLabel = document.getElementById('create-item-name-label');
+            const showCreateTextfileModalBtn = document.getElementById('show-create-textfile-modal-btn');
+            const showCreateFolderModalBtn = document.getElementById('show-create-folder-modal-btn');
+
+            function openCreateItemModal(type) {
+                if (!createItemModal || !createItemForm || !createItemModalTitle || !createItemNameLabel || !createItemNameInput) return;
+                createItemForm.reset();
+
+                const currentPathForCreation = IS_SEARCH_RESULT_VIEW ? '/' : CURRENT_PATH_ON_LOAD;
+                const currentPathInputInForm = createItemForm.querySelector('input[name="currentPath"]');
+                if (currentPathInputInForm) currentPathInputInForm.value = currentPathForCreation;
+
+
+                if (type === 'textfile') {
+                    createItemModalTitle.textContent = '新建文本文件';
+                    createItemNameLabel.textContent = '文件名 (例如: mydoc.txt):';
+                    createItemNameInput.name = 'newFileName';
+                    createItemNameInput.placeholder = '例如: notes.txt, script.js';
+                    createItemForm.action = '/create-text-file';
+                } else if (type === 'folder') {
+                    createItemModalTitle.textContent = '创建新文件夹';
+                    createItemNameLabel.textContent = '文件夹名称:';
+                    createItemNameInput.name = 'folderName';
+                    createItemNameInput.placeholder = '例如: 我的文档';
+                    createItemForm.action = '/create-folder';
+                }
+
+                const targetUsernameHiddenInput = createItemForm.querySelector('input[name="targetUsername"]');
+                if (targetUsernameHiddenInput) {
+                    if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                        targetUsernameHiddenInput.value = VIEW_CONTEXT_USER_USERNAME;
+                    } else {
+                        targetUsernameHiddenInput.value = '';
+                    }
+                }
+                createItemModal.style.display = 'block';
+                createItemNameInput.focus();
+            }
+
+            if (showCreateTextfileModalBtn) showCreateTextfileModalBtn.addEventListener('click', () => openCreateItemModal('textfile'));
+            if (showCreateFolderModalBtn) showCreateFolderModalBtn.addEventListener('click', () => openCreateItemModal('folder'));
+            if (closeCreateItemModalBtn) closeCreateItemModalBtn.onclick = () => createItemModal.style.display = 'none';
+            if (cancelCreateItemBtn) cancelCreateItemBtn.onclick = () => createItemModal.style.display = 'none';
+
+            function openVideoPlayer(encodedPath, videoName, videoType) {
+                if (!videoPlayerModal || !html5VideoPlayer || !videoSourceElement || !videoModalTitle) return;
+
+                let videoSrc = `/stream/${encodedPath}`;
+                const queryParams = new URLSearchParams();
+
+                if (VIEW_CONTEXT_USER_USERNAME && CURRENT_SESSION_USER_ROLE === 'admin' && VIEW_CONTEXT_USER_USERNAME !== CURRENT_SESSION_USER_USERNAME) {
+                    queryParams.set('targetUsername', VIEW_CONTEXT_USER_USERNAME);
+                }
+
+                if (Array.from(queryParams).length > 0) {
+                    videoSrc += `?${queryParams.toString()}`;
+                }
+
+
+                videoModalTitle.textContent = videoName || '播放視頻';
+                videoSourceElement.setAttribute('src', videoSrc);
+                if (videoType) {
+                    videoSourceElement.setAttribute('type', videoType);
+                } else {
+                    videoSourceElement.removeAttribute('type');
+                }
+                html5VideoPlayer.load();
+                videoPlayerModal.style.display = 'block';
+            }
+
+            if (closeVideoModalBtn) {
+                closeVideoModalBtn.onclick = () => {
+                    if (videoPlayerModal) videoPlayerModal.style.display = 'none';
+                    if (html5VideoPlayer) {
+                        html5VideoPlayer.pause();
+                        videoSourceElement.setAttribute('src', '');
                     }
                 };
-                xhr.onerror = () => {
-                    if (uploadProgressContainer) uploadProgressContainer.style.display = 'none';
-                    alert('上傳過程中發生網絡錯誤。');
-                };
-                xhr.send(formData);
-            },
+            }
+
+
+            window.addEventListener('click', (event) => {
+                if (event.target == createItemModal) createItemModal.style.display = 'none';
+                if (event.target == renameItemModal) renameItemModal.style.display = 'none';
+                if (event.target == moveModal) moveModal.style.display = 'none';
+                if (event.target == overwriteModal) {
+                    const abandonButton = overwriteModal.querySelector('#overwrite-abandon-btn');
+                    if (abandonButton) abandonButton.click();
+                }
+                if (event.target == videoPlayerModal) {
+                     if (videoPlayerModal) videoPlayerModal.style.display = 'none';
+                    if (html5VideoPlayer) {
+                        html5VideoPlayer.pause();
+                        videoSourceElement.setAttribute('src', '');
+                    }
+                }
+                if (event.target == shareModal) shareModal.style.display = 'none';
+                if (event.target == publicLinkDisplayModal) publicLinkDisplayModal.style.display = 'none';
+                if (event.target == existingLinksModal) existingLinksModal.style.display = 'none';
+            });
+
+            updateMultiSelectModeUI();
+            updateSelectionActions();
+            updatePublicLinkSelectionActions();
+
         });
-        
-        // --- App Initialization ---
-        document.addEventListener('DOMContentLoaded', () => App.init());
     </script>
 </body>
 </html>
