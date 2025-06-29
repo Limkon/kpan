@@ -9,22 +9,22 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* MODIFIED: Styles for the new header layout */
+        /* 頁面頂部佈局 */
         .viewer-header { 
             display: flex;
-            justify-content: space-between; /* Aligns children to opposite ends */
-            align-items: center; /* Vertically centers the items */
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 15px;
         }
         .header-actions {
             display: flex;
-            gap: 10px; /* Space between Edit and Download buttons */
+            gap: 10px;
         }
-        /* Keep h2 separate for clean layout */
         .viewer-title {
              margin-bottom: 15px;
         }
 
+        /* MODIFIED: 為文件預覽區域設定字體 */
         pre {
             background-color: #f8f9fa;
             border: 1px solid #dee2e6;
@@ -32,9 +32,12 @@
             border-radius: 5px;
             white-space: pre-wrap;
             word-break: break-all;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.9rem;
+            font-size: 1rem;
+            line-height: 1.6;
+            /* 關鍵：設定字體為宋體 */
+            font-family: 'SimSun', '宋体', 'STSong', serif;
         }
+        /* 優化暗色主題下的預覽區樣式 */
         body.dark-theme pre {
             background-color: #2c2c2c;
             border-color: #444;
