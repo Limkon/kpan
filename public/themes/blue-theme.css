@@ -12,8 +12,6 @@
     --input-focus-border: #007bff;
     --input-focus-shadow: rgba(0, 123, 255, 0.25);
     --link-color: #0056b3;
-    --secondary-button-bg: #6c757d;
-    --secondary-button-hover-bg: #545b62;
 }
 
 body {
@@ -47,14 +45,7 @@ button:hover, .button-link:hover {
     background-color: var(--primary-hover-color);
     border-color: var(--primary-hover-color);
 }
-button.secondary, .button-link.secondary {
-    background-color: var(--secondary-button-bg);
-    border-color: var(--secondary-button-bg);
-}
-button.secondary:hover, .button-link.secondary:hover {
-    background-color: var(--secondary-button-hover-bg);
-    border-color: var(--secondary-button-hover-bg);
-}
+/* REMOVED: .secondary button styles removed for unified look */
 
 a { color: var(--link-color); }
 .current-path { background-color: #cfe2ff; color: var(--header-text-color); }
