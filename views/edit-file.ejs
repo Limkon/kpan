@@ -8,51 +8,46 @@
     <title>编辑文件: <%= filename %></title>
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-darker.min.css">
+
     <style>
-        /* 让编辑器充满屏幕的主要部分 */
+        /* 整體佈局樣式 */
         body, html {
-            height: 100%;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
+            height: 100%; margin: 0; display: flex; flex-direction: column;
         }
         .container {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 15px;
-            max-width: 1200px;
-            width: 100%;
-            margin-left: auto;
-            margin-right: auto;
+            flex-grow: 1; display: flex; flex-direction: column; padding: 15px;
+            max-width: 95%; /* 讓編輯器更寬，更像IDE */
+            width: 100%; margin-left: auto; margin-right: auto;
         }
         form {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        textarea#fileContent {
-            flex-grow: 1;
-            width: 100%;
-            box-sizing: border-box;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1rem;
-            line-height: 1.5;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            padding: 10px;
-            margin: 0;
+            flex-grow: 1; display: flex; flex-direction: column;
         }
         .editor-header {
             margin-bottom: 15px;
         }
         .editor-actions {
-            margin-top: 15px;
-            text-align: right;
-            flex-shrink: 0;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
+            margin-top: 15px; text-align: right; flex-shrink: 0;
+            display: flex; justify-content: flex-end; gap: 10px;
+        }
+
+        /* 關鍵：CodeMirror 編輯器實例的樣式 */
+        .CodeMirror {
+            flex-grow: 1; /* 讓編輯器填滿剩餘空間 */
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            height: auto; /* 配合 flex 佈局的關鍵 */
+            font-size: 1rem;
+        }
+        /* 優化暗色主題下的邊框 */
+        body.dark-theme .CodeMirror {
+            border-color: #555;
+        }
+        /* 隱藏原始的 textarea */
+        textarea#fileContent {
+            display: none;
         }
     </style>
 </head>
@@ -81,14 +76,70 @@
 
             <div class="editor-actions">
                 <button type="submit">保存更改</button>
-                
-                <%# MODIFIED: Changed the "Cancel" link to a real button for style consistency %>
                 <% const viewUrl = `/view?path=${encodeURIComponent(currentPath)}${viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''}`; %>
                 <button type="button" onclick="window.location.href='<%= viewUrl %>'">取消</button>
             </div>
         </form>
     </div>
 
-    <script src="/theme.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/shell/shell.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 純前端方案：從文件名推斷語法模式
+            const filename = "<%= filename %>";
+            const extension = "." + filename.split('.').pop();
+
+            // 將文件擴展名映射到 CodeMirror 的模式（mode）
+            function getModeFromExtension(ext) {
+                switch (ext.toLowerCase()) {
+                    case '.js':
+                    case '.json':
+                    case '.ts':
+                        return 'javascript';
+                    case '.css':
+                        return 'css';
+                    case '.html':
+                    case '.xml':
+                        return 'htmlmixed';
+                    case '.md':
+                        return 'markdown';
+                    case '.py':
+                        return 'python';
+                    case '.sh':
+                    case '.bat':
+                        return 'shell';
+                    default:
+                        return 'text/plain'; // 對於未知類型，作為純文本處理
+                }
+            }
+
+            const editorTextarea = document.getElementById('fileContent');
+            const editor = CodeMirror.fromTextArea(editorTextarea, {
+                lineNumbers: true,              // 啟用行號
+                mode: getModeFromExtension(extension), // 根據擴展名設定語法模式
+                theme: 'material-darker',       // 使用一個舒適的暗色主題
+                lineWrapping: true,             // 自動換行
+                indentUnit: 4,                  // 縮進單位
+                smartIndent: true,              // 智能縮進
+            });
+
+            // 確保 CodeMirror 的內容變動會同步回原始的 textarea，以便表單能提交最新內容
+            editor.on('change', () => {
+                editor.save();
+            });
+
+            // 自動調整編輯器高度以適應內容，或設置一個固定高度
+            editor.setSize(null, '100%'); 
+        });
+    </script>
 </body>
 </html>
