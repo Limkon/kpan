@@ -112,6 +112,8 @@
             border-right: 1px solid #d0d7de;
             user-select: none;
             overflow: hidden;
+            /* [FIX] Ensure newlines are respected for vertical layout */
+            white-space: pre;
         }
 
         .editor-main {
@@ -228,7 +230,7 @@
             <div class="code-editor-wrapper">
                 <div class="line-numbers" id="line-numbers-display">1</div>
                 <div class="editor-main">
-                    <textarea id="fileContent" name="fileContent" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"><%= content %></textarea>
+                    <textarea id="fileContent" name="fileContent" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"><%- content %></textarea>
                     <pre id="highlight-output" aria-hidden="true"><code></code></pre>
                 </div>
             </div>
@@ -250,7 +252,6 @@
         const lineNumbersDisplay = document.getElementById('line-numbers-display');
         const filename = "<%= filename %>";
 
-        // This function ensures that HTML entities are properly escaped.
         const escapeHtml = (text) => {
             const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
             return text.replace(/[&<>"']/g, m => map[m]);
@@ -271,8 +272,6 @@
                 return escapeHtml(text);
             }
             
-            // A simplified, non-blocking highlighter.
-            // This is NOT a full parser and will have limitations.
             let html = escapeHtml(text);
             const rules = {
                 javascript: [
@@ -333,15 +332,15 @@
                 const end = textarea.selectionEnd;
                 const tabCharacter = '  ';
 
-                if (e.shiftKey) { // Shift + Tab for outdent
+                if (e.shiftKey) { 
                      const before = textarea.value.substring(0, start);
                      const lastLineStart = before.lastIndexOf('\n') + 1;
                      if (textarea.value.substring(lastLineStart, lastLineStart + 2) === tabCharacter) {
                         textarea.value = textarea.value.substring(0, lastLineStart) + textarea.value.substring(lastLineStart + 2);
-                        textarea.selectionStart = start - 2;
+                        textarea.selectionStart = start > lastLineStart + 1 ? start - 2 : lastLineStart;
                         textarea.selectionEnd = end - 2;
                      }
-                } else { // Normal Tab for indent
+                } else {
                      textarea.value = textarea.value.substring(0, start) + tabCharacter + textarea.value.substring(end);
                      textarea.selectionStart = textarea.selectionEnd = start + tabCharacter.length;
                 }
