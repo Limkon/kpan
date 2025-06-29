@@ -123,10 +123,3 @@ table td { border-color: #555; }
 .theme-switcher-container label {
     color: #e0e0e0;
 }
-
-/* MODIFIED: Added selection styles for dark theme */
-.list-view li.selected,
-.grid-view li.selected {
-    background-color: #004a7c; /* A darker blue for dark mode */
-    border-color: #80bdff;
-}

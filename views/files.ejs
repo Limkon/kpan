@@ -604,142 +604,111 @@
                     };
                 %>
                 <ul>
-    <% if (items.length > 0) { %>
-        <%
-            const adminTargetQueryForActions = locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin' ? '&targetUsername=' + encodeURIComponent(viewContextUser.username) : '';
-
-            const formatFileSize = (bytes) => {
-                if (bytes === undefined || bytes === null || isNaN(bytes)) return '--';
-                if (bytes === 0) return '0 B';
-                const k = 1024;
-                const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-            };
-
-            const formatDate = (dateString) => {
-                if (!dateString) return '--';
-                try {
-                    const date = new Date(dateString);
-                    if (isNaN(date.getTime())) return '--';
-                    return date.toLocaleDateString('zh-CN', {
-                        year: 'numeric', month: '2-digit', day: '2-digit',
-                        hour: '2-digit', minute: '2-digit'
-                    });
-                } catch (e) { return '--'; }
-            };
-        %>
-
-        <% items.forEach(item => { %>
-            <%# *** FIX STARTS HERE: All content for one item is now inside a single <li> tag *** %>
-            <li class="<%= item.isDir ? 'dir-item' : 'file-item' %>"
-                data-path="<%= item.path %>"
-                data-name="<%= item.name %>"
-                data-is-dir="<%= item.isDir %>"
-                <% if (locals.viewMode === 'userShares') { %>
-                    data-link-id="<%= item.link_id %>"
-                    data-token="<%= item.token %>"
-                    data-public-url="<%= item.publicUrl %>"
-                <% } %>>
-
-                <div class="file-entry-selectable">
-                    <% if (locals.viewMode !== 'userShares') { %>
-                        <input type="checkbox" class="item-checkbox"
-                               data-path="<%= item.path %>"
-                               data-encoded-path="<%= item.encodedPath %>"
-                               data-name="<%= item.name %>"
-                               data-encoded-name="<%= item.encodedName %>"
-                               data-is-dir="<%= item.isDir %>"
-                               data-is-playable-video="<%= item.isPlayableVideo || false %>"
-                               data-video-type="<%= item.videoType || '' %>"
-                               data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>">
-                    <% } else { %>
-                        <input type="checkbox" class="public-link-checkbox" data-link-id="<%= item.link_id %>">
-                    <% } %>
-
-                    <div class="file-content-wrapper">
-                        <% if (item.isDir) { %>
-                            <div class="file-entry">
-                                <span class="file-icon-large folder-icon">📁</span>
-                                <% if (locals.viewMode === 'userShares') { %>
-                                    <span class="file-name"><%= item.name %></span>
+                    <% items.forEach(item => { %>
+                        <li data-item-path="<%= item.path %>"
+                            <% if (locals.viewMode === 'userShares') { %>data-link-id="<%= item.link_id %>" data-token="<%= item.token %>" data-public-url="<%= item.publicUrl %>"<% } %>
+                            >
+                            <div class="file-entry-selectable">
+                                <% if (locals.viewMode !== 'userShares') { %>
+                                <input type="checkbox" class="item-checkbox"
+                                       data-path="<%= item.path %>"
+                                       data-encoded-path="<%= item.encodedPath %>"
+                                       data-name="<%= item.name %>"
+                                       data-encoded-name="<%= item.encodedName %>"
+                                       data-is-dir="<%= item.isDir %>"
+                                       data-is-playable-video="<%= item.isPlayableVideo || false %>"
+                                       data-video-type="<%= item.videoType || '' %>"
+                                       data-raw-name="<%= item.name.replace(/'/g, '\\\'').replace(/"/g, '&quot;') %>"
+                                       >
                                 <% } else { %>
-                                    <a href="/files?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name"><%= item.name %></a>
+                                    <input type="checkbox" class="public-link-checkbox" data-link-id="<%= item.link_id %>">
                                 <% } %>
-                                <% if (locals.isSearchResult && (!locals.viewMode || locals.viewMode === 'myfiles')) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
-                            </div>
-                            <div class="file-details">
-                                <% if (locals.viewMode === 'userShares') { %>
-                                    <span class="file-public-link"><a href="<%= item.publicUrl %>" target="_blank" title="點擊打開公開連結"><%= item.publicUrl %></a></span>
-                                    <span class="file-created-at">創建於: <%= formatDate(item.created_at) %></span>
-                                <% } else { %>
-                                    <span class="file-size"></span>
-                                    <span class="file-modified"><%= formatDate(item.lastModified) %></span>
-                                <% } %>
-                            </div>
-                        <% } else { // It's a file %>
-                            <div class="file-entry">
-                                <%
-                                    const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
-                                    let largeIcon = '📄';
-                                    let iconClass = 'file-icon';
-                                    if (item.isDir) {
-                                        largeIcon = '📁'; iconClass = 'folder-icon';
-                                    } else if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
-                                        largeIcon = '📝'; iconClass = 'text-file-icon';
-                                    } else if (item.isPlayableVideo) {
-                                        largeIcon = '🎥'; iconClass = 'video-file-icon';
-                                    } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) {
-                                        largeIcon = '🖼️'; iconClass = 'image-file-icon';
-                                    } else if (['pdf'].includes(ext)) {
-                                        largeIcon = '📕'; iconClass = 'pdf-file-icon';
-                                    }
-                                %>
-                                <span class="file-icon-large <%= iconClass %>"><%= largeIcon %></span>
-                                <% if (locals.viewMode === 'userShares') { %>
-                                    <span class="file-name"><%= item.name %></span>
-                                <% } else if (item.isPlayableVideo) { %>
-                                    <a href="#" class="file-name video-link" data-path="<%= item.encodedPath %>" data-name="<%= item.name %>" data-type="<%= item.videoType %>" title="點擊播放 <%= item.name %>"><%= item.name %></a>
-                                <% } else if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) { %>
-                                    <a href="/view?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name" title="點擊查看"><%= item.name %></a>
-                                <% } else { %>
-                                    <span class="file-name"><%= item.name %></span>
-                                <% } %>
-                                <% if (locals.isSearchResult && (!locals.viewMode || locals.viewMode === 'myfiles')) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
-                            </div>
-                            <div class="file-details">
-                                <% if (locals.viewMode === 'userShares') { %>
-                                    <span class="file-public-link"><a href="<%= item.publicUrl %>" target="_blank" title="點擊打開公開連結"><%= item.publicUrl %></a></span>
-                                    <span class="file-created-at">創建於: <%= formatDate(item.created_at) %></span>
-                                <% } else { %>
-                                    <span class="file-size" title="<%= item.size %> bytes"><%= formatFileSize(item.size) %></span>
-                                    <span class="file-modified"><%= formatDate(item.lastModified) %></span>
-                                <% } %>
-                            </div>
-                        <% } %>
+                                <div class="file-content-wrapper">
+                                    <% if (item.isDir) { %>
+                                        <div class="file-entry">
+                                            <span class="file-icon-large folder-icon">📁</span>
+                                            <% if (locals.viewMode === 'userShares') { %>
+                                                <span class="file-name"><%= item.name %></span>
+                                            <% } else { %>
+                                                <a href="/files?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name"><%= item.name %></a>
+                                            <% } %>
+                                            <% if (locals.isSearchResult && (!locals.viewMode || locals.viewMode === 'myfiles')) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
+                                        </div>
+                                        <div class="file-details">
+                                            <% if (locals.viewMode === 'userShares') { %>
+                                                <span class="file-public-link"><a href="<%= item.publicUrl %>" target="_blank" title="點擊打開公開連結"><%= item.publicUrl %></a></span>
+                                                <span class="file-created-at">創建於: <%= formatDate(item.createdAt) %></span>
+                                            <% } else { %>
+                                                <span class="file-size"></span>
+                                                <span class="file-modified"><%= formatDate(item.lastModified) %></span>
+                                            <% } %>
+                                        </div>
+                                    <% } else { // It's a file %>
+                                        <div class="file-entry">
+                                            <%
+                                                const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.') + 1).toLowerCase() : '';
+                                                let largeIcon = '📄';
+                                                let iconClass = 'file-icon';
 
-                        <% if (locals.viewMode === 'userShares') { %>
-                            <div class="link-actions-group">
-                                <button type="button" class="action-button-small view-public-link-btn" data-url="<%= item.publicUrl %>">查看</button>
-                                <form action="/actions/revoke-public-link" method="POST" class="revoke-single-link-form" style="display: inline;">
-                                    <input type="hidden" name="link_id" value="<%= item.link_id %>">
-                                    <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
-                                        <input type="hidden" name="contextUsername" value="<%= viewContextUser.username %>">
+                                                if (item.isDir) {
+                                                    largeIcon = '📁';
+                                                    iconClass = 'folder-icon';
+                                                } else if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) {
+                                                    largeIcon = '📝'; iconClass = 'text-file-icon';
+                                                } else if (item.isPlayableVideo) {
+                                                    largeIcon = '🎥'; iconClass = 'video-file-icon';
+                                                } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) {
+                                                    largeIcon = '🖼️'; iconClass = 'image-file-icon';
+                                                } else if (['pdf'].includes(ext)) {
+                                                    largeIcon = '📕'; iconClass = 'pdf-file-icon';
+                                                }
+                                            %>
+                                            <span class="file-icon-large <%= iconClass %>"><%= largeIcon %></span>
+                                            <% if (locals.viewMode === 'userShares') { %>
+                                                <span class="file-name"><%= item.name %></span>
+                                            <% } else if (item.isPlayableVideo) { %>
+                                                <a href="#" class="file-name video-link"
+                                                   data-path="<%= item.encodedPath %>"
+                                                   data-name="<%= item.name %>"
+                                                   data-type="<%= item.videoType %>"
+                                                   title="點擊播放 <%= item.name %>"><%= item.name %></a>
+                                            <% } else if (ALLOWED_TEXT_EXTENSIONS.includes('.' + ext) || ALLOWED_TEXT_EXTENSIONS.includes(ext)) { %>
+                                                <a href="/view?path=<%= item.encodedPath %><%= adminTargetQueryForActions %>" class="file-name" title="點擊查看"><%= item.name %></a>
+                                            <% } else { %>
+                                                <span class="file-name"><%= item.name %></span>
+                                            <% } %>
+                                            <% if (locals.isSearchResult && (!locals.viewMode || locals.viewMode === 'myfiles')) { %><span class="file-location-in-search">(位於: <%= (item.path.substring(0, item.path.lastIndexOf('/')) || '/') %>)</span><% } %>
+                                        </div>
+                                        <div class="file-details">
+                                            <% if (locals.viewMode === 'userShares') { %>
+                                                <span class="file-public-link"><a href="<%= item.publicUrl %>" target="_blank" title="點擊打開公開連結"><%= item.publicUrl %></a></span>
+                                                <span class="file-created-at">創建於: <%= formatDate(item.createdAt) %></span>
+                                            <% } else { %>
+                                                <span class="file-size" title="<%= item.size %> bytes"><%= formatFileSize(item.size) %></span>
+                                                <span class="file-modified"><%= formatDate(item.lastModified) %></span>
+                                            <% } %>
+                                        </div>
                                     <% } %>
-                                    <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                                    <button type="submit" class="secondary action-button-small" onclick="return confirm('確定要撤銷此公開連結嗎？');">撤銷</button>
-                                </form>
+                                    <% if (locals.viewMode === 'userShares') { %>
+                                        <div class="link-actions-group">
+                                            <button type="button" class="action-button-small view-public-link-btn" data-url="<%= item.publicUrl %>">查看</button>
+                                            <form action="/actions/revoke-public-link" method="POST" class="revoke-single-link-form" style="display: inline;">
+                                                <input type="hidden" name="link_id" value="<%= item.link_id %>">
+                                                <% if (locals.viewContextUser && locals.viewContextUser.username !== user.username && user.role === 'admin') { %>
+                                                    <input type="hidden" name="contextUsername" value="<%= viewContextUser.username %>">
+                                                <% } %>
+                                                <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
+                                                <button type="submit" class="secondary action-button-small" onclick="return confirm('確定要撤銷此公開連結嗎？');">撤銷</button>
+                                            </form>
+                                        </div>
+                                    <% } else { %>
+                                        <span class="file-actions-placeholder"></span>
+                                    <% } %>
+                                </div>
                             </div>
-                        <% } else { %>
-                            <span class="file-actions-placeholder"></span>
-                        <% } %>
-                    </div>
-                </div>
-            </li>
-            <%# *** FIX ENDS HERE *** %>
-        <% }) %>
-    <% } %>
-</ul>
+                        </li>
+                    <% }) %>
+                </ul>
             <% } else { %>
                 <p><%= locals.isSearchResult ? '找不到符合條件的文件。' : ( (locals.viewMode === 'userShares') ? '您尚未創建任何公開連結。' : '此文件夾為空。' ) %></p>
             <% } %>
@@ -887,6 +856,46 @@
             </div>
         </div>
     </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 找到文件容器
+    const fileContainer = document.getElementById('file-container');
+    if (fileContainer) {
+        // 為容器內的每個文件項添加點擊事件監聽
+        fileContainer.addEventListener('click', (event) => {
+            // 尋找被點擊的文件項 (li 元素)
+            const item = event.target.closest('li');
+            if (!item) return; // 如果點擊的不是文件項，則不做任何事
+
+            // 阻止點擊文件項中的鏈接或按鈕時觸發選中效果
+            if (event.target.tagName === 'A' || event.target.tagName === 'BUTTON' || event.target.closest('.action-link')) {
+                return;
+            }
+
+            // 切換 .selected 樣式
+            item.classList.toggle('selected');
+
+            // 同步更新與該文件項關聯的多選框 (checkbox) 的狀態
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = item.classList.contains('selected');
+            }
+        });
+
+        // 當多選框的狀態改變時，也同步更新文件項的 .selected 樣式
+        fileContainer.addEventListener('change', (event) => {
+            if (event.target.type === 'checkbox') {
+                const item = event.target.closest('li');
+                if (item) {
+                    item.classList.toggle('selected', event.target.checked);
+                }
+            }
+        });
+    }
+});
+</script>
+
 
     <script src="/theme.js"></script>
     <script>
@@ -2390,8 +2399,5 @@
 
         });
     </script>
-
-</body>
-</html>
 </body>
 </html>

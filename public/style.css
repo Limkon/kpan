@@ -290,6 +290,12 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
 .list-view .file-entry .file-name { color: #212529; }
 .list-view .file-actions-placeholder { min-width: 150px; text-align: right; font-size: 0.9em; color: #666; }
 
+/* MODIFIED: Added .selected style for list view */
+.list-view li.selected {
+    background-color: #d1e7ff; /* A light blue to indicate selection */
+    border-color: #007bff;
+}
+
 /* --- Grid View Styling --- */
 .grid-view ul {
     display: grid;
@@ -311,6 +317,12 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
     cursor: pointer; /* Add cursor to indicate clickable */
 }
 .grid-view .file-icon { display: none !important; }
+
+/* MODIFIED: Added .selected style for grid view */
+.grid-view li.selected {
+    background-color: #d1e7ff; /* A light blue background */
+    border-color: #007bff;
+}
 
 .grid-view .file-icon-large {
     font-size: 2.5em;
@@ -387,18 +399,6 @@ textarea#fileContent {
 .editor-actions button { margin-left: 0; margin-bottom:0; }
 
 .note { font-size: 0.85em; margin-top: 15px; padding: 10px; background-color: #f1f3f5; border-left: 4px solid #007bff; }
-
-/* MODIFIED: Added .selected style for list view */
-.list-view li.selected {
-    background-color: #d1e7ff; /* A light blue to indicate selection */
-    border-color: #007bff;
-}
-
-/* MODIFIED: Added .selected style for grid view */
-.grid-view li.selected {
-    background-color: #d1e7ff; /* A light blue background */
-    border-color: #007bff;
-}
 
 /* Responsive adjustments */
 @media (min-width: 768px) {
