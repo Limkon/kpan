@@ -42,14 +42,7 @@ button:hover, .button-link:hover {
     background-color: #0056b3;
     border-color: #004085;
 }
-button.secondary, .button-link.secondary {
-    background-color: #4f5962;
-    border-color: #4f5962;
-}
-button.secondary:hover, .button-link.secondary:hover {
-    background-color: #3d444b;
-    border-color: #383d41;
-}
+/* REMOVED: .secondary button styles removed for unified look */
 
 a {
     color: #6cb2eb; /* 亮藍色鏈接 */
