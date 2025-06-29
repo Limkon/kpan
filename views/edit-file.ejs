@@ -1,85 +1,124 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>編輯檔案: <%= filename %></title>
-    <link rel="stylesheet" href="/style.css">
-    <link rel="stylesheet" id="theme-stylesheet" href=""> <!-- Theme will be applied by JS -->
-    <style>
-        /* Minimal styles to make theme switcher work without the partial */
-        .page-header-container {
-            width: 100%;
-            max-width: 960px;
-            margin: 0 auto 10px auto;
-            display: flex;
-            justify-content: flex-end;
-            padding: 10px 15px;
-            box-sizing: border-box;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>編輯檔案: <%= filename %></title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" id="theme-stylesheet" href="">     <style>
+        /* Minimal styles to make theme switcher work without the partial */
+        .page-header-container {
+            width: 100%;
+            max-width: 960px;
+            margin: 0 auto 10px auto;
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px 15px;
+            box-sizing: border-box;
+        }
+
+        /* --- 新增/修改的樣式 --- */
+        #fileContent {
+            background-color: var(--input-bg-color);
+            color: var(--input-text-color);
+            border: 1px solid var(--input-border-color);
+            border-radius: 4px;
         }
-    </style>
+
+        .editor-actions {
+            display: flex;
+            gap: 10px; /* 在按鈕之間添加間距 */
+            align-items: center;
+        }
+
+        /* 為按鈕和連結定義一個通用的樣式類 */
+        .action-button {
+            padding: 8px 16px;
+            font-size: 1em;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            border: 1px solid var(--button-primary-border-color);
+            background-color: var(--button-primary-bg-color);
+            color: var(--button-primary-text-color);
+            display: inline-block;
+            transition: opacity 0.2s;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* 確保字體一致 */
+            line-height: 1.5; /* 確保行高一致 */
+        }
+        
+        /* 次要按鈕 (例如 "取消") 的樣式 */
+        .action-button.secondary {
+            background-color: var(--button-secondary-bg-color);
+            border-color: var(--button-secondary-border-color);
+            color: var(--button-secondary-text-color);
+        }
+
+        .action-button:hover {
+            opacity: 0.9;
+        }
+    </style>
 </head>
 <body>
-    <div class="page-header-container">
-        <div class="theme-switcher-container">
-            <label for="theme-select" class="theme-label">主題:</label>
-            <select id="theme-select">
-                <option value="default">預設亮色</option>
-                <option value="dark">暗黑模式</option>
-                <option value="blue">海洋藍</option>
-                <option value="green">森林綠</option>
-                <option value="purple">優雅紫</option>
-            </select>
-        </div>
-    </div>
+    <div class="page-header-container">
+        <div class="theme-switcher-container">
+            <label for="theme-select" class="theme-label">主題:</label>
+            <select id="theme-select">
+                <option value="default">預設亮色</option>
+                <option value="dark">暗黑模式</option>
+                <option value="blue">海洋藍</option>
+                <option value="green">森林綠</option>
+                <option value="purple">優雅紫</option>
+            </select>
+        </div>
+    </div>
 
-    <div class="container">
-        <!-- Assume header is similar to other pages -->
-        <header>
-            <h1>
-                <% if (locals.viewTargetUsername) { %>
-                    管理 <%= viewTargetUsername %> 的檔案
-                <% } else { %>
-                    編輯檔案
-                <% } %>
-            </h1>
-            <div class="header-controls">
-                <nav>
-                     <a href="/files<% if (locals.viewTargetUsername) { %>?targetUsername=<%= encodeURIComponent(viewTargetUsername) %><% } %>">返回文件列表</a>
-                    <a href="/change-password">修改密碼</a>
-                    <a href="/logout">登出</a>
-                </nav>
-            </div>
-        </header>
+    <div class="container">
+                <header>
+            <h1>
+                <% if (locals.viewTargetUsername) { %>
+                    管理 <%= viewTargetUsername %> 的檔案
+                <% } else { %>
+                    編輯檔案
+                <% } %>
+            </h1>
+            <div class="header-controls">
+                <nav>
+                     <a href="/files<% if (locals.viewTargetUsername) { %>?targetUsername=<%= encodeURIComponent(viewTargetUsername) %><% } %>">返回文件列表</a>
+                    <a href="/change-password">修改密碼</a>
+                    <a href="/logout">登出</a>
+                </nav>
+            </div>
+        </header>
 
-        <h2><%= filename %></h2>
-        <p class="current-path">路徑: <%= currentPath %></p>
+        <h2><%= filename %></h2>
+        <p class="current-path">路徑: <%= currentPath %></p>
 
-        <% if (locals.message) { %>
-            <div class="message <%= locals.messageType === 'error' ? 'success' : '' %>">
-                <%= message %>
-            </div>
-        <% } %>
+        <% if (locals.message) { %>
+            <div class="message <%= locals.messageType === 'error' ? 'error-message' : 'success-message' %>">
+                <%= message %>
+            </div>
+        <% } %>
 
-        <form action="/save/<%= encodeURIComponent(currentPath) %>" method="POST">
-            <% if (locals.viewTargetUsername) { %>
-                <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
-            <% } %>
+        <form action="/save/<%= encodeURIComponent(currentPath) %>" method="POST">
+            <% if (locals.viewTargetUsername) { %>
+                <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
+            <% } %>
 
-            <div style="margin-bottom: 15px;">
-                <textarea id="fileContent" name="fileContent" style="width: 100%; min-height: 50vh; box-sizing: border-box; padding: 10px; font-family: monospace;"><%= content %></textarea>
-            </div>
-            
-            <% let viewUrl = `/view?path=${encodeURIComponent(currentPath)}`; %>
-            <% if (locals.viewTargetUsername) { viewUrl += `&targetUsername=${encodeURIComponent(viewTargetUsername)}`; } %>
-    
-            <div class="editor-actions">
-                <a href="<%= viewUrl %>" class="button-link">取消</a>
-                <button type="submit">保存文件</button>
-            </div>
-        </form>
-    </div>
+            <div style="margin-bottom: 15px;">
+                <textarea id="fileContent" name="fileContent" style="width: 100%; min-height: 50vh; box-sizing: border-box; padding: 10px; font-family: monospace;"><%= content %></textarea>
+            </div>
+            
+            <% let viewUrl = `/view?path=${encodeURIComponent(currentPath)}`; %>
+            <% if (locals.viewTargetUsername) { viewUrl += `&targetUsername=${encodeURIComponent(viewTargetUsername)}`; } %>
+    
+            <div class="editor-actions">
+                                <a href="<%= viewUrl %>" class="action-button secondary">取消</a>
+                <button type="submit" class="action-button">保存文件</button>
+            </div>
+        </form>
+    </div>
 
-    <script src="/theme.js"></script>
+    <script src="/theme.js"></script>
 </body>
 </html>
