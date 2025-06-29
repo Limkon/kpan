@@ -19,8 +19,7 @@
         }
         .container {
             flex-grow: 1; display: flex; flex-direction: column; padding: 15px;
-            max-width: 95%; /* 讓編輯器更寬，更像IDE */
-            width: 100%; margin-left: auto; margin-right: auto;
+            max-width: 95%; width: 100%; margin-left: auto; margin-right: auto;
         }
         form {
             flex-grow: 1; display: flex; flex-direction: column;
@@ -33,21 +32,29 @@
             display: flex; justify-content: flex-end; gap: 10px;
         }
 
-        /* 關鍵：CodeMirror 編輯器實例的樣式 */
-        .CodeMirror {
-            flex-grow: 1; /* 讓編輯器填滿剩餘空間 */
+        /* * MODIFIED: 
+         * 統一樣式，無論是普通文本框還是 CodeMirror 編輯器，都能填滿空間。
+         */
+        .CodeMirror, textarea#fileContent {
+            flex-grow: 1;
             border: 1px solid #ced4da;
             border-radius: 5px;
-            height: auto; /* 配合 flex 佈局的關鍵 */
+            height: auto;
+            font-family: 'Courier New', Courier, monospace;
             font-size: 1rem;
+            line-height: 1.5;
+        }
+        /* 為普通文本框提供內邊距 */
+        textarea#fileContent {
+             padding: 10px;
+             box-sizing: border-box;
         }
         /* 優化暗色主題下的邊框 */
-        body.dark-theme .CodeMirror {
+        body.dark-theme .CodeMirror, 
+        body.dark-theme textarea#fileContent {
             border-color: #555;
-        }
-        /* 隱藏原始的 textarea */
-        textarea#fileContent {
-            display: none;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
         }
     </style>
 </head>
@@ -94,51 +101,51 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // 純前端方案：從文件名推斷語法模式
+            // 從文件名推斷擴展名
             const filename = "<%= filename %>";
-            const extension = "." + filename.split('.').pop();
+            const extension = ("." + filename.split('.').pop()).toLowerCase();
 
-            // 將文件擴展名映射到 CodeMirror 的模式（mode）
-            function getModeFromExtension(ext) {
-                switch (ext.toLowerCase()) {
-                    case '.js':
-                    case '.json':
-                    case '.ts':
-                        return 'javascript';
-                    case '.css':
-                        return 'css';
-                    case '.html':
-                    case '.xml':
-                        return 'htmlmixed';
-                    case '.md':
-                        return 'markdown';
-                    case '.py':
-                        return 'python';
-                    case '.sh':
-                    case '.bat':
-                        return 'shell';
-                    default:
-                        return 'text/plain'; // 對於未知類型，作為純文本處理
+            // 定義需要啟用高級編輯器模式的擴展名列表
+            const CODE_EXTENSIONS = [
+                '.js', '.json', '.ts', '.css', '.html', '.xml', 
+                '.md', '.py', '.sh', '.bat', '.java', '.c', 
+                '.cpp', '.go', '.rb', '.ps1', '.yaml', '.yml', 
+                '.ini', '.conf', '.cfg', '.sql', '.php', '.pl'
+            ];
+
+            // 檢查當前文件是否為代碼文件
+            if (CODE_EXTENSIONS.includes(extension)) {
+                
+                // 將文件擴展名映射到 CodeMirror 的模式（mode）
+                function getModeFromExtension(ext) {
+                    switch (ext) {
+                        case '.js': case '.json': case '.ts': return 'javascript';
+                        case '.css': return 'css';
+                        case '.html': case '.xml': return 'htmlmixed';
+                        case '.md': return 'markdown';
+                        case '.py': return 'python';
+                        case '.sh': case '.bat': return 'shell';
+                        default: return 'text/plain';
+                    }
                 }
+
+                const editorTextarea = document.getElementById('fileContent');
+                const editor = CodeMirror.fromTextArea(editorTextarea, {
+                    lineNumbers: true,
+                    mode: getModeFromExtension(extension),
+                    theme: 'material-darker',
+                    lineWrapping: true,
+                    indentUnit: 4,
+                    smartIndent: true,
+                });
+
+                editor.on('change', () => {
+                    editor.save();
+                });
+
+                editor.setSize(null, '100%');
             }
-
-            const editorTextarea = document.getElementById('fileContent');
-            const editor = CodeMirror.fromTextArea(editorTextarea, {
-                lineNumbers: true,              // 啟用行號
-                mode: getModeFromExtension(extension), // 根據擴展名設定語法模式
-                theme: 'material-darker',       // 使用一個舒適的暗色主題
-                lineWrapping: true,             // 自動換行
-                indentUnit: 4,                  // 縮進單位
-                smartIndent: true,              // 智能縮進
-            });
-
-            // 確保 CodeMirror 的內容變動會同步回原始的 textarea，以便表單能提交最新內容
-            editor.on('change', () => {
-                editor.save();
-            });
-
-            // 自動調整編輯器高度以適應內容，或設置一個固定高度
-            editor.setSize(null, '100%'); 
+            // 如果不是代碼文件，則不執行任何操作，頁面將會顯示原始的、帶有樣式的 <textarea>
         });
     </script>
 </body>
