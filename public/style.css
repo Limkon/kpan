@@ -114,7 +114,6 @@ header nav {
     gap: 10px; /* Adjusted gap for button-like links */
     align-items: center;
 }
-/* MODIFIED: Header navigation links now look like buttons */
 header nav a {
     display: inline-block;
     padding: 8px 12px;
@@ -242,13 +241,11 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
     background-color: #0069d9; border-color: #0062cc; color: white !important; text-decoration: none;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-/* REMOVED: .secondary button styles removed for unified look */
 
 .message { padding: 10px 12px; border-radius: 5px; margin-bottom: 15px; font-size: 0.95em; }
 .error-message { color: #842029; background-color: #f8d7da; border: 1px solid #f5c2c7; }
 .message:not(.error-message) { color: #0f5132; background-color: #d1e7dd; border: 1px solid #badbcc;}
-.warning-message { color: #664d03; background-color: #fff3cd; border-color: #ffecb5; } /* Added warning message style */
-
+.warning-message { color: #664d03; background-color: #fff3cd; border-color: #ffecb5; }
 
 .current-path { margin-bottom: 15px; padding: 10px; background-color: #e9ecef; border-radius: 5px; font-size: 0.9em; color: #495057; word-break: break-all; }
 .current-path a { font-weight: 500; }
@@ -282,6 +279,7 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
     padding: 10px; margin-bottom: -1px; display: flex; justify-content: space-between; align-items: center;
     border: 1px solid #dee2e6; background-color: #fff;
     position: relative;
+    cursor: pointer;
 }
 .list-view li:first-child { border-top-left-radius: 5px; border-top-right-radius: 5px; }
 .list-view li:last-child { border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; margin-bottom: 0; }
@@ -292,15 +290,20 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
 .list-view .file-entry .file-name { color: #212529; }
 .list-view .file-actions-placeholder { min-width: 150px; text-align: right; font-size: 0.9em; color: #666; }
 
-/* --- Grid View Styling - MODIFIED SECTION STARTS --- */
+/* MODIFIED: Added .selected style for list view */
+.list-view li.selected {
+    background-color: #d1e7ff; /* A light blue to indicate selection */
+    border-color: #007bff;
+}
+
+/* --- Grid View Styling --- */
 .grid-view ul {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Default for smaller screens */
-    gap: 10px; /* Reduced from 12px */
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
 }
 .grid-view li {
-    padding: 8px; /* Reduced padding from 10px */
-    min-height: auto; /* Allow content to dictate height more naturally */
+    padding: 8px;
     background-color: #fff;
     border: 1px solid #dee2e6;
     border-radius: 6px;
@@ -308,24 +311,30 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start; /* Align items to the start */
+    justify-content: flex-start;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     position: relative;
+    cursor: pointer; /* Add cursor to indicate clickable */
 }
-.grid-view .file-icon { display: none !important; } /* Kept from original, hides smaller icon */
+.grid-view .file-icon { display: none !important; }
+
+/* MODIFIED: Added .selected style for grid view */
+.grid-view li.selected {
+    background-color: #d1e7ff; /* A light blue background */
+    border-color: #007bff;
+}
 
 .grid-view .file-icon-large {
-    font-size: 2.5em; /* Adjusted from 2.8em, can be changed back if preferred */
-    margin-bottom: 4px; /* Reduced space between icon and filename (original was 6px) */
+    font-size: 2.5em;
+    margin-bottom: 4px;
     display: inline-block !important;
     line-height:1;
-    /* Color is now handled by specific classes below */
 }
 .grid-view .file-icon-large.folder-icon {
-    color: #ffc107; /* Original folder icon color */
+    color: #ffc107;
 }
-.grid-view .file-icon-large.file-icon { /* New: For generic file icons */
-    color: #495057; /* Example color for non-folder files */
+.grid-view .file-icon-large.file-icon {
+    color: #495057;
 }
 
 .grid-view .file-name {
@@ -333,23 +342,23 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
     font-weight: 500;
     color: #343a40;
     word-break: break-all;
-    margin-bottom: 5px; /* Adjusted space between filename and actions (original was 6px) */
+    margin-bottom: 5px;
     line-height: 1.3;
     display: -webkit-box;
-    -webkit-line-clamp: 2; /* Keeps filename to 2 lines */
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-height: 2.2em; /* Ensures space for two lines, consistent height for name block */
-    width: 100%; /* Added to ensure consistent text alignment within padding */
+    min-height: 2.2em;
+    width: 100%;
 }
 .grid-view .file-actions {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    width: calc(100% - 10px); /* Considers li padding for action width */
-    margin-top: auto; /* Important: pushes actions to the bottom of the li */
-    padding-top: 5px; /* Small space above actions */
+    width: calc(100% - 10px);
+    margin-top: auto;
+    padding-top: 5px;
 }
 .grid-view .file-actions .action-link {
     font-size: 0.75em;
@@ -359,8 +368,6 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
     color: #495057;
     display: block;
 }
-/* --- Grid View Styling - MODIFIED SECTION ENDS --- */
-
 
 .rename-form {
     display: none; position: absolute; left: 25px; right: 5px; top: calc(100% + 2px);
@@ -385,7 +392,7 @@ table td form { display: inline-flex !important; gap: 5px !important; align-item
 table td form input[type="password"] { width: 120px !important; padding: 5px !important; font-size: 0.85em !important; margin:0; }
 table td form button { margin:0; }
 
-textarea#fileContent { /* Styles in edit-file.ejs are more specific */
+textarea#fileContent {
     min-height: 50vh; font-size: 0.9rem; margin:0;
 }
 .editor-actions { margin-top: 15px; text-align: right; display: flex; gap: 10px; justify-content: flex-end; }
@@ -411,7 +418,6 @@ textarea#fileContent { /* Styles in edit-file.ejs are more specific */
     .auth-form-container { padding: 30px 40px; }
     h1:not(.auth-form-container h1):not(header h1) { font-size: 2em; }
     h2 { font-size: 1.4em; }
-    /* .grid-view ul { grid-template-columns: repeat(3, 1fr); } */ /* This was specific, now handled by auto-fill below */
     .file-browser-controls .control-form { min-width: 300px; }
 }
 
@@ -421,13 +427,13 @@ textarea#fileContent { /* Styles in edit-file.ejs are more specific */
     .file-browser-controls .upload-button-main { width: auto; }
     #drop-area #upload-button { width: auto; }
     .grid-view ul {
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); /* Original value, adjust minmax if items should be narrower */
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     }
 }
 
 @media (min-width: 992px) {
     .grid-view ul {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* Original value, adjust minmax if items should be narrower */
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
 }
 
@@ -437,16 +443,14 @@ body.dark-theme {
     --input-border-color: #555;
     --input-bg-color: #333;
     --input-text-color: #e0e0e0;
-    --container-bg: #2c2c2c; /* For .rename-form background and other containers */
-    --border-color: #444;     /* For .rename-form border and other borders */
-
-    /* Ensure main body background and text color are set using these variables */
-    background-color: #1e1e1e; /* Or your preferred dark background */
+    --container-bg: #2c2c2c;
+    --border-color: #444;
+    background-color: #1e1e1e;
     color: var(--text-color);
 }
-.dark-theme .container { /* Example: Ensure general container also uses dark theme variables */
+.dark-theme .container {
     background-color: var(--container-bg, #2c2c2c);
-    border-color: var(--border-color, #444); /* If containers have borders */
+    border-color: var(--border-color, #444);
 }
 .dark-theme header {
     border-bottom-color: var(--border-color, #444);
@@ -483,7 +487,7 @@ body.dark-theme {
     color: var(--text-color, #e0e0e0);
 }
 .dark-theme .current-path a {
-    color: #80bdff; /* Lighter blue for links in dark mode */
+    color: #80bdff;
 }
 
 .dark-theme #upload-section {
@@ -507,26 +511,36 @@ body.dark-theme {
     background-color: var(--container-bg, #2c2c2c);
     border-color: var(--border-color, #444);
 }
+/* MODIFIED: Added dark theme .selected style */
+.dark-theme .list-view li.selected {
+    background-color: #004a7c; /* A darker blue for dark mode */
+    border-color: #80bdff;
+}
 .dark-theme .list-view .file-entry .file-name {
     color: var(--text-color, #e0e0e0);
 }
 .dark-theme .list-view .file-entry a.file-name {
-    color: #80bdff; /* Lighter blue for links */
+    color: #80bdff;
 }
 .dark-theme .list-view .file-actions-placeholder {
     color: #aaa;
 }
 
-/* --- Dark Theme for Grid View - ADDED/MODIFIED --- */
+/* --- Dark Theme for Grid View --- */
 .dark-theme .grid-view li {
     background-color: var(--container-bg, #2c2c2c);
     border-color: var(--border-color, #444);
 }
-.dark-theme .grid-view .file-icon-large.folder-icon {
-    color: #ffca28; /* Dark theme adjusted folder icon color */
+/* MODIFIED: Added dark theme .selected style */
+.dark-theme .grid-view li.selected {
+    background-color: #004a7c; /* A darker blue for dark mode */
+    border-color: #80bdff;
 }
-.dark-theme .grid-view .file-icon-large.file-icon { /* For generic file icons in dark mode */
-    color: #adb5bd; /* Lighter grey for file icons */
+.dark-theme .grid-view .file-icon-large.folder-icon {
+    color: #ffca28;
+}
+.dark-theme .grid-view .file-icon-large.file-icon {
+    color: #adb5bd;
 }
 .dark-theme .grid-view .file-name {
     color: var(--text-color, #e0e0e0);
@@ -534,7 +548,7 @@ body.dark-theme {
 .dark-theme .grid-view .file-actions .action-link {
     background-color: #3a3a3a;
     color: var(--text-color, #e0e0e0);
-    border: 1px solid #555; /* Optional: add subtle border to actions in dark mode */
+    border: 1px solid #555;
 }
 
 /* --- Dark Theme for Tables --- */
@@ -555,14 +569,11 @@ body.dark-theme {
     color: var(--text-color, #e0e0e0);
 }
 
-/* Ensure input focus styles are visible in dark mode */
 .dark-theme input[type="text"]:focus:not(.auth-form-container input),
 .dark-theme input[type="password"]:focus:not(.auth-form-container input),
 .dark-theme select:focus:not(#theme-select),
 .dark-theme textarea:focus {
     border-color: #80bdff;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    background-color: #383838; /* Slightly lighter background on focus */
+    background-color: #383838;
 }
-
-/* REMOVED: Dark theme secondary button styles removed for unified look */
