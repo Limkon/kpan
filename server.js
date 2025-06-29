@@ -1095,12 +1095,12 @@ app.post('/save/:encodedPath(*)', isAuthenticated, async (req, res) => {
         }
         await fsp.writeFile(fullFilePath, fileContent, 'utf8');
 
-        const parentDirForRedirect = path.posix.dirname(relativeFilePath) || '/';
         let adminQuery = '';
         if (actingUser.role === 'admin' && req.body.targetUsername && req.body.targetUsername !== actingUser.username) {
             adminQuery = `&targetUsername=${encodeURIComponent(req.body.targetUsername)}`;
         }
-        res.redirect(`/files?path=${encodeURIComponent(parentDirForRedirect)}${adminQuery}&message=文件 "${filename}" 已成功保存。&messageType=success`);
+        // MODIFIED: Redirect to the view page of the saved file
+        res.redirect(`/view?path=${encodeURIComponent(relativeFilePath)}${adminQuery}&message=文件 "${filename}" 已成功保存。&messageType=success`);
     } catch (err) {
         console.error(`[${actingUser.username}] 為 ${targetUsernameForSave} 保存文件 ${relativeFilePath} 錯誤:`, err);
         let errorMessage = '保存文件失敗。';
