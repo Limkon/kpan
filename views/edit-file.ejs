@@ -9,9 +9,6 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-darker.min.css">
-
     <style>
         /* 整體佈局樣式 */
         body, html {
@@ -32,25 +29,21 @@
             display: flex; justify-content: flex-end; gap: 10px;
         }
 
-        /* * MODIFIED: 
-         * 統一樣式，無論是普通文本框還是 CodeMirror 編輯器，都能填滿空間。
-         */
-        .CodeMirror, textarea#fileContent {
-            flex-grow: 1;
+        /* MODIFIED: 簡化樣式，只修改字體 */
+        textarea#fileContent {
+            flex-grow: 1; /* 填滿可用空間 */
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
             border: 1px solid #ced4da;
             border-radius: 5px;
-            height: auto;
-            font-family: 'Courier New', Courier, monospace;
             font-size: 1rem;
-            line-height: 1.5;
+            line-height: 1.6;
+            /* 關鍵：設定字體為宋體，並提供備用字體 */
+            font-family: 'SimSun', '宋体', 'STSong', serif;
         }
-        /* 為普通文本框提供內邊距 */
-        textarea#fileContent {
-             padding: 10px;
-             box-sizing: border-box;
-        }
-        /* 優化暗色主題下的邊框 */
-        body.dark-theme .CodeMirror, 
+
+        /* 優化暗色主題下的樣式 */
         body.dark-theme textarea#fileContent {
             border-color: #555;
             background-color: #2c2c2c;
@@ -88,65 +81,6 @@
             </div>
         </form>
     </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/htmlmixed/htmlmixed.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/python/python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/markdown/markdown.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/shell/shell.min.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // 從文件名推斷擴展名
-            const filename = "<%= filename %>";
-            const extension = ("." + filename.split('.').pop()).toLowerCase();
-
-            // 定義需要啟用高級編輯器模式的擴展名列表
-            const CODE_EXTENSIONS = [
-                '.js', '.json', '.ts', '.css', '.html', '.xml', 
-                '.md', '.py', '.sh', '.bat', '.java', '.c', 
-                '.cpp', '.go', '.rb', '.ps1', '.yaml', '.yml', 
-                '.ini', '.conf', '.cfg', '.sql', '.php', '.pl'
-            ];
-
-            // 檢查當前文件是否為代碼文件
-            if (CODE_EXTENSIONS.includes(extension)) {
-                
-                // 將文件擴展名映射到 CodeMirror 的模式（mode）
-                function getModeFromExtension(ext) {
-                    switch (ext) {
-                        case '.js': case '.json': case '.ts': return 'javascript';
-                        case '.css': return 'css';
-                        case '.html': case '.xml': return 'htmlmixed';
-                        case '.md': return 'markdown';
-                        case '.py': return 'python';
-                        case '.sh': case '.bat': return 'shell';
-                        default: return 'text/plain';
-                    }
-                }
-
-                const editorTextarea = document.getElementById('fileContent');
-                const editor = CodeMirror.fromTextArea(editorTextarea, {
-                    lineNumbers: true,
-                    mode: getModeFromExtension(extension),
-                    theme: 'material-darker',
-                    lineWrapping: true,
-                    indentUnit: 4,
-                    smartIndent: true,
-                });
-
-                editor.on('change', () => {
-                    editor.save();
-                });
-
-                editor.setSize(null, '100%');
-            }
-            // 如果不是代碼文件，則不執行任何操作，頁面將會顯示原始的、帶有樣式的 <textarea>
-        });
-    </script>
-</body>
+    </body>
 </html>
