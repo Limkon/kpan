@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <%- include("partials/theme-switcher") %>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>编辑文件: <%= filename %></title>
@@ -9,204 +10,47 @@
     <link id="theme-stylesheet" rel="stylesheet" href="">
 
     <style>
-        /* --- General Layout --- */
-        html, body {
-            height: 100%;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f8f9fa;
+        /* 整體佈局樣式 */
+        body, html {
+            height: 100%; margin: 0; display: flex; flex-direction: column;
         }
-
         .container {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 15px;
-            max-width: 98%;
-            width: 100%;
-            margin-left: auto;
-            margin-right: auto;
-            box-sizing: border-box;
+            flex-grow: 1; display: flex; flex-direction: column; padding: 15px;
+            max-width: 95%; width: 100%; margin-left: auto; margin-right: auto;
         }
-
         form {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
+            flex-grow: 1; display: flex; flex-direction: column;
         }
-
-        /* --- GitHub-Style Header --- */
         .editor-header {
             margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: nowrap;
-            gap: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #d0d7de;
         }
-        
-        .editor-header h2 {
-            margin: 0;
-            font-size: 1.25em;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            min-width: 0;
-            flex-grow: 1;
-        }
-        
-        .editor-header .button-link {
-            flex-shrink: 0;
-            background-color: #f6f8fa;
-            border: 1px solid rgba(27, 31, 36, 0.15);
-            color: #24292f;
-        }
-        .editor-header .button-link:hover {
-            background-color: #f3f4f6;
-        }
-
         .editor-actions {
-            margin-top: 15px;
-            flex-shrink: 0;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        
-        .button-link {
-            display: inline-block;
-            padding: 8px 16px;
-            text-decoration: none;
-            border-radius: 6px;
-            font-size: 0.9em;
-            font-weight: 500;
-            white-space: nowrap;
-            cursor: pointer;
+            margin-top: 15px; text-align: right; flex-shrink: 0;
+            display: flex; justify-content: flex-end; gap: 10px;
         }
 
-        /* --- Custom Code Editor --- */
-        .code-editor-wrapper {
-            position: relative;
+        /* 簡化樣式，只修改字體 */
+        textarea#fileContent {
             flex-grow: 1;
-            display: flex;
-            border: 1px solid #d0d7de;
-            border-radius: 6px;
-            overflow: hidden;
-            background-color: #ffffff;
-        }
-
-        .line-numbers {
-            flex-shrink: 0;
-            padding: 10px 8px;
-            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            color: #888;
-            background-color: #f6f8fa;
-            text-align: right;
-            border-right: 1px solid #d0d7de;
-            user-select: none;
-            overflow: hidden;
-            /* [FIX] Ensure newlines are respected for vertical layout */
-            white-space: pre;
-        }
-
-        .editor-main {
-            position: relative;
-            flex-grow: 1;
-            overflow: auto;
-        }
-        
-        .editor-main textarea,
-        .editor-main pre {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
-            margin: 0;
             padding: 10px;
             box-sizing: border-box;
-            border: none;
-            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            white-space: pre;
-            word-wrap: normal;
-            overflow-wrap: normal;
-            background: transparent;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 1rem;
+            line-height: 1.6;
+            font-family: 'SimSun', '宋体', 'STSong', serif;
         }
 
-        .editor-main textarea {
-            z-index: 1;
-            color: transparent;
-            caret-color: #24292f;
-            resize: none;
-            outline: none;
-        }
-
-        .editor-main pre {
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden; 
-        }
-        
-        .editor-main pre code {
-            display: block;
-        }
-
-        /* --- Syntax Highlighting Styles (VSCode-like) --- */
-        pre .token-comment { color: #6a9955; }
-        pre .token-string { color: #ce9178; }
-        pre .token-keyword { color: #c586c0; }
-        pre .token-number { color: #b5cea8; }
-        pre .token-boolean { color: #569cd6; }
-        pre .token-function { color: #dcdcaa; }
-        pre .token-tag { color: #569cd6; }
-        pre .token-attribute { color: #9cdcfe; }
-        pre .token-value { color: #ce9178; }
-        pre .token-operator { color: #d4d4d4; }
-        pre .token-punctuation { color: #d4d4d4; }
-        pre .token-selector { color: #d7ba7d; }
-        pre .token-property { color: #9cdcfe; }
-
-        /* --- Dark Theme Adjustments --- */
-        body.dark-theme {
-            background-color: #0d1117;
-            color: #c9d1d9;
-        }
-        .dark-theme .editor-header {
-            border-bottom: 1px solid #30363d;
-        }
-        .dark-theme .editor-header .button-link {
-            background-color: #21262d;
-            border-color: rgba(240, 246, 252, 0.1);
-            color: #c9d1d9;
-        }
-        .dark-theme .editor-header .button-link:hover {
-            background-color: #30363d;
-            border-color: #8b949e;
-        }
-        .dark-theme .code-editor-wrapper {
-            border-color: #30363d;
-            background-color: #0d1117;
-        }
-        .dark-theme .line-numbers {
-            background-color: #161b22;
-            color: #8b949e;
-            border-right: 1px solid #30363d;
-        }
-        .dark-theme .editor-main textarea {
-            caret-color: #c9d1d9;
+        /* 優化暗色主題下的樣式 */
+        body.dark-theme textarea#fileContent {
+            border-color: #555;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
         }
     </style>
 </head>
-<body class="<%= locals.theme === 'dark' ? 'dark-theme' : '' %>">
+<body>
 
     <div class="container">
         <% if (message) { %>
@@ -216,9 +60,9 @@
         <% } %>
 
         <div class="editor-header">
-             <h2><%= filename %></h2>
-              <% const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/'; %>
-              <a href="/files?path=<%= encodeURIComponent(parentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">&larr; 返回文件列表</a>
+             <% const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/'; %>
+             <a href="/files?path=<%= encodeURIComponent(parentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">&larr; 返回文件列表</a>
+            <h2>正在编辑: <%= filename %></h2>
         </div>
 
         <form action="/save/<%= encodeURIComponent(currentPath) %>" method="post">
@@ -227,135 +71,17 @@
                 <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
             <% } %>
             
-            <div class="code-editor-wrapper">
-                <div class="line-numbers" id="line-numbers-display">1</div>
-                <div class="editor-main">
-                    <textarea id="fileContent" name="fileContent" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"><%- content %></textarea>
-                    <pre id="highlight-output" aria-hidden="true"><code></code></pre>
-                </div>
-            </div>
+            <textarea id="fileContent" name="fileContent"><%= content %></textarea>
 
             <div class="editor-actions">
                 <button type="submit">保存更改</button>
                 <% const viewUrl = `/view?path=${encodeURIComponent(currentPath)}${viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''}`; %>
-                <button type="button" class="secondary" onclick="window.location.href='<%= viewUrl %>'">取消</button>
+                <button type="button" onclick="window.location.href='<%= viewUrl %>'">取消</button>
             </div>
         </form>
     </div>
     
     <script src="/theme.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const textarea = document.getElementById('fileContent');
-        const highlightOutput = document.getElementById('highlight-output');
-        const highlightCodeEl = highlightOutput.querySelector('code');
-        const lineNumbersDisplay = document.getElementById('line-numbers-display');
-        const filename = "<%= filename %>";
-
-        const escapeHtml = (text) => {
-            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return text.replace(/[&<>"']/g, m => map[m]);
-        };
-
-        const getLanguageFromFilename = (name) => {
-            const ext = name.split('.').pop().toLowerCase();
-            if (['js', 'mjs', 'cjs', 'json'].includes(ext)) return 'javascript';
-            if (['css'].includes(ext)) return 'css';
-            if (['html', 'htm', 'xml'].includes(ext)) return 'html';
-            return 'plaintext';
-        };
-        
-        const language = getLanguageFromFilename(filename);
-
-        const highlight = (text, lang) => {
-            if (lang === 'plaintext') {
-                return escapeHtml(text);
-            }
-            
-            let html = escapeHtml(text);
-            const rules = {
-                javascript: [
-                    { t: 'comment', r: /(\/\/.*|\/\*[\s\S]*?\*\/)/g },
-                    { t: 'string', r: /(".*?"|'.*?'|`.*?`)/gs },
-                    { t: 'keyword', r: /\b(const|let|var|if|else|for|while|return|function|class|import|export|from|async|await|new|this|typeof|instanceof|switch|case|default|break|continue)\b/g },
-                    { t: 'boolean', r: /\b(true|false|null|undefined)\b/g },
-                    { t: 'number', r: /\b(\d+(\.\d+)?)\b/g },
-                    { t: 'function', r: /(\w+)(?=\s*\()/g },
-                    { t: 'punctuation', r: /([{}()[\].,;])/g }
-                ],
-                html: [
-                    { t: 'comment', r: /(&lt;!--[\s\S]*?--&gt;)/g },
-                    { t: 'tag', r: /(&lt;\/?[\w\d-]+|&gt;)/g },
-                    { t: 'attribute', r: /(?<=\s)([\w\d-]+)(?==)/g },
-                ],
-                css: [
-                    { t: 'comment', r: /(\/\*[\s\S]*?\*\/)/g },
-                    { t: 'selector', r: /([^\{\}\s][^\{\}]*)(?=\s*\{)/g },
-                    { t: 'property', r: /([\w-]+)(?=\s*:)/g },
-                    { t: 'number', r: /(-?\d*\.?\d+)(px|%|em|rem|vw|vh|s)?/g },
-                    { t: 'string', r: /(".*?")/g },
-                ]
-            };
-
-            const langRules = rules[lang] || [];
-            langRules.forEach(rule => {
-                html = html.replace(rule.r, `<span class="token-${rule.t}">$&</span>`);
-            });
-
-            return html;
-        };
-
-        const updateEditor = () => {
-            const code = textarea.value;
-            highlightCodeEl.innerHTML = highlight(code, language) + '\n';
-
-            const lineCount = code.split('\n').length || 1;
-            const lines = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n');
-            lineNumbersDisplay.textContent = lines;
-            
-            syncScroll();
-        };
-
-        const syncScroll = () => {
-            if(!textarea || !highlightOutput || !lineNumbersDisplay) return;
-            requestAnimationFrame(() => {
-                highlightOutput.scrollTop = textarea.scrollTop;
-                highlightOutput.scrollLeft = textarea.scrollLeft;
-                lineNumbersDisplay.scrollTop = textarea.scrollTop;
-            });
-        };
-
-        const handleTab = (e) => {
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                const start = textarea.selectionStart;
-                const end = textarea.selectionEnd;
-                const tabCharacter = '  ';
-
-                if (e.shiftKey) { 
-                     const before = textarea.value.substring(0, start);
-                     const lastLineStart = before.lastIndexOf('\n') + 1;
-                     if (textarea.value.substring(lastLineStart, lastLineStart + 2) === tabCharacter) {
-                        textarea.value = textarea.value.substring(0, lastLineStart) + textarea.value.substring(lastLineStart + 2);
-                        textarea.selectionStart = start > lastLineStart + 1 ? start - 2 : lastLineStart;
-                        textarea.selectionEnd = end - 2;
-                     }
-                } else {
-                     textarea.value = textarea.value.substring(0, start) + tabCharacter + textarea.value.substring(end);
-                     textarea.selectionStart = textarea.selectionEnd = start + tabCharacter.length;
-                }
-                
-                updateEditor();
-            }
-        };
-
-        textarea.addEventListener('input', updateEditor);
-        textarea.addEventListener('scroll', syncScroll);
-        textarea.addEventListener('keydown', handleTab);
-        
-        // Initial load
-        updateEditor();
-    });
-    </script>
+    
 </body>
 </html>
