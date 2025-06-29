@@ -224,8 +224,7 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
     background-color: #0069d9; border-color: #0062cc; color: white !important; text-decoration: none;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-button.secondary, .button-link.secondary { background-color: #6c757d; border-color: #6c757d; }
-button.secondary:hover, .button-link.secondary:hover { background-color: #5a6268; border-color: #545b62; }
+/* REMOVED: .secondary button styles removed for unified look */
 
 .message { padding: 10px 12px; border-radius: 5px; margin-bottom: 15px; font-size: 0.95em; }
 .error-message { color: #842029; background-color: #f8d7da; border: 1px solid #f5c2c7; }
@@ -548,17 +547,4 @@ body.dark-theme {
     background-color: #383838; /* Slightly lighter background on focus */
 }
 
-/* Ensure buttons remain accessible */
-.dark-theme button, .dark-theme button[type="submit"], .dark-theme .button-link {
-    /* Primary buttons can keep their blue or use a slightly adjusted blue */
-    /* background-color: #007bff; color: white !important; border-color: #007bff; */
-}
-.dark-theme button:hover, .dark-theme button[type="submit"]:hover, .dark-theme .button-link:hover {
-    /* background-color: #0069d9; border-color: #0062cc; */
-}
-.dark-theme button.secondary, .dark-theme .button-link.secondary {
-    background-color: #5a6268; border-color: #5a6268;
-}
-.dark-theme button.secondary:hover, .dark-theme .button-link.secondary:hover {
-    background-color: #495057; border-color: #495057;
-}
+/* REMOVED: Dark theme secondary button styles removed for unified look */
