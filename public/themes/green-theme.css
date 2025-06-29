@@ -12,8 +12,6 @@
     --input-focus-border: #28a745; /* 輸入框焦點邊框 */
     --input-focus-shadow: rgba(40, 167, 69, 0.25); /* 輸入框焦點陰影 */
     --link-color: #198754; /* 鏈接顏色（稍深的綠色） */
-    --secondary-button-bg: #5cb85c; /* 次要按鈕背景（不同的綠色） */
-    --secondary-button-hover-bg: #4cae4c; /* 次要按鈕懸停背景 */
 }
 
 /* 從 blue-theme.css 複製其餘的規則，它們會使用上面定義的變量 */
@@ -48,14 +46,7 @@ button:hover, .button-link:hover {
     background-color: var(--primary-hover-color);
     border-color: var(--primary-hover-color);
 }
-button.secondary, .button-link.secondary {
-    background-color: var(--secondary-button-bg);
-    border-color: var(--secondary-button-bg);
-}
-button.secondary:hover, .button-link.secondary:hover {
-    background-color: var(--secondary-button-hover-bg);
-    border-color: var(--secondary-button-hover-bg);
-}
+/* REMOVED: .secondary button styles removed for unified look */
 
 a { color: var(--link-color); }
 .current-path { background-color: #d4edda; color: var(--header-text-color); } /* 淺綠色背景 */
