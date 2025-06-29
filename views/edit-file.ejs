@@ -37,7 +37,7 @@
             flex-direction: column;
         }
 
-        /* --- Header Layout --- */
+        /* --- [FIX] Header Layout --- */
         .editor-header {
             margin-bottom: 15px;
             display: flex;
@@ -53,7 +53,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             min-width: 0; /* Important for ellipsis in flexbox */
-            flex-shrink: 1; /* Allow title to shrink if needed */
+            flex-grow: 1; /* Allow title to take available space */
         }
         
         .editor-header .button-link {
@@ -160,7 +160,7 @@
         pre .token-number { color: #b5cea8; }
         pre .token-boolean { color: #569cd6; }
         pre .token-function { color: #dcdcaa; }
-        pre .token-tag { color: #569cd6; }
+        pre .token-tag { color: #4ec9b0; }
         pre .token-attribute { color: #9cdcfe; }
         pre .token-value { color: #ce9178; }
         pre .token-operator { color: #d4d4d4; }
@@ -197,6 +197,9 @@
         .dark-theme pre .token-punctuation {
             color: #d4d4d4;
         }
+        .dark-theme pre .token-tag { color: #4ec9b0; }
+        .dark-theme pre .token-attribute { color: #9cdcfe; }
+        .dark-theme pre .token-string { color: #ce9178; }
     </style>
 </head>
 <body class="<%= locals.theme === 'dark' ? 'dark-theme' : '' %>">
@@ -223,8 +226,8 @@
             <div class="code-editor-wrapper">
                 <div class="line-numbers" id="line-numbers-display">1</div>
                 <div class="editor-main">
-                    <textarea id="fileContent" name="fileContent" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"><%= content %></textarea>
-                    <pre id="highlight-output" aria-hidden="true"><code><%= content %></code></pre>
+                    <textarea id="fileContent" name="fileContent" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"><%- content %></textarea>
+                    <pre id="highlight-output" aria-hidden="true"><code></code></pre>
                 </div>
             </div>
 
@@ -246,14 +249,21 @@
         const filename = "<%= filename %>";
 
         const escapeHtml = (text) => {
-            return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
         };
 
         const getLanguageFromFilename = (name) => {
             const ext = name.split('.').pop().toLowerCase();
-            if (['js', 'mjs', 'cjs'].includes(ext)) return 'javascript';
+            if (['js', 'mjs', 'cjs', 'json'].includes(ext)) return 'javascript';
             if (['css'].includes(ext)) return 'css';
-            if (['html', 'htm'].includes(ext)) return 'html';
+            if (['html', 'htm', 'xml'].includes(ext)) return 'html';
             return 'plaintext'; // Default
         };
         
@@ -264,84 +274,74 @@
                 return escapeHtml(text);
             }
 
-            let highlightedText = escapeHtml(text);
+            let escapedText = escapeHtml(text);
             
             // This is a very basic highlighter, not a full parser.
-            // It applies rules sequentially. More specific rules should come first.
             const rules = {
                 javascript: [
                     { type: 'comment', regex: /(\/\/.*|\/\*[\s\S]*?\*\/)/g },
-                    { type: 'string', regex: /(".*?"|'.*?'|`.*?`)/g },
-                    { type: 'keyword', regex: /\b(const|let|var|if|else|for|while|return|function|class|import|export|from|async|await|new|this)\b/g },
+                    { type: 'string', regex: /(".*?"|'.*?'|`.*?`)/gs },
+                    { type: 'keyword', regex: /\b(const|let|var|if|else|for|while|return|function|class|import|export|from|async|await|new|this|typeof|instanceof)\b/g },
                     { type: 'boolean', regex: /\b(true|false|null|undefined)\b/g },
                     { type: 'number', regex: /\b(\d+(\.\d+)?)\b/g },
                     { type: 'function', regex: /(\w+)(?=\s*\()/g },
-                    { type: 'operator', regex: /([+\-*/%=&|<>!^~?:]+)/g },
+                    { type: 'operator', regex: /([+\-*/%=&|<>!^~?:])/g },
                     { type: 'punctuation', regex: /([{}()[\].,;])/g }
                 ],
                 html: [
                     { type: 'comment', regex: /(&lt;!--[\s\S]*?--&gt;)/g },
-                    { type: 'tag', regex: /(&lt;\/?[\w\d-]+)/g },
+                    { type: 'tag', regex: /(&lt;\/?[\w\d-]+|&gt;)/g },
                     { type: 'attribute', regex: /(\s+[\w\d-]+)(?=\s*=)/g },
                     { type: 'string', regex: /(".*?"|'.*?')/g }
                 ],
                 css: [
                     { type: 'comment', regex: /(\/\*[\s\S]*?\*\/)/g },
                     { type: 'string', regex: /(".*?")/g },
-                    { type: 'selector', regex: /(^|[\s,}{])([.#&]?[a-zA-Z0-9\-_*:]+)(?=[^}]*{)/g },
+                    { type: 'selector', regex: /(^|[\s,}{])([.#&]?[a-zA-Z0-9\-_*:]+)(?=[^}]*\{)/g },
                     { type: 'property', regex: /([\w-]+)(?=\s*:)/g },
                     { type: 'number', regex: /(-?\d*\.?\d+)(px|%|em|rem|vw|vh|s)?/g },
                 ]
             };
             
             const langRules = rules[lang] || [];
+            if (langRules.length === 0) return escapedText;
 
-            // A simple state machine to prevent nested highlighting
-            const tokens = [];
+            // This approach is simplified and may not be perfect, but avoids complex lookaheads.
+            // It replaces text outside of existing spans.
+            let result = '';
             let lastIndex = 0;
-            highlightedText.replace(/<span.*?<\/span>|./gs, (match, index) => {
-                if (match.startsWith('<span')) {
-                    // This part is already tokenized, just push it
-                    if (index > lastIndex) {
-                        tokens.push(highlightedText.substring(lastIndex, index));
-                    }
-                    tokens.push(match);
-                    lastIndex = index + match.length;
+            const combinedRegex = new RegExp(langRules.map(r => r.regex.source).join('|'), 'g');
+            
+            escapedText.replace(combinedRegex, (match, ...args) => {
+                const offset = args[args.length - 2];
+                // Find which rule matched
+                let ruleType = 'unknown';
+                for(let i = 0; i < langRules.length; i++){
+                    // Re-test the match with each rule's regex
+                     if(new RegExp(`^${langRules[i].regex.source}$`).test(match)){
+                        ruleType = langRules[i].type;
+                        break;
+                     }
                 }
-            });
-            if (lastIndex < highlightedText.length) {
-                tokens.push(highlightedText.substring(lastIndex));
-            }
-
-            let finalHtml = '';
-            tokens.forEach(token => {
-                if (token.startsWith('<span')) {
-                    finalHtml += token;
-                    return;
-                }
-                
-                let processedToken = token;
-                langRules.forEach(rule => {
-                    processedToken = processedToken.replace(rule.regex, (match, ...args) => {
-                         // Extra check to avoid re-wrapping
-                        if (match.includes('<span')) return match;
-                        let content = lang === 'css' && rule.type === 'selector' ? args[1] + `<span class="token-${rule.type}">${args[2]}</span>` : `<span class="token-${rule.type}">${match}</span>`;
-                        return content;
-                    });
-                });
-                finalHtml += processedToken;
+                 // Add the text before the match
+                result += escapedText.substring(lastIndex, offset);
+                // Add the highlighted match
+                result += `<span class="token-${ruleType}">${match}</span>`;
+                // Update the last index
+                lastIndex = offset + match.length;
             });
 
-
-            return finalHtml;
+            // Add any remaining text
+            result += escapedText.substring(lastIndex);
+            
+            return result;
         };
 
         const updateEditor = () => {
             const code = textarea.value;
             
-            // [FIX] Use the highlighter which correctly handles escaped HTML
             const highlightedCode = highlight(code, language);
-            highlightCodeEl.innerHTML = highlightedCode + '<br>'; // Add a trailing newline to ensure the last line is rendered
+            highlightCodeEl.innerHTML = highlightedCode + '\n'; // Add trailing newline for better rendering of last line
 
             // Update line numbers
             const lineCount = code.split('\n').length || 1;
@@ -365,12 +365,20 @@
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
                 
-                // Insert 2 spaces for tab
-                const tabCharacter = '  ';
-                textarea.value = textarea.value.substring(0, start) + tabCharacter + textarea.value.substring(end);
+                const tabCharacter = '  '; // 2 spaces for tab
                 
-                // Move cursor
-                textarea.selectionStart = textarea.selectionEnd = start + tabCharacter.length;
+                // For multi-line selection
+                if (start !== end && textarea.value.substring(start, end).includes('\n')) {
+                    const selectedLines = textarea.value.substring(start, end).split('\n');
+                    const indentedText = selectedLines.map(line => e.shiftKey ? line.startsWith(tabCharacter) ? line.substring(2) : line : tabCharacter + line).join('\n');
+                    textarea.value = textarea.value.substring(0, start) + indentedText + textarea.value.substring(end);
+                    textarea.selectionStart = start;
+                    textarea.selectionEnd = start + indentedText.length;
+                } else {
+                    // Single line or no selection
+                    textarea.value = textarea.value.substring(0, start) + tabCharacter + textarea.value.substring(end);
+                    textarea.selectionStart = textarea.selectionEnd = start + tabCharacter.length;
+                }
                 updateEditor();
             }
         };
