@@ -10,14 +10,44 @@
     <link id="theme-stylesheet" rel="stylesheet" href="">
 
     <style>
-        /* 樣式保持不變 */
-        body, html { height: 100%; margin: 0; display: flex; flex-direction: column; }
-        .container { flex-grow: 1; display: flex; flex-direction: column; padding: 15px; max-width: 95%; width: 100%; margin-left: auto; margin-right: auto; }
-        form { flex-grow: 1; display: flex; flex-direction: column; }
-        .editor-header { margin-bottom: 15px; }
-        .editor-actions { margin-top: 15px; text-align: right; flex-shrink: 0; display: flex; justify-content: flex-end; gap: 10px; }
-        .cm-editor { flex-grow: 1; height: 100%; border: 1px solid #ced4da; border-radius: 5px; }
-        body.dark-theme .cm-editor { border-color: #555; }
+        /* 整體佈局樣式 */
+        body, html {
+            height: 100%; margin: 0; display: flex; flex-direction: column;
+        }
+        .container {
+            flex-grow: 1; display: flex; flex-direction: column; padding: 15px;
+            max-width: 95%; width: 100%; margin-left: auto; margin-right: auto;
+        }
+        form {
+            flex-grow: 1; display: flex; flex-direction: column;
+        }
+        .editor-header {
+            margin-bottom: 15px;
+        }
+        .editor-actions {
+            margin-top: 15px; text-align: right; flex-shrink: 0;
+            display: flex; justify-content: flex-end; gap: 10px;
+        }
+
+        /* 簡化樣式，只修改字體 */
+        textarea#fileContent {
+            flex-grow: 1;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 1rem;
+            line-height: 1.6;
+            font-family: 'SimSun', '宋体', 'STSong', serif;
+        }
+
+        /* 優化暗色主題下的樣式 */
+        body.dark-theme textarea#fileContent {
+            border-color: #555;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+        }
     </style>
 </head>
 <body>
@@ -30,19 +60,18 @@
         <% } %>
 
         <div class="editor-header">
-            <% const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/'; %>
-            <a href="/files?path=<%= encodeURIComponent(parentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">&larr; 返回文件列表</a>
+             <% const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/'; %>
+             <a href="/files?path=<%= encodeURIComponent(parentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">&larr; 返回文件列表</a>
             <h2>正在编辑: <%= filename %></h2>
         </div>
 
-        <form action="/save/<%= encodeURIComponent(currentPath) %>" method="post" id="editForm">
+        <form action="/save/<%= encodeURIComponent(currentPath) %>" method="post">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <% if (viewTargetUsername) { %>
                 <input type="hidden" name="targetUsername" value="<%= viewTargetUsername %>">
             <% } %>
             
-            <div id="editor"></div>
-            <textarea id="fileContent" name="fileContent" style="display: none;"><%= content %></textarea>
+            <textarea id="fileContent" name="fileContent"><%= content %></textarea>
 
             <div class="editor-actions">
                 <button type="submit">保存更改</button>
@@ -53,91 +82,6 @@
     </div>
     
     <script src="/theme.js"></script>
-
-    <script type="module">
-        import { EditorState } from "/codemirror/state/dist/index.js";
-        import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightSpecialChars, drawSelection, dropCursor, rectangularSelection, crosshairCursor, highlightActiveLine } from "/codemirror/view/dist/index.js";
-        import { defaultKeymap, history, historyKeymap } from "/codemirror/commands/dist/index.js";
-        import { syntaxHighlighting, defaultHighlightStyle, bracketMatching, foldGutter, foldKeymap, indentOnInput } from "/codemirror/language/dist/index.js";
-        import { oneDark } from "/codemirror/theme-one-dark/dist/index.js";
-        
-        async function getLanguageSupport(filename) {
-            const extension = "." + filename.split('.').pop();
-            switch (extension) {
-                case '.js':
-                case '.mjs':
-                case '.cjs':
-                    const { javascript } = await import("/codemirror/lang-javascript/dist/index.js");
-                    return javascript({ jsx: true, typescript: true });
-                case '.css':
-                    const { css } = await import("/codemirror/lang-css/dist/index.js");
-                    return css();
-                case '.html':
-                    const { html } = await import("/codemirror/lang-html/dist/index.js");
-                    return html();
-                case '.json':
-                    const { json } = await import("/codemirror/lang-json/dist/index.js");
-                    return json();
-                case '.md':
-                    const { markdown } = await import("/codemirror/lang-markdown/dist/index.js");
-                    return markdown();
-                default:
-                    return null;
-            }
-        }
-
-        (async () => {
-            const fileContentElement = document.getElementById('fileContent');
-            
-            const updateListener = EditorView.updateListener.of(update => {
-                if (update.docChanged) {
-                    fileContentElement.value = update.state.doc.toString();
-                }
-            });
-
-            const basicSetup = [
-                lineNumbers(), highlightActiveLineGutter(), highlightSpecialChars(), history(),
-                foldGutter(), drawSelection(), dropCursor(), indentOnInput(),
-                bracketMatching(), rectangularSelection(), crosshairCursor(), highlightActiveLine(),
-                keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap]),
-            ];
-
-            const isDark = document.body.classList.contains('dark-theme');
-            const themeExtensions = [isDark ? oneDark : [], syntaxHighlighting(defaultHighlightStyle, { fallback: true })];
-
-            const languageSupport = await getLanguageSupport('<%= filename %>');
-            const languageExtension = languageSupport ? [languageSupport] : [];
-            
-            const state = EditorState.create({
-                doc: fileContentElement.value,
-                extensions: [
-                    ...basicSetup,
-                    ...themeExtensions,
-                    ...languageExtension,
-                    updateListener
-                ]
-            });
-
-            const view = new EditorView({
-                state,
-                parent: document.getElementById('editor')
-            });
-            
-            const themeSwitcher = document.getElementById('theme-switcher');
-            if (themeSwitcher) {
-                const observer = new MutationObserver((mutations) => {
-                    mutations.forEach(mutation => {
-                        if (mutation.attributeName === 'data-theme') {
-                            const isDarkNow = document.documentElement.getAttribute('data-theme') === 'dark';
-                            view.dispatch({
-                                effects: EditorView.theme.reconfigure(isDarkNow ? oneDark : [])
-                            });
-                        }
-                    });
-                });
-                observer.observe(document.documentElement, { attributes: true });
-            }
-        })();
-    </script>
+    
 </body>
 </html>
