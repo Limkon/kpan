@@ -111,15 +111,33 @@ header h1 {
 header nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 10px; /* Adjusted gap for button-like links */
     align-items: center;
 }
+/* MODIFIED: Header navigation links now look like buttons */
 header nav a {
-    text-decoration: none;
-    color: #007bff;
+    display: inline-block;
+    padding: 8px 12px;
+    border: 1px solid var(--primary-color, #007bff);
+    border-radius: 5px;
+    background-color: var(--primary-color, #007bff);
+    color: white !important;
     font-weight: 500;
-    padding: 5px 0;
+    text-decoration: none;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
+    cursor: pointer;
+    margin: 0;
 }
+
+header nav a:hover {
+    background-color: var(--primary-hover-color, #0069d9);
+    border-color: var(--primary-hover-color, #0062cc);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-decoration: none;
+}
+
 
 /* --- Theme Switcher Styling (In Header or Page Top) --- */
 .theme-switcher-container {
