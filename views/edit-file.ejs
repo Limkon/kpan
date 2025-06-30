@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <%# 注意: 主题选择器的 HTML 本体已从 head 中移除 %>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>编辑文件: <%= filename %></title>
@@ -20,14 +19,24 @@
         form {
             flex-grow: 1; display: flex; flex-direction: column;
         }
+        
+        /* MODIFIED: 修改 header 样式以支持左右对齐 */
         .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 15px;
         }
+        
+        .editor-title {
+             margin-bottom: 15px;
+        }
+
         .editor-actions {
             margin-top: 15px; text-align: right; flex-shrink: 0;
             display: flex; 
             justify-content: flex-end; 
-            align-items: center; /* 确保垂直对齐 */
+            align-items: center;
             gap: 10px;
         }
 
@@ -62,8 +71,16 @@
         <% } %>
 
         <div class="editor-header">
-             <% const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/'; %>
-             <a href="/files?path=<%= encodeURIComponent(parentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">&larr; 返回文件列表</a>
+            <%# 左侧：返回链接 %>
+            <% const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/'; %>
+            <a href="/files?path=<%= encodeURIComponent(parentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">&larr; 返回文件列表</a>
+
+            <%# 右侧：主题选择器 %>
+            <%- include("partials/theme-switcher") %>
+        </div>
+
+        <div class="editor-title">
+            <%# 标题被移到 header 外部，以实现一致的布局 %>
             <h2>正在编辑: <%= filename %></h2>
         </div>
 
@@ -76,13 +93,10 @@
             <textarea id="fileContent" name="fileContent"><%= content %></textarea>
 
             <div class="editor-actions">
-                <%# 先放置保存和取消按钮 %>
+                <%# 底部操作区不再包含主题选择器 %>
                 <button type="submit">保存更改</button>
                 <% const viewUrl = `/view?path=${encodeURIComponent(currentPath)}${viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''}`; %>
                 <button type="button" onclick="window.location.href='<%= viewUrl %>'">取消</button>
-
-                <%# 将主题选择器放在最后，使其显示在最右侧 %>
-                <%- include("partials/theme-switcher") %>
             </div>
         </form>
     </div>
