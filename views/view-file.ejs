@@ -2,29 +2,46 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <%- include("partials/theme-switcher") %>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>查看文件: <%= filename %></title>
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
+        /* 新增：主題選擇器容器樣式 */
+        .theme-switcher-container {
+            max-width: 95%; /* 根據您的 .container 調整 */
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 10px 15px 0; /* 在上方和左右添加一些內邊距 */
+            text-align: right; /* 將內容（主題選擇器）居右 */
+            box-sizing: border-box;
+        }
+
+        /* 確保 .container 的頂部內邊距被調整，以避免雙重邊距 */
+        .container {
+            padding-top: 0;
+        }
+
         /* 頁面頂部佈局 */
         .viewer-header { 
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            /* 如果需要，可以將頂部邊距添加到這裡 */
+            margin-top: 15px;
         }
         .header-actions {
             display: flex;
             gap: 10px;
         }
         .viewer-title {
-             margin-bottom: 15px;
+            margin-bottom: 15px;
         }
 
-        /* MODIFIED: 為文件預覽區域設定字體 */
+        /* 為文件預覽區域設定字體 */
         pre {
             background-color: #f8f9fa;
             border: 1px solid #dee2e6;
@@ -46,6 +63,11 @@
     </style>
 </head>
 <body>
+
+    <div class="theme-switcher-container">
+        <%- include("partials/theme-switcher") %>
+    </div>
+
     <div class="container">
         <% if (message) { %>
             <div class="message <%= messageType === 'error' ? 'error-message' : '' %>">
