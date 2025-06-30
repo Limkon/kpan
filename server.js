@@ -29,7 +29,7 @@ const ALLOWED_TEXT_EXTENSIONS = [
 ];
 const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov'];
 const SESSION_SECRET = process.env.SESSION_SECRET || 'a_very_very_strong_and_unique_secret_CHANGE_THIS_NOW_REALLY';
-const USER_QUOTA_MB = 90;
+const USER_QUOTA_MB = 900;
 const USER_QUOTA_BYTES = USER_QUOTA_MB * 1024 * 1024;
 
 // --- 目錄初始化 ---
