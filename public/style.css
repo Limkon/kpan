@@ -5,8 +5,7 @@ body {
     color: #212529;
     line-height: 1.6;
     margin: 0;
-    /* MODIFIED: Reduced initial padding for better mobile scaling */
-    padding: 10px; 
+    padding: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -17,8 +16,7 @@ body {
 
 .container {
     background-color: #ffffff;
-    /* MODIFIED: Reduced initial padding */
-    padding: 15px; 
+    padding: 15px;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     width: 100%;
@@ -36,13 +34,12 @@ body {
     align-items: center;
     width: 100%;
     min-height: 80vh;
-    padding: 15px; /* MODIFIED: Reduced padding */
-    flex-grow: 1; 
+    padding: 15px;
+    flex-grow: 1;
 }
 .auth-form-container {
     background-color: #fff;
-    /* MODIFIED: Reduced padding for mobile */
-    padding: 20px; 
+    padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
@@ -50,7 +47,7 @@ body {
     text-align: center;
 }
 .auth-form-container h1 {
-    font-size: 1.6em; /* MODIFIED: Slightly smaller heading */
+    font-size: 1.6em;
     margin-bottom: 25px;
     color: #343a40;
 }
@@ -101,21 +98,21 @@ header {
 }
 header h1 {
     margin: 0 0 10px 0;
-    font-size: 1.5em; /* MODIFIED: Adjusted size for mobile */
+    font-size: 1.5em;
     color: #343a40;
     flex-shrink: 0;
 }
 .header-controls {
     display: flex;
-    flex-wrap: wrap; /* ADDED: Allow controls to wrap on small screens */
+    flex-wrap: wrap;
     align-items: center;
-    gap: 15px; /* MODIFIED: Adjusted gap */
+    gap: 15px;
     width: 100%;
 }
 header nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px; 
+    gap: 10px;
     align-items: center;
 }
 header nav a {
@@ -141,7 +138,6 @@ header nav a:hover {
     text-decoration: none;
 }
 
-
 /* --- Theme Switcher Styling --- */
 .theme-switcher-container {
     display: flex;
@@ -150,22 +146,19 @@ header nav a:hover {
     padding: 5px;
     background-color: transparent;
     border-radius: 6px;
-    /* MODIFIED: Adjusted margin logic for flexbox wrapping */
-    margin-left: 0; 
+    margin-left: 0;
 }
 
-/* This rule will push it to the right only when space is available */
 @media (min-width: 480px) {
     .header-controls .theme-switcher-container {
         margin-left: auto;
     }
 }
 
-
 .theme-switcher-container .theme-label {
     margin-right: 0;
     font-size: 0.9em;
-    color: var(--text-color, #495057); 
+    color: var(--text-color, #495057);
     font-weight: 500;
     white-space: nowrap;
 }
@@ -173,7 +166,7 @@ header nav a:hover {
     padding: 6px 8px;
     font-size: 0.9em;
     border-radius: 4px;
-    border: 1px solid var(--input-border-color, #ced4da); 
+    border: 1px solid var(--input-border-color, #ced4da);
     margin: 0;
     width: auto;
     background-color: var(--input-bg-color, #fff);
@@ -182,27 +175,26 @@ header nav a:hover {
 
 .page-header-container {
     width: 100%;
-    max-width: 960px; 
+    max-width: 960px;
     margin: 0 auto 10px auto;
     display: flex;
     justify-content: flex-end;
-    padding: 10px 15px; 
+    padding: 10px 15px;
     box-sizing: border-box;
 }
 .page-header-container .theme-switcher-container {
     margin-left: 0;
 }
 
-
 /* General h1, h2 for non-auth pages */
 .container > h1:not(.auth-form-container h1):not(header h1) {
     text-align: center;
-    font-size: 1.6em; /* MODIFIED: Adjusted size for mobile */
+    font-size: 1.6em;
     margin-bottom: 15px;
     color: #343a40;
 }
 h2 {
-    font-size: 1.2em; /* MODIFIED: Adjusted size for mobile */
+    font-size: 1.2em;
     border-bottom: 2px solid #007bff;
     padding-bottom: 6px;
     margin-top: 25px;
@@ -263,14 +255,46 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
 .current-path { margin-bottom: 15px; padding: 10px; background-color: #e9ecef; border-radius: 5px; font-size: 0.9em; color: #495057; word-break: break-all; }
 .current-path a { font-weight: 500; }
 
+/* --- REBUILT: Replaced Flexbox with CSS Grid for robust control layout --- */
 .file-browser-controls {
-    margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
 }
-.file-browser-controls .control-form { display: flex; flex-grow: 1; gap: 8px; min-width: 200px; }
-.file-browser-controls .control-form input[type="text"] { flex-grow: 1; margin: 0; }
-.file-browser-controls .control-form button { flex-shrink: 0; margin: 0; }
-.file-browser-controls .upload-button-main, .file-browser-controls .view-toggle button { margin: 0; flex-shrink: 0; }
-.view-toggle { display: flex; gap: 8px; margin-left: auto; }
+
+/* Assumes the search form has a class of "search-form" in the HTML */
+.file-browser-controls .search-form {
+    grid-column: 1 / -1; 
+    display: flex;
+    gap: 8px;
+}
+
+.file-browser-controls .search-form input[type="text"] {
+    flex-grow: 1;
+    margin: 0;
+}
+
+.file-browser-controls .search-form button {
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.file-browser-controls .control-form,
+.file-browser-controls .button-link,
+.file-browser-controls button {
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.view-toggle {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
 .view-toggle button { background-color: #6c757d; font-size: 0.9em; }
 .view-toggle button.active { background-color: #007bff; }
 
@@ -309,7 +333,6 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
 }
 
 /* --- Grid View Styling --- */
-/* MODIFIED: Changed to a responsive auto-fill grid for mobile-first approach */
 .grid-view ul {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -406,8 +429,7 @@ textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin:0; }
 
 .note { font-size: 0.85em; margin-top: 15px; padding: 10px; background-color: #f1f3f5; border-left: 4px solid #007bff; }
 
-/* Responsive adjustments */
-/* MODIFIED: This block now primarily handles tablet-and-up adjustments */
+/* --- Responsive Adjustments --- */
 @media (min-width: 768px) {
     header {
         flex-direction: row;
@@ -415,26 +437,21 @@ textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin:0; }
     }
     header h1 {
         margin-bottom: 0;
-        font-size: 1.75em; /* Restore larger font size */
+        font-size: 1.75em;
     }
     .header-controls {
         width: auto;
         margin-left: auto;
-        flex-wrap: nowrap; /* ADDED: Prevent wrapping on larger screens */
+        flex-wrap: nowrap;
     }
-    .container { padding: 20px 25px; } /* Restore larger padding */
+    .container { padding: 20px 25px; }
     .auth-form-container { padding: 30px 40px; }
     .container > h1:not(.auth-form-container h1):not(header h1) { font-size: 2em; }
     h2 { font-size: 1.4em; }
-    .file-browser-controls .control-form { min-width: 300px; }
 }
 
 @media (min-width: 576px) {
-    .file-browser-controls { flex-direction: row; align-items: center; }
-    .file-browser-controls .control-form { flex-grow: 0; min-width: 250px; }
-    .file-browser-controls .upload-button-main { width: auto; }
     #drop-area #upload-button { width: auto; }
-    /* MODIFIED: Grid column size can be larger on bigger screens */
     .grid-view ul {
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     }
@@ -446,10 +463,9 @@ textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin:0; }
     }
 }
 
-/* ADDED: Media query for small mobile devices */
 @media (max-width: 575px) {
     body {
-        padding: 5px; /* Less padding on the very edges */
+        padding: 5px;
     }
     .container {
         padding: 10px;
@@ -457,32 +473,19 @@ textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin:0; }
         margin-bottom: 10px;
     }
     .file-browser-controls {
-        flex-direction: column; /* Stack controls vertically */
-        align-items: stretch; /* Stretch items to full width */
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 8px;
     }
-    .file-browser-controls .control-form {
-        width: 100%;
-    }
-    .file-browser-controls .control-form button,
-    .file-browser-controls .upload-button-main {
-        width: 100%; /* Make buttons full-width */
-    }
-    .view-toggle {
-        margin-left: 0; /* Reset margin */
-        justify-content: flex-end; /* Align to the right */
-        width: 100%;
-    }
-    /* Make table cells have less padding to fit more content */
     table th, table td {
         padding: 6px 8px;
     }
     .list-view .file-actions-placeholder {
-        min-width: 100px; /* Reduce placeholder width */
+        min-width: 100px;
     }
 }
 
 
-/* Dark theme specific styles (No changes needed here for responsiveness) */
+/* --- Dark Theme Specific Styles --- */
 body.dark-theme {
     --text-color: #e0e0e0;
     --input-border-color: #555;
@@ -551,7 +554,6 @@ body.dark-theme {
     color: var(--text-color, #e0e0e0);
 }
 
-/* --- Dark Theme for List View --- */
 .dark-theme .list-view li {
     background-color: var(--container-bg, #2c2c2c);
     border-color: var(--border-color, #444);
@@ -570,7 +572,6 @@ body.dark-theme {
     color: #aaa;
 }
 
-/* --- Dark Theme for Grid View --- */
 .dark-theme .grid-view li {
     background-color: var(--container-bg, #2c2c2c);
     border-color: var(--border-color, #444);
@@ -594,7 +595,6 @@ body.dark-theme {
     border: 1px solid #555;
 }
 
-/* --- Dark Theme for Tables --- */
 .dark-theme table th, .dark-theme table td {
     border-color: var(--border-color, #444);
 }
