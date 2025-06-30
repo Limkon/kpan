@@ -8,52 +8,38 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* [修正] 主題選擇器容器樣式 */
+        /* [最終修正] 使用絕對定位 */
+        body {
+            position: relative; /* 關鍵：為絕對定位的子元素提供定位上下文 */
+            padding-top: 50px;  /* 關鍵：為頂部留出空間，防止內容被選擇器遮擋 */
+        }
+
         .theme-switcher-container {
-            /* 讓容器佔滿寬度，僅用 padding 控制左右邊距以對齊內容 */
-            padding: 10px 2.5% 0; /* 2.5% 與下方 95% 寬度的 container 邊距匹配 */
-            text-align: right;      /* 將內部元素推到容器最右邊 */
-            box-sizing: border-box;
+            position: absolute;   /* 使用絕對定位 */
+            top: 15px;            /* 距離頂部 15px */
+            right: 2.5%;          /* 距離右側 2.5%，與下方 container 的邊緣對齊 */
+            z-index: 1000;        /* 確保它在最上層 */
         }
+        
+        body, html { margin: 0; }
 
-        /* 確保 .container 的頂部內邊距被調整，以避免雙重邊距 */
         .container {
-            padding-top: 0;
+            padding: 15px; max-width: 95%; width: 100%; margin-left: auto; margin-right: auto;
         }
 
-        /* 頁面頂部佈局 */
         .viewer-header { 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            margin-top: 15px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
         }
-        .header-actions {
-            display: flex;
-            gap: 10px;
-        }
-        .viewer-title {
-            margin-bottom: 15px;
-        }
+        .header-actions { display: flex; gap: 10px; }
+        .viewer-title { margin-bottom: 15px; }
 
-        /* 為文件預覽區域設定字體 */
         pre {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            padding: 15px;
-            border-radius: 5px;
-            white-space: pre-wrap;
-            word-break: break-all;
-            font-size: 1rem;
-            line-height: 1.6;
-            font-family: 'SimSun', '宋体', 'STSong', serif;
+            background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 15px;
+            border-radius: 5px; white-space: pre-wrap; word-break: break-all;
+            font-size: 1rem; line-height: 1.6; font-family: 'SimSun', '宋体', 'STSong', serif;
         }
-        /* 優化暗色主題下的預覽區樣式 */
         body.dark-theme pre {
-            background-color: #2c2c2c;
-            border-color: #444;
-            color: #e0e0e0;
+            background-color: #2c2c2c; border-color: #444; color: #e0e0e0;
         }
     </style>
 </head>
@@ -62,7 +48,7 @@
     <div class="theme-switcher-container">
         <%- include("partials/theme-switcher") %>
     </div>
-
+    
     <div class="container">
         <% if (message) { %>
             <div class="message <%= messageType === 'error' ? 'error-message' : '' %>">
@@ -88,6 +74,7 @@
 
         <pre><%= content %></pre>
     </div>
+
     <script src="/theme.js"></script>
 </body>
 </html>
