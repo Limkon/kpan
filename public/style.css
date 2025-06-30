@@ -5,7 +5,8 @@ body {
     color: #212529;
     line-height: 1.6;
     margin: 0;
-    padding: 10px;
+    /* MODIFIED: Reduced initial padding for better mobile scaling */
+    padding: 10px; 
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -16,7 +17,8 @@ body {
 
 .container {
     background-color: #ffffff;
-    padding: 15px;
+    /* MODIFIED: Reduced initial padding */
+    padding: 15px; 
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     width: 100%;
@@ -34,12 +36,13 @@ body {
     align-items: center;
     width: 100%;
     min-height: 80vh;
-    padding: 20px;
-    flex-grow: 1; /* Allow auth container to take available space */
+    padding: 15px; /* MODIFIED: Reduced padding */
+    flex-grow: 1; 
 }
 .auth-form-container {
     background-color: #fff;
-    padding: 25px 30px;
+    /* MODIFIED: Reduced padding for mobile */
+    padding: 20px; 
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
@@ -47,7 +50,7 @@ body {
     text-align: center;
 }
 .auth-form-container h1 {
-    font-size: 1.8em;
+    font-size: 1.6em; /* MODIFIED: Slightly smaller heading */
     margin-bottom: 25px;
     color: #343a40;
 }
@@ -98,20 +101,21 @@ header {
 }
 header h1 {
     margin: 0 0 10px 0;
-    font-size: 1.6em;
+    font-size: 1.5em; /* MODIFIED: Adjusted size for mobile */
     color: #343a40;
     flex-shrink: 0;
 }
 .header-controls {
     display: flex;
+    flex-wrap: wrap; /* ADDED: Allow controls to wrap on small screens */
     align-items: center;
-    gap: 20px;
+    gap: 15px; /* MODIFIED: Adjusted gap */
     width: 100%;
 }
 header nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px; /* Adjusted gap for button-like links */
+    gap: 10px; 
     align-items: center;
 }
 header nav a {
@@ -138,7 +142,7 @@ header nav a:hover {
 }
 
 
-/* --- Theme Switcher Styling (In Header or Page Top) --- */
+/* --- Theme Switcher Styling --- */
 .theme-switcher-container {
     display: flex;
     align-items: center;
@@ -146,12 +150,22 @@ header nav a:hover {
     padding: 5px;
     background-color: transparent;
     border-radius: 6px;
-    margin-left: auto; /* Pushes to the right in .header-controls */
+    /* MODIFIED: Adjusted margin logic for flexbox wrapping */
+    margin-left: 0; 
 }
+
+/* This rule will push it to the right only when space is available */
+@media (min-width: 480px) {
+    .header-controls .theme-switcher-container {
+        margin-left: auto;
+    }
+}
+
+
 .theme-switcher-container .theme-label {
     margin-right: 0;
     font-size: 0.9em;
-    color: var(--text-color, #495057); /* Use CSS var for theming */
+    color: var(--text-color, #495057); 
     font-weight: 500;
     white-space: nowrap;
 }
@@ -159,37 +173,36 @@ header nav a:hover {
     padding: 6px 8px;
     font-size: 0.9em;
     border-radius: 4px;
-    border: 1px solid var(--input-border-color, #ced4da); /* Use CSS var */
+    border: 1px solid var(--input-border-color, #ced4da); 
     margin: 0;
     width: auto;
-    background-color: var(--input-bg-color, #fff); /* Use CSS var */
-    color: var(--input-text-color, #495057); /* Use CSS var */
+    background-color: var(--input-bg-color, #fff);
+    color: var(--input-text-color, #495057);
 }
 
-/* For pages like login/register where theme switcher is at the very top */
 .page-header-container {
     width: 100%;
-    max-width: 960px; /* Match .container or adjust */
+    max-width: 960px; 
     margin: 0 auto 10px auto;
     display: flex;
     justify-content: flex-end;
-    padding: 10px 15px; /* Adjust padding to align with .container's content area */
+    padding: 10px 15px; 
     box-sizing: border-box;
 }
 .page-header-container .theme-switcher-container {
-    margin-left: 0; /* No auto margin needed here as parent handles alignment */
+    margin-left: 0;
 }
 
 
 /* General h1, h2 for non-auth pages */
 .container > h1:not(.auth-form-container h1):not(header h1) {
     text-align: center;
-    font-size: 1.8em;
+    font-size: 1.6em; /* MODIFIED: Adjusted size for mobile */
     margin-bottom: 15px;
     color: #343a40;
 }
 h2 {
-    font-size: 1.3em;
+    font-size: 1.2em; /* MODIFIED: Adjusted size for mobile */
     border-bottom: 2px solid #007bff;
     padding-bottom: 6px;
     margin-top: 25px;
@@ -290,16 +303,16 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
 .list-view .file-entry .file-name { color: #212529; }
 .list-view .file-actions-placeholder { min-width: 150px; text-align: right; font-size: 0.9em; color: #666; }
 
-/* MODIFIED: Added .selected style for list view */
 .list-view li.selected {
-    background-color: #d1e7ff; /* A light blue to indicate selection */
+    background-color: #d1e7ff; 
     border-color: #007bff;
 }
 
 /* --- Grid View Styling --- */
+/* MODIFIED: Changed to a responsive auto-fill grid for mobile-first approach */
 .grid-view ul {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 10px;
 }
 .grid-view li {
@@ -314,13 +327,12 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
     justify-content: flex-start;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     position: relative;
-    cursor: pointer; /* Add cursor to indicate clickable */
+    cursor: pointer;
 }
 .grid-view .file-icon { display: none !important; }
 
-/* MODIFIED: Added .selected style for grid view */
 .grid-view li.selected {
-    background-color: #d1e7ff; /* A light blue background */
+    background-color: #d1e7ff;
     border-color: #007bff;
 }
 
@@ -330,12 +342,8 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
     display: inline-block !important;
     line-height:1;
 }
-.grid-view .file-icon-large.folder-icon {
-    color: #ffc107;
-}
-.grid-view .file-icon-large.file-icon {
-    color: #495057;
-}
+.grid-view .file-icon-large.folder-icon { color: #ffc107; }
+.grid-view .file-icon-large.file-icon { color: #495057; }
 
 .grid-view .file-name {
     font-size: 0.8em;
@@ -349,7 +357,7 @@ button:hover, button[type="submit"]:hover, .button-link:hover {
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-height: 2.2em;
+    min-height: 2.2em; 
     width: 100%;
 }
 .grid-view .file-actions {
@@ -392,15 +400,14 @@ table td form { display: inline-flex !important; gap: 5px !important; align-item
 table td form input[type="password"] { width: 120px !important; padding: 5px !important; font-size: 0.85em !important; margin:0; }
 table td form button { margin:0; }
 
-textarea#fileContent {
-    min-height: 50vh; font-size: 0.9rem; margin:0;
-}
+textarea#fileContent { min-height: 50vh; font-size: 0.9rem; margin:0; }
 .editor-actions { margin-top: 15px; text-align: right; display: flex; gap: 10px; justify-content: flex-end; }
 .editor-actions button { margin-left: 0; margin-bottom:0; }
 
 .note { font-size: 0.85em; margin-top: 15px; padding: 10px; background-color: #f1f3f5; border-left: 4px solid #007bff; }
 
 /* Responsive adjustments */
+/* MODIFIED: This block now primarily handles tablet-and-up adjustments */
 @media (min-width: 768px) {
     header {
         flex-direction: row;
@@ -408,15 +415,16 @@ textarea#fileContent {
     }
     header h1 {
         margin-bottom: 0;
-        font-size: 1.75em;
+        font-size: 1.75em; /* Restore larger font size */
     }
     .header-controls {
         width: auto;
         margin-left: auto;
+        flex-wrap: nowrap; /* ADDED: Prevent wrapping on larger screens */
     }
-    .container { padding: 20px 25px; }
+    .container { padding: 20px 25px; } /* Restore larger padding */
     .auth-form-container { padding: 30px 40px; }
-    h1:not(.auth-form-container h1):not(header h1) { font-size: 2em; }
+    .container > h1:not(.auth-form-container h1):not(header h1) { font-size: 2em; }
     h2 { font-size: 1.4em; }
     .file-browser-controls .control-form { min-width: 300px; }
 }
@@ -426,6 +434,7 @@ textarea#fileContent {
     .file-browser-controls .control-form { flex-grow: 0; min-width: 250px; }
     .file-browser-controls .upload-button-main { width: auto; }
     #drop-area #upload-button { width: auto; }
+    /* MODIFIED: Grid column size can be larger on bigger screens */
     .grid-view ul {
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     }
@@ -437,7 +446,43 @@ textarea#fileContent {
     }
 }
 
-/* Dark theme specific styles */
+/* ADDED: Media query for small mobile devices */
+@media (max-width: 575px) {
+    body {
+        padding: 5px; /* Less padding on the very edges */
+    }
+    .container {
+        padding: 10px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+    .file-browser-controls {
+        flex-direction: column; /* Stack controls vertically */
+        align-items: stretch; /* Stretch items to full width */
+    }
+    .file-browser-controls .control-form {
+        width: 100%;
+    }
+    .file-browser-controls .control-form button,
+    .file-browser-controls .upload-button-main {
+        width: 100%; /* Make buttons full-width */
+    }
+    .view-toggle {
+        margin-left: 0; /* Reset margin */
+        justify-content: flex-end; /* Align to the right */
+        width: 100%;
+    }
+    /* Make table cells have less padding to fit more content */
+    table th, table td {
+        padding: 6px 8px;
+    }
+    .list-view .file-actions-placeholder {
+        min-width: 100px; /* Reduce placeholder width */
+    }
+}
+
+
+/* Dark theme specific styles (No changes needed here for responsiveness) */
 body.dark-theme {
     --text-color: #e0e0e0;
     --input-border-color: #555;
@@ -511,9 +556,8 @@ body.dark-theme {
     background-color: var(--container-bg, #2c2c2c);
     border-color: var(--border-color, #444);
 }
-/* MODIFIED: Added dark theme .selected style */
 .dark-theme .list-view li.selected {
-    background-color: #004a7c; /* A darker blue for dark mode */
+    background-color: #004a7c;
     border-color: #80bdff;
 }
 .dark-theme .list-view .file-entry .file-name {
@@ -531,9 +575,8 @@ body.dark-theme {
     background-color: var(--container-bg, #2c2c2c);
     border-color: var(--border-color, #444);
 }
-/* MODIFIED: Added dark theme .selected style */
 .dark-theme .grid-view li.selected {
-    background-color: #004a7c; /* A darker blue for dark mode */
+    background-color: #004a7c;
     border-color: #80bdff;
 }
 .dark-theme .grid-view .file-icon-large.folder-icon {
