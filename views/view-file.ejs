@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <%- include("partials/theme-switcher") %>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>查看文件: <%= filename %></title>
@@ -17,13 +16,14 @@
         }
         .header-actions {
             display: flex;
+            align-items: center; /* 确保所有按钮垂直对齐 */
             gap: 10px;
         }
         .viewer-title {
             margin-bottom: 15px;
         }
 
-        /* MODIFIED: 為文件預覽區域設定字體 */
+        /* 文件預覽區域字體 */
         pre {
             background-color: #f8f9fa;
             border: 1px solid #dee2e6;
@@ -33,7 +33,6 @@
             word-break: break-all;
             font-size: 1rem;
             line-height: 1.6;
-            /* 關鍵：設定字體為宋體 */
             font-family: 'SimSun', '宋体', 'STSong', serif;
         }
         /* 優化暗色主題下的預覽區樣式 */
@@ -53,10 +52,15 @@
         <% } %>
 
         <div class="viewer-header">
+            <%# 左侧：返回链接 %>
             <% const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/'; %>
             <a href="/files?path=<%= encodeURIComponent(parentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">&larr; 返回文件列表</a>
             
+            <%# 右侧：操作按钮组 %>
             <div class="header-actions">
+                <%# 将主题选择器放置在这里 %>
+                <%- include("partials/theme-switcher") %>
+
                 <% if (ALLOWED_TEXT_EXTENSIONS.includes(fileExtension)) { %>
                     <a href="/edit?path=<%= encodeURIComponent(currentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">編輯文件</a>
                 <% } %>
