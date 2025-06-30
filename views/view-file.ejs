@@ -8,14 +8,11 @@
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
     <style>
-        /* 新增：主題選擇器容器樣式 */
+        /* [修正] 主題選擇器容器樣式 */
         .theme-switcher-container {
-            max-width: 95%; /* 根據您的 .container 調整 */
-            width: 100%;
-            margin-left: auto;
-            margin-right: auto;
-            padding: 10px 15px 0; /* 在上方和左右添加一些內邊距 */
-            text-align: right; /* 將內容（主題選擇器）居右 */
+            /* 讓容器佔滿寬度，僅用 padding 控制左右邊距以對齊內容 */
+            padding: 10px 2.5% 0; /* 2.5% 與下方 95% 寬度的 container 邊距匹配 */
+            text-align: right;      /* 將內部元素推到容器最右邊 */
             box-sizing: border-box;
         }
 
@@ -30,7 +27,6 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
-            /* 如果需要，可以將頂部邊距添加到這裡 */
             margin-top: 15px;
         }
         .header-actions {
@@ -51,7 +47,6 @@
             word-break: break-all;
             font-size: 1rem;
             line-height: 1.6;
-            /* 關鍵：設定字體為宋體 */
             font-family: 'SimSun', '宋体', 'STSong', serif;
         }
         /* 優化暗色主題下的預覽區樣式 */
