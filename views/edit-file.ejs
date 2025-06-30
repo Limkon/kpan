@@ -1,8 +1,7 @@
-<%# views/edit-file.ejs %>
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <%- include("partials/theme-switcher") %>
+    <%# 注意: 主题选择器的 HTML 本体已从 head 中移除 %>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>编辑文件: <%= filename %></title>
@@ -26,10 +25,13 @@
         }
         .editor-actions {
             margin-top: 15px; text-align: right; flex-shrink: 0;
-            display: flex; justify-content: flex-end; gap: 10px;
+            display: flex; 
+            justify-content: flex-end; 
+            align-items: center; /* 确保垂直对齐 */
+            gap: 10px;
         }
 
-        /* 簡化樣式，只修改字體 */
+        /* 文本区域字体 */
         textarea#fileContent {
             flex-grow: 1;
             width: 100%;
@@ -74,9 +76,13 @@
             <textarea id="fileContent" name="fileContent"><%= content %></textarea>
 
             <div class="editor-actions">
+                <%# 先放置保存和取消按钮 %>
                 <button type="submit">保存更改</button>
                 <% const viewUrl = `/view?path=${encodeURIComponent(currentPath)}${viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : ''}`; %>
                 <button type="button" onclick="window.location.href='<%= viewUrl %>'">取消</button>
+
+                <%# 将主题选择器放在最后，使其显示在最右侧 %>
+                <%- include("partials/theme-switcher") %>
             </div>
         </form>
     </div>
