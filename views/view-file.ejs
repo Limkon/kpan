@@ -1,99 +1,75 @@
+<%# views/view-file.ejs %>
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <%- include("partials/theme-switcher") %>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>查看文件: <%= filename %> - 網路硬碟</title>
+    <title>查看文件: <%= filename %></title>
     <link rel="stylesheet" href="/style.css">
     <link id="theme-stylesheet" rel="stylesheet" href="">
-    <% /* 移除了 highlight.js 的 CSS 引用 */ %>
     <style>
-        .view-container {
-            padding: 15px;
-            background-color: var(--viewer-bg, #fdfdfd);
-            border: 1px solid var(--viewer-border-color, #eee);
-            border-radius: 5px;
-            margin-top: 15px;
-            font-family: monospace;
-            font-size: 0.9em;
-            line-height: 1.6;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            color: var(--viewer-text-color, #333);
-        }
-        .view-actions {
-            margin-top: 15px;
-            text-align: right;
-        }
-        .dark-theme .view-container {
-            --viewer-bg: #2b2b2b;
-            --viewer-border-color: #444;
-            --viewer-text-color: #ccc;
-        }
-        body > .container {
+        /* 頁面頂部佈局 */
+        .viewer-header { 
             display: flex;
-            flex-direction: column;
-            min-height: calc(100vh - 40px); 
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
         }
-        .view-content-wrapper {
-             flex-grow: 1; 
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .viewer-title {
+             margin-bottom: 15px;
+        }
+
+        /* MODIFIED: 為文件預覽區域設定字體 */
+        pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-size: 1rem;
+            line-height: 1.6;
+            /* 關鍵：設定字體為宋體 */
+            font-family: 'SimSun', '宋体', 'STSong', serif;
+        }
+        /* 優化暗色主題下的預覽區樣式 */
+        body.dark-theme pre {
+            background-color: #2c2c2c;
+            border-color: #444;
+            color: #e0e0e0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>查看文件: <%= filename %></h1>
-            <div class="header-controls">
-                <nav>
-                    <%
-                        let backPath = "/files";
-                        if (locals.currentPath && typeof locals.currentPath === 'string') {
-                            const parentDirOfFile = currentPath.includes('/') ? currentPath.substring(0, currentPath.lastIndexOf('/')) || '/' : '/';
-                            if (locals.viewTargetUsername && user.role === 'admin') {
-                                backPath = `/files?path=${encodeURIComponent(parentDirOfFile)}&targetUsername=${encodeURIComponent(viewTargetUsername)}`;
-                            } else {
-                                backPath = `/files?path=${encodeURIComponent(parentDirOfFile)}`;
-                            }
-                        } else if (locals.viewTargetUsername && user.role === 'admin') {
-                             backPath = `/files?targetUsername=${encodeURIComponent(viewTargetUsername)}`;
-                        }
-
-                        let editLinkHref = '';
-                        if (locals.ALLOWED_TEXT_EXTENSIONS && locals.fileExtension && ALLOWED_TEXT_EXTENSIONS.includes(fileExtension)) {
-                            editLinkHref = `/edit?path=${encodeURIComponent(currentPath)}`;
-                            if (locals.viewTargetUsername && user.role === 'admin') {
-                                editLinkHref += `&targetUsername=${encodeURIComponent(viewTargetUsername)}`;
-                            }
-                        }
-
-                        let downloadLinkHref = `/download?path=${encodeURIComponent(currentPath)}`;
-                        if (locals.viewTargetUsername && user.role === 'admin') {
-                            downloadLinkHref += `&targetUsername=${encodeURIComponent(viewTargetUsername)}`;
-                        }
-                    %>
-                    <a href="<%= backPath %>">返回文件列表</a>
-                    <% if (editLinkHref) { %>
-                        <a href="<%= editLinkHref %>" class="button-link">編輯此文件</a>
-                    <% } %>
-                    <a href="/logout">登出</a>
-                </nav>
-                <%- include('partials/theme-switcher') %>
+        <% if (message) { %>
+            <div class="message <%= messageType === 'error' ? 'error-message' : '' %>">
+                <%= message %>
             </div>
-        </header>
-
-        <% if (locals.message) { %>
-            <p class="message <%= (locals.messageType === 'error') ? 'error-message' : '' %>"><%= message %></p>
         <% } %>
-        
-        <div class="view-content-wrapper">
-            <div class="view-actions">
-                <a href="<%= downloadLinkHref %>" class="button-link secondary">下載文件</a>
+
+        <div class="viewer-header">
+            <% const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/')) || '/'; %>
+            <a href="/files?path=<%= encodeURIComponent(parentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">&larr; 返回文件列表</a>
+            
+            <div class="header-actions">
+                <% if (ALLOWED_TEXT_EXTENSIONS.includes(fileExtension)) { %>
+                    <a href="/edit?path=<%= encodeURIComponent(currentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link">編輯文件</a>
+                <% } %>
+                <a href="/download?path=<%= encodeURIComponent(currentPath) %><%= viewTargetUsername ? '&targetUsername=' + encodeURIComponent(viewTargetUsername) : '' %>" class="button-link" download>下載文件</a>
             </div>
-            <pre class="view-container"><%= content %></pre>
         </div>
 
+        <div class="viewer-title">
+            <h2>正在查看: <%= filename %></h2>
+        </div>
+
+        <pre><%= content %></pre>
     </div>
     <script src="/theme.js"></script>
 </body>
