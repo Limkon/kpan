@@ -2,7 +2,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <%- include("partials/theme-switcher") %>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>编辑文件: <%= filename %></title>
@@ -10,6 +9,17 @@
     <link id="theme-stylesheet" rel="stylesheet" href="">
 
     <style>
+        /* 新增：主題選擇器容器樣式 */
+        .theme-switcher-container {
+            max-width: 95%;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 10px 15px 0; /* 在上方和左右添加一些內邊距 */
+            text-align: right; /* 將內容（主題選擇器）居右 */
+            box-sizing: border-box;
+        }
+
         /* 整體佈局樣式 */
         body, html {
             height: 100%; margin: 0; display: flex; flex-direction: column;
@@ -17,6 +27,7 @@
         .container {
             flex-grow: 1; display: flex; flex-direction: column; padding: 15px;
             max-width: 95%; width: 100%; margin-left: auto; margin-right: auto;
+            padding-top: 0; /* 移除容器的頂部內邊距，因為已添加到主題選擇器容器中 */
         }
         form {
             flex-grow: 1; display: flex; flex-direction: column;
@@ -51,6 +62,10 @@
     </style>
 </head>
 <body>
+
+    <div class="theme-switcher-container">
+        <%- include("partials/theme-switcher") %>
+    </div>
 
     <div class="container">
         <% if (message) { %>
